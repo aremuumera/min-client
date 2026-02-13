@@ -1,0 +1,157 @@
+'use client';
+
+import * as React from 'react';
+import { useContext } from 'react';
+import { Divider } from '@/components/ui/divider';
+import { Avatar } from '@/components/ui/avatar';
+import { Box } from '@/components/ui/box';
+import { Stack } from '@/components/ui/stack';
+import { Typography } from '@/components/ui/typography';
+import { useSelector } from 'react-redux';
+
+import { dayjs } from '@/lib/dayjs';
+import { usePathname } from '@/hooks/use-pathname';
+
+import { ChatContext } from './chat_com/chat_context';
+import { generateTextAvatar, stringToColor } from './message-box';
+
+function getDisplayContent(lastMessage: any, userId: string): string {
+  // If lastMessage is a string, just return it
+  if (typeof lastMessage === 'string') {
+    return lastMessage;
+  }
+
+  // Otherwise, handle the message object structure
+  const author = lastMessage?.otherUserId === userId ? 'Me: ' : '';
+  const message = lastMessage?.type === 'image' ? 'Sent a photo' : lastMessage?.content;
+
+  return `${author}${message || ''}`;
+}
+
+interface ThreadItemProps {
+  active?: boolean;
+  thread: {
+    id: string;
+    conversationId: string;
+    itemType: string;
+    lastMessage?: any;
+    otherUserId?: string;
+    otherUserName?: string;
+    otherCompanyName?: string;
+    unreadCount: number;
+    lastMessageTime?: { seconds: number };
+    itemTitle?: string;
+    itemId?: string;
+    type: string;
+  };
+  onSelect?: () => void;
+  messages: any[]; // Passed from sidebar
+}
+
+export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps) {
+  const {
+    conversationId,
+    itemType,
+    lastMessage,
+    otherUserId,
+    otherUserName,
+    otherCompanyName,
+    unreadCount,
+    lastMessageTime,
+    itemTitle,
+  } = thread;
+  const { user } = useSelector((state: any) => state.auth);
+  const pathname = usePathname();
+  const { messages } = useContext(ChatContext);
+  const otherUser = messages.find((message: any) => message.senderId === otherUserId);
+
+  // Format timestamp from lastMessageTime
+  const formattedTime = lastMessageTime ? dayjs(new Date(lastMessageTime.seconds * 1000)).fromNow() : '';
+
+  // Generate text avatar from username
+  const textAvatar = generateTextAvatar(otherUserName || '');
+
+  // Generate color from username for consistent avatar background
+  const avatarBgColor = stringToColor(otherUserName || '');
+
+  // Determining background color based on unreadCount and active state
+  const getBackgroundColor = () => {
+    if (active) {
+      return 'var(--mui-palette-action-selected)';
+    }
+    if (unreadCount > 0) {
+      return 'rgba(var(--mui-palette-primary-mainChannel) / 0.08)'; // Light highlight for unread
+    }
+    return 'transparent';
+  };
+
+  // Check if current route matches this conversation
+  const isActive = pathname.includes(`/dashboard/chat/${itemType}/${conversationId}/${thread.itemId}`);
+
+  return (
+    <li className="select-none">
+      <Box
+        onClick={onSelect}
+        onKeyUp={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            onSelect?.();
+          }
+        }}
+        role="button"
+        className={`flex items-center gap-2 p-2 cursor-pointer transition-colors duration-200 rounded-lg outline-none
+          ${isActive ? 'bg-[var(--mui-palette-action-selected)]' : getBackgroundColor()}
+          hover:bg-[var(--mui-palette-action-hover)]`}
+        tabIndex={0}
+      >
+        {/* Text Avatar */}
+        <Avatar
+          className={`${unreadCount > 0 ? 'ring-2 ring-[var(--mui-palette-primary-main)]' : ''}`}
+          style={{
+            backgroundColor: avatarBgColor,
+            height: '50px',
+            width: '50px',
+            fontSize: 'var(--fontSize-sm)',
+          }}
+        >
+          {textAvatar}
+        </Avatar>
+
+        {/* RECIPIENTS & CONTENT */}
+        <Box className="flex-auto overflow-hidden relative">
+          {itemType !== 'business' ? (
+            <Typography noWrap className="text-[12px] text-[#818080]" variant="subtitle2">
+              {otherUserName || itemTitle}
+            </Typography>
+          ) : (
+            <Typography noWrap className="text-[12px] text-[#818080]" variant="subtitle2">
+              {otherCompanyName}
+            </Typography>
+          )}
+          <Typography noWrap className="text-[14px] font-bold" variant="subtitle2">
+            {itemType !== 'business' ? itemTitle : otherUserName}
+          </Typography>
+          <Stack direction="row" spacing={1} className="items-center">
+            <Typography color="text.secondary" noWrap className="flex-auto" variant="subtitle2">
+              {getDisplayContent(lastMessage, user?.id)}
+            </Typography>
+          </Stack>
+        </Box>
+
+        {/* LAST MESSAGE TIME */}
+        <Typography color="text.secondary" className="whitespace-nowrap relative" variant="caption">
+          {formattedTime}
+          {unreadCount > 0 && (
+            <Box
+              className="bg-[var(--mui-palette-primary-main)] text-white text-[12px] rounded-full absolute -right-[2px] -top-[25px] flex items-center justify-center p-1 h-[18px] min-w-[18px]"
+              style={{ zIndex: 50 }}
+            >
+              {unreadCount}
+            </Box>
+          )}
+        </Typography>
+      </Box>
+
+      <Divider className="mt-2 border-[var(--mui-palette-divider)]" />
+    </li>
+  );
+}

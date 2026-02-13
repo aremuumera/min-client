@@ -1,0 +1,751 @@
+
+> customer-frontend-next@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 26 errors:
+./src/components/v2/blogs/blogs_1.tsx:2:10
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [36mimport[39m { use } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { useGetAllBlogsQuery[33m,[39m useGetBlogCategoriesQuery } [36mfrom[39m [32m'@/redux/features/blogs/blog_api'[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/v2/blogs/blogs_1.tsx
+    ./src/app/blogs/page.tsx
+
+
+./src/components/v2/blogs/detailedBlog.tsx:5:10
+Ecmascript file had an error
+[0m [90m 3 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mArrowLeft[39m[33m,[39m [33mArrowUpRight[39m[33m,[39m [33mCheck[39m[33m,[39m [33mChevronLeft[39m[33m,[39m [33mCopy[39m[33m,[39m [33mShare2[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m
+ [90m 7 |[39m [36mimport[39m [33mContactForm[39m [36mfrom[39m [32m'../cta-whole'[39m[33m;[39m
+ [90m 8 |[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/v2/blogs/detailedBlog.tsx
+    ./src/app/blogs/[blogId]/page.tsx
+
+
+./src/components/v2/contact/contact-form.tsx:1:17
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mconst[39m [33mContactMessageSection[39m [33m=[39m () [33m=>[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/v2/contact/contact-form.tsx
+    ./src/app/contact/page.tsx
+
+
+./src/components/v2/guides/main-guide2.tsx:1:17
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mAnimatePresence[39m[33m,[39m motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { [33mArrowUpRight[39m[33m,[39m [33mX[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/v2/guides/main-guide2.tsx
+    ./src/app/guides/page.tsx
+
+
+./src/sections/home/becomeASupplier.tsx:1:17
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { paths } [36mfrom[39m [32m'@/config/paths'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/sections/home/becomeASupplier.tsx
+    ./src/app/become-a-supplier/page.tsx
+
+
+./src/sections/home/postrfq.tsx:1:17
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useEffect[33m,[39m useRef[33m,[39m useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { motion[33m,[39m useInView } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mPRFQ[39m() {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/sections/home/postrfq.tsx
+    ./src/app/post-your-rfq/page.tsx
+
+
+./src/sections/home/postrfq.tsx:1:28
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useEffect[33m,[39m useRef[33m,[39m useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                            [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { motion[33m,[39m useInView } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mPRFQ[39m() {[0m
+
+You're importing a component that needs `useRef`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/sections/home/postrfq.tsx
+    ./src/app/post-your-rfq/page.tsx
+
+
+./src/sections/home/postrfq.tsx:1:36
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useEffect[33m,[39m useRef[33m,[39m useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { motion[33m,[39m useInView } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mPRFQ[39m() {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/sections/home/postrfq.tsx
+    ./src/app/post-your-rfq/page.tsx
+
+
+./src/sections/home/supportCom.tsx:1:17
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [90m// Sample JSON data for support content[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Server Component:
+    ./src/sections/home/supportCom.tsx
+    ./src/app/support/page.tsx
+
+
+./src/lib/legacy-config.ts:4:1
+Module not found: Can't resolve '../styles/theme/colors'
+[0m [90m 2 |[39m [36mimport[39m { [33mLogLevel[39m } [36mfrom[39m [32m'@/lib/logger'[39m[33m;[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { chateauGreen } [36mfrom[39m [32m'../styles/theme/colors'[39m[33m;[39m [90m// Adjust the path accordingly[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mconst[39m palettes [33m=[39m {
+ [90m 7 |[39m   chateauGreen[33m,[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/lib/legacy-config.ts [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_notif_service.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_service/index.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_context.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_view.tsx [Client Component Browser]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Client Component Browser]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/lib/legacy-config.ts [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_notif_service.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_service/index.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_context.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_view.tsx [Client Component SSR]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Client Component SSR]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/v2/dashboard/Overviews'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33mOverviews[39m [36mfrom[39m [32m'@/components/v2/dashboard/Overviews'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mDashboardPage[39m() {
+ [90m 7 |[39m   [36mreturn[39m ([0m
+
+Import map: aliased to relative './src/components/v2/dashboard/Overviews' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/dashboard/page.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/dashboard/page.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/sections/dashboard/ComapnyInfoVerificartion/CompanyInfo.tsx:24:1
+Module not found: Can't resolve '@/hooks/useAlert'
+[0m [90m 22 |[39m [36mimport[39m { useDispatch[33m,[39m useSelector } [36mfrom[39m [32m'react-redux'[39m[33m;[39m
+ [90m 23 |[39m
+[31m[1m>[22m[39m[90m 24 |[39m [36mimport[39m useAlert [36mfrom[39m [32m'@/hooks/useAlert'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 25 |[39m [36mimport[39m { clearCompanyInfoErrors[33m,[39m resetCompanyInfo[33m,[39m setCompanyInfoErrors[33m,[39m updateCategoryData[33m,[39m updateCompanyInfo } [36mfrom[39m [32m'@/redux/features/business_verification_feature/bv_slice'[39m[33m;[39m
+ [90m 26 |[39m [36mimport[39m { toast } [36mfrom[39m [32m'sonner'[39m[33m;[39m
+ [90m 27 |[39m [36mimport[39m { useSubmitCompanyInfoMutation } [36mfrom[39m [32m'@/redux/features/business_verification_feature/bv_api'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/hooks/useAlert' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/sections/dashboard/ComapnyInfoVerificartion/CompanyInfo.tsx [Client Component Browser]
+    ./src/sections/dashboard/ComapnyInfoVerificartion/index.tsx [Client Component Browser]
+    ./src/app/dashboard/company-info-verification/page.tsx [Client Component Browser]
+    ./src/app/dashboard/company-info-verification/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/sections/dashboard/ComapnyInfoVerificartion/CompanyInfo.tsx [Client Component SSR]
+    ./src/sections/dashboard/ComapnyInfoVerificartion/index.tsx [Client Component SSR]
+    ./src/app/dashboard/company-info-verification/page.tsx [Client Component SSR]
+    ./src/app/dashboard/company-info-verification/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/lib/legacy-config.ts:1:1
+Module not found: Can't resolve '@/lib/get-site-url'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { getSiteURL } [36mfrom[39m [32m'@/lib/get-site-url'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mLogLevel[39m } [36mfrom[39m [32m'@/lib/logger'[39m[33m;[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { chateauGreen } [36mfrom[39m [32m'../styles/theme/colors'[39m[33m;[39m [90m// Adjust the path accordingly[39m[0m
+
+Import map: aliased to relative './src/lib/get-site-url' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/lib/legacy-config.ts [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_notif_service.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_service/index.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_context.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_view.tsx [Client Component Browser]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Client Component Browser]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/lib/legacy-config.ts [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_notif_service.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_service/index.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_context.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_view.tsx [Client Component SSR]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Client Component SSR]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/lib/legacy-config.ts:2:1
+Module not found: Can't resolve '@/lib/logger'
+[0m [90m 1 |[39m [36mimport[39m { getSiteURL } [36mfrom[39m [32m'@/lib/get-site-url'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { [33mLogLevel[39m } [36mfrom[39m [32m'@/lib/logger'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { chateauGreen } [36mfrom[39m [32m'../styles/theme/colors'[39m[33m;[39m [90m// Adjust the path accordingly[39m
+ [90m 5 |[39m[0m
+
+Import map: aliased to relative './src/lib/logger' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/lib/legacy-config.ts [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_notif_service.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_service/index.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_context.tsx [Client Component Browser]
+    ./src/sections/dashboard/chat/chat_com/chat_view.tsx [Client Component Browser]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Client Component Browser]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/lib/legacy-config.ts [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_notif_service.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_service/index.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_context.tsx [Client Component SSR]
+    ./src/sections/dashboard/chat/chat_com/chat_view.tsx [Client Component SSR]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Client Component SSR]
+    ./src/app/dashboard/chat/[threadType]/[threadId]/[itemId]/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/dashboard/layout/user-popover.tsx:10:1
+Module not found: Can't resolve '@/redux/features/auth/auth-slice'
+[0m [90m  8 |[39m [36mimport[39m { cn } [36mfrom[39m [32m'@/lib/utils'[39m[33m;[39m
+ [90m  9 |[39m [36mimport[39m { paths } [36mfrom[39m [32m'@/config/paths'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m { logout } [36mfrom[39m [32m'@/redux/features/auth/auth-slice'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 11 |[39m [36mimport[39m { resetProductState } [36mfrom[39m [32m'@/redux/features/supplier-profile/supplier_products_slice'[39m[33m;[39m
+ [90m 12 |[39m [36mimport[39m { resetRFQState } [36mfrom[39m [32m'@/redux/features/rfq/rfq-slice'[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAppDispatch[39m[33m,[39m [33mRootState[39m } [36mfrom[39m [32m'@/redux/store'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/redux/features/auth/auth-slice' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/dashboard/layout/user-popover.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/main-nav.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/dashboard/layout/user-popover.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/main-nav.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/dashboard/layout/vertical/side-nav.tsx:14:1
+Module not found: Can't resolve '@/redux/features/auth/auth-slice'
+[0m [90m 12 |[39m [36mimport[39m { isNavItemActive } [36mfrom[39m [32m'@/lib/is-nav-item-active'[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { paths } [36mfrom[39m [32m'@/config/paths'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 14 |[39m [36mimport[39m { logout } [36mfrom[39m [32m'@/redux/features/auth/auth-slice'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m [36mimport[39m { resetProductState } [36mfrom[39m [32m'@/redux/features/supplier-profile/supplier_products_slice'[39m[33m;[39m
+ [90m 16 |[39m [36mimport[39m { resetRFQState } [36mfrom[39m [32m'@/redux/features/rfq/rfq-slice'[39m[33m;[39m
+ [90m 17 |[39m [36mimport[39m { [33mAppDispatch[39m } [36mfrom[39m [32m'@/redux/store'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/redux/features/auth/auth-slice' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/dashboard/layout/vertical/side-nav.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/dashboard/layout/vertical/side-nav.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/dashboard/layout/user-popover.tsx:12:1
+Module not found: Can't resolve '@/redux/features/rfq/rfq-slice'
+[0m [90m 10 |[39m [36mimport[39m { logout } [36mfrom[39m [32m'@/redux/features/auth/auth-slice'[39m[33m;[39m
+ [90m 11 |[39m [36mimport[39m { resetProductState } [36mfrom[39m [32m'@/redux/features/supplier-profile/supplier_products_slice'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { resetRFQState } [36mfrom[39m [32m'@/redux/features/rfq/rfq-slice'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m [36mimport[39m { [33mAppDispatch[39m[33m,[39m [33mRootState[39m } [36mfrom[39m [32m'@/redux/store'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m { [33mAvatar[39m[33m,[39m [33mAvatarImage[39m[33m,[39m [33mAvatarFallback[39m } [36mfrom[39m [32m'@/components/ui/avatar'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/redux/features/rfq/rfq-slice' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/dashboard/layout/user-popover.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/main-nav.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/dashboard/layout/user-popover.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/main-nav.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/dashboard/layout/vertical/side-nav.tsx:16:1
+Module not found: Can't resolve '@/redux/features/rfq/rfq-slice'
+[0m [90m 14 |[39m [36mimport[39m { logout } [36mfrom[39m [32m'@/redux/features/auth/auth-slice'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m { resetProductState } [36mfrom[39m [32m'@/redux/features/supplier-profile/supplier_products_slice'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m { resetRFQState } [36mfrom[39m [32m'@/redux/features/rfq/rfq-slice'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m { [33mAppDispatch[39m } [36mfrom[39m [32m'@/redux/store'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+ [90m 19 |[39m [36mimport[39m { [33mNavItemConfig[39m } [36mfrom[39m [32m'@/config/dashboard-config'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/redux/features/rfq/rfq-slice' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/dashboard/layout/vertical/side-nav.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/dashboard/layout/vertical/side-nav.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/dashboard/layout/user-popover.tsx:11:1
+Module not found: Can't resolve '@/redux/features/supplier-profile/supplier_products_slice'
+[0m [90m  9 |[39m [36mimport[39m { paths } [36mfrom[39m [32m'@/config/paths'[39m[33m;[39m
+ [90m 10 |[39m [36mimport[39m { logout } [36mfrom[39m [32m'@/redux/features/auth/auth-slice'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { resetProductState } [36mfrom[39m [32m'@/redux/features/supplier-profile/supplier_products_slice'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mimport[39m { resetRFQState } [36mfrom[39m [32m'@/redux/features/rfq/rfq-slice'[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m { [33mAppDispatch[39m[33m,[39m [33mRootState[39m } [36mfrom[39m [32m'@/redux/store'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/redux/features/supplier-profile/supplier_products_slice' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/dashboard/layout/user-popover.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/main-nav.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/dashboard/layout/user-popover.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/main-nav.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/dashboard/layout/vertical/side-nav.tsx:15:1
+Module not found: Can't resolve '@/redux/features/supplier-profile/supplier_products_slice'
+[0m [90m 13 |[39m [36mimport[39m { paths } [36mfrom[39m [32m'@/config/paths'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m { logout } [36mfrom[39m [32m'@/redux/features/auth/auth-slice'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m { resetProductState } [36mfrom[39m [32m'@/redux/features/supplier-profile/supplier_products_slice'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m { resetRFQState } [36mfrom[39m [32m'@/redux/features/rfq/rfq-slice'[39m[33m;[39m
+ [90m 17 |[39m [36mimport[39m { [33mAppDispatch[39m } [36mfrom[39m [32m'@/redux/store'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/redux/features/supplier-profile/supplier_products_slice' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/dashboard/layout/vertical/side-nav.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Client Component Browser]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/dashboard/layout/vertical/side-nav.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/vertical/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Client Component SSR]
+    ./src/components/dashboard/layout/layout.tsx [Server Component]
+    ./src/app/dashboard/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/v2/contact/contact-hero.tsx:2:1
+Module not found: Can't resolve '@/utils/config'
+[0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { config } [36mfrom[39m [32m'@/utils/config'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mArrowUpRight[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+ [90m 5 |[39m[0m
+
+Import map: aliased to relative './src/utils/config' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/components/v2/contact/contact-hero.tsx
+    ./src/app/contact/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/core/no-ssr.tsx:4:1
+Module not found: Can't resolve '@mui/utils/useEnhancedEffect'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m useEnhancedEffect [36mfrom[39m [32m'@mui/utils/useEnhancedEffect'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [90m// https://github.com/mui/material-ui/blob/master/packages/mui-base/src/NoSsr/NoSsr.tsx[39m
+ [90m 7 |[39m [90m// without prop-types[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/core/no-ssr.tsx [Client Component Browser]
+    ./src/sections/home/home/start-building.tsx [Client Component Browser]
+    ./src/sections/home/home/start-building.tsx [Server Component]
+    ./src/app/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/core/no-ssr.tsx [Client Component SSR]
+    ./src/sections/home/home/start-building.tsx [Client Component SSR]
+    ./src/sections/home/home/start-building.tsx [Server Component]
+    ./src/app/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/core/text-editor/text-editor.tsx:5:1
+Module not found: Can't resolve '@tiptap/extension-link'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mBox[39m } [36mfrom[39m [32m'@/components/ui/box'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mLink[39m } [36mfrom[39m [32m'@tiptap/extension-link'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { [33mPlaceholder[39m } [36mfrom[39m [32m'@tiptap/extension-placeholder'[39m[33m;[39m
+ [90m 7 |[39m [36mimport[39m { [33mEditor[39m[33m,[39m [33mEditorContent[39m[33m,[39m useEditor } [36mfrom[39m [32m'@tiptap/react'[39m[33m;[39m
+ [90m 8 |[39m [36mimport[39m { [33mStarterKit[39m } [36mfrom[39m [32m'@tiptap/starter-kit'[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/core/text-editor/text-editor.tsx:6:1
+Module not found: Can't resolve '@tiptap/extension-placeholder'
+[0m [90m 4 |[39m [36mimport[39m { [33mBox[39m } [36mfrom[39m [32m'@/components/ui/box'[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { [33mLink[39m } [36mfrom[39m [32m'@tiptap/extension-link'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { [33mPlaceholder[39m } [36mfrom[39m [32m'@tiptap/extension-placeholder'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mEditor[39m[33m,[39m [33mEditorContent[39m[33m,[39m useEditor } [36mfrom[39m [32m'@tiptap/react'[39m[33m;[39m
+ [90m 8 |[39m [36mimport[39m { [33mStarterKit[39m } [36mfrom[39m [32m'@tiptap/starter-kit'[39m[33m;[39m
+ [90m 9 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/core/text-editor/text-editor.tsx:7:1
+Module not found: Can't resolve '@tiptap/react'
+[0m [90m  5 |[39m [36mimport[39m { [33mLink[39m } [36mfrom[39m [32m'@tiptap/extension-link'[39m[33m;[39m
+ [90m  6 |[39m [36mimport[39m { [33mPlaceholder[39m } [36mfrom[39m [32m'@tiptap/extension-placeholder'[39m[33m;[39m
+[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { [33mEditor[39m[33m,[39m [33mEditorContent[39m[33m,[39m useEditor } [36mfrom[39m [32m'@tiptap/react'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  8 |[39m [36mimport[39m { [33mStarterKit[39m } [36mfrom[39m [32m'@tiptap/starter-kit'[39m[33m;[39m
+ [90m  9 |[39m
+ [90m 10 |[39m [36mimport[39m { [33mTextEditorToolbar[39m } [36mfrom[39m [32m'./text-editor-toolbar'[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/core/text-editor/text-editor.tsx:8:1
+Module not found: Can't resolve '@tiptap/starter-kit'
+[0m [90m  6 |[39m [36mimport[39m { [33mPlaceholder[39m } [36mfrom[39m [32m'@tiptap/extension-placeholder'[39m[33m;[39m
+ [90m  7 |[39m [36mimport[39m { [33mEditor[39m[33m,[39m [33mEditorContent[39m[33m,[39m useEditor } [36mfrom[39m [32m'@tiptap/react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { [33mStarterKit[39m } [36mfrom[39m [32m'@tiptap/starter-kit'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  9 |[39m
+ [90m 10 |[39m [36mimport[39m { [33mTextEditorToolbar[39m } [36mfrom[39m [32m'./text-editor-toolbar'[39m[33m;[39m
+ [90m 11 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component Browser]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component Browser]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/core/text-editor/text-editor.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/SupplierCompanyProfileDescription.tsx [Client Component SSR]
+    ./src/sections/dashboard/Supplier/SupplierCompanyProfile/index.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Client Component SSR]
+    ./src/app/dashboard/settings/business/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./src/components/v2/blogs/blogs_1.tsx:2:10)
+    at <unknown> (./src/components/v2/blogs/detailedBlog.tsx:5:10)
+    at <unknown> (./src/components/v2/contact/contact-form.tsx:1:17)
+    at <unknown> (./src/components/v2/guides/main-guide2.tsx:1:17)
+    at <unknown> (./src/sections/home/becomeASupplier.tsx:1:17)
+    at <unknown> (./src/sections/home/postrfq.tsx:1:17)
+    at <unknown> (./src/sections/home/postrfq.tsx:1:28)
+    at <unknown> (./src/sections/home/postrfq.tsx:1:36)
+    at <unknown> (./src/sections/home/supportCom.tsx:1:17)
+    at <unknown> (./src/lib/legacy-config.ts:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/dashboard/page.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/sections/dashboard/ComapnyInfoVerificartion/CompanyInfo.tsx:24:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/legacy-config.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/legacy-config.ts:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/dashboard/layout/user-popover.tsx:10:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/dashboard/layout/vertical/side-nav.tsx:14:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/dashboard/layout/user-popover.tsx:12:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/dashboard/layout/vertical/side-nav.tsx:16:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/dashboard/layout/user-popover.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/dashboard/layout/vertical/side-nav.tsx:15:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/v2/contact/contact-hero.tsx:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/core/no-ssr.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/core/text-editor/text-editor.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/core/text-editor/text-editor.tsx:6:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/core/text-editor/text-editor.tsx:7:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/core/text-editor/text-editor.tsx:8:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

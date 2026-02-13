@@ -1,0 +1,582 @@
+@import "tailwindcss";
+
+/* ============================================
+   PUBLIC SANS FONT FAMILY
+   ============================================ */
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-ThinItalic.ttf') format('truetype');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-ExtraLightItalic.ttf') format('truetype');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-ExtraBoldItalic.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  src: url('/font/PublicSans-BlackItalic.ttf') format('truetype');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ============================================
+   TAILWIND THEME CONFIGURATION
+   ============================================ */
+
+@theme {
+  /* Font Family */
+  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+
+  /* Primary - Chateau Green */
+  --color-primary-50: #edfcf2;
+  --color-primary-100: #d2f9de;
+  --color-primary-200: #aaf0c4;
+  --color-primary-300: #72e3a3;
+  --color-primary-400: #3acd7e;
+  --color-primary-500: #16b364;
+  --color-primary-600: #0a9150;
+  --color-primary-700: #087442;
+  --color-primary-800: #095c37;
+  --color-primary-900: #094b2f;
+  --color-primary-950: #042a1a;
+  --color-primary: var(--color-primary-500);
+
+  /* Secondary - Nevada */
+  --color-secondary-50: #fbfcfe;
+  --color-secondary-100: #f0f4f8;
+  --color-secondary-200: #dde7ee;
+  --color-secondary-300: #cdd7e1;
+  --color-secondary-400: #9fa6ad;
+  --color-secondary-500: #636b74;
+  --color-secondary-600: #555e68;
+  --color-secondary-700: #32383e;
+  --color-secondary-800: #202427;
+  --color-secondary-900: #121517;
+  --color-secondary-950: #090a0b;
+  --color-secondary: var(--color-secondary-700);
+
+  /* Error - Red Orange */
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-200: #ffcdc9;
+  --color-error-300: #fdaaa4;
+  --color-error-400: #f97970;
+  --color-error-500: #f04438;
+  --color-error-600: #de3024;
+  --color-error-700: #bb241a;
+  --color-error-800: #9a221a;
+  --color-error-900: #80231c;
+  --color-error-950: #460d09;
+  --color-error: var(--color-error-500);
+
+  /* Warning - California */
+  --color-warning-50: #fffaea;
+  --color-warning-100: #fff3c6;
+  --color-warning-200: #ffe587;
+  --color-warning-300: #ffd049;
+  --color-warning-400: #ffbb1f;
+  --color-warning-500: #fb9c0c;
+  --color-warning-600: #de7101;
+  --color-warning-700: #b84d05;
+  --color-warning-800: #953b0b;
+  --color-warning-900: #7b310c;
+  --color-warning-950: #471701;
+  --color-warning: var(--color-warning-500);
+
+  /* Success - Kepple */
+  --color-success-50: #f0fdfa;
+  --color-success-100: #ccfbef;
+  --color-success-200: #9af5e1;
+  --color-success-300: #5fe9ce;
+  --color-success-400: #2ed3b8;
+  --color-success-500: #15b79f;
+  --color-success-600: #0e9382;
+  --color-success-700: #107569;
+  --color-success-800: #115e56;
+  --color-success-900: #134e48;
+  --color-success-950: #042f2c;
+  --color-success: var(--color-success-500);
+
+  /* Info - Shakespeare */
+  --color-info-50: #ecfdff;
+  --color-info-100: #cff7fe;
+  --color-info-200: #a4eefd;
+  --color-info-300: #66e0fa;
+  --color-info-400: #10bee8;
+  --color-info-500: #04aad6;
+  --color-info-600: #0787b3;
+  --color-info-700: #0d6d91;
+  --color-info-800: #145876;
+  --color-info-900: #154964;
+  --color-info-950: #082f44;
+  --color-info: var(--color-info-500);
+
+  /* Neutral - Storm Grey */
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f1f1f4;
+  --color-neutral-200: #dcdfe4;
+  --color-neutral-300: #b3b9c6;
+  --color-neutral-400: #8a94a6;
+  --color-neutral-500: #667085;
+  --color-neutral-600: #565e73;
+  --color-neutral-700: #434a60;
+  --color-neutral-800: #313749;
+  --color-neutral-900: #212636;
+  --color-neutral-950: #121621;
+
+  /* Background & Foreground */
+  --color-background: #ffffff;
+  --color-background-paper: #ffffff;
+  --color-background-level1: var(--color-neutral-50);
+  --color-background-level2: var(--color-neutral-100);
+  --color-background-level3: var(--color-neutral-200);
+  --color-foreground: var(--color-neutral-900);
+  --color-foreground-secondary: var(--color-neutral-500);
+  --color-foreground-muted: var(--color-neutral-400);
+
+  /* Divider */
+  --color-divider: var(--color-neutral-200);
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* ============================================
+   CSS VARIABLES (matching original)
+   ============================================ */
+
+:root {
+  --fontSize-xs: 0.75rem;
+  --fontSize-sm: 0.875rem;
+  --fontSize-md: 1rem;
+  --fontSize-lg: 1.125rem;
+  --fontSize-xl: 1.25rem;
+  --fontSize-2xl: 1.5rem;
+
+  --icon-fontSize-sm: 1rem;
+  --icon-fontSize-md: 1.25rem;
+  --icon-fontSize-lg: 1.5rem;
+
+  --maxWidth-xs: 0;
+  --maxWidth-sm: 600px;
+  --maxWidth-md: 900px;
+  --maxWidth-lg: 1200px;
+  --maxWidth-xl: 1440px;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#__next {
+  height: 100%;
+}
+
+/* ============================================
+   LOADER ANIMATION
+   ============================================ */
+
+.loader {
+  --cell-size: 20px;
+  --cell-spacing: 1px;
+  --cells: 3;
+  --total-size: calc(var(--cells) * (var(--cell-size) + 2 * var(--cell-spacing)));
+  display: flex;
+  flex-wrap: wrap;
+  width: var(--total-size);
+  height: var(--total-size);
+}
+
+.cell {
+  flex: 0 0 var(--cell-size);
+  margin: var(--cell-spacing);
+  background-color: transparent;
+  box-sizing: border-box;
+  border-radius: 4px;
+  animation: 1.5s ripple ease infinite;
+}
+
+.cell.d-1 {
+  animation-delay: 100ms;
+}
+
+.cell.d-2 {
+  animation-delay: 200ms;
+}
+
+.cell.d-3 {
+  animation-delay: 300ms;
+}
+
+.cell.d-4 {
+  animation-delay: 400ms;
+}
+
+.cell:nth-child(1) {
+  --cell-color: #00FF87;
+}
+
+.cell:nth-child(2) {
+  --cell-color: #0CFD95;
+}
+
+.cell:nth-child(3) {
+  --cell-color: #17FBA2;
+}
+
+.cell:nth-child(4) {
+  --cell-color: #23F9B2;
+}
+
+.cell:nth-child(5) {
+  --cell-color: #30F7C3;
+}
+
+.cell:nth-child(6) {
+  --cell-color: #3DF5D4;
+}
+
+.cell:nth-child(7) {
+  --cell-color: #45F4DE;
+}
+
+.cell:nth-child(8) {
+  --cell-color: #53F1F0;
+}
+
+.cell:nth-child(9) {
+  --cell-color: #60EFFF;
+}
+
+@keyframes ripple {
+  0% {
+    background-color: transparent;
+  }
+
+  30% {
+    background-color: var(--cell-color);
+  }
+
+  60% {
+    background-color: transparent;
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.transition-max-height {
+  transition: max-height 0.5s ease-in-out;
+}
+
+/* Remove autofill background color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #333 !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* ============================================
+   SLIDESHOW STYLES (from original)
+   ============================================ */
+
+.slide-container {
+  width: 100%;
+  position: relative;
+}
+
+.each-fade {
+  display: flex;
+  width: 100%;
+}
+
+.each-fade>div {
+  width: 100%;
+}
+
+.each-fade>div img {
+  width: 100% !important;
+  height: 100%;
+  object-fit: cover !important;
+}
+
+.image-container {
+  position: relative;
+  height: 100vh !important;
+  width: 100%;
+  max-width: 700px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.image-container img {
+  object-fit: cover !important;
+}
+
+.text-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 2rem;
+  text-align: center;
+  opacity: 0;
+  animation: fadeIn 3s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.indicators {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 100000 !important;
+}
+
+.indicator-button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  cursor: pointer;
+}
+
+.indicator-button:focus {
+  outline: none;
+}
+
+.indicator-button.active {
+  background: black;
+}
+
+/* ============================================
+   RECHARTS (from original)
+   ============================================ */
+
+.recharts-cartesian-axis-tick-value {
+  color: var(--color-foreground-secondary);
+  font-size: var(--fontSize-xs);
+}
+
+.recharts-cartesian-grid line {
+  stroke: var(--color-divider);
+}
+
+.recharts-pie path:focus {
+  outline: none;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES (from original)
+   ============================================ */
+
+@media screen and (max-width: 1028px) {
+  .cp12 {
+    flex-wrap: wrap;
+  }
+}
