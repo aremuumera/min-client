@@ -215,15 +215,15 @@ const SearchInput = ({ className }: SearchInputProps) => {
         )}
       </AnimatePresence> */}
       {/* Search Input Container */}
-      <div className="relative bg-transparent border border-gray-700 rounded-full flex items-center py-3 sm:px-4 px-3 focus-within:border-green-500 transition-colors">
+      <div className="relative bg-white border border-[#E5E5E5] rounded-full flex items-center py-3 sm:px-4 px-3 focus-within:border-green-500 transition-colors">
         {/* Category Selector */}
         <div ref={categoryRef} className="relative">
           <button
             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
             className="flex items-center gap-1 sm:gap-2 text-gray-300 hover:text-white transition-colors pr-3 text-sm md:text-base whitespace-nowrap"
           >
-            <span className="font-medium">{getCurrentCategoryLabel()}</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+            <span className="font-medium text-gray-400">{getCurrentCategoryLabel()}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform text-gray-400 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Category Dropdown */}
@@ -234,7 +234,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="absolute top-full left-0 mt-2 bg-[#050D0B] border border-gray-700 rounded-lg shadow-xl py-2 min-w-[150px] z-50"
+                className="absolute top-full left-0 mt-2 bg-white border border-[#E5E5E5] rounded-lg shadow-xl py-2 min-w-[150px] z-50"
               >
                 {categories.map((category) => (
                   <motion.button
@@ -242,8 +242,8 @@ const SearchInput = ({ className }: SearchInputProps) => {
                     variants={itemVariants}
                     onClick={() => handleCategorySelect(category.value)}
                     className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedCategory === category.value
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                      ? 'bg-green-500/20 text-green-900'
+                      : 'text-gray-500 hover:bg-[#E5E5E5] hover:text-green-900'
                       }`}
                   >
                     {category.label}
@@ -255,7 +255,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
         </div>
 
         {/* Divider */}
-        <div className="w-px sm:mx-3 h-5 bg-gray-700 " />
+        <div className="w-px sm:mx-3 h-5 bg-gray-400 " />
 
         {/* Search Input */}
         <input
@@ -263,7 +263,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
           value={searchTerm}
           onChange={handleSearchChange}
           placeholder="Search for any minerals"
-          className="flex-1 bg-transparent border-none outline-none text-gray-300 placeholder-gray-500 text-sm md:text-base"
+          className="flex-1 bg-transparent border-none! focus:border-none! focus:outline-none! focus:ring-0!  text-gray-300 placeholder-gray-500 text-sm md:text-base"
         />
 
         {/* Search Icon */}
@@ -280,7 +280,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute left-0 right-0 mt-2 bg-[#0a1612] border border-gray-700 rounded-lg shadow-2xl max-h-[60vh] overflow-y-auto z-50"
+            className="absolute left-0 right-0 mt-2 bg-white border border-[#E5E5E5] rounded-lg shadow-2xl max-h-[60vh] overflow-y-auto z-50"
           >
             {/* Loading State */}
             {(isProductsLoading || isRfqLoading) && (
@@ -292,21 +292,21 @@ const SearchInput = ({ className }: SearchInputProps) => {
             {/* Products Section */}
             {!isProductsLoading && shouldQueryProducts && productsToShow.length > 0 && (
               <div>
-                <div className="px-4 py-3 bg-gray-800/30 border-b border-gray-700">
-                  <h3 className="text-sm font-semibold text-gray-300">Products</h3>
+                <div className="px-4 py-3 bg-white border-b border-[#E5E5E5]">
+                  <h3 className="text-sm font-semibold text-gray-500">Products</h3>
                 </div>
                 {productsToShow.map((product: any) => (
                   <a
                     key={product.id}
-                    href={`/products/details/${product.id}/${formatCompanyNameForUrl(product?.product_name)}`}
+                    href={`/dashboard/products/details/${product.id}/${formatCompanyNameForUrl(product?.product_name)}`}
                     onClick={() => {
                       setShowResults(false);
                       setSearchTerm('');
                     }}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-gray-800/50 transition-colors border-b border-gray-800/30"
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100 transition-colors border-b border-[#E5E5E5]"
                   >
                     {/* Product Image */}
-                    <div className="w-12 h-12 flex-shrink-0 rounded overflow-hidden bg-gray-800">
+                    <div className="w-12 h-12 shrink-0 rounded overflow-hidden bg-gray-800">
                       <img
                         src={product.images?.[0] || '/api/placeholder/50/50'}
                         alt={product.product_name}
@@ -316,22 +316,22 @@ const SearchInput = ({ className }: SearchInputProps) => {
 
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-white truncate">{product.product_name}</h4>
+                      <h4 className="text-sm font-medium text-black truncate">{product.product_name}</h4>
                       <p className="text-xs text-gray-400 mt-1">
                         {product.product_category} | {product.storeProfile?.company_name}
                       </p>
-                      <p className="text-sm font-semibold text-green-400 mt-1">${product.real_price}</p>
+                      <p className="text-sm font-semibold text-green-800 mt-1">${product.real_price}</p>
                     </div>
                   </a>
                 ))}
                 {productData?.products?.length > 6 && (
                   <a
-                    href="/products/all-mineral-cp"
+                    href="/dashboard/products/all-mineral-cp"
                     onClick={() => {
                       setShowResults(false);
                       setSearchTerm('');
                     }}
-                    className="block px-4 py-3 text-center text-sm font-medium text-green-400 hover:bg-gray-800/50 transition-colors"
+                    className="block px-4 py-3 text-center text-sm font-medium text-green-800 hover:bg-slate-100 transition-colors"
                   >
                     View all products
                   </a>
@@ -342,33 +342,33 @@ const SearchInput = ({ className }: SearchInputProps) => {
             {/* RFQs Section */}
             {!isRfqLoading && shouldQueryRfqs && rfqsToShow.length > 0 && (
               <div>
-                <div className="px-4 py-3 bg-gray-800/30 border-b border-gray-700">
-                  <h3 className="text-sm font-semibold text-gray-300">RFQs</h3>
+                <div className="px-4 py-3 bg-white border-b border-[#E5E5E5]">
+                  <h3 className="text-sm font-semibold text-gray-500">RFQs</h3>
                 </div>
                 {rfqsToShow.map((rfq: any, i: number) => (
                   <a
                     key={i}
-                    href={`/rfqs/details/${rfq.rfqId}/${formatCompanyNameForUrl(rfq?.rfqProductName)}`}
+                    href={`/dashboard/rfqs/details/${rfq.rfqId}/${formatCompanyNameForUrl(rfq?.rfqProductName)}`}
                     onClick={() => {
                       setShowResults(false);
                       setSearchTerm('');
                     }}
                     className="block px-4 py-3 hover:bg-gray-800/50 transition-colors border-b border-gray-800/30"
                   >
-                    <h4 className="text-sm font-medium text-white">Looking For - {rfq.rfqProductName}</h4>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <h4 className="text-sm font-medium text-black">Looking For - {rfq.rfqProductName}</h4>
+                    <p className="text-xs text-gray-500 mt-1">
                       Quantity: {rfq.quantityRequired} {rfq.quantityMeasure}
                     </p>
                   </a>
                 ))}
                 {rfqData?.data?.length > 6 && (
                   <a
-                    href="/products/rfq-products"
+                    href="/dashboard/products/rfq-products"
                     onClick={() => {
                       setShowResults(false);
                       setSearchTerm('');
                     }}
-                    className="block px-4 py-3 text-center text-sm font-medium text-green-400 hover:bg-gray-800/50 transition-colors"
+                    className="block px-4 py-3 text-center text-sm font-medium text-green-800 hover:bg-slate-100 transition-colors"
                   >
                     View all RFQs
                   </a>

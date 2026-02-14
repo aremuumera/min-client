@@ -1,3 +1,5 @@
+"use client";
+
 // import { Select } from '@/components/ui/select';
 import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
@@ -360,7 +362,7 @@ const EditRfQs = ({ open, rows, onClose }: any) => {
 
   return (
     <div>
-      <div className="w-full !relative ">
+      <div className="w-full relative! ">
         <div className="flex px-[12px] py-[30px] justify-between items-center">
           <div>
             <Link className="flex justify-center items-center gap-[6px]" href={paths.dashboard.rfqs.list}>
@@ -373,20 +375,20 @@ const EditRfQs = ({ open, rows, onClose }: any) => {
             </Button>
           </div>
         </div>
-        <div className="p-4 space-y-4 !relative   bg-white shadow rounded-lg">
+        <div className="p-4 space-y-4 relative!   bg-white shadow rounded-lg">
           <div className="flex lg:h-[10vh] h-full  justify-between items-center py-[6px]">
             <div>
-              <h2 className="text-[2rem]  font-[700]">{rfqProductName}</h2>
+              <h2 className="text-[2rem]  font-medium">{rfqProductName}</h2>
               <p className="pt-[5px] text-[#a8a8a8]">Posted on {formatDate(createdAt)}</p>
             </div>
           </div>
 
-          <h3 className="font-semibold !text-left">{'Attachment'}</h3>
+          <h3 className="font-semibold text-left!">{'Attachment'}</h3>
           <div className="relative flex items-start space-x-2">
             <div className="flex relative overflow-x-auto space-x-2">
               {ProductImagesArray?.length > 0 && ProductImagesArray?.map((img: any, i: number) => (
-                <div key={i} className="w-40 h-32 o rounded flex-shrink-0">
-                  <img src={img?.url} alt="" className='' />
+                <div key={i} className="w-40 h-40 o rounded shrink-0">
+                  <img src={img?.url} alt="" className='w-full h-full object-cover' />
                 </div>
               ))}
               <div >
@@ -406,14 +408,14 @@ const EditRfQs = ({ open, rows, onClose }: any) => {
           </div>
 
 
-          <div className="overflow-y-auto max-h-full pt-12 space-y-4">
+          <div className="overflow-y-auto max-h-full  space-y-4">
             {dynamicFields.map((field: any) => (
               <div
                 key={field.key}
                 className={`flex justify-between items-center ${field.fullWidth ? 'gap-[10px]' : ''}`}
               >
                 <div className={`flex flex-col justify-start ${field.fullWidth ? 'w-full max-w-[800px]' : ''}`}>
-                  <h3 className="font-semibold !text-left">{field.label}</h3>
+                  <h3 className="font-semibold text-left!">{field.label}</h3>
                   <p className="text-sm max-w-[200px] truncate text-gray-600">{field.value}</p>
                 </div>
                 <Button

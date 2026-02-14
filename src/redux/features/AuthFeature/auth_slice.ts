@@ -77,7 +77,7 @@ const AuthSlice = createSlice({
             state.awaitingOTPVerification = false;
             if (typeof window !== 'undefined') localStorage.removeItem('chimpstate');
             state.isAuth = false;
-            state.isInitialized = false;
+            state.isInitialized = true;
             initialStateFromLocalStorage();
         },
         loginSuccess: (state, action: PayloadAction<any>) => {

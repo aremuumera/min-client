@@ -8,6 +8,8 @@ export { Checkbox, type CheckboxProps } from './checkbox';
 export { Radio, RadioGroup, type RadioProps, type RadioGroupProps } from './radio';
 export { Switch, type SwitchProps } from './switch';
 export { Autocomplete, type AutocompleteProps, type AutocompleteOption } from './autocomplete';
+export { SearchableSelect } from './searchable-select';
+export { MultiCheckboxSelect } from './multi-checkbox-select';
 export {
     FormLabel,
     FormGroup,

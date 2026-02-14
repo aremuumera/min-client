@@ -1,3 +1,5 @@
+'use client'
+
 import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/input';
@@ -36,51 +38,51 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
   const [mediaImages, setMediaImages] = useState([]);
   const [mediaAttachments, setMediaAttachments] = useState([]);
 
-    const { user, appData } = useSelector((state: any) => state.auth);
+  const { user, appData } = useSelector((state: any) => state.auth);
 
- const { data, isLoading, isError } = useGetAllProductDetailsForSupQuery({
-  supplierId: user?.id,
-  productId: listedSupplierProductId
-},
-{
-  // refetchOnMountOrArgChange: true,
-  // skip: !user?.id || !listedSupplierProductId,
-}
-);
+  const { data, isLoading, isError } = useGetAllProductDetailsForSupQuery({
+    supplierId: user?.id,
+    productId: listedSupplierProductId
+  },
+    {
+      // refetchOnMountOrArgChange: true,
+      // skip: !user?.id || !listedSupplierProductId,
+    }
+  );
 
-const theProd = data?.product
+  const theProd = data?.product
 
-    // const [currentCategories, setCurrentCategories] = useState({
-    //   main: theProd?.product_main_category || '',
-    //   product: theProd?.product_category || '',
-    //   sub: theProd?.product_sub_category || ''
-    // });
+  // const [currentCategories, setCurrentCategories] = useState({
+  //   main: theProd?.product_main_category || '',
+  //   product: theProd?.product_category || '',
+  //   sub: theProd?.product_sub_category || ''
+  // });
 
-    const [currentCategories, setCurrentCategories] = useState({
-      main: '',
-      product: '',
-      sub: '',
-      catTag: ''
-    });
-    
-    // Add category API hooks
-    const { data: mainCatData } = useGetMainCategoryQuery();
+  const [currentCategories, setCurrentCategories] = useState({
+    main: '',
+    product: '',
+    sub: '',
+    catTag: ''
+  });
 
-    const { data: productCatData } = useGetCategoryQuery(
-      mainCatData?.find((c: any) => c.name === currentCategories.main)?.tag,
-      { skip: !currentCategories.main }
-    );
+  // Add category API hooks
+  const { data: mainCatData } = useGetMainCategoryQuery();
 
-    const { data: subCatData } = useGetSubCategoryQuery(
-      productCatData?.children?.find((c: any) => c.name === currentCategories.product)?.original_id,
-      { skip: !currentCategories.product }
-    );
-    
+  const { data: productCatData } = useGetCategoryQuery(
+    mainCatData?.find((c: any) => c.name === currentCategories.main)?.tag,
+    { skip: !currentCategories.main }
+  );
 
-    
+  const { data: subCatData } = useGetSubCategoryQuery(
+    productCatData?.children?.find((c: any) => c.name === currentCategories.product)?.original_id,
+    { skip: !currentCategories.product }
+  );
+
+
+
   const exampleRoute = 'http://localhost:3000/products/details/2/High-Purity-Limestone-for-Industrial-Use'
 
-console.log("SUP DETAIL data", data?.product);
+  console.log("SUP DETAIL data", data?.product);
 
   useEffect(() => {
     if (data?.product) {
@@ -88,12 +90,12 @@ console.log("SUP DETAIL data", data?.product);
       setMediaImages(data?.product?.images);
       setMediaAttachments(data?.product?.attachments);
 
-    setCurrentCategories({
-      main: data.product.product_main_category || '',
-      product: data.product.product_category || '',
-      sub: data.product.product_sub_category || '',
-      catTag: data.product.category_tag || ''
-    });
+      setCurrentCategories({
+        main: data.product.product_main_category || '',
+        product: data.product.product_category || '',
+        sub: data.product.product_sub_category || '',
+        catTag: data.product.category_tag || ''
+      });
     }
   }, [data?.product, listedSupplierProductId, router]);
 
@@ -112,19 +114,19 @@ console.log("SUP DETAIL data", data?.product);
   //     navigate('/dashboard/supplier-list', { replace: true });
   //   }
   // }, [mockData, listedSupplierProductId, navigate]);
-  
-  
 
-const handleOpenModal = (field: string) => {
-  setFields([(fieldConfigurations as any)[field]]);
-  setOpenModal(true);
-};
 
-const handleSave = async (updatedData: any) => {
-  
-};
 
-  
+  const handleOpenModal = (field: string) => {
+    setFields([(fieldConfigurations as any)[field]]);
+    setOpenModal(true);
+  };
+
+  const handleSave = async (updatedData: any) => {
+
+  };
+
+
 
   const subCategoryField = ['Metallic minerals', 'Non-metallic Industrial minerals', 'Marble and Natural Stone', 'Gravel, Sand or Aggregate', 'Coal', 'Gems', 'Others'];
 
@@ -136,7 +138,7 @@ const handleSave = async (updatedData: any) => {
 
   const shippingTermsField = shippingTermsFields;
 
-   
+
 
   // const { supplierProductId, productName, productCategory,
   //   productSubCategory, productType, deliveryPeriod,
@@ -184,7 +186,7 @@ const handleSave = async (updatedData: any) => {
     attachments
   } = supProductsIdData;
 
-// console.log("selected_payments", selected_payments);
+  // console.log("selected_payments", selected_payments);
   const fieldConfigurations = {
     productCategories: {
       id: 'productCategories',
@@ -195,7 +197,7 @@ const handleSave = async (updatedData: any) => {
       productCatData: productCatData || { children: [] },
       subCatData: subCatData || { children: [] }
     },
-  
+
     supplierProductId: {
       id: 'supplierProductId',
       type: 'text',
@@ -425,15 +427,15 @@ const handleSave = async (updatedData: any) => {
     },
 
   };
- 
 
-  
+
+
 
   const ProductImagesArray = Array.isArray(supProductsIdData?.images)
     ? supProductsIdData.images
     : [supProductsIdData?.images];
 
-    const ProductAttachmentArray = Array.isArray(supProductsIdData?.attachments)
+  const ProductAttachmentArray = Array.isArray(supProductsIdData?.attachments)
     ? supProductsIdData.attachments
     : [supProductsIdData?.attachments];
 
@@ -441,10 +443,10 @@ const handleSave = async (updatedData: any) => {
     // { label: 'Product Category', value: product_category, key: 'productCategory' },
     // { label: 'Product sub-category', value: product_sub_category, key: 'productSubCategory' },
     // { label: 'Product main-category', value: product_sub_category, key: 'productMainCategory' },
-    { 
-      label: 'Categories', 
+    {
+      label: 'Categories',
       value: `${currentCategories.main}${currentCategories.product ? ` > ${currentCategories.product}` : ''}${currentCategories.sub ? ` > ${currentCategories.sub}` : ''}`,
-      key: 'productCategories' 
+      key: 'productCategories'
     },
     { label: 'Product Name', value: product_name, key: 'productName' },
     { label: 'Product Detailed Description', value: 'ProductDetailDescription', key: 'ProductDetailDescription' },
@@ -473,7 +475,7 @@ const handleSave = async (updatedData: any) => {
     { label: 'Longitude', value: longitude, key: 'longitude' },
     { label: 'Payment Terms Described', value: paymentsTermsDescribed, key: 'paymentTermsDescribed' },
     { label: 'Shipping Terms Described', value: shippingTermsDescribed, key: 'shippingTermsDescribed' },
-   
+
   ];
 
   if (isLoading) return <div><Loader />.</div>;
@@ -504,7 +506,7 @@ const handleSave = async (updatedData: any) => {
         <div className="p-4 space-y-4 bg-white shadow rounded-lg">
           <div className='flex justify-between items-center py-[6px]'>
             <div>
-              <h2 className='text-[2rem]  font-[700]'>{product_name}</h2>
+              <h2 className='text-[2rem]  font-bold'>{product_name}</h2>
               <p className='pt-[5px] text-[#a8a8a8]'>Posted on {formatDate(createdAt)}</p>
             </div>
           </div>
@@ -517,32 +519,32 @@ const handleSave = async (updatedData: any) => {
             ))}
           </div> */}
 
-         {/* Image Section */}
+          {/* Image Section */}
           <h3 className="font-semibold !text-left">{'Product Images'}</h3>
           <div className="relative flex items-start space-x-2">
             <div className="flex relative overflow-x-auto space-x-2">
               {images?.length > 0 && images?.map((img: any, i: number) => (
-                <div key={i} className="w-40 h-32 o rounded flex-shrink-0"> 
-                  <img src={img.url} 
-                  alt="" 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%',
-                    objectFit: 'cover' 
-                  }} 
-                  className='' />
+                <div key={i} className="w-40 h-32 o rounded flex-shrink-0">
+                  <img src={img.url}
+                    alt=""
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    className='' />
                 </div>
               ))}
               <div >
               </div>
             </div>
             <Button
-              className="absolute right-0 z-10 bg-white rounded-none shadow-md"
+              className="absolute right-0 z-10 rounded-none shadow-md"
               style={{
                 boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-              }} 
+              }}
               onClick={() => handleOpenModal('productImage')}
-              size="sm" 
+              size="sm"
             >
               <MdEdit className="mr-2" />
               Edit Product Images
@@ -555,79 +557,79 @@ const handleSave = async (updatedData: any) => {
             <div className="flex relative overflow-x-auto space-x-2">
               {attachments?.length > 0 && attachments?.map((img: any, i: number) => (
                 <div key={i} className="w-40 h-32 o rounded flex-shrink-0">
-                   {img.url.endsWith('.pdf') ? (
-                      <div 
+                  {img.url.endsWith('.pdf') ? (
+                    <div
                       onClick={() => {
                         const pdfUrl = img.url.replace('/image/upload/', '/raw/upload/');
                         window.open(img.url, '_blank', 'noopener,noreferrer');
                       }}
-                       className="cursor-pointer flex flex-col justify-center items-center h-full w-full bg-[#d2d1d1] text-center"
+                      className="cursor-pointer flex flex-col justify-center items-center h-full w-full bg-[#f5f2f2] text-center"
+                    >
+                      <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 21"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
                       >
-                          <svg 
-                            width="40" 
-                            height="40" 
-                            viewBox="0 0 24 21" 
-                            fill="none" 
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path 
-                              d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" 
-                              stroke="#FF0000" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            />
-                            <path 
-                              d="M14 2V8H20" 
-                              stroke="#FF0000" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            />
-                            <path 
-                              d="M16 13H8" 
-                              stroke="#FF0000" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            />
-                            <path 
-                              d="M16 17H8" 
-                              stroke="#FF0000" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            />
-                            <path 
-                              d="M10 9H9H8" 
-                              stroke="#FF0000" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          <span className="block text-[#FF0000] text-xs mt-1">
-                            PDF File
-                          </span>
-                      </div>
-                    ) : (
-                      <img 
-                        src={img.url} 
-                        alt="" 
-                        style={{ 
-                          width: '100%', 
-                          height: '100%',
-                          objectFit: 'cover' 
-                        }} 
-                      />
-                    )}
+                        <path
+                          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                          stroke="#FF0000"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M14 2V8H20"
+                          stroke="#FF0000"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M16 13H8"
+                          stroke="#FF0000"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M16 17H8"
+                          stroke="#FF0000"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M10 9H9H8"
+                          stroke="#FF0000"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className="block text-[#FF0000] text-xs mt-1">
+                        PDF File
+                      </span>
+                    </div>
+                  ) : (
+                    <img
+                      src={img.url}
+                      alt=""
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  )}
                 </div>
               ))}
               <div >
               </div>
             </div>
             <Button
-              className="absolute right-0 z-10 bg-white rounded-none shadow-md"
+              className="absolute right-0 z-10 rounded-none shadow-md"
               style={{
                 boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
               }}
@@ -641,7 +643,7 @@ const handleSave = async (updatedData: any) => {
 
           <div className="overflow-y-auto max-h-full space-y-4">
             {/* {dynamicFields.map((field) => ( */}
-              {/* <div
+            {/* <div
                 // key={field.key}
                 className={`flex justify-between items-center ${ 'gap-[10px]' }`}
               >
@@ -660,15 +662,15 @@ const handleSave = async (updatedData: any) => {
             {/* ))} */}
           </div>
 
-          <div className="overflow-y-auto max-h-full space-y-4">
+          <div className="overflow-y-auto max-h-full mb-6 space-y-4">
             {dynamicFields.map((field) => (
               <div
                 key={field.key}
                 className={`flex justify-between items-center ${field.fullWidth ? 'gap-[10px]' : ''}`}
               >
                 <div className={`flex flex-col justify-start ${field.fullWidth ? 'w-full max-w-[800px]' : ''}`}>
-                  <h3 className="font-semibold !text-left">{field.label}</h3>
-                  <p className="text-sm max-w-[200px] truncate text-gray-600">{ field.value}</p>
+                  <h3 className="font-semibold text-left!">{field.label}</h3>
+                  <p className="text-sm max-w-[200px] truncate text-gray-600">{field.value}</p>
                 </div>
                 <Button
                   onClick={() => handleOpenModal(field.key)}
@@ -683,43 +685,41 @@ const handleSave = async (updatedData: any) => {
           </div>
 
           {/* Copy & Share Section */}
-          {/* Copy & Share Section */}
-          <div className="flex md:flex-row flex-col gap-[20px] justify-end items-center bg-gray-100 p-2 rounded">
-             <div className='py-[25px] w-full max-w-[300px] border-[2px] border-primary bg-white rounded-[15px] flex items-center justify-between px-4'>
-                <span className="truncate">SYYH89rhfbdu...</span>
-                <button 
-                  onClick={() => {
-                     navigator.clipboard.writeText("SYYH89rhfbdu...");
-                     setCopied(true);
-                     setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="p-1"
-                  title={copied ? 'Copied!' : 'Copy'}
-                >
-                  <MdOutlineContentCopy />
-                </button>
-             </div>
+          {/* <div className="flex md:flex-row flex-col gap-[20px] justify-end items-center bg-gray-100 p-2 rounded">
+            <div className='py-[25px] w-full max-w-[300px] border-[2px] border-primary bg-white rounded-[15px] flex items-center justify-between px-4'>
+              <span className="truncate">SYYH89rhfbdu...</span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText("SYYH89rhfbdu...");
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="p-1"
+                title={copied ? 'Copied!' : 'Copy'}
+              >
+                <MdOutlineContentCopy />
+              </button>
+            </div>
 
-              <div className="relative group">
-                <Button variant='contained' className='w-full max-w-[300px] flex items-center gap-2 text-white'>
-                   <MdShare className='text-[1rem] text-white' /> Share
-                </Button>
-                {/* Simple hover dropdown for share */}
-                <div className="absolute bottom-full mb-2 hidden group-hover:flex bg-white shadow-lg p-2 rounded gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-full"><FaFacebook /></button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full"><FaTwitter /></button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full"><FaLinkedin /></button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full"><FaWhatsapp /></button>
-                </div>
+            <div className="relative group">
+              <Button variant='contained' className='w-full max-w-[300px] flex items-center gap-2 text-white'>
+                <MdShare className='text-[1rem] text-white' /> Share
+              </Button>
+              <div className="absolute bottom-full mb-2 hidden group-hover:flex bg-white shadow-lg p-2 rounded gap-2">
+                <button className="p-2 hover:bg-gray-100 rounded-full"><FaFacebook /></button>
+                <button className="p-2 hover:bg-gray-100 rounded-full"><FaTwitter /></button>
+                <button className="p-2 hover:bg-gray-100 rounded-full"><FaLinkedin /></button>
+                <button className="p-2 hover:bg-gray-100 rounded-full"><FaWhatsapp /></button>
               </div>
-          </div>
+            </div>
+          </div> */}
         </div>
 
         <SupplierUpdateField
           data={supProductsIdData}
           open={openModal}
           onClose={() => setOpenModal(null)}
-           images={mediaImages}
+          images={mediaImages}
           attachments={mediaAttachments}
           fields={fields as any}
           onSave={handleSave}

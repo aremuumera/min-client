@@ -4,18 +4,12 @@ import {
   resetProductState,
   updateSupplierLocationInfo,
 } from '@/redux/features/supplier-profile/supplier_profile_slice';
-import { Button } from '@/components/ui/button';
-import { MenuItem } from '@/components/ui/menu';
-import { Select } from '@/components/ui/select';
-import { TextField } from '@/components/ui/input';
-import { FormControl, FormLabel as InputLabel } from '@/components/ui/form-control';
-import { FormHelperText } from '@/components/ui/input';
-import { CircularProgress } from '@/components/ui/progress';
+import { Button, MenuItem, Select, TextField, FormControl, InputLabel, FormHelperText, CircularProgress, SearchableSelect } from '@/components/ui';
 import { Country, State, IState } from 'country-state-city';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { toast } from '@/components/core/toaster';
 import { RootState } from '@/redux/store';
 import { clearAllFilesFromIndexedDB, getAllFilesFromIndexedDBForServer } from '@/utils/indexDb';
 
@@ -51,6 +45,16 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
   const [createStoreProfile, { isLoading }] = useCreateStoreProfileMutation();
 
+  // Prepare country options
+  const countryOptions = React.useMemo(() =>
+    Country.getAllCountries().map(c => ({ value: c.isoCode, label: c.name })),
+    []);
+
+  // Prepare state options
+  const stateOptions = React.useMemo(() =>
+    states.map(s => ({ value: s.name, label: s.name })),
+    [states]);
+
   useEffect(() => {
     if ((supplierLocationInfo as SupplierLocationInfo)?.selectedCountry) {
       setStates(State.getStatesOfCountry((supplierLocationInfo as SupplierLocationInfo).selectedCountry));
@@ -66,7 +70,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
   const handleCountryChange = (event: any) => {
     const countryCode = event.target.value;
-    const countryName = Country.getAllCountries().find((country) => country.isoCode === countryCode)?.name;
+    const countryName = countryOptions.find((c) => c.value === countryCode)?.label;
 
     dispatch(
       updateSupplierLocationInfo({
@@ -98,6 +102,12 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
     if (!info?.selectedState) newErrors.state = 'State is required.';
 
     setErrors(newErrors); // Set errors
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0] as string;
+      toast.error(firstError);
+    }
+
     return Object.keys(newErrors).length === 0; // Return true if no errors
   };
 
@@ -215,14 +225,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
       console.log('API Response:', response);
       setResponseData(response.data);
-      toast.success('Profile created successfully', {
-        position: 'top-right',
-        duration: 3000,
-        style: {
-          background: '#4CAF50',
-          color: '#fff',
-        },
-      });
+      toast.success('Profile created successfully');
 
       // console.log("API Response:", response);
       dispatch(resetProductState());
@@ -302,41 +305,33 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
           </div>
 
           <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-center justify-center">
-            <FormControl fullWidth error={!!errors.country}>
-              <InputLabel>Country</InputLabel>
-              <Select
+            <div className="w-full">
+              <SearchableSelect
+                label="Country"
+                options={countryOptions}
                 value={supplierLocationInfo?.selectedCountry || ''}
                 onChange={handleCountryChange}
-                className="w-full"
-              >
-                <MenuItem value="">Select</MenuItem>
-                {Country.getAllCountries().map((country) => (
-                  <MenuItem key={country.isoCode} value={country.isoCode}>
-                    {country.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.country && <FormHelperText>{errors.country}</FormHelperText>}
-            </FormControl>
+                placeholder="Select country"
+                searchPlaceholder="Search countries..."
+                errorMessage={errors.country}
+                fullWidth
+              />
+            </div>
 
-            <FormControl fullWidth error={!!errors.state}>
-              <InputLabel>State</InputLabel>
-              <Select
+            <div className="w-full">
+              <SearchableSelect
+                label="State"
+                options={stateOptions}
                 value={supplierLocationInfo?.selectedState || ''}
                 onChange={handleStateChange}
-                disabled={states.length === 0}
-                className="w-full"
-              >
-                <MenuItem value="">Select</MenuItem>
-                {states.map((state) => (
-                  <MenuItem key={state.isoCode} value={state.name}>
-                    {state.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.state && <FormHelperText>{errors.state}</FormHelperText>}
-              <p className="text-[#696969] text-[.75rem]">Kindly select your country before the state</p>
-            </FormControl>
+                placeholder="Select state"
+                searchPlaceholder="Search states..."
+                disabled={!supplierLocationInfo?.selectedCountry || states.length === 0}
+                errorMessage={errors.state}
+                helperText="Kindly select your country before the state"
+                fullWidth
+              />
+            </div>
           </div>
 
           <div className="pt-[20px]">

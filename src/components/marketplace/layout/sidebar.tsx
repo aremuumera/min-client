@@ -57,13 +57,13 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
 
   // Extract params from pathname if useParams doesn't give them (App Router nuances)
   // Or rely on useParams if configured correctly with dynamic segments.
-  // Assuming route is /products/all-mineral-cp/[mainCategoryId]/[mineralCategoryId]/...
+  // Assuming route is /dashboard/products/all-mineral-cp/[mainCategoryId]/[mineralCategoryId]/...
   const mainCategoryId = params?.slug?.[0] || '';
   const mineralCategoryId = params?.slug?.[1] || '';
   const subMineralCategoryId = params?.slug?.[2] || '';
 
   // Or better, let's look at how the page is structured. 
-  // If it's `src/app/products/all-mineral-cp/[[...slug]]/page.tsx`, then slug is an array.
+  // If it's `src/app/dashboard/products/all-mineral-cp/[[...slug]]/page.tsx`, then slug is an array.
 
   const mdUp = useMediaQuery('up', 'md');
   const { showAlert } = useAlert();
@@ -184,7 +184,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   };
 
   const renderRfqCategories = () => (
-    <div className="text-[#03045e] w-full pt-[10px] duration-500">
+    <div className="text-gray-900 w-full pt-[10px] duration-500">
       {real?.map((category) => (
         <div key={category.id}>
           {/* Recursive rendering logic similar to original but adapted for Next.js Links */}
@@ -226,8 +226,8 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
             ) : (
               <Link
                 href={`/dashboard/products/rfq-products/${category.tag}`}
-                className={`block py-[10px] px-[8px] text-[.85rem] font-[500] border-b-[1px] border-b-gray-200
-                  ${pathname?.includes(category.tag || '') ? 'bg-green-50 text-green-600' : ''}`}
+                className={`block py-[10px] px-[8px] text-[.85rem] font-medium border-b border-gray-100 hover:text-green-600 transition-colors
+                  ${pathname?.includes(category.tag || '') ? 'bg-green-50 text-green-600 rounded-md' : 'text-gray-600'}`}
                 onClick={() => onClose()}
               >
                 {category.name}
@@ -240,7 +240,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   );
 
   return (
-    <div className={`h-full bg-white flex flex-col ${isMobile ? 'w-full' : 'w-64 border-r border-gray-100'}`}>
+    <div className={`h-full bg-white flex flex-col ${isMobile ? 'w-full' : 'w-72 border-r border-gray-100 shadow-sm'}`}>
       {isMobile && (
         <div className="flex justify-end p-2 border-b">
           <button onClick={onClose}><X size={24} /></button>
@@ -260,7 +260,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
         <div className="h-px bg-gray-200 mb-2"></div>
 
         {/* Categories List */}
-        <div className="text-[#03045e]">
+        <div className="text-gray-900">
           {rfqCheck ? renderRfqCategories() : real?.map((category) => (
             <div key={category.id} className="mb-1">
               <Link

@@ -78,13 +78,14 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                         <div className={`group transition-all duration-300 hover:shadow-md ${isGridView ? 'flex w-full max-w-[300px] flex-col min-h-[530px] flex-grow' : 'flex flex-row w-full justify-around gap-[30px]'} shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full`}>
                             {/* images  */}
                             <div>
-                                <div className={`${isGridView ? 'max-w-[300px] w-full' : 'max-w-[430px] w-full'} widget_image_container relative h-[230px] overflow-hidden rounded-xl`}>
+                                <div className={`${isGridView ? 'max-w-[300px] w-full aspect-square md:h-[230px]' : 'max-w-[430px] w-full aspect-[4/3] md:h-[280px]'} widget_image_container relative h-auto overflow-hidden rounded-xl`}>
                                     <div className="absolute inset-0 z-0">
                                         {/* Image Carousel */}
                                         <Link href={productCardRoute} className="w-full h-full flex" style={imageContainerStyle}>
                                             {products?.images?.map((j: string, i: number) => (
                                                 <div
-                                                    className={`relative w-full h-full rounded-t-xl overflow-hidden shrink-0`}
+                                                    className={`relative h-full rounded-t-xl overflow-hidden shrink-0`}
+                                                    style={{ width: `${100 / (products?.images?.length || 1)}%` }}
                                                     key={i}
                                                 >
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -183,7 +184,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                 <div className="pt-[15px] flex items-center gap-[10px] border-t border-gray-100 mt-2">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     {country?.flagImage && <img src={country.flagImage} alt='Country' className='w-5 h-auto object-contain' />}
-                                    <Link href={`/business/${storeProfile?.company_name}`} className='text-[13px] text-gray-600 hover:text-green-600 font-medium hover:underline truncate' >
+                                    <Link href={`/dashboard/business/${storeProfile?.company_name}`} className='text-[13px] text-gray-600 hover:text-green-600 font-medium hover:underline truncate' >
                                         {storeProfile?.company_name}
                                     </Link>
                                 </div>

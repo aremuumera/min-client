@@ -55,11 +55,11 @@ const AllRfqsView = ({ mainCategoryId, mineralCategoryId, subMineralCategoryId }
     );
 
     return (
-        <div ref={scrollRef} className="px-4 py-8">
+        <div ref={scrollRef} className="">
             <h5 className="font-bold mb-6 text-xl">
                 All RFQ
             </h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {isLoading ? (
                     <AllRfqsSkeleton count={8} />
                 ) : data?.data?.length > 0 ? (

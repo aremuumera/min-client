@@ -21,14 +21,7 @@ import {
 import {
   useAppDispatch,
   useAppSelector,
-  useAppStore,
 } from '@/redux/hooks';
-import {
-  deleteFileByNameFromIndexedDB,
-  getAllFilesFromIndexedDBForServer,
-  logAllDataFromIndexedDB,
-  storeFileInIndexedDB,
-} from '@/utils/indexDb';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,6 +50,10 @@ interface SupplierProductDetailsProps {
   setActiveStep: (step: number) => void;
   activeStep: number;
   handleBack: () => void;
+  productImages: File[];
+  setProductImages: React.Dispatch<React.SetStateAction<File[]>>;
+  productAttachments: File[];
+  setProductAttachments: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 const steps = ['Create Product', 'Product Location', 'Payment terms', 'Confirm Product Information'];
@@ -67,9 +64,12 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
   setActiveStep,
   activeStep,
   handleBack,
+  productImages,
+  setProductImages,
+  productAttachments,
+  setProductAttachments,
 }) => {
   const dispatch = useAppDispatch();
-  const store = useAppStore();
   // const [descriptionFields, setDescriptionFields] = useState([{ header: "", description: "" }]);
   const [openPreview, setOpenPreview] = useState(false);
   const [uploadedFileForServer, setUploadedFileForServer] = useState<any[]>([]);
@@ -119,50 +119,48 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
     name: string,
     tag: string = ''
   ) => {
-    setSelectedCategories((prev) => {
-      const newState = { ...prev };
+    // 1. Compute the new state locally first
+    const newState = { ...selectedCategories };
 
-      // Reset downstream selections when upstream changes
-      if (level === 'mainCategory') {
-        newState.productCategory = { id: '', name: '', tag: '' };
-        newState.subCategory = { id: '', name: '', tag: '' };
-      } else if (level === 'productCategory') {
-        newState.subCategory = { id: '', name: '', tag: '' };
-      }
+    // Reset downstream selections when upstream changes
+    if (level === 'mainCategory') {
+      newState.productCategory = { id: '', name: '', tag: '' };
+      newState.subCategory = { id: '', name: '', tag: '' };
+    } else if (level === 'productCategory') {
+      newState.subCategory = { id: '', name: '', tag: '' };
+    }
 
-      // Update the selected category
-      (newState as any)[level] = {
-        id: value,
-        name: name,
-        tag: tag,
-      };
+    // Update the selected category
+    (newState as any)[level] = {
+      id: value,
+      name: name,
+      tag: tag,
+    };
 
-      let finalCategoryTag = '';
-      if (newState.subCategory.tag) {
-        finalCategoryTag = newState.subCategory.tag;
-      } else if (newState.productCategory.tag) {
-        finalCategoryTag = newState.productCategory.tag;
-      } else if (newState.mainCategory.tag) {
-        finalCategoryTag = newState.mainCategory.tag;
-      }
+    let finalCategoryTag = '';
+    if (newState.subCategory.tag) {
+      finalCategoryTag = newState.subCategory.tag;
+    } else if (newState.productCategory.tag) {
+      finalCategoryTag = newState.productCategory.tag;
+    } else if (newState.mainCategory.tag) {
+      finalCategoryTag = newState.mainCategory.tag;
+    }
 
-      // Update the form data
-      // Prepare the form data update
-      const formDataUpdate: any = {
-        productMainCategory: newState.mainCategory.name,
-        productCategory: newState.productCategory.name,
-        categoryTag: finalCategoryTag,
-      };
+    // 2. Prepare the form data update
+    const formDataUpdate: any = {
+      productMainCategory: newState.mainCategory.name,
+      productCategory: newState.productCategory.name,
+      categoryTag: finalCategoryTag,
+    };
 
-      // Only include productSubCategory if it exists
-      if (newState.subCategory.name || newState.subCategory.id !== '') {
-        formDataUpdate.productSubCategory = newState.subCategory.name;
-      }
+    // Only include productSubCategory if it exists
+    if (newState.subCategory.name || newState.subCategory.id !== '') {
+      formDataUpdate.productSubCategory = newState.subCategory.name;
+    }
 
-      // Update the form data
-      dispatch(updateProductDetailsFormData(formDataUpdate));
-      return newState;
-    });
+    // 3. Perform side effects (dispatch and state update)
+    setSelectedCategories(newState);
+    dispatch(updateProductDetailsFormData(formDataUpdate));
   };
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
@@ -187,7 +185,8 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
   };
 
   // Handle adding new header-description fields
-  const handleAddDescriptionField = () => {
+  const handleAddDescriptionField = (e: React.MouseEvent) => {
+    e.preventDefault();
     // setDescriptionFields([...descriptionFields, { header: "", description: "" }]);
     dispatch(addDescriptionField());
   };
@@ -214,29 +213,23 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             ...prevErrors,
             productImages: 'File size must not exceed 5MB',
           }));
-          toast.error(`${file.name} exceeds 5MB limit and won't be uploaded`, {
-            position: 'top-right',
-            style: {
-              background: '#f44336',
-              color: '#fff',
-            },
+          toast.error(`${file.name} exceeds 5MB limit`, {
+            style: { background: '#f44336', color: '#fff' },
           });
           return false;
         }
-        if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+        if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
           setErrors((prevErrors) => ({
             ...prevErrors,
             productImages: 'Supported formats: PNG, JPEG, WEBP',
           }));
-          toast.error(`${file.name} has unsupported format`, {
-            duration: 3000,
-          });
+          toast.error(`${file.name} has unsupported format`);
           return false;
         }
         return true;
       });
 
-      if (validFiles.length + uploadedFiles.length < 5) {
+      if (validFiles.length + productImages.length < 5) {
         setErrors((prevErrors) => ({
           ...prevErrors,
           productImages: 'Minimum of 5 images is required',
@@ -244,30 +237,30 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       } else {
         setErrors((prevErrors) => ({ ...prevErrors, productImages: '' }));
       }
-      const currentImages = store.getState().product.uploadedFiles;
-      storeFileInIndexedDB(validFiles, 'ProductImages')
-        .then((result) => {
-          console.log('products Images storage:', result);
-          dispatch(setUploadedFiles([...currentImages, ...result]));
-        })
-        .catch((error) => {
-          console.error('Error storing product files:', error);
-        });
+
+      // Update parent state (Raw Files)
+      setProductImages((prev) => [...prev, ...validFiles]);
+
+      // Update Redux (Serializable Metadata for Preview)
+      const newMetaData = validFiles.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        url: URL.createObjectURL(file)
+      }));
+      dispatch(setUploadedFiles([...uploadedFiles, ...newMetaData]));
     }
   };
   // this is the delete section for file and attachment
   const handleDeleteFile = (index: number) => {
     const fileName = uploadedFiles[index]?.name;
     if (fileName) {
+      // Clean up Blob URL to prevent memory leaks
+      if (uploadedFiles[index]?.url) {
+        URL.revokeObjectURL(uploadedFiles[index].url);
+      }
       dispatch(deleteUploadedFile(fileName));
-      deleteFileByNameFromIndexedDB('ProductImages', fileName)
-        .then((result) => {
-          console.log(`ProductImages for ${fileName} deleted`, result);
-          setUploadedFileForServer((prevFiles) => prevFiles.filter((_, i) => i !== index));
-        })
-        .catch((error) => {
-          console.error(`Error deleting ProductImages for ${fileName}`, error);
-        });
+      setProductImages((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -281,7 +274,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
         if (file.size > 20 * 1024 * 1024) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            attachment: 'File size must not exceed 5MB',
+            attachment: 'File size must not exceed 20MB',
           }));
           return false;
         }
@@ -295,24 +288,17 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
         return true;
       });
 
-      if (validFiles.length + uploadedFiles.length < 5) {
-        setErrors((prevErrors) => ({
-          ...prevErrors,
-          productImages: 'Minimum of 5 images is required',
-        }));
-      } else {
-        setErrors((prevErrors) => ({ ...prevErrors, productImages: '' }));
-      }
+      // Update parent state (Raw Files)
+      setProductAttachments((prev) => [...prev, ...validFiles]);
 
-      const currentImages = store.getState().product.uploadedAttachment;
-      storeFileInIndexedDB(validFiles, 'ProductAttachment')
-        .then((result) => {
-          console.log('products Attachment storage:', result);
-          dispatch(setUploadedAttachment([...currentImages, ...result]));
-        })
-        .catch((error) => {
-          console.error('Error storing product files:', error);
-        });
+      // Update Redux (Serializable Metadata for Preview)
+      const newMetaData = validFiles.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        url: URL.createObjectURL(file)
+      }));
+      dispatch(setUploadedAttachment([...uploadedAttachment, ...newMetaData]));
       setErrors((prevErrors) => ({ ...prevErrors, attachment: '' }));
     }
   };
@@ -321,15 +307,11 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
   const handleDeleteAttachment = (index: number) => {
     const fileName = uploadedAttachment[index]?.name;
     if (fileName) {
+      if (uploadedAttachment[index]?.url) {
+        URL.revokeObjectURL(uploadedAttachment[index].url);
+      }
       dispatch(deleteUploadedAttachment(fileName));
-      deleteFileByNameFromIndexedDB('ProductAttachment', fileName)
-        .then((result) => {
-          console.log(`ProductAttachment for ${fileName} deleted`, result);
-          setUploadedAttachmentForServer((prevFiles) => prevFiles.filter((_, i) => i !== index));
-        })
-        .catch((error) => {
-          console.error(`Error deleting ProductAttachment for ${fileName}`, error);
-        });
+      setProductAttachments((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -435,6 +417,11 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
     setErrors(newErrors as Record<string, string>);
 
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0] as string;
+      toast.error(firstError);
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -446,14 +433,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
     if (uploadedFiles.length < 5) {
       newErrors.productImages = 'Minimum of 5 images is required';
       isValid = false;
-      toast.error('Minimum of 5 product images is required', {
-        position: 'top-right',
-        style: {
-          background: '#f44336',
-          color: '#fff',
-        },
-        duration: 3000,
-      });
+      toast.error('Minimum of 5 product images is required');
     }
 
     // Check individual image sizes
@@ -462,14 +442,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
         // 5MB limit
         newErrors.productImages = 'One or more images exceed 5MB limit';
         isValid = false;
-        toast.error(`${file.name} exceeds 5MB limit`, {
-          position: 'top-right',
-          style: {
-            background: '#f44336',
-            color: '#fff',
-          },
-          duration: 3000,
-        });
+        toast.error(`${file.name} exceeds 5MB limit`);
       }
     });
 
@@ -479,10 +452,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
         // 5MB limit
         newErrors.attachments = 'One or more attachments exceed 20MB limit';
         isValid = false;
-        toast.error(`${file.name} exceeds 20MB limit`, {
-          position: 'top-right',
-          duration: 3000,
-        });
+        toast.error(`${file.name} exceeds 20MB limit`);
       }
     });
 
@@ -503,7 +473,6 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       }
 
       if (!validateFilesBeforeSubmit()) {
-        console.error('File validation failed');
         return;
       }
 
@@ -522,18 +491,17 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
       formData.append('step', '1');
 
-      // Retrieve files from IndexedDB and append to FormData
-      const [imageFiles, attachmentFiles] = await Promise.all([
-        getAllFilesFromIndexedDBForServer('ProductImages'),
-        getAllFilesFromIndexedDBForServer('ProductAttachment'),
-      ]);
+      // Add raw files to FormData
+      if (productImages && productImages.length > 0) {
+        productImages.forEach((file) => {
+          formData.append('productImages', file);
+        });
+      }
 
-      setUploadedFileForServer(imageFiles as any);
-      setUploadedAttachmentForServer(attachmentFiles as any);
-
-      // Log FormData contents for debugging
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+      if (productAttachments && productAttachments.length > 0) {
+        productAttachments.forEach((file) => {
+          formData.append('productAttachments', file);
+        });
       }
 
       // Send the data to API
@@ -582,23 +550,23 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
           <div>
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <TextField
-                name="productName"
-                label="Product name"
+                label="Product Name"
                 fullWidth
+                name="productName"
                 margin="normal"
                 placeholder="Enter product name"
-                value={productDetailsFormData?.productName}
+                value={productDetailsFormData?.productName || ''}
                 onChange={handleInputChange}
                 error={!!errors.productName}
                 helperText={errors.productName}
               />
               <TextField
-                label="Del Period"
+                label="Delivery Period"
                 fullWidth
-                margin="normal"
                 name="deliveryPeriod"
-                placeholder="e.g. 2 months, 3weeks, 4months"
-                value={productDetailsFormData?.deliveryPeriod}
+                margin="normal"
+                placeholder="Delivery Period"
+                value={productDetailsFormData?.deliveryPeriod || ''}
                 onChange={handleInputChange}
                 error={!!errors.deliveryPeriod}
                 helperText={errors.deliveryPeriod}
@@ -608,46 +576,46 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             {/*  price section */}
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <FormControl fullWidth error={!!errors.unitCurrency}>
-                <InputLabel>Unit Currency</InputLabel>
                 <Select
-                  value={productDetailsFormData?.unitCurrency}
+                  name="unitCurrency"
+                  value={productDetailsFormData?.unitCurrency || ''}
                   onChange={handleInputChange}
                   label="Unit Currency"
                   MenuProps={{
                     PaperProps: {
                       style: {
-                        maxHeight: 250, // Adjust this value for height
+                        maxHeight: 250,
                       },
                     },
                   }}
                 >
-                  {/* <MenuItem value=""> */}
-                  <option>Select Unit Price</option>
-                  {/* </MenuItem> */}
+                  <MenuItem value="">
+                    <em>Select Currency</em>
+                  </MenuItem>
                   <MenuItem value="NGN">NGN</MenuItem>
-                  {/* <MenuItem value="USD">USD</MenuItem> */}
+                  <MenuItem value="USD">USD</MenuItem>
                 </Select>
               </FormControl>
 
               <TextField
-                name="realPrice"
-                label="Real price"
+                label="Real Price"
                 fullWidth
+                name="realPrice"
                 margin="normal"
                 placeholder="Enter amount"
-                value={productDetailsFormData?.realPrice}
+                value={productDetailsFormData?.realPrice || ''}
                 onChange={handleInputChange}
                 error={!!errors.realPrice}
                 helperText={errors.realPrice}
               />
               <div className="w-full">
                 <TextField
-                  name="prevPrice"
-                  label="Prev price"
+                  label="Prev Price"
                   fullWidth
+                  name="prevPrice"
                   margin="normal"
                   placeholder="Enter amount"
-                  value={productDetailsFormData?.prevPrice}
+                  value={productDetailsFormData?.prevPrice || ''}
                   onChange={handleInputChange}
                   error={!!errors.prevPrice}
                   helperText={errors.prevPrice}
@@ -664,7 +632,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 fullWidth
                 margin="normal"
                 placeholder="Enter composition"
-                value={productDetailsFormData?.composition}
+                value={productDetailsFormData?.composition || ''}
                 onChange={handleInputChange}
                 error={!!errors.composition}
                 helperText={errors.composition}
@@ -676,7 +644,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 fullWidth
                 margin="normal"
                 placeholder="Enter density"
-                value={productDetailsFormData?.density}
+                value={productDetailsFormData?.density || ''}
                 onChange={handleInputChange}
                 error={!!errors.density}
                 helperText={errors.density}
@@ -693,7 +661,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 name="hardness"
                 margin="normal"
                 placeholder="Enter Hardness"
-                value={productDetailsFormData?.hardness}
+                value={productDetailsFormData?.hardness || ''}
                 onChange={handleInputChange}
                 error={!!errors.hardness}
                 helperText={errors.hardness}
@@ -705,7 +673,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                   margin="normal"
                   name="color"
                   placeholder="Enter Color"
-                  value={productDetailsFormData?.color}
+                  value={productDetailsFormData?.color || ''}
                   onChange={handleInputChange}
                   error={!!errors.color}
                   helperText={errors.color}
@@ -743,7 +711,6 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             {/* all category selection */}
             <div className="flex flex-col md:flex-row gap-[15px] pt-4 items-center justify-center">
               <FormControl fullWidth error={!!errors.productMainCategory}>
-                <InputLabel>Main Product Category</InputLabel>
                 <Select
                   value={selectedCategories.mainCategory.id}
                   onChange={(e) => {
@@ -775,7 +742,6 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
               {selectedCategories.mainCategory.id &&
                 mainCatData?.find((cat: any) => cat.original_id === selectedCategories.mainCategory.id)?.submenu && (
                   <FormControl fullWidth error={!!errors.productCategory}>
-                    <InputLabel>Product Category</InputLabel>
                     <Select
                       value={selectedCategories.productCategory.id}
                       onChange={(e) => {
@@ -812,7 +778,6 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 productCatData?.children?.find((cat: any) => cat.original_id === selectedCategories.productCategory.id)
                   ?.submenu && (
                   <FormControl fullWidth error={!!errors.productSubCategory}>
-                    <InputLabel>Product Sub Category</InputLabel>
                     <Select
                       value={selectedCategories.subCategory.id}
                       onChange={(e) => {
@@ -847,11 +812,11 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             {/* Measure */}
             <div className="flex flex-col pt-[10px] md:flex-row gap-[15px] items-center justify-center">
               <FormControl fullWidth error={!!errors.measure}>
-                <InputLabel>Measure</InputLabel>
                 <Select
                   name="measure"
                   value={productDetailsFormData?.measure || ''}
                   onChange={handleInputChange}
+                  label="Measure"
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -877,7 +842,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                   margin="normal"
                   name="quantity"
                   placeholder="Enter your M.O.Q value and select the measure unit"
-                  value={productDetailsFormData?.quantity}
+                  value={productDetailsFormData?.quantity || ''}
                   onChange={handleInputChange}
                   error={!!errors.quantity}
                   helperText={errors.quantity}
@@ -894,7 +859,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 margin="normal"
                 name="productHeaderDescription"
                 placeholder="Enter a brief, engaging product description to be displayed at the top of the page..."
-                value={productDetailsFormData?.productHeaderDescription}
+                value={productDetailsFormData?.productHeaderDescription || ''}
                 onChange={handleInputChange}
                 error={!!errors.productHeaderDescription}
                 helperText={
@@ -908,8 +873,8 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
             {/* Description Fields */}
             <div className="pt-[20px]">
-              <h2 className="font-[500]  pb-3 text-[1rem]">Product Detail Description</h2>
-              <div className="space-y-2 !relative">
+              <h2 className="font-medium pb-3 text-[1rem]">Product Detail Description</h2>
+              <div className="space-y-2 relative!">
                 {descriptionFields.map((field: any, index: number) => (
                   <div key={index}>
                     {index === 0 ? (
@@ -935,7 +900,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                         error={!!errors[`header${index}`]}
                         helperText={errors[`header${index}`]}
                       />
-                      <Box sx={{ mt: '8px', '& .tiptap-container': { height: '200px' } }}>
+                      <Box sx={{ mt: '8px' }}>
                         {/* <TextEditor
                           name="description"
                           placeholder="Describe your product here..."
@@ -943,7 +908,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                            onUpdate={({ editor }) => handleDescriptionChange(index, "description", editor.getText())}
                         /> */}
                         <TextField
-                          label="Product Header Description"
+                          label="Section Description"
                           fullWidth
                           multiline
                           rows={5}
@@ -967,10 +932,10 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
             {/* Preview Modal Button */}
             <div className="py-[20px] flex gap-4 w-full">
-              <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary">
+              <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type="button">
                 Preview
               </Button>
-              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" sx={{}} color="primary">
+              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" sx={{}} color="primary" type="button">
                 Add Description Field
               </Button>
             </div>
@@ -991,7 +956,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                     </Box>
                   ))}
                 </div>
-                <Button variant="contained" sx={{ mt: '26px' }} onClick={handlePreviewClose} color="secondary">
+                <Button variant="contained" sx={{ mt: '26px' }} onClick={handlePreviewClose} color="secondary" type="button">
                   Close Preview
                 </Button>
               </Box>
@@ -1000,7 +965,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             {/*  this is for Product Images */}
             <div>
               <div className="py-[20px]">
-                <h2 className="font-[500] text-[1.4rem]">Upload Product Images</h2>
+                <h2 className="font-medium text-[1.4rem]">Upload Product Images</h2>
                 <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images is required to list products</p>
               </div>
               <Box
@@ -1071,7 +1036,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             {/*  this is for Attachment */}
             <div>
               <div className="py-[20px]">
-                <h2 className="font-[500] text-[1.4rem]">Upload Attachment</h2>
+                <h2 className="font-medium text-[1.4rem]">Upload Attachment</h2>
                 <p className="text-[#7b7b7b] text-[.9rem] ">
                   Attachment could be document about the product, details, or any other relevant information about the
                   product
@@ -1162,7 +1127,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                   <CircularProgress
                     size={24}
                     color="inherit"
-                    className="text-white" // Makes spinner visible on primary button
+                    className="text-white"
                   />
                 ) : activeStep === steps.length - 1 ? (
                   'Finish'

@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 
 import RfqDetailDescription from './rfq-details/rfq-detail-description';
 import RelatedRfqs from './rfq-details/related-rfqs';
+import { ViewModeProvider } from '@/contexts/view-product-mode';
 
 const RfqDetailsView = ({ id }: { id: string }) => {
   const router = useRouter();
@@ -28,9 +29,11 @@ const RfqDetailsView = ({ id }: { id: string }) => {
   if (isLoading) {
     // Temporary skeleton approach
     return (
-      <div className="max-w-[1280px] mx-auto px-4 py-8 mt-[100px]">
-        <ProductSkeleton count={1} />
-      </div>
+      <ViewModeProvider>
+        <div className="max-w-[1280px] mx-auto px-4 py-8 mt-[100px]">
+          <ProductSkeleton count={1} />
+        </div>
+      </ViewModeProvider>
     );
   }
 
@@ -49,22 +52,24 @@ const RfqDetailsView = ({ id }: { id: string }) => {
   }
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen">
-      <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8 ">
-        <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
-        </div>
+    <ViewModeProvider>
+      <div className="w-full bg-gray-50 min-h-screen">
+        <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8 ">
+          <div className="mb-6">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
+          </div>
 
-        <RfqDetailDescription rfqProduct={rfqProduct} />
-        <RelatedRfqs rfqProduct={rfqProduct} />
+          <RfqDetailDescription rfqProduct={rfqProduct} />
+          <RelatedRfqs rfqProduct={rfqProduct} />
+        </div>
       </div>
-    </div>
+    </ViewModeProvider>
   );
 };
 

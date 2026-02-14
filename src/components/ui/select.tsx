@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/utils/helper';
+import { Portal } from './portal';
 
 export interface SelectOption {
   value: string;
@@ -118,7 +119,11 @@ function Select({
   // Close on click outside
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const isInsideContainer = containerRef.current?.contains(target);
+      const isInsideDropdown = listRef.current?.contains(target);
+      // Close if the click is outside both the container and the portal dropdown
+      if (!isInsideContainer && !isInsideDropdown) {
         setIsOpen(false);
       }
     };
@@ -211,49 +216,58 @@ function Select({
       </button>
 
       {/* Dropdown */}
+      {/* Dropdown */}
       {isOpen && (
-        <ul
-          ref={listRef}
-          className={cn(
-            'absolute z-50 mt-1 w-full overflow-auto rounded-lg border border-neutral-200',
-            'bg-white shadow-lg',
-            'max-h-60'
-          )}
-        >
-          {derivedOptions.map((option, index) => {
-            if (!option.isSelectable) {
-              return <div key={index}>{option.label}</div>;
-            }
+        <Portal>
+          <ul
+            ref={listRef}
+            style={{
+              position: 'fixed',
+              top: `${containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 0}px`,
+              left: `${containerRef.current ? containerRef.current.getBoundingClientRect().left : 0}px`,
+              width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
+            }}
+            className={cn(
+              'z-[9999] overflow-auto rounded-lg border border-neutral-200',
+              'bg-white shadow-lg',
+              'max-h-[250px]'
+            )}
+          >
+            {derivedOptions.map((option, index) => {
+              if (!option.isSelectable) {
+                return <div key={index}>{option.label}</div>;
+              }
 
-            return (
-              <li
-                key={option.value || index}
-                onClick={() => {
-                  if (!option.disabled) {
-                    onChange?.({ target: { value: option.value, name } });
-                    setIsOpen(false);
-                  }
-                }}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                className={cn(
-                  'flex items-center justify-between px-3 py-3 min-h-[44px] cursor-pointer transition-colors',
-                  option.disabled
-                    ? 'opacity-50 cursor-not-allowed'
-                    : highlightedIndex === index
-                      ? 'bg-primary-50'
-                      : 'hover:bg-neutral-50',
-                  option.value === value && 'text-primary-500',
-                  option.className
-                )}
-              >
-                <div className="flex-1 truncate">{option.label}</div>
-                {option.value === value && (
-                  <Check className="h-4 w-4 text-primary-500" />
-                )}
-              </li>
-            );
-          })}
-        </ul>
+              return (
+                <li
+                  key={option.value || index}
+                  onClick={() => {
+                    if (!option.disabled) {
+                      onChange?.({ target: { value: option.value, name } });
+                      setIsOpen(false);
+                    }
+                  }}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  className={cn(
+                    'flex items-center justify-between px-3 py-3 min-h-[44px] cursor-pointer transition-colors',
+                    option.disabled
+                      ? 'opacity-50 cursor-not-allowed'
+                      : highlightedIndex === index
+                        ? 'bg-primary-50'
+                        : 'hover:bg-neutral-50',
+                    option.value === value && 'text-primary-500',
+                    option.className
+                  )}
+                >
+                  <div className="flex-1 truncate">{option.label}</div>
+                  {option.value === value && (
+                    <Check className="h-4 w-4 text-primary-500" />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </Portal>
       )}
 
       {/* Helper/Error text */}

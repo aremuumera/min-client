@@ -7,6 +7,8 @@ import { AlertProvider } from './alert-provider';
 import { SettingsProvider } from './settings-provider';
 import { ThemeProvider } from './theme-provider';
 
+import { Toaster } from '@/components/core/toaster';
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <StoreProvider>
@@ -14,6 +16,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <SettingsProvider>
           <AlertProvider>
             {children}
+            <Toaster
+              position="top-right"
+              richColors
+              closeButton
+              toastOptions={{
+                style: {
+                  borderRadius: '12px',
+                },
+              }}
+            />
           </AlertProvider>
         </SettingsProvider>
       </ThemeProvider>

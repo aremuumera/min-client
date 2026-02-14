@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useValidateProductStepMutation } from '@/redux/features/supplier-products/products_api';
 import { setServerReadyData, updateProductLocation } from '@/redux/features/supplier-products/products_slice';
-import { Button } from '@/components/ui/button';
-import { TextField } from '@/components/ui/input';
+import { Button, TextField, SearchableSelect } from '@/components/ui';
 import { Country, State } from 'country-state-city';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'sonner';
+import { toast } from '@/components/core/toaster';
 
 const steps = ['Create Product', 'Product Location', 'Payment Terms', 'Confirm Product Information'];
 
@@ -18,10 +17,20 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
 
+  // Prepare country options
+  const countryOptions = useMemo(() =>
+    Country.getAllCountries().map(c => ({ value: c.isoCode, label: c.name })),
+    []);
+
+  // Prepare state options
+  const stateOptions = useMemo(() =>
+    states.map((s: any) => ({ value: s.name, label: s.name })),
+    [states]);
+
   // Handle country change
-  const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCountryChange = (event: any) => {
     const countryCode = event.target.value;
-    const countryName = Country.getAllCountries().find((country) => country.isoCode === countryCode)?.name;
+    const countryName = countryOptions.find((c) => c.value === countryCode)?.label;
 
     dispatch(
       updateProductLocation({
@@ -36,7 +45,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
   };
 
   // Handle state change
-  const handleStateChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStateChange = (event: any) => {
     dispatch(updateProductLocation({ selectedState: event.target.value }));
     setErrors((prevErrors: any) => ({ ...prevErrors, state: '' }));
   };
@@ -88,6 +97,12 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
     }
 
     setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0] as string;
+      toast.error(firstError);
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -119,14 +134,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
 
         console.log('Step 2 validation response:', response);
 
-        toast.success(`${response?.message || 'Product location submitted successfully!'}`, {
-          position: 'top-right',
-          duration: 3000,
-          style: {
-            background: '#4CAF50',
-            color: '#fff',
-          },
-        });
+        toast.success(`${response?.message || 'Product location submitted successfully!'}`);
 
         const validatedData = response?.validatedData;
         dispatch(setServerReadyData(validatedData));
@@ -139,26 +147,12 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
             setErrors({
               serverError: response?.error || response?.message,
             });
-            toast.error(`${response?.error || 'Failed to submit product details. Please try again.'}`, {
-              duration: 3000,
-              position: 'top-right',
-              style: {
-                background: '#f44336',
-                color: '#fff',
-              },
-            });
+            toast.error(`${response?.error || 'Failed to submit product details. Please try again.'}`);
           }
         }
       } catch (error: any) {
         console.error('Error validating step 2:', error);
-        toast.error(`${error?.data?.error || 'Failed to submit product details. Please try again.'}`, {
-          duration: 3000,
-          position: 'top-right',
-          style: {
-            background: '#f44336',
-            color: '#fff',
-          },
-        });
+        toast.error(`${error?.data?.error || 'Failed to submit product details. Please try again.'}`);
         setErrors({
           serverError: error.response?.data?.message || 'Error submitting product location',
         });
@@ -173,39 +167,31 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
           <div>
             <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-start justify-center">
               <div className="w-full flex flex-col gap-1">
-                <label className="text-sm font-medium">Country</label>
-                <select
-                  className="w-full p-2 border rounded-md"
+                <SearchableSelect
+                  label="Country"
+                  options={countryOptions}
                   value={productLocation?.selectedCountry || ''}
                   onChange={handleCountryChange}
-                >
-                  <option value="">Select</option>
-                  {Country.getAllCountries().map((country) => (
-                    <option key={country.isoCode} value={country.isoCode}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.country && <span className="text-red-500 text-xs">{errors.country}</span>}
+                  placeholder="Select country"
+                  searchPlaceholder="Search countries..."
+                  error={!!errors.country}
+                  errorMessage={errors.country}
+                />
               </div>
 
               <div className="w-full flex flex-col gap-1">
-                <label className="text-sm font-medium">State</label>
-                <select
-                  className="w-full p-2 border rounded-md"
+                <SearchableSelect
+                  label="State"
+                  options={stateOptions}
                   value={productLocation?.selectedState || ''}
                   onChange={handleStateChange}
-                  disabled={states.length === 0}
-                >
-                  <option value="">Select</option>
-                  {states.map((state) => (
-                    <option key={state.isoCode} value={state.name}>
-                      {state.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.state && <span className="text-red-500 text-xs">{errors.state}</span>}
-                <p className="text-[#696969] text-[.75rem]">Kindly select your country before the state</p>
+                  placeholder="Select state"
+                  searchPlaceholder="Search states..."
+                  disabled={!productLocation?.selectedCountry || states.length === 0}
+                  error={!!errors.state}
+                  errorMessage={errors.state}
+                  helperText="Kindly select your country before the state"
+                />
               </div>
             </div>
 
@@ -217,6 +203,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
                   name="zipCode"
                   value={productLocation?.zipCode || ''}
                   onChange={handleInputChange}
+                  error={!!errors.zipCode}
                 />
                 {errors.zipCode && <span className="text-red-500 text-xs">{errors.zipCode}</span>}
               </div>

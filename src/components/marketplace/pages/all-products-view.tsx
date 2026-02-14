@@ -135,7 +135,7 @@ const AllProductsView = () => {
         ) : productsToShow.length > 0 ? (
           <div
             className={`grid ${isGridView
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6'
               : 'grid-cols-1 gap-4'
               } mt-[20px]`}
           >

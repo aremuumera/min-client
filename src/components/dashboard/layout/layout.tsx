@@ -7,6 +7,7 @@ import { SideNav } from './side-nav';
 import { dashboardConfig } from '@/config/dashboard-config';
 import { useAppSelector } from '@/redux';
 import { cn } from '@/utils/helper';
+import { usePathname } from '@/hooks/use-pathname';
 
 interface VerticalLayoutProps {
     children: React.ReactNode;
@@ -16,6 +17,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const { user, appData } = useAppSelector((state) => state.auth);
     const [isCollapsed, setIsCollapsed] = React.useState(false);
     const [isMounted, setIsMounted] = React.useState(false);
+    const pathname = usePathname()
 
     React.useEffect(() => {
         setIsMounted(true);
@@ -77,7 +79,10 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                 <MainNav items={finalItems} isCollapsed={isCollapsed} />
 
                 <main className="grow w-full">
-                    <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
+                    <div className={cn(
+                        "p-6 lg:p-10 max-w-[1600px] mx-auto",
+                        pathname?.includes('/dashboard/products') || pathname?.includes('/dashboard/rfqs') ? "p-0 max-w-none" : ""
+                    )}>
                         {children}
                     </div>
                 </main>

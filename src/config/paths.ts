@@ -15,8 +15,7 @@ export const paths = {
     becomeASupplier: '/become-a-supplier',
     postYouRfq: '/post-your-rfq',
     rfq: (rfqId: string | number) => `/rfq/${rfqId}`,
-    product: '/product',
-    products: '/products',
+    products: '/dashboard/products/all-mineral-cp',
     auth: {
         signIn: '/auth/sign-in',
         signUp: '/auth/sign-up',
@@ -51,7 +50,7 @@ export const paths = {
 
     //==================================== Market Place route  =================================
     marketplace: {
-        products: '/dashboard/products',
+        products: '/dashboard/products/all-mineral-cp',
         allCp: '/dashboard/products/all-mineral-cp',
         // Granular category routes
         mainCategory: (mainCategoryId: string) => `/dashboard/products/all-mineral-cp/${mainCategoryId}`,
@@ -60,8 +59,8 @@ export const paths = {
 
         recentRfQ: '/dashboard/products/rfq-products',
         companyProfile: (companyId: string | number) => `/dashboard/business/${companyId}`,
-        product: (productId: string | number) => `/dashboard/products/product/${productId}`,
-        productDetails: (productId: string | number) => `/dashboard/products/details/${productId}`,
+        product: (productId: string | number) => `/dashboard/products/details/${productId}/product`,
+        productDetails: (productId: string | number, productName: string) => `/dashboard/products/details/${productId}/${productName}`,
         rfqDetails: (rfqId: string | number, rfqName: string) => `/dashboard/rfqs/details/${rfqId}/${rfqName}`,
     },
 
@@ -98,7 +97,7 @@ export const paths = {
         rfqs: {
             list: '/dashboard/rfq-list',
             create: '/dashboard/rfq-list/create',
-            update: '/dashboard/rfq-list/update',
+            update: (listedRfqId: string | number) => `/dashboard/rfq-list/update/${listedRfqId}`,
         },
     },
 
@@ -123,7 +122,7 @@ export const routeAccess = {
         paths.ourPlans,
         paths.becomeASupplier,
         paths.postYouRfq,
-        paths.product,
+        // paths.product,
         paths.products,
         // Auth routes
         paths.auth.signIn,
@@ -185,9 +184,9 @@ export const isPublicRoute = (pathname: string): boolean => {
 };
 
 export const requiresVerification = (pathname: string): boolean => {
-    return routeAccess.verified.some((route) => pathname.startsWith(route));
+    return routeAccess.verified.some((route) => pathname.startsWith(route as string));
 };
 
 export const requiresAuthOnly = (pathname: string): boolean => {
-    return routeAccess.authOnly.some((route) => pathname.startsWith(route));
+    return routeAccess.authOnly.some((route) => pathname.startsWith(route as string));
 };

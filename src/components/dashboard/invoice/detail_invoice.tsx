@@ -697,7 +697,7 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: { invoiceId?: st
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Unit Price</p>
                   <p className="text-sm font-bold text-gray-900">
                     <span className="text-gray-400 mr-0.5">{invoice.currency === 'USD' ? '$' : '₦'}</span>
-                    {invoice.unitPrice.toLocaleString()}
+                    {invoice.unitPrice.toLocaleString() || 0.00}
                   </p>
                 </div>
               </div>
@@ -780,7 +780,9 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: { invoiceId?: st
                   </div>
                 </div>
                 <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/30">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Buyer</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Buyer
+                  </p>
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-gray-900 leading-tight">{invoice.buyer?.company_name || 'N/A'}</p>
                     <p className="text-xs text-gray-500 font-medium">{invoice.buyer?.first_name} {invoice.buyer?.last_name} {isBuyer && <span className="ml-2 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">You</span>}</p>

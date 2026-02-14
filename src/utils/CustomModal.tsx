@@ -18,19 +18,19 @@ const CustomModal = ({ open, onClose, title, children }: CustomModalProps) => {
   return (
     <Modal open={open} onClose={onClose} size="lg">
       <div className="relative">
-        <IconButton
+        {/* <IconButton
           aria-label="Close modal"
           onClick={onClose}
           className="absolute top-2 right-2 z-10"
         >
           <CloseIcon />
-        </IconButton>
+        </IconButton> */}
         {title && (
           <ModalHeader className="text-center pr-10">
             {title}
           </ModalHeader>
         )}
-        <ModalBody className="max-h-[70vh] overflow-y-auto">
+        <ModalBody className="max-h-[90vh] overflow-y-auto">
           {children}
         </ModalBody>
       </div>

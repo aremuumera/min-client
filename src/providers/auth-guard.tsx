@@ -80,7 +80,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // unless we really aren't initialized
     if (!isInitialized && isLoading && !isAuth) return;
 
-    // Not authenticated
+    // Not authenticated or user data missing
     if (!isAuth || !user) {
       // Double check if we are still loading or initializing
       if (isLoading && !isAuth) return;
@@ -123,7 +123,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     isError,
   ]);
 
-  if ((!isInitialized || isLoading) && !isAuth) {
+  if (!isInitialized || (isLoading && !isAuth)) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500" />
@@ -168,9 +168,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500" />
-    </div>
-  );
+  // Not authenticated and initialized -> return null as we are redirecting
+  return null;
 }

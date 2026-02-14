@@ -82,8 +82,8 @@ const ProductWidgets = ({ products }: ProductProps) => {
           <div className="gap-[10px]">
             <div
               className={`group ${isGridView
-                  ? 'flex w-full max-w-[300px] flex-col min-h-[530px] flex-grow'
-                  : 'flex flex-row w-full justify-around gap-[30px]'
+                ? 'flex w-full max-w-[300px] flex-col min-h-[530px] flex-grow'
+                : 'flex flex-row w-full justify-around gap-[30px]'
                 } shadow-sm shadow-[#0000002a] mb-[14px] bg-white pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full`}
             >
               {/* images */}
@@ -94,7 +94,7 @@ const ProductWidgets = ({ products }: ProductProps) => {
                 >
                   <div className="w-full h-full flex" style={imageContainerStyle}>
                     {products?.images?.map((j, i) => (
-                      <div className="relative w-full h-full rounded-t-xl overflow-hidden flex-shrink-0" key={i}>
+                      <div className="relative h-full rounded-t-xl overflow-hidden flex-shrink-0" style={{ width: `${100 / (products?.images?.length || 1)}%` }} key={i}>
                         <Link href={productCardRoute}>
                           <img
                             src={j}

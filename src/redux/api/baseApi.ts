@@ -8,11 +8,31 @@ export interface ApiResponse<T = any> {
     success?: boolean;
 }
 
+// Mutex to prevent multiple concurrent refresh calls
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const onTokenRefreshed = (token: string) => {
+    refreshSubscribers.map((callback) => callback(token));
+    refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+    refreshSubscribers.push(callback);
+};
+
 // Base query configuration matching original bv_v1_api.js
 const baseQuery = fetchBaseQuery({
     baseUrl: config.api.baseUrl,
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
+        // Skip adding the authorization header if 'x-skip-auth' is present
+        // This is crucial for the refresh endpoint which relies on cookies
+        if (headers.has('x-skip-auth')) {
+            headers.delete('x-skip-auth');
+            return headers;
+        }
+
         // Get token from Redux state (exact parity)
         const state: any = getState();
         const token = state.auth.token;
@@ -30,7 +50,7 @@ const baseQuery = fetchBaseQuery({
 
 /**
  * Shared base query with re-authentication logic
- * Ported from original bv_v1_api.js logic
+ * Ported from original bv_v1_api.js logic with added Mutex protection
  */
 export const baseQueryWithReauth: BaseQueryFn<
     string | FetchArgs,
@@ -41,41 +61,50 @@ export const baseQueryWithReauth: BaseQueryFn<
 
     // If token expired or unauthorized (401)
     if (result.error && result.error.status === 401) {
-        const localToken = typeof window !== 'undefined' ? localStorage.getItem('chimpstate') : null;
-        const state: any = api.getState();
-        const refreshToken = state.auth.token || localToken;
+        // console.log('Unauthorized (401) detected - attempting to refresh token');
 
-        if (!refreshToken) {
-            console.log('called-1')
-            api.dispatch(logout());
-            return result;
-        }
+        if (!isRefreshing) {
+            isRefreshing = true;
+            // console.log('Starting refresh token call via check_refresh_token...');
 
-        // Attempt token refresh
-        const refreshResult: any = await baseQuery(
-            {
-                url: `/auth/umera/check_refresh_token`,
-                method: 'GET',
-                credentials: 'include',
-            },
-            api,
-            extraOptions
-        );
+            // Attempt token refresh
+            const refreshResult: any = await baseQuery(
+                {
+                    url: `/auth/umera/check_refresh_token`,
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'x-skip-auth': 'true' }
+                },
+                api,
+                extraOptions
+            );
 
-        if (refreshResult.data?.ac || refreshResult.data?.data?.ac) {
-            const newRefresh = refreshResult.data || refreshResult.data?.data
-            const newAccessToken = refreshResult.data?.ac || refreshResult.data?.data?.ac;
+            if (refreshResult.data?.ac || refreshResult.data?.data?.ac) {
+                const newRefresh = refreshResult.data || refreshResult.data?.data
+                const newAccessToken = refreshResult.data?.ac || refreshResult.data?.data?.ac;
 
-            // Save new token
-            api.dispatch(setToken(newAccessToken));
-            api.dispatch(loginRefresh(newRefresh))
+                // console.log('Refresh successful, updating store and retrying original request...');
+                api.dispatch(setToken(newAccessToken));
+                api.dispatch(loginRefresh(newRefresh))
 
-            // Retry the original query with new token
-            result = await baseQuery(args, api, extraOptions);
+                isRefreshing = false;
+                onTokenRefreshed(newAccessToken);
+
+                // Retry original request
+                result = await baseQuery(args, api, extraOptions);
+            } else {
+                // console.error('Refresh failed or session truly expired - logging out');
+                isRefreshing = false;
+                api.dispatch(logout());
+            }
         } else {
-            console.log('called-2')
-            // Refresh failed — log user out
-            api.dispatch(logout());
+            // Already refreshing, queue this request to wait for the new token
+            return new Promise((resolve) => {
+                addRefreshSubscriber((newToken) => {
+                    // Retry original request with the new token
+                    resolve(baseQuery(args, api, extraOptions));
+                });
+            });
         }
     }
 
@@ -88,3 +117,6 @@ export const api = {
 };
 
 export default baseQueryWithReauth;
+
+
+

@@ -2,6 +2,14 @@ import React from 'react';
 import { Box } from '@/components/ui/box';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Typography } from '@/components/ui/typography';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export const EmptyState = ({ message }: { message: string }) => (
   <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -13,27 +21,34 @@ export const EmptyState = ({ message }: { message: string }) => (
 
 const TableSkeleton = ({ columns }: { columns: any[] }) => {
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
-      <Box sx={{ display: 'flex', py: 2, borderBottom: '1px solid #e5e5e5' }}>
-        {columns.map((column, index) => (
-          <Box key={index} sx={{ width: column.width || '150px', px: 2 }}>
-            <Skeleton variant="text" className="h-6 w-4/5" />
-          </Box>
-        ))}
-      </Box>
-      {[...Array(5)].map((_, rowIndex) => (
-        <Box 
-          key={rowIndex} 
-          sx={{ display: 'flex', py: 2, borderBottom: '1px solid #f3f3f3' }}
-        >
-          {columns.map((column, colIndex) => (
-            <Box key={colIndex} sx={{ width: column.width || '150px', px: 2 }}>
-              <Skeleton variant="text" className="h-5 w-[90%]" />
-            </Box>
+    <div className="rounded-md border bg-white">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column, index) => (
+              <TableHead key={index} style={{ width: column.width }}>
+                <Skeleton className="h-4 w-[100px]" />
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {columns.map((column, colIndex) => (
+                <TableCell key={colIndex} style={{ width: column.width }}>
+                  <div className="flex items-center gap-3">
+                    {/* Assuming first column might have an image, like in product table */}
+                    {colIndex === 0 && <Skeleton className="h-10 w-10 rounded-md shrink-0" />}
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </TableCell>
+              ))}
+            </TableRow>
           ))}
-        </Box>
-      ))}
-    </Box>
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

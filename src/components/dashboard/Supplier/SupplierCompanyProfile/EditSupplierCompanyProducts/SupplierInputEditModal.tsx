@@ -1,27 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { TextField } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
+
 import { Box } from '@/components/ui/box';
 import { Typography } from '@/components/ui/typography';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Country, State } from 'country-state-city';
-import CustomModal from '@/utils/CustomModal';
-// import { TextEditor } from '@/components/core/text-editor/text-editor';
-import { MdOutlineCancel } from 'react-icons/md';
-import { motion, AnimatePresence } from 'framer-motion'; // For animations
-import { 
+import {
   useUpdateStoreProfileMutation,
-  useUpdateStoreMediaMutation 
+  useUpdateStoreMediaMutation
 } from '@/redux/features/supplier-profile/supplier_profile_api';
+import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
+import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 import { useSelector } from 'react-redux';
-import { toast } from 'sonner';
+import { toast } from '@/components/core/toaster';
 import { useAppSelector } from '@/redux';
+import CustomModal from '@/utils/CustomModal';
+import { motion } from 'framer-motion';
+import { Country, State } from 'country-state-city';
+import { MdOutlineCancel } from 'react-icons/md';
+import { Loader2 } from 'lucide-react';
+
 
 const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: any) => {
   const [formData, setFormData] = useState<any>({});
   const [CountryData, setCountryData] = useState<any[]>([]);
-  const [stateData, setStateData] = useState<any[]>([]); 
+  const [stateData, setStateData] = useState<any[]>([]);
   const [selectedFileLogo, setSelectedFileLogo] = useState<any>(null);
   const [selectedFileBanner, setSelectedFileBanner] = useState<any>(null);
   const [errors, setErrors] = useState<any>({});
@@ -29,17 +32,17 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
   const [profileDescriptionFields, setProfileDescriptionFields] = useState<any[]>([{ header: '', description: '' }]);
   const { user } = useAppSelector((state) => state.auth);
   const { appData } = useAppSelector((state) => state?.auth);
-  
+
 
   const [updateStoreProfile, { isLoading: isUpdatingProfile }] = useUpdateStoreProfileMutation();
   const [updateStoreMedia, { isLoading: isUpdatingMedia }] = useUpdateStoreMediaMutation();
- 
+
 
   const handlePreviewOpen = () => setOpenPreview(true);
   const handlePreviewClose = () => setOpenPreview(false);
 
- // Populate profileDescriptionFields when the modal opens or when `data` changes
- useEffect(() => {
+  // Populate profileDescriptionFields when the modal opens or when `data` changes
+  useEffect(() => {
     if (data?.profileDetailDescription) {
       // If profileDetailDescription exists in data, use it to populate profileDescriptionFields
       setProfileDescriptionFields(JSON.parse(JSON.stringify(data?.profileDetailDescription)));
@@ -49,11 +52,11 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
       // Otherwise, initialize with a default empty field
       setProfileDescriptionFields([{ header: '', description: '' }]);
     }
-}, [data]);
+  }, [data]);
 
- // Validate each description field
- 
- const validateEachDescriptionField = (index: number, field: string, value: string) => {
+  // Validate each description field
+
+  const validateEachDescriptionField = (index: number, field: string, value: string) => {
     const fieldKey = `${field}${index}`;
     setErrors((prevErrors: any) => {
       const newErrors = { ...prevErrors };
@@ -77,7 +80,8 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
   };
 
   // Add a new description field
-  const handleAddDescriptionField = () => {
+  const handleAddDescriptionField = (e: React.MouseEvent) => {
+    e.preventDefault();
     setProfileDescriptionFields((prevFields) => [...prevFields, { header: '', description: '' }]);
   };
 
@@ -116,7 +120,7 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
 
       // If the location field is present, fetch states for the selected country
       if (initialData.location) {
-        const country = CountryData.find((c) => c.name === initialData.location);
+        const country = CountryData.find((c) => c.isoCode === initialData.location || c.name === initialData.location);
         if (country) {
           const states = State.getStatesOfCountry(country.isoCode);
           setStateData(states);
@@ -127,11 +131,13 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
 
   // Handle field changes
   const handleChange = (id: string, value: any) => {
-    setFormData((prev: any) => ({ ...prev, [id]: value }));
+    // If we're coming from Custom Select, value might be in e.target.value or just value
+    const actualValue = value?.target ? value.target.value : value;
+    setFormData((prev: any) => ({ ...prev, [id]: actualValue }));
 
     // If the location field changes, fetch states for the selected country
     if (id === 'location') {
-      const country = CountryData.find((c: any) => c.name === value);
+      const country = CountryData.find((c: any) => c.isoCode === actualValue || c.name === actualValue);
       if (country) {
         const states = State.getStatesOfCountry(country.isoCode);
         setStateData(states);
@@ -147,24 +153,28 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
       const profileId = user?.id;
 
       if (!supplierId || !profileId) {
+        toast.error('Missing required IDs for update', {
+          position: 'top-right',
+          duration: 3000,
+        });
         throw new Error('Missing required IDs');
       }
 
       // Determine which API to use based on field type
-      const isMediaField = fields.some((field: any) => 
-        field?.type === 'file' || 
-        field?.id === 'companyLogo' || 
+      const isMediaField = fields.some((field: any) =>
+        field?.type === 'file' ||
+        field?.id === 'companyLogo' ||
         field?.id === 'companyBanner'
       );
 
       if (isMediaField) {
         // Handle logo/banner upload
         const formData = new FormData();
-        
+
         if (selectedFileLogo) {
           formData.append('logo', selectedFileLogo);
         }
-        
+
         if (selectedFileBanner) {
           formData.append('banner', selectedFileBanner);
         }
@@ -178,32 +188,26 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
         toast.success('Media updated successfully', {
           position: 'top-right',
           duration: 3000,
-          style: {
-            background: '#4CAF50',
-            color: '#fff',
-          }
-         });
+        });
       } else {
         // Handle normal profile data
         const payload = {
-          // ...formData,
+          // Merge with existing data to ensure no fields are lost
           businessType: formData.businessType,
           businessCategory: formData.businessCategory,
           companyDescription: formData.companyDescription,
-          
+
           // Contact info
           companyEmail: formData.email,
           companyPhone: formData.phoneNumber,
-          
-          // Social media
-          facebook: formData.facebook,
-          instagram: formData.instagram,
-          linkedIn: formData.linkedin,
-          xSocial: formData.XTwitter,
 
-          // latitude: formData.latitude,
-          // longitude: formData.longitude,
-          
+          // Social media
+          // Social media (Sanitize empty strings to null to avoid backend validation errors)
+          facebook: formData.facebook || null,
+          instagram: formData.instagram || null,
+          linkedIn: formData.linkedin || null,
+          xSocial: formData.XTwitter || null,
+
           // Location
           fullAddress: formData.fullAddress,
           selectedCountry: formData.location,
@@ -212,13 +216,13 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
           zip_code: formData.zipCode,
           latitude: formData.latitude,
           longitude: formData.longitude,
-          
+
           // Business info
           totalEmployees: formData.totalEmployees,
           yearEstablished: formData.yearsOfEstablish,
           yearExperience: formData.yearsOfExperience,
           totalRevenue: formData.totalRevenue,
-          
+
           // Special fields
           selectedPayments: formData.PaymentTerms,
           selectedShippings: formData.shippingTerms,
@@ -232,14 +236,10 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
         }).unwrap();
 
         toast.success('Profile updated successfully',
-         {
-          position: 'top-right',
-          duration: 3000,
-          style: {
-            background: '#4CAF50',
-            color: '#fff',
+          {
+            position: 'top-right',
+            duration: 3000,
           }
-         }
         );
       }
 
@@ -249,80 +249,40 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
       toast.error(error?.data?.message || 'Update failed', {
         position: 'top-right',
         duration: 3000,
-        style: {
-          background: '#F44336',
-          color: '#fff',
-        }
       });
     }
   };
 
-console.log('formData:', formData);
+  console.log('formData:', formData);
 
-  // Helper function to render options based on the category
-  const renderOptions = (options: any[], selectCategoryName: string, field: any) => {
+  // Helper function to prepare options for Select component
+  const renderOptions = (options: any[], selectCategoryName: string) => {
     switch (selectCategoryName) {
       case 'location':
-        return CountryData?.map((country: any) => (
-          <option key={country.isoCode} value={country.name}>
-            {country.name}
-          </option>
-        ));
+        return CountryData?.map((country: any) => ({
+          value: country.name,
+          label: country.name,
+          isoCode: country.isoCode
+        })) || [];
       case 'state':
-        return stateData?.map((state: any) => (
-          <option key={state.name} value={state.name}>
-            {state.name}
-          </option>
-        ));
-      case 'PaymentTerms':
-        return options.map((option: any) => {
-          // const isSelected = Array.isArray(formData[field.id]) && formData[field.id].includes(option.code);
-          return (
-            <option key={option.code} value={option.code}>
-               {/* {isSelected ? '[x] ' : '[ ] '} */}
-              {`${option.code} - ${option.name}`}
-            </option>
-          );
-        });
-      case 'shippingTerms':
-        return options.map((option: any) => {
-          // const isSelected = Array.isArray(formData[field.id]) && formData[field.id].includes(option.code);
-          return (
-            <option key={option.code} value={option.code}>
-               {/* {isSelected ? '[x] ' : '[ ] '} */}
-              {`${option.code} - ${option.name}`}
-            </option>
-          );
-        });
+        return stateData?.map((state: any) => ({
+          value: state.name,
+          label: state.name,
+          isoCode: state.isoCode
+        })) || [];
       default:
-        return options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ));
+        return (options || []).map((option) => ({
+          value: option,
+          label: option
+        }));
     }
   };
 
-  // Helper function to render the selected value(s) in the Select component
-  const renderSelectedValue = (selected: any, options = [], multipleFields: boolean) => {
-    if (multipleFields) {
-      // Ensure selected is always treated as an array for multiple selections
-      return Array.isArray(selected)
-        ? selected.map((value: any) => {
-            const option: any = options.find((opt: any) => opt.value === value);
-            return option ? option.label || option.value : value;
-          }).join(', ')
-        : '';
-    }
 
-    // Handle single selection case
-    const option: any = options.find((opt: any) => opt.value === selected);
-    return option ? option.label || option.value : selected;
-  };
 
   const handleFileChange = async (id: string, value: any) => {
     const files = value;
-  
+
     if (files.length > 0 && files.length === 1) {
       const file = files[0]; // Get the first file
       const isValidFile = (file: any) => {
@@ -331,6 +291,10 @@ console.log('formData:', formData);
             ...prevErrors,
             productImages: "File size must not exceed 5MB",
           }));
+          toast.error('File size must not exceed 5MB', {
+            position: 'top-right',
+            duration: 3000,
+          });
           return false;
         }
         if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
@@ -338,6 +302,10 @@ console.log('formData:', formData);
             ...prevErrors,
             productImages: "Supported formats: PNG, JPEG, WEBP",
           }));
+          toast.error('Supported formats: PNG, JPEG, WEBP', {
+            position: 'top-right',
+            duration: 3000,
+          });
           return false;
         }
         return true;
@@ -353,7 +321,7 @@ console.log('formData:', formData);
       } else if (id === 'companyBanner') {
         setSelectedFileBanner(file);
       }
-        
+
     }
   };
 
@@ -361,9 +329,9 @@ console.log('formData:', formData);
     <div>
       <CustomModal open={open} onClose={onClose} title={`Edit ${fields[0]?.label || ''} Details`}>
         <div className="w-full">
-          <form 
-          onSubmit={handleSubmit}
-          className="!w-full">
+          <form
+            onSubmit={handleSubmit}
+            className="w-full!">
             {fields?.length > 0 && fields.map((field: any) => (
               <Box key={field.id} style={{ marginBottom: '16px' }}>
                 {field?.type === 'text' && (
@@ -386,40 +354,61 @@ console.log('formData:', formData);
                   />
                 )}
 
-                  <Select
-                    className="w-full"
-                    {...({
-                        multiple: field?.multipleFields,
-                        value: field?.multipleFields ? formData[field?.id] || [] : formData[field?.id] || '',
-                        onChange: (e: any) => handleChange(field?.id, e.target.value),
-                        renderValue: (selected: any) => renderSelectedValue(selected, field?.options, field?.multipleFields),
-                    } as any)}
-                  >
-                    {renderOptions(field.options, field.selectCategoryName, field)}
-                  </Select>
-            
-               {field.type === 'file' && (
-                  <> 
-                  <label className="w-full block">
-                    <Button variant="outlined" className="w-full">
-                      Upload {field.label}
+                {field.type === 'select' && (
+                  !field.multipleFields ? (
+                    <SearchableSelectLocal
+                      label={field?.label}
+                      value={formData[field?.id] || ''}
+                      onChange={(val: any) => handleChange(field?.id, val)}
+                      options={renderOptions(field.options, field.selectCategoryName)}
+                      placeholder={`Select ${field?.label}`}
+                      searchPlaceholder={`Search ${field?.label}...`}
+                    />
+                  ) : (
+                    <MultiCheckboxSelectLocal
+                      label={field?.label}
+                      options={
+                        field.options?.map((opt: any) => ({
+                          value: opt.code || opt,
+                          label: opt.name ? `${opt.code} - ${opt.name}` : opt,
+                        })) || []
+                      }
+                      value={formData[field?.id] || []}
+                      onChange={(value: any) => handleChange(field?.id, value)}
+                      placeholder={`Select ${field?.label}`}
+                      searchPlaceholder={`Search ${field?.label}...`}
+                    />
+                  )
+                )}
+
+                {field.type === 'file' && (
+                  <>
+                    <label className="w-full block">
+                      <Button
+                        variant="outlined"
+                        className="w-full"
+                        type="button"
+                        onClick={() => document.getElementById(`file-input-${field.id}`)?.click()}
+                      >
+                        Upload {field.label}
+                      </Button>
                       <input
+                        id={`file-input-${field.id}`}
                         type="file"
                         hidden
                         onChange={(e) => handleFileChange(field.id, e.target.files)}
-                        />
-                    </Button>
-                  </label>
+                      />
+                    </label>
 
-                  {field.id === 'companyLogo' && selectedFileLogo && (
-                    <Typography className="mt-1" variant="body2">
+                    {field.id === 'companyLogo' && selectedFileLogo && (
+                      <Typography className="mt-1" variant="body2">
                         Selected file: {selectedFileLogo.name}
-                    </Typography>
+                      </Typography>
                     )}
                     {field.id === 'companyBanner' && selectedFileBanner && (
-                    <Typography className="mt-1" variant="body2">
+                      <Typography className="mt-1" variant="body2">
                         Selected file: {selectedFileBanner.name}
-                    </Typography>
+                      </Typography>
                     )}
 
                     {errors.productImages && (
@@ -432,30 +421,31 @@ console.log('formData:', formData);
 
                 {field?.type === 'headerDescription' && (
                   <>
-                    <div className="space-y-2 !relative overflow-y-auto" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <Typography variant="h6" gutterBottom>
-                            You currently have {profileDescriptionFields?.length} description fields.
-                            </Typography>
-                        </motion.div>
+                    <div className="space-y-2 relative! overflow-y-auto" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Typography variant="h6" gutterBottom>
+                          You currently have {profileDescriptionFields?.length} description fields.
+                        </Typography>
+                      </motion.div>
                       {profileDescriptionFields?.map((field, index) => (
                         <Box key={index} style={{ marginTop: '24px' }}>
-                        
+
                           {index !== 0 && (
                             <button
-                                style={{
-                                  position: 'absolute',
-                                  right: 0,
-                                  zIndex: 20,
-                                }}
-                                onClick={() => handleClearDescriptionField(index)}
-                              >
-                                <MdOutlineCancel />
+                              type="button"
+                              style={{
+                                position: 'absolute',
+                                right: 0,
+                                zIndex: 20,
+                              }}
+                              onClick={() => handleClearDescriptionField(index)}
+                            >
+                              <MdOutlineCancel />
                             </button>
                           )}
                           <div>
@@ -477,9 +467,9 @@ console.log('formData:', formData);
                                 fullWidth
                                 placeholder="Describe your product here..."
                                 value={field.description}
-                                 margin="normal"
-                                 rows={6}
-                                 multiline
+                                margin="normal"
+                                rows={6}
+                                multiline
                                 onChange={(e) => handleDescriptionChange(index, 'description', e.target.value)}
                                 error={!!errors[`description${index}`]}
                                 helperText={errors[`description${index}`]}
@@ -491,11 +481,11 @@ console.log('formData:', formData);
                     </div>
 
                     {/* Preview Modal Button */}
-                    <Box style={{ paddingTop: '24px' }} className="py-[20px] !bg-black flex gap-8 w-full">
-                      <Button variant="contained" style={{ marginBottom: '10px' }} fullWidth onClick={handlePreviewOpen} color="primary">
+                    <Box style={{ paddingTop: '24px' }} className="py-[10px] flex items-center justify-between gap-8 w-full">
+                      <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type='button' className='mt-4'>
                         Preview
                       </Button>
-                      <Button fullWidth style={{ marginTop: '16px' }} onClick={handleAddDescriptionField} variant="outlined" color="primary">
+                      <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" color="primary" type='button' className=''>
                         Add Description Field
                       </Button>
                     </Box>
@@ -513,7 +503,7 @@ console.log('formData:', formData);
                             </Box>
                           ))}
                         </div>
-                        <Button variant="contained" style={{ marginTop: '26px' }} onClick={handlePreviewClose} color="secondary">
+                        <Button variant="contained" style={{ marginTop: '26px' }} onClick={handlePreviewClose} color="secondary" type='button'>
                           Close Preview
                         </Button>
                       </Box>
@@ -522,21 +512,21 @@ console.log('formData:', formData);
                 )}
               </Box>
             ))}
-            
+
             <Box style={{ marginTop: '24px', display: 'flex', gap: '20px', justifyContent: 'space-between' }}>
               <Button type='button' onClick={onClose} fullWidth variant="outlined">
                 Cancel
               </Button>
-              <Button 
-              type='submit'
-              disabled={isUpdatingProfile || isUpdatingMedia}
-              //  onClick={handleSubmit} 
-               fullWidth variant="contained" color="primary">
-                  {isUpdatingProfile || isUpdatingMedia ?  (
-                      <span>Loading...</span>
-                    ) : (
-                      "Save"
-                   )}
+              <Button
+                type='submit'
+                disabled={isUpdatingProfile || isUpdatingMedia}
+                //  onClick={handleSubmit} 
+                fullWidth variant="contained" color="primary">
+                {isUpdatingProfile || isUpdatingMedia ? (
+                  <Loader2 className="animate-spin text-white" size={24} />
+                ) : (
+                  "Save"
+                )}
               </Button>
             </Box>
           </form>
@@ -545,5 +535,7 @@ console.log('formData:', formData);
     </div>
   );
 };
+
+
 
 export default SupplierProfileInputEditModal;

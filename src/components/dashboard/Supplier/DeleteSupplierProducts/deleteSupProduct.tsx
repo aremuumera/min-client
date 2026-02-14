@@ -10,27 +10,28 @@ import { useDeleteProductMutation } from '@/redux/features/supplier-products/pro
 import { CircularProgress } from '@/components/ui/progress';
 
 const DeleteSupProducts = ({ open, rows, onClose }: any) => {
- 
-  const [deleteProduct, {data, isLoading, isError}] = useDeleteProductMutation();
+
+  const [deleteProduct, { data, isLoading, isError }] = useDeleteProductMutation();
   const { user } = useSelector((state: any) => state?.auth);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-   
+
     console.log('data:', data);
     try {
-    const response =  await deleteProduct({
+      const response = await deleteProduct({
         productId: rows?.id,
         supplierId: user?.id
       }).unwrap();
-      toast.success(`${response?.data?.message  || ` ${rows?.product_name} 'deleted successfully'` } `,   
+      toast.success(`${response?.data?.message || ` ${rows?.product_name} 'deleted successfully'`} `,
         {
           position: 'top-right',
           duration: 3000,
           style: {
             background: '#4CAF50',
             color: '#fff',
-          }}
+          }
+        }
       );
       onClose();
     } catch (error: any) {
@@ -51,28 +52,28 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
       <CustomModal open={open} onClose={onClose}>
         <div className="w-full">
           <form
-          onSubmit={handleSubmit}
-           className="!w-full">
+            onSubmit={handleSubmit}
+            className="!w-full!">
             <div className="bg-white">
               <div className="flex justify-center items-center flex-col">
                 <div className="rounded-full bg-[#f7f7f7] flex w-[140px] h-[140px] justify-center items-center text-[70px] text-red-500">
-                  <RiDeleteBin6Line className="!text-[50px]" />
+                  <RiDeleteBin6Line className="!text-[50px]!" />
                 </div>
               </div>
               <div className="pt-[30px] flex justify-start items-start">
                 <div className="text-left">
                   <Typography className="text-lg font-medium">
-                    You are about to delete <span style={{fontWeight: 'bold', fontSize:'1.4rem' }} >{rows?.product_name}</span>
+                    You are about to delete <span style={{ fontWeight: 'bold', fontSize: '1.4rem' }} >{rows?.product_name}</span>
                   </Typography>
-                  <Typography className="text-sm font-normal text-[#b4b4b4] pt-[10px]">
+                  <Typography className="text-sm font-normal text-[#0C0C0C] ">
                     Are you sure you want to delete?
                   </Typography>
                 </div>
               </div>
             </div>
-            <div className="pt-[30px] flex justify-start items-start gap-[10px] flex-col">
+            <div className=" flex justify-start items-start flex-col">
               <div className="text-left flex justify-start items-center w-full gap-[10px]">
-                <div className="text-sm font-normal text-[#c6c6c6]">
+                <div className="text-sm font-normal text-[#c6c6c6] pt-6">
                   {' '}
                   <img src="/assets/Check_box.svg" />{' '}
                 </div>
@@ -82,7 +83,7 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
               </div>
 
               <div className="text-left flex justify-start items-center w-full gap-[10px]">
-                <div className="text-sm font-normal text-[#c6c6c6]">
+                <div className="text-sm font-normal text-[#c6c6c6] pt-6">
                   {' '}
                   <img src="/assets/Check_box.svg" />{' '}
                 </div>
@@ -92,7 +93,7 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
               </div>
 
               <div className="text-left flex justify-start items-center w-full gap-[10px]">
-                <div className="text-sm font-normal text-[#c6c6c6]">
+                <div className="text-sm font-normal text-[#c6c6c6] pt-6">
                   {' '}
                   <img src="/assets/Check_box.svg" />{' '}
                 </div>
@@ -105,6 +106,7 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
             <div className="flex pt-[50px] w-full justify-between gap-[20px]">
               <Button
                 onClick={onClose}
+                disabled={isLoading}
                 variant="outlined"
                 className="w-full text-red-500 border-red-500 hover:bg-red-50"
                 type='button'
@@ -113,15 +115,15 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
               </Button>
               <Button
                 disabled={isLoading}
-               variant="contained"
-               className="w-full"
-               type='submit'
-               >
-                 {isLoading ? (
-                   "Deleting..."
-                  ) : (
-                    "Delete"
-                  )}
+                variant="contained"
+                className="w-full"
+                type='submit'
+              >
+                {isLoading ? (
+                  "Deleting..."
+                ) : (
+                  "Delete"
+                )}
               </Button>
             </div>
           </form>
@@ -132,4 +134,4 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
 };
 
 export default DeleteSupProducts
-;
+  ;

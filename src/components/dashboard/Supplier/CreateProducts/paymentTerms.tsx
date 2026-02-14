@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react';
 // TODO: Migrate CircularProgress from @mui/material
 import { Button } from '@/components/ui/button';
@@ -8,8 +10,9 @@ import { PiWarningLight } from "react-icons/pi";
 import { updateProductPaymentData, setServerReadyData } from '@/redux/features/supplier-products/products_slice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useValidateProductStepMutation } from "@/redux/features/supplier-products/products_api";
-import { toast } from "sonner";
+import { toast } from '@/components/core/toaster';
 import { useAppSelector } from '@/redux';
+import { MultiCheckboxSelect } from '@/components/ui';
 
 const steps = [
   "Create Product",
@@ -24,27 +27,12 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
   activeStep: number;
   handleBack: () => void;
 }) => {
-  const { productPaymentData,  serverReadyData, serverReadyImagesData, serverReadyAttachmentData } = useAppSelector((state) => state?.product);
+  const { productPaymentData, serverReadyData, serverReadyImagesData, serverReadyAttachmentData } = useAppSelector((state) => state?.product);
   const { user } = useAppSelector((state) => state?.auth);
   const dispatch = useDispatch();
-  
+
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
   const [formErrors, setFormErrors] = useState({});
-
-  // Handle payment terms selection
-  const handlePaymentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // For multiple select, access selectedOptions
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    dispatch(updateProductPaymentData({ selectedPayments: selectedOptions }));
-    setFormErrors((prevErrors) => ({ ...prevErrors, selectedPayments: "" }));
-  };
-
-  // Handle shipping terms selection
-  const handleShippingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    dispatch(updateProductPaymentData({ selectedShippings: selectedOptions }));
-    setFormErrors((prevErrors) => ({ ...prevErrors, selectedShippings: "" }));
-  };
 
   // Handle text input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -56,13 +44,13 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
   // Validate form data
   const validateData = () => {
     const newErrors: any = {};
-    
+
     // Check if payment terms are selected
     const pd = productPaymentData as any;
     if (!pd?.selectedPayments || pd.selectedPayments.length === 0) {
       newErrors.selectedPayments = "Payment terms selection is required";
     }
-    
+
     // Check if shipping terms are selected
     if (!pd?.selectedShippings || pd.selectedShippings.length === 0) {
       newErrors.selectedShippings = "Shipping terms selection is required";
@@ -79,6 +67,12 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
     }
 
     setFormErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0] as string;
+      toast.error(firstError);
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -90,10 +84,10 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
       try {
         // Create FormData and append step 3 fields
         const formDataToSend = new FormData();
-        
+
         // Add step number
         formDataToSend.append('step', String(3));
-        
+
         // Add all payment fields
         const pd = productPaymentData as any;
         // Add all payment fields
@@ -102,37 +96,30 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
             formDataToSend.append(`selectedPayments`, payment);
           });
         }
-        
+
         if (pd?.selectedShippings) {
           pd.selectedShippings.forEach((shipping: string, index: number) => {
             formDataToSend.append(`selectedShipping`, shipping);
           });
         }
-        
+
         formDataToSend.append('paymentsTermsDescribed', pd?.paymentTermsDescribed || '');
         formDataToSend.append('shippingTermsDescribed', pd?.shippingTermsDescribed || '');
-        
+
         // Send the FormData to the API
         const response = await validateProductStep({
           supplierId: user?.id,
           body: formDataToSend,
         }).unwrap();
-        
+
         console.log('Step 3 validation response:', response);
-        
-        toast.success(`${response?.message || 'Payment terms submitted successfully!'}`, {
-          position: 'top-right',
-          duration: 3000,
-          style: {
-            background: '#4CAF50',
-            color: '#fff',
-          },
-        });
+
+        toast.success(`${response?.message || 'Payment terms submitted successfully!'}`);
 
         // Update the Redux store with validated data from server
         const validatedData = response?.validatedData;
         dispatch(setServerReadyData(validatedData));
-        
+
         if (response?.success) {
           handleNext();
         } else {
@@ -141,26 +128,12 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
             setFormErrors({
               serverError: response?.error || response?.message
             });
-            toast.error(`${response?.error || 'Failed to submit payment details. Please try again.'}`, {
-              duration: 3000,
-              position: 'top-right',
-              style: {
-                background: '#f44336',
-                color: '#fff',
-              },
-            });
+            toast.error(`${response?.error || 'Failed to submit payment details. Please try again.'}`);
           }
         }
       } catch (error: any) {
         console.error('Error validating step 3:', error);
-        toast.error(`${error?.data?.error || 'Failed to submit payment details. Please try again.'}`, {
-          duration: 3000,
-          position: 'top-right',
-          style: {
-            background: '#f44336',
-            color: '#fff',
-          },
-        });
+        toast.error(`${error?.data?.error || 'Failed to submit payment details. Please try again.'}`);
         setFormErrors({
           serverError: error.response?.data?.message || 'Error submitting payment terms'
         });
@@ -177,43 +150,26 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
       <div className="">
         <form onSubmit={handleSubmit} className="">
           <div>
-            <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-center justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 pt-[30px] gap-[15px] items-start">
+              <MultiCheckboxSelect
+                label="Payment Terms"
+                options={paymentTerms.map(t => ({ value: t.code, label: `${t.code} - ${t.name}` }))}
+                value={(productPaymentData as any)?.selectedPayments || []}
+                onChange={(val) => dispatch(updateProductPaymentData({ selectedPayments: val }))}
+                placeholder="Select payment terms"
+                errorMessage={(formErrors as any).selectedPayments}
+                fullWidth
+              />
 
-              <div className="w-full">
-                <label className="block text-sm font-medium mb-1">Payment Terms</label>
-                <select
-                  multiple
-                  name='selectedPayments'
-                  value={(productPaymentData as any)?.selectedPayments || []}
-                  onChange={handlePaymentChange}
-                  className="w-full border border-gray-300 rounded-md p-2 min-h-[100px]"
-                >
-                  {paymentTerms.map((term) => (
-                    <option key={term.code} value={term.code}>
-                      {term.code} - {term.name}
-                    </option>
-                  ))}
-                </select>
-                {(formErrors as any).selectedPayments && <p className="text-red-500 text-xs mt-1">{(formErrors as any).selectedPayments}</p>}
-              </div>
-
-              <div className="w-full">
-                <label className="block text-sm font-medium mb-1">Shipping Terms</label>
-                <select
-                  multiple
-                  name='selectedShippings'
-                  value={(productPaymentData as any)?.selectedShippings || []}
-                  onChange={handleShippingChange}
-                  className="w-full border border-gray-300 rounded-md p-2 min-h-[100px]"
-                >
-                  {shippingTerms.map((term) => (
-                    <option key={term.code} value={term.code}>
-                      {term.code} - {term.name}
-                    </option>
-                  ))}
-                </select>
-                {(formErrors as any).selectedShippings && <p className="text-red-500 text-xs mt-1">{(formErrors as any).selectedShippings}</p>}
-              </div>
+              <MultiCheckboxSelect
+                label="Shipping Terms"
+                options={shippingTerms.map(t => ({ value: t.code, label: `${t.code} - ${t.name}` }))}
+                value={(productPaymentData as any)?.selectedShippings || []}
+                onChange={(val) => dispatch(updateProductPaymentData({ selectedShippings: val }))}
+                placeholder="Select shipping terms"
+                errorMessage={(formErrors as any).selectedShippings}
+                fullWidth
+              />
             </div>
 
             <div className="flex pt-[20px] flex-col md:flex-row gap-[15px] items-center justify-center">
@@ -227,8 +183,8 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
                 name='paymentTermsDescribed'
                 value={(productPaymentData as any)?.paymentTermsDescribed || ""}
                 onChange={handleChange}
-                // error={!!(formErrors as any).paymentTermsDescribed}
-                // helperText={(formErrors as any).paymentTermsDescribed}
+              // error={!!(formErrors as any).paymentTermsDescribed}
+              // helperText={(formErrors as any).paymentTermsDescribed}
               />
               <TextField
                 id="shippingTermsDescribed"
@@ -240,11 +196,11 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
                 name='shippingTermsDescribed'
                 value={(productPaymentData as any)?.shippingTermsDescribed || ""}
                 onChange={handleChange}
-                // error={!!(formErrors as any).shippingTermsDescribed}
-                // helperText={(formErrors as any).shippingTermsDescribed}
+              // error={!!(formErrors as any).shippingTermsDescribed}
+              // helperText={(formErrors as any).shippingTermsDescribed}
               />
             </div>
-            
+
             {(formErrors as any).serverError && (
               <div className="text-red-500 mt-2 text-center">
                 {(formErrors as any).serverError}

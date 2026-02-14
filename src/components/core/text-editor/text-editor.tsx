@@ -51,36 +51,52 @@ export function TextEditor({
   const editor = useEditor({ extensions, content, editable, onUpdate, immediatelyRender: false });
 
   return (
-    <Box
-      className="tiptap-root"
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        ...(editable && {
-          border: '1px solid var(--mui-palette-divider)',
-          borderRadius: 1,
-          boxShadow: 'var(--mui-shadows-1)',
-        }),
-        '& .tiptap-container': { display: 'flex', flex: '1 1 auto', flexDirection: 'column', minHeight: 0 },
-        '& .tiptap': {
-          color: 'var(--mui-palette-text-primary)',
-          flex: '1 1 auto',
-          overflow: 'auto',
-          p: '8px 16px',
-          '&:focus-visible': { outline: 'none' },
-          '&.resize-cursor': { cursor: 'ew-resize', '& table': { cursor: 'col-resize' } },
-          '& .is-editor-empty:before': {
-            color: 'var(--mui-palette-text-secondary)',
-            content: 'attr(data-placeholder)',
-            float: 'left',
-            height: 0,
-            pointerEvents: 'none',
-          },
-        },
-      }}
-    >
-      {!hideToolbar ? <TextEditorToolbar editor={editor} /> : <div />}
-      <EditorContent className="tiptap-container" editor={editor} />
-    </Box>
+    <>
+      <style>{`
+        .tiptap-root .tiptap-container {
+          display: flex;
+          flex: 1 1 auto;
+          flex-direction: column;
+          min-height: 0;
+        }
+        .tiptap-root .tiptap {
+          color: var(--mui-palette-text-primary);
+          flex: 1 1 auto;
+          overflow: auto;
+          padding: 8px 16px;
+        }
+        .tiptap-root .tiptap:focus-visible {
+          outline: none;
+        }
+        .tiptap-root .tiptap.resize-cursor {
+          cursor: ew-resize;
+        }
+        .tiptap-root .tiptap.resize-cursor table {
+          cursor: col-resize;
+        }
+        .tiptap-root .tiptap .is-editor-empty:before {
+          color: var(--mui-palette-text-secondary);
+          content: attr(data-placeholder);
+          float: left;
+          height: 0;
+          pointerEvents: none;
+        }
+      `}</style>
+      <Box
+        className="tiptap-root"
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          ...(editable && {
+            border: '1px solid var(--mui-palette-divider)',
+            borderRadius: 1,
+            boxShadow: 'var(--mui-shadows-1)',
+          }),
+        }}
+      >
+        {!hideToolbar ? <TextEditorToolbar editor={editor} /> : <div />}
+        <EditorContent className="tiptap-container" editor={editor} />
+      </Box>
+    </>
   );
 }

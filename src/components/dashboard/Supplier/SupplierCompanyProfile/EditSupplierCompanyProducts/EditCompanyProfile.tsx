@@ -283,7 +283,7 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
   ];
 
   const handleOpenModal = (field: string) => {
-    const fieldConfig = (fieldConfigurations as any)[field] ;
+    const fieldConfig = (fieldConfigurations as any)[field];
     if (!fieldConfig) {
       console.error(`Field configuration not found for: ${field}`);
       return;
@@ -324,7 +324,7 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
               <div></div>
             </div>
             <Button
-              className="absolute right-0 z-10 bg-white rounded-none shadow-md"
+              className="absolute right-0 z-10 rounded-none shadow-md"
               style={{ boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}
               onClick={() => handleOpenModal('companyLogo')}
               size="sm"
@@ -344,7 +344,7 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
               <div></div>
             </div>
             <Button
-              className="absolute right-0 z-10 bg-white rounded-none shadow-md"
+              className="absolute right-0 z-10 rounded-none shadow-md"
               style={{ boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}
               onClick={() => handleOpenModal('companyBanner')}
               size="sm"

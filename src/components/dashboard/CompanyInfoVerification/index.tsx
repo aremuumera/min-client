@@ -2005,12 +2005,12 @@ const CompletionStep = () => {
           Submitted Successfully!
         </Typography>
 
-        <Typography variant="body1" color="text.secondary" className="mb-6 max-w-screen-md mx-auto text-lg">
+        <Typography variant="body1" color="text.secondary" className="mb-6 max-w-3xl mx-auto text-lg">
           Your business verification has been submitted and is now under review. We'll notify you once the verification
           is complete.
         </Typography>
 
-        <Alert severity="info" className="max-w-screen-md mx-auto mb-8 bg-primary-50 border-primary-100">
+        <Alert severity="info" className="max-w-3xl mx-auto mb-8 bg-primary-50 border-primary-100">
           <Box className="flex flex-col gap-1">
             <Box className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
@@ -2028,7 +2028,7 @@ const CompletionStep = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="relative max-w-screen-xl mx-auto my-10 before:content-[''] before:absolute before:top-1/2 before:left-0 before:right-0 before:h-px before:bg-gray-100"
+        className="relative max-w-3xl mx-auto my-10 before:content-[''] before:absolute before:top-1/2 before:left-0 before:right-0 before:h-px before:bg-gray-100"
       >
         <Box
           className="relative inline-block bg-white px-4 py-1 rounded-full border border-gray-100"

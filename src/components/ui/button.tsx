@@ -121,6 +121,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       sx,
       style,
+      asChild,
       ...props
     },
     ref

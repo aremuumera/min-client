@@ -101,7 +101,8 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
     validateEachDescriptionField(index, field, value);
   };
 
-  const handleAddDescriptionField = () => {
+  const handleAddDescriptionField = (e: React.MouseEvent) => {
+    e.preventDefault();
     dispatch(addProfileDescriptionField());
   };
   const handelClearDescriptionField = (index: number) => {
@@ -153,23 +154,25 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       newErrors.selectedShippings = 'Shipping options is required.';
     if (!profileDetailsFormData.totalRevenue) newErrors.totalRevenue = 'Total revenue is required.';
     if (!profileDetailsFormData.companyDescription) newErrors.companyDescription = 'Company description is required.';
-    
+
     setErrors(newErrors);
     console.log('Validation errors:', newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0] as string;
+      toast.error(firstError, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#f44336',
+          color: '#fff',
+        },
+      });
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
-  // useEffect(() => {
-  //   logAllDataFromIndexedDB('supplierProfileLogo').then((data) => {
-  //     // The data will be logged in the console
-  //     console.log('all indexdb data:', data);
-  //   }).catch((error) => {
-  //     console.error('Error:', error);
-  //   });
-  //   console.log('Current Errors:', errors);
-  //   // console.log('Uploaded Files:', uploadedFiles);
-  //   // console.log('Description Fields:', descriptionFields);
-  // }, [errors, supplierProfileLogo, supplierProfileBanner]);
 
   const handleLogoFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -488,12 +491,12 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
                     {paymentTerms.map((term) => (
                       <div key={term.code} className="flex items-center space-x-2">
-                        <Checkbox 
+                        <Checkbox
                           id={`payment-${term.code}`}
-                          checked={(profileDetailsFormData.selectedPayments || []).indexOf(term.code) > -1} 
+                          checked={(profileDetailsFormData.selectedPayments || []).indexOf(term.code) > -1}
                           onChange={() => {
                             const current = profileDetailsFormData.selectedPayments || [];
-                            const next = current.includes(term.code) 
+                            const next = current.includes(term.code)
                               ? current.filter((c: string) => c !== term.code)
                               : [...current, term.code];
                             handlePaymentChange({ target: { value: next } } as any);
@@ -514,12 +517,12 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
                     {shippingTerms.map((term) => (
                       <div key={term.code} className="flex items-center space-x-2">
-                        <Checkbox 
+                        <Checkbox
                           id={`shipping-${term.code}`}
-                          checked={(profileDetailsFormData.selectedShippings || []).indexOf(term.code) > -1} 
+                          checked={(profileDetailsFormData.selectedShippings || []).indexOf(term.code) > -1}
                           onChange={() => {
                             const current = profileDetailsFormData.selectedShippings || [];
-                            const next = current.includes(term.code) 
+                            const next = current.includes(term.code)
                               ? current.filter((c: string) => c !== term.code)
                               : [...current, term.code];
                             handleShippingChange({ target: { value: next } } as any);
@@ -608,6 +611,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                       ''
                     ) : (
                       <Button
+                        type="button"
                         className="flex absolute right-0 justify-center text-center text-[1.4rem]"
                         onClick={() => handelClearDescriptionField(index)}
                       >
@@ -646,10 +650,10 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
 
             {/* Preview Modal Button */}
             <div className="py-[20px] flex gap-4 w-full">
-              <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary">
+              <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type="button">
                 Preview
               </Button>
-              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" className="mt-4" color="primary">
+              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" className="mt-4" color="primary" type="button">
                 Add More Description Field
               </Button>
             </div>
@@ -669,7 +673,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                     </Box>
                   ))}
                 </div>
-                <Button variant="contained" className="mt-6" onClick={handlePreviewClose} color="secondary">
+                <Button variant="contained" className="mt-6" onClick={handlePreviewClose} color="secondary" type="button">
                   Close Preview
                 </Button>
               </Box>
@@ -683,10 +687,10 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                     <h2 className="font-[500] text-[1rem]">Company logo</h2>
                     <p className="text-[#b6b6b6] text-[.9rem]">File should maintain minimum of 40 * 40</p>
                   </div>
-                    <Box
-                      className="flex flex-col gap-[8px] justify-center items-center w-full h-[150px] border-[1.5px] border-dashed border-[#d9d9d9] rounded-[8px] cursor-pointer bg-white hover:bg-[#f7f7f7]"
-                      onClick={() => (document.getElementById('logo-upload') as HTMLInputElement).click()} // Trigger input on box click
-                    >
+                  <Box
+                    className="flex flex-col gap-[8px] justify-center items-center w-full h-[150px] border-[1.5px] border-dashed border-[#d9d9d9] rounded-[8px] cursor-pointer bg-white hover:bg-[#f7f7f7]"
+                    onClick={() => (document.getElementById('logo-upload') as HTMLInputElement).click()} // Trigger input on box click
+                  >
                     <FaUpload size={20} color="#888" />
                     <Input
                       id="logo-upload"
@@ -739,7 +743,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                       className="hidden"
                       accept="image/png, image/jpeg, image/webp, "
                       sx={{ display: 'none' }}
-                      // multiple
+                    // multiple
                     />
                     <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
                   </Box>

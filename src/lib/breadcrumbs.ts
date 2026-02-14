@@ -15,16 +15,13 @@ export const generateMarketplaceBreadcrumbs = (
 ): Breadcrumb[] => {
     const segments = pathname.split('/').filter(Boolean);
 
-    // Remove 'dashboard' and 'products' segments if present at start
+    // Remove 'dashboard' segment if present at start for URL building prefix
     if (segments[0] === 'dashboard') {
-        segments.shift();
-    }
-    if (segments[0] === 'products') {
         segments.shift();
     }
 
     const breadcrumbs: Breadcrumb[] = [];
-    let url = '';
+    let url = '/dashboard';
 
     breadcrumbs.push({ title: 'Home', href: '/' });
 
@@ -36,28 +33,29 @@ export const generateMarketplaceBreadcrumbs = (
 
         // Handle special route segments
         switch (segment) {
+            case 'products':
+                title = 'Marketplace';
+                break;
+            case 'rfqs':
+                title = 'RFQs';
+                break;
             case 'all-mineral-cp':
                 title = 'All Products';
                 break;
             case 'rfq-products':
-                title = 'RFQs';
+                title = 'RFQ Listings';
                 break;
-            case 'all-cp':
-                title = 'All Products';
-                break;
+            case 'details':
+                continue; // Skip 'details' in breadcrumbs for cleaner look
             default:
                 // Handle dynamic segments with route params
                 if (i > 0) {
                     const prevSegment = segments[i - 1];
-                    if (prevSegment === 'all-mineral-cp' && i === 1) {
+                    if (prevSegment === 'all-mineral-cp') {
                         title = params?.mainCategoryId || title;
-                    } else if (prevSegment === 'all-mineral-cp' && i === 2) {
-                        title = params?.mineralCategoryId || title;
-                    } else if (prevSegment === 'all-mineral-cp' && i === 3) {
-                        title = params?.subMineralCategoryId || title;
-                    } else if (prevSegment === 'rfq-products' && i === 1) {
-                        title = params?.rfqCategoryId || title;
-                    } else if (prevSegment === 'rfq-products' && i === 2 && segment.includes('rfq')) {
+                    } else if (prevSegment === 'details') {
+                        // If previous was details, this is an ID or Name
+                        // Try to get name from params if possible
                         title = params?.rfqName || title;
                     }
                 }
@@ -65,7 +63,9 @@ export const generateMarketplaceBreadcrumbs = (
                 title = title.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
         }
 
-        breadcrumbs.push({ title, href: `/dashboard/products${url}` });
+        if (segment !== 'details') {
+            breadcrumbs.push({ title, href: url });
+        }
     }
 
     return breadcrumbs;

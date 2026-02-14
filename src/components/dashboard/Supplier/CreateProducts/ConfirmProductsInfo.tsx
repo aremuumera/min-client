@@ -9,18 +9,18 @@ import { useAppSelector } from '@/redux';
 const ConfirmSupplierProductsInfo = () => {
   const { productSuccessData } = useAppSelector((state) => state.product);
 
-  
+
   // This would typically come from your router or state management
-  const productId = "1e21c382d5f642a2b7cf7dc5fe3b5b8c"; 
-  const productName = productSuccessData?.productName ? productSuccessData?.productName : ''; 
+  const productId = "1e21c382d5f642a2b7cf7dc5fe3b5b8c";
+  const productName = productSuccessData?.productName ? productSuccessData?.productName : '';
   // Determine base URL based on environment
   const isLocal = process.env.NODE_ENV === 'development';
-  const baseUrl = isLocal 
-    ? 'http://localhost:3000' 
+  const baseUrl = isLocal
+    ? 'http://localhost:3000'
     : `${WEB_URL}`;
-  
+
   // Construct the product link
-  const productLink = `${baseUrl}products/details/${productSuccessData?.productId || ''}/${formatCompanyNameForUrl(productSuccessData?.productName || '')}`;
+  const productLink = `${baseUrl}/products/details/${productSuccessData?.productId || ''}/${formatCompanyNameForUrl(productSuccessData?.productName || '')}`;
 
   console.log('productSuccessData', productSuccessData);
 
@@ -69,31 +69,31 @@ const ConfirmSupplierProductsInfo = () => {
           <div className="flex justify-center items-center bg-primary p-[40px] rounded-full">
             <TiTick className="text-[54px] text-white" />
           </div>
-          
+
           <div className="text-center">
-            <h2 className="text-[20px] font-[500]">Product listed successfully</h2>
+            <h2 className="text-[20px] font-medium">Product listed successfully</h2>
             <p className="text-[16px] mx-auto w-full pt-4 max-w-[600px] text-[#757c84]">
               Thank you! Your {productName} has been listed successfully.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap justify-center gap-4 mt-6">
-            <button 
+            <button
               onClick={handleCopyLink}
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
             >
               <FaCopy /> Copy Link
             </button>
-            
-            <button 
+
+            <button
               onClick={handleViewProduct}
               className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition"
             >
               <FaEye /> View Product
             </button>
-            
+
             {'share' in navigator && (
-              <button 
+              <button
                 onClick={handleShare}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
               >
@@ -101,7 +101,7 @@ const ConfirmSupplierProductsInfo = () => {
               </button>
             )}
           </div>
-          
+
           {/* Debug info for local development */}
           {isLocal && (
             <div className="mt-6 p-4 bg-gray-50 rounded-lg max-w-full">

@@ -105,9 +105,15 @@ function NavItem({
     depth: number;
     isCollapsed?: boolean;
 }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const active = isNavItemActive({ ...item, pathname });
     const hasChildren = item.items && item.items.length > 0;
+
+    // Automatically expand if a child item is active
+    const forceOpen = hasChildren
+        ? item.items?.some(child => isNavItemActive({ ...child, pathname }))
+        : false;
+
+    const [isOpen, setIsOpen] = useState(forceOpen);
+    const active = isNavItemActive({ ...item, pathname });
     const Icon = item.icon ? icons[item.icon] : null;
 
     const content = (

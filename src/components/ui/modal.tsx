@@ -197,7 +197,7 @@ function ModalBody({ className, dividers = false, ...props }: ModalBodyProps) {
   return (
     <div
       className={cn(
-        'p-4 overflow-y-auto max-h-[60vh]',
+        'p-4 overflow-y-auto max-h-[90vh]',
         dividers && 'border-y border-neutral-200',
         className
       )}

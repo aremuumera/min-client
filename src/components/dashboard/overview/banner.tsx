@@ -98,8 +98,8 @@ const Banner = () => {
   return (
     <div className="w-full">
       {/* Banner Slider */}
-      <div className="relative overflow-hidden rounded-lg md:rounded-xl lg:rounded-[30px] h-[150px] sm:h-[180px] md:h-[210px] w-full">
-        {/* <AnimatePresence initial={false}>
+      {/* <div className="relative overflow-hidden rounded-lg md:rounded-xl lg:rounded-[30px] h-[150px] sm:h-[180px] md:h-[210px] w-full">
+        <AnimatePresence initial={false}>
           <motion.div
             key={currentBanner}
             initial={{ opacity: 0, x: 300 }}
@@ -129,10 +129,9 @@ const Banner = () => {
               </motion.p>
             </div>
           </motion.div>
-        </AnimatePresence> */}
+        </AnimatePresence>
 
-        {/* Slider Controls */}
-        {/* <div className="absolute inset-y-0 left-0 flex items-center">
+        <div className="absolute inset-y-0 left-0 flex items-center">
           <button 
             onClick={prevSlide}
             className="bg-white bg-opacity-30 hover:bg-opacity-50 p-2 rounded-r-lg focus:outline-none"
@@ -154,10 +153,8 @@ const Banner = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-        </div> */}
-
-        {/* Dots Navigation */}
-        {/* <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+        </div>
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
           {bannerImages.map((_, index) => (
             <button
               key={index}
@@ -168,8 +165,8 @@ const Banner = () => {
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
-        </div> */}
-      </div>
+        </div>
+      </div> */}
 
       <div className="py-4 px-4 lg:px-0">
         <div className="w-full py-4 md:py-6">

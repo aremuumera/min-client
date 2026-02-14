@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useGetUserInvoiceAgreementsQuery } from '@/redux/features/invoice/invoice_api';
-// TODO: Migrate Alert from @mui/material
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,8 +20,6 @@ import { TablePagination } from '@/components/ui/pagination';
 import { TextField } from '@/components/ui/input';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Typography } from '@/components/ui/typography';
-// TODO: Migrate  from @mui/material
-// import { useGetUserInvoiceAgreementsQuery } from '@/redux/features/invoice/invoice_api';
 import {
     FileText as DescriptionIcon,
     Clock as PendingIcon,
@@ -225,11 +222,11 @@ export function InvoicesDashboard() {
                             </div>
                         </div>
 
-                        <div className="md:border-l border-gray-100 md:pl-6 shrink-0">
+                        {/* <div className="md:border-l border-gray-100 md:pl-6 shrink-0">
                             <p className="text-xs text-gray-400 font-medium">
                                 Showing <span className="text-gray-900 font-bold">{filteredInvoices.length}</span> of <span className="text-gray-900 font-bold">{stats.total}</span> agreements
                             </p>
-                        </div>
+                        </div> */}
                     </div>
                 </CardContent>
             </Card>
@@ -276,7 +273,7 @@ export function InvoicesDashboard() {
                                         <TableCell className="text-right">
                                             <div className="text-sm font-bold text-gray-900">
                                                 {invoice.currency === 'NGN' ? '₦' : invoice.currency === 'USD' ? '$' : '₦'}
-                                                {invoice.totalPrice}
+                                                {invoice.totalPrice || '0.00'}
                                             </div>
                                             <div className="text-[10px] text-gray-400 font-bold uppercase">{invoice.currency}</div>
                                         </TableCell>

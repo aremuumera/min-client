@@ -58,14 +58,23 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full">
-        <div className="p-4 flex-grow h-full flex flex-col">
+      <div className="bg-white rounded-lg border border-[#efefef] flex flex-col h-full">
+        <div className="p-4 grow h-full flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center text-green-700 text-sm font-medium">
-              <User className="mr-1.5 w-4 h-4" />
-              <span className="truncate max-w-[120px] sm:max-w-[150px]">
-                {buyer?.first_name} {buyer?.last_name}
-              </span>
+            <div className="grow">
+              <p className="text-sm font-semibold text-gray-900 leading-tight">
+                {buyer?.name || 'Buyer'}
+              </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <p className="text-[11px] text-gray-500">
+                  {buyer?.company_name || 'Individual Buyer'}
+                </p>
+                {buyer?.verified && (
+                  <span className="shrink-0 bg-blue-50 text-blue-600 px-1 rounded text-[9px] font-medium border border-blue-100 uppercase tracking-tighter">
+                    Verified
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center text-green-800 bg-green-50 px-2 py-1 rounded-md text-xs font-medium">
               <Calendar className="mr-1.5 w-3 h-3" />
@@ -91,7 +100,7 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
               <div className="flex items-center gap-2 overflow-hidden">
                 {country?.flagImage && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <div className="w-6 h-4 flex-shrink-0">
+                  <div className="w-6 h-4 shrink-0">
                     <img src={country.flagImage} alt="Flag" className="w-full h-full object-cover rounded-[1px]" />
                   </div>
                 )}

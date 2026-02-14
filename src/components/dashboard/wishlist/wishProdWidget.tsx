@@ -50,7 +50,7 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
         id
     } = products;
 
-    const productCardRoute = `/products/details/${id}/${formatCompanyNameForUrl(product_name)}`;
+    const productCardRoute = `/dashboard/products/details/${id}/${formatCompanyNameForUrl(product_name)}`;
 
     return (
         <div className='relative'>
@@ -73,11 +73,12 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
 
                 {/* Images */}
                 <div>
-                    <div className="widget_image_container relative h-[230px]">
+                    <div className="widget_image_container relative aspect-square md:h-[230px]">
                         <div className="w-full h-full flex" style={imageContainerStyle}>
                             {products?.images?.map((j: any, i: any) => (
                                 <div
-                                    className="relative w-full h-full rounded-t-xl overflow-hidden"
+                                    className="relative h-full rounded-t-xl overflow-hidden shrink-0"
+                                    style={{ width: `${100 / (products?.images?.length || 1)}%` }}
                                     key={i}
                                 >
                                     <Link
@@ -176,7 +177,7 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                         )}
                         <Link
                             className='sm:text-[15px] text-[12px] cursor-pointer font-[500] underline'
-                            href={`/business/${storeProfile?.company_name}`}
+                            href={`/dashboard/business/${storeProfile?.company_name}`}
                         >
                             {storeProfile?.company_name}
                         </Link>

@@ -1,6 +1,8 @@
+"use client";
+
 import React, { useState } from "react";
 import { Table } from '@/components/ui/table';
-import { TableHead } from '@/components/ui/table';
+import { TableHead, TableHeader } from '@/components/ui/table';
 import { TableBody } from '@/components/ui/table';
 import { TableCell } from '@/components/ui/table';
 import { TableRow } from '@/components/ui/table';
@@ -10,7 +12,7 @@ import { RiDeleteBinLine } from "react-icons/ri";
 import DeleteRfQs from "../Delete/deleteRfqs";
 import EditRfQs from "../Edit/RfqEdit";
 import { useRouter } from "next/navigation";
-import { formatDate } from "@/utils/utils";
+import { formatDate } from "@/utils/helper";
 
 
 
@@ -50,18 +52,18 @@ const RfqDataTable = ({ columns = [], rows = [] }: any) => {
     <div className="shadow-md rounded-lg bg-white overflow-x-auto">
       <Table>
         {/* Table Head */}
-        <TableHead>
+        <TableHeader>
           <TableRow>
             {columns.map((col: any) => (
-              <TableCell
+              <TableHead
                 key={col.id}
                 style={{ width: col.width, maxWidth: col.width, minWidth: col.width, fontWeight: "bold" }}
               >
                 {col.label}
-              </TableCell>
+              </TableHead>
             ))}
           </TableRow>
-        </TableHead>
+        </TableHeader>
 
         {/* Table Body */}
         <TableBody>

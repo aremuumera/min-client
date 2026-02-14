@@ -70,7 +70,7 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
           </div>
         )}
 
-        <div className="flex-grow p-4">
+        <div className="grow p-4">
           <div className="flex items-center justify-between mb-3">
             <Typography className="flex items-center text-primary text-sm font-medium">
               <MdPerson className="mr-1 text-primary" />
@@ -102,7 +102,7 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
                   <img src={country.flagImage} alt="Country Flag" className="w-full h-full object-cover" />
                 </div>
               )}
-              <span className="sm:text-[15px] text-[12px] cursor-pointer font-[500]">{productDestination}</span>
+              <span className="sm:text-[15px] text-[12px] cursor-pointer font-medium">{productDestination}</span>
             </div>
           </div>
 
@@ -133,8 +133,8 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
 
         <div className="flex justify-between px-3 pb-3 mt-auto">
           <Link
-            href={`/rfqs/details/${rfqIdentifier}/${formatCompanyNameForUrl(productName)}`}
-            className="!text-green-600 !bg-transparent !border !border-green-600 hover:!bg-green-100"
+            href={`/dashboard/rfqs/details/${rfqIdentifier}/${formatCompanyNameForUrl(productName)}`}
+            className="text-green-600! bg-transparent! border! border-green-600 hover:bg-green-100!"
           >
             View more info
           </Link>

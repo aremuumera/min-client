@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useEffect, useState } from 'react';
 import ProgressBar from '@/utils/progress_tracker';
 import { Box } from '@/components/ui/box';

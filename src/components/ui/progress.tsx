@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { cn } from '@/utils/helper';
+import { Loader2 } from 'lucide-react';
 
 /* ============================================
    LINEAR PROGRESS
@@ -117,45 +117,12 @@ function CircularProgress({
   color = 'primary',
   ...props
 }: CircularProgressProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clampedValue = Math.min(100, Math.max(0, value));
-  const offset = circumference - (clampedValue / 100) * circumference;
-
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className={cn(indeterminate && 'animate-spin', className)}
+    <Loader2
+      size={size}
+      className={cn('animate-spin', circularColorClasses[color], className)}
       {...props}
-    >
-      {/* Background circle */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        strokeWidth={strokeWidth}
-        className="stroke-neutral-200"
-      />
-      {/* Progress circle */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        className={cn(strokeColorClasses[color])}
-        style={{
-          strokeDasharray: circumference,
-          strokeDashoffset: indeterminate ? circumference * 0.75 : offset,
-          transformOrigin: 'center',
-          transform: 'rotate(-90deg)',
-        }}
-      />
-    </svg>
+    />
   );
 }
 

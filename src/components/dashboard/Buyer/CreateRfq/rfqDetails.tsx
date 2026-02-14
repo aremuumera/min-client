@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react';
 import { useCreateRFQMutation } from '@/redux/features/buyer-rfq/rfq-api';
 import {
@@ -38,9 +40,9 @@ import {
   TextField,
   Typography,
   ListItemText,
-  CircularProgress,
   FormHelperText
 } from '@/components/ui';
+import { Loader2 } from 'lucide-react';
 import {
   MdCheckCircle as CheckCircle,
   MdClose as Close,
@@ -56,11 +58,14 @@ import { toast } from 'sonner';
 
 import { Option } from '@/components/core/option';
 import { TextEditor } from '@/components/core/text-editor/text-editor';
+import { paths } from '@/config/paths';
 import { Moq } from '@/components/marketplace/layout/sidebar';
 
 import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
 import { useAppDispatch, useAppSelector } from '@/redux';
 import { Chip } from '@/components/ui/chip';
+import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
+import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 
 interface CategoryItem {
   id: string;
@@ -71,6 +76,7 @@ interface CategoryItem {
 }
 
 interface CategoryData {
+  id?: string;
   children?: CategoryItem[];
   original_id?: string;
   name?: string;
@@ -211,6 +217,12 @@ const RfqDetails = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    dispatch(updateRfqProductDetailsFormData({ [name]: value }));
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
+    validateForm();
+  };
+
+  const handleSelectChange = (name: string, value: any) => {
     dispatch(updateRfqProductDetailsFormData({ [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
     validateForm();
@@ -497,9 +509,14 @@ const RfqDetails = ({
 
   const isLocal = process.env.NODE_ENV === 'development';
 
-  const theWebUrl = isLocal ? 'http://localhost:3000' : `${WEB_URL}`;
+  const theWebUrl = (isLocal ? 'http://localhost:3000' : `${WEB_URL}`).replace(/\/$/, '');
 
-  const viewCopyLink = `${theWebUrl}rfqs/details/${rfqSuccessData?.id || ''}/${rfqSuccessData?.name ? formatCompanyNameForUrl(rfqSuccessData?.name) : ''}`;
+  const rfqPath = paths.marketplace.rfqDetails(
+    rfqSuccessData?.id || '',
+    rfqSuccessData?.name ? formatCompanyNameForUrl(rfqSuccessData?.name) : ''
+  );
+
+  const viewCopyLink = `${theWebUrl}${rfqPath}`;
 
   const handleViewRfq = () => {
     // Navigate to the RFQ detail page
@@ -541,20 +558,15 @@ const RfqDetails = ({
 
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <FormControl fullWidth error={!!errors.quantityMeasure}>
-                <InputLabel>Quantity(measured)</InputLabel>
-                <Select
+                <SearchableSelectLocal
+                  label="Quantity(measured)"
                   name="quantityMeasure"
                   value={typedFormData?.quantityMeasure || ''}
-                  onChange={handleInputChange}
-                >
-                  <Option value="">Select Quantity e.g (tons, kg)</Option>
-                  {Moq.map((unit) => (
-                    <Option key={unit} value={unit}>
-                      {unit}
-                    </Option>
-                  ))}
-                </Select>
-                {errors.quantityMeasure && <FormHelperText>{errors.quantityMeasure}</FormHelperText>}
+                  onChange={(val: any) => handleSelectChange('quantityMeasure', val)}
+                  options={Moq.map(unit => ({ value: unit, label: unit }))}
+                  placeholder="Select Quantity e.g (tons, kg)"
+                />
+                {errors.quantityMeasure && <FormHelperText error>{errors.quantityMeasure}</FormHelperText>}
               </FormControl>
 
               {/* Quantity required */}
@@ -571,132 +583,72 @@ const RfqDetails = ({
               />
             </div>
 
-            {/* <div className="flex flex-col py-5 md:flex-row gap-[15px] items-center justify-center">
-                        
-                        <FormControl fullWidth error={!!(errors as any).rfqProductCategory}>
-                          <InputLabel>Product request Category</InputLabel>
-                          <Select 
-                          defaultValue="" 
-                          name="rfqProductCategory"
-                          value={rfqProductDetailsFormData?.rfqProductCategory || ''}
-                          onChange={handleInputChange}
-                          >
-                            <Option value="">Select a category</Option>
-                            <Option value="minerals">Minerals</Option>
-                          </Select>
-                         {errors.rfqProductCategory && <FormHelperText>{errors.rfqProductCategory}</FormHelperText>}
-                        </FormControl>
-                        
-
-                        <FormControl  fullWidth error={!!(errors as any).rfqProductSubCategory}>
-                          <InputLabel>Product request Sub-Category</InputLabel>
-                          <Select 
-                          // defaultValue="" 
-                          name="rfqProductSubCategory" 
-                          value={rfqProductDetailsFormData?.rfqProductSubCategory || '' }
-                          onChange={handleInputChange}
-                          MenuProps={{
-                            PaperProps: {
-                              style: {
-                                maxHeight: 250,
-                              },
-                            },
-                          }}
-                          disabled={rfqProductDetailsFormData?.rfqProductCategory !== 'minerals'}
-                          >
-                            <Option value="">Select a sub-category</Option>
-                            <Option value="Metallic">Metallic min</Option>
-                            <Option value="Non-metallic Industrial minerals">Non-metallic Industrial minerals</Option>
-                            <Option value="Marble and Natural Stone">Marble and Natural Stone</Option>
-                            <Option value="Gravel, Sand or Aggregate">Gravel, Sand or Aggregate</Option>
-                            <Option value="Coal">Coal</Option>
-                            <Option value="Other Minerals">Other Minerals</Option>
-                            <Option value="Gems">Gems</Option>
-                          </Select>
-                          {errors.rfqProductSubCategory && <FormHelperText>{errors.rfqProductSubCategory}</FormHelperText>}
-                        </FormControl>
-                    </div> */}
-
-            {/* all category selection */}
             <div className="flex flex-col md:flex-row gap-[15px] pt-4 items-center justify-center">
-              <FormControl fullWidth error={!!(errors as any).productMainCategory}>
-                <InputLabel>Main Product Category</InputLabel>
-                <Select
-                  value={selectedCategories.mainCategory.id}
-                  onChange={(e) => {
-                    const selected = mainCatData.find((cat: CategoryData) => cat.original_id === e.target.value);
-                    handleCategoryChanges('mainCategory', e.target.value as string, selected?.name, selected?.tag);
-                  }}
+              <div className="w-full">
+                <SearchableSelectLocal
                   label="Main Product Category"
+                  name="mainCategory"
+                  value={selectedCategories.mainCategory.id}
+                  onChange={(val: any) => {
+                    const selected = mainCatData.find((cat: CategoryData) => (cat.original_id || cat.id) === val);
+                    handleCategoryChanges('mainCategory', val, selected?.name, selected?.tag);
+                  }}
+                  options={mainCatData?.map((cat: CategoryData) => ({
+                    value: cat.original_id || cat.id,
+                    label: cat.name
+                  })) || []}
+                  placeholder="Select a main category"
                   disabled={isMainCatLoading}
-                >
-                  <MenuItem value="">
-                    <em>Select a main category</em>
-                  </MenuItem>
-                  {mainCatData?.map((category: CategoryData) => (
-                    <MenuItem key={category.original_id} value={category.original_id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                />
+                {errors.productMainCategory && <FormHelperText error>{errors.productMainCategory}</FormHelperText>}
+              </div>
 
-              {/* Only show Product Category select if the selected main category has submenu: true */}
               {selectedCategories.mainCategory.id &&
                 mainCatData?.find((cat: CategoryData) => cat.original_id === selectedCategories.mainCategory.id)?.submenu && (
-                  <FormControl fullWidth error={!!(errors as any).productCategory}>
-                    <InputLabel>Product Category</InputLabel>
-                    <Select
-                      value={selectedCategories.productCategory.id}
-                      onChange={(e) => {
-                        const selected = productCatData?.children?.find((cat: CategoryItem) => cat.original_id === e.target.value);
-                        handleCategoryChanges('productCategory', e.target.value as string, selected?.name, selected?.tag);
-                      }}
+                  <div className="w-full">
+                    <SearchableSelectLocal
                       label="Product Category"
+                      name="productCategory"
+                      value={selectedCategories.productCategory.id}
+                      onChange={(val: any) => {
+                        const selected = productCatData?.children?.find((cat: CategoryItem) => (cat.original_id || cat.id) === val);
+                        handleCategoryChanges('productCategory', val, selected?.name, selected?.tag);
+                      }}
+                      options={productCatData?.children?.map((cat: CategoryItem) => ({
+                        value: cat.original_id || cat.id,
+                        label: cat.name
+                      })) || []}
+                      placeholder="Select a category"
                       disabled={isProductCatLoading}
-                    >
-                      <MenuItem value="">
-                        <em>Select a category</em>
-                      </MenuItem>
-                      {productCatData?.children?.map((category: CategoryItem) => (
-                        <MenuItem key={category.original_id} value={category.original_id}>
-                          {category.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                    />
+                    {errors.productCategory && <FormHelperText error>{errors.productCategory}</FormHelperText>}
+                  </div>
                 )}
             </div>
 
             <div className="flex flex-col md:flex-row gap-[15px] pt-6 items-center justify-center">
-              {/* Only show Sub Category select if the selected product category has submenu: true */}
               {selectedCategories.productCategory.id &&
                 productCatData?.children?.find((cat: CategoryItem) => cat.original_id === selectedCategories.productCategory.id)
                   ?.submenu && (
-                  <FormControl fullWidth error={!!(errors as any).productSubCategory}>
-                    <InputLabel>Product Sub Category</InputLabel>
-                    <Select
-                      value={selectedCategories.subCategory.id}
-                      onChange={(e) => {
-                        const selected = subCatData?.children?.find((cat: CategoryItem) => cat.original_id === e.target.value);
-                        handleCategoryChanges('subCategory', e.target.value as string, selected?.name, selected?.tag);
-                      }}
+                  <div className="w-full">
+                    <SearchableSelectLocal
                       label="Product Sub Category"
+                      name="subCategory"
+                      value={selectedCategories.subCategory.id}
+                      onChange={(val: any) => {
+                        const selected = subCatData?.children?.find((cat: CategoryItem) => (cat.original_id || cat.id) === val);
+                        handleCategoryChanges('subCategory', val, selected?.name, selected?.tag);
+                      }}
+                      options={subCatData?.children?.map((cat: CategoryItem) => ({
+                        value: cat.original_id || cat.id,
+                        label: cat.name
+                      })) || []}
+                      placeholder="Select a sub-category"
                       disabled={isSubCatLoading}
-                    >
-                      <MenuItem value="">
-                        <em>Select a sub-category</em>
-                      </MenuItem>
-                      {subCatData?.children?.map((category: CategoryItem) => (
-                        <MenuItem key={category.original_id} value={category.original_id}>
-                          {category.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                    />
+                    {errors.productSubCategory && <FormHelperText error>{errors.productSubCategory}</FormHelperText>}
+                  </div>
                 )}
-
-              {/* ... other form fields ... */}
             </div>
 
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
@@ -712,74 +664,54 @@ const RfqDetails = ({
                 helperText={errors.deliveryPeriod}
               />
 
-              {/* <TextField
-                          label="Product Destination"
-                          fullWidth
-                          margin="normal"
-                          name='productDestination'
-                          placeholder="e.g... Nigeria, China"
-                          value={rfqProductDetailsFormData?.productDestination || ''}
-                          onChange={handleInputChange}
-                          error={!!(errors as any).productDestination}
-                          helperText={errors.productDestination}
-                        /> */}
-
-              <FormControl fullWidth error={!!(errors as any).productDestination}>
-                <InputLabel>Product Destination</InputLabel>
-                <Select
+              <div className="w-full">
+                <SearchableSelectLocal
+                  label="Product Destination"
                   name="productDestination"
                   value={typedFormData?.productDestination || ''}
-                  onChange={handleCountryChange}
-                >
-                  <MenuItem value="">Select</MenuItem>
-                  {Country.getAllCountries().map((country) => (
-                    <MenuItem key={country.isoCode} value={country.isoCode}>
-                      {country.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.productDestination && <FormHelperText>{errors.productDestination}</FormHelperText>}
-              </FormControl>
+                  onChange={(val: any) => {
+                    const selectedCountryData = Country.getAllCountries().find((country) => country.isoCode === val);
+                    setSelectedCountry(val);
+                    dispatch(setStates(State.getStatesOfCountry(val) || []));
+                    dispatch(
+                      updateRfqProductDetailsFormData({
+                        productDestination: val,
+                        selectedCountryName: selectedCountryData?.name || '',
+                      })
+                    );
+                    setErrors((prevErrors) => ({ ...prevErrors, productDestination: '' }));
+                  }}
+                  options={Country.getAllCountries().map(c => ({ value: c.isoCode, label: c.name, isoCode: c.isoCode }))}
+                  placeholder="Select Destination"
+                />
+                {errors.productDestination && <FormHelperText error>{errors.productDestination}</FormHelperText>}
+              </div>
             </div>
 
             <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-center justify-center">
-              {/* Shipping Terms Select */}
-              <FormControl fullWidth error={!!errors.selectedShippings}>
-                <InputLabel>Shipping Terms</InputLabel>
-                <Select
-                  // multiple is not supported by custom Select yet
+              <div className="w-full">
+                <MultiCheckboxSelectLocal
+                  label="Shipping Terms"
                   name="selectedShippings"
-                  value={typedFormData?.selectedShippings?.[0] || ''}
-                  onChange={handleInputChange}
-                >
-                  {shippingTerms.map((term) => (
-                    <MenuItem key={term.code} value={term.code}>
-                      <Checkbox checked={(typedFormData?.selectedShippings || []).indexOf(term.code) > -1} />
-                      <ListItemText primary={`${term.code} - ${term.name}`} />
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.selectedShippings && <FormHelperText>{errors.selectedShippings}</FormHelperText>}
-              </FormControl>
+                  value={typedFormData?.selectedShippings || []}
+                  onChange={(val: any[]) => handleSelectChange('selectedShippings', val)}
+                  options={shippingTerms.map(term => ({ value: term.code, label: `${term.code} - ${term.name}` }))}
+                  placeholder="Select Shipping Terms"
+                />
+                {errors.selectedShippings && <FormHelperText error>{errors.selectedShippings}</FormHelperText>}
+              </div>
 
-              {/* Payment Terms Select */}
-              <FormControl fullWidth error={!!errors.selectedPayments}>
-                <InputLabel>Payment Terms</InputLabel>
-                <Select
-                  // multiple is not supported by custom Select yet
+              <div className="w-full">
+                <MultiCheckboxSelectLocal
+                  label="Payment Terms"
                   name="selectedPayments"
-                  value={typedFormData?.selectedPayments?.[0] || ''}
-                  onChange={handleInputChange}
-                >
-                  {paymentTerms.map((term) => (
-                    <MenuItem key={term.code} value={term.code}>
-                      <Checkbox checked={(typedFormData?.selectedPayments || []).indexOf(term.code) > -1} />
-                      <ListItemText primary={`${term.code} - ${term.name}`} />
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.selectedPayments && <FormHelperText>{errors.selectedPayments}</FormHelperText>}
-              </FormControl>
+                  value={typedFormData?.selectedPayments || []}
+                  onChange={(val: any[]) => handleSelectChange('selectedPayments', val)}
+                  options={paymentTerms.map(term => ({ value: term.code, label: `${term.code} - ${term.name}` }))}
+                  placeholder="Select Payment Terms"
+                />
+                {errors.selectedPayments && <FormHelperText error>{errors.selectedPayments}</FormHelperText>}
+              </div>
             </div>
 
             <div className="flex pt-[20px] flex-col md:flex-row gap-[15px] items-center justify-center">
@@ -793,7 +725,6 @@ const RfqDetails = ({
                 name="paymentTermsDescribed"
                 value={typedFormData?.paymentTermsDescribed || ''}
                 onChange={handleInputChange}
-                // sx={{ mt: 1 }}
                 error={!!errors.paymentTermsDescribed}
                 helperText={errors.paymentTermsDescribed}
               />
@@ -807,16 +738,14 @@ const RfqDetails = ({
                 name="shippingTermsDescribed"
                 value={typedFormData?.shippingTermsDescribed || ''}
                 onChange={handleInputChange}
-                // sx={{ mt: 1 }}
                 error={!!errors.shippingTermsDescribed}
                 helperText={errors.shippingTermsDescribed}
               />
             </div>
 
-            {/* File Upload Section */}
             <div>
               <div className="py-[20px]">
-                <h2 className="font-[500] text-[1.4rem]">Upload RFQ Attachemnt (Optional)</h2>
+                <h2 className="font-medium text-[1.4rem]">Upload RFQ Attachemnt (Optional)</h2>
                 <p className="text-[#838383] text-[.9rem] ">Maximum of 5 attachment is required</p>
               </div>
               <Box
@@ -839,7 +768,7 @@ const RfqDetails = ({
                 onClick={() => {
                   const input = document.getElementById('file-upload');
                   if (input) input.click();
-                }} // Trigger input on box click
+                }}
               >
                 <FaUpload size={20} color="#888" />
                 <input
@@ -856,7 +785,6 @@ const RfqDetails = ({
                   Image must not exceed 5mb | Supported format: *jpg, *png, *webp
                 </p>
               </Box>
-              {/* Display Uploaded Files' Names */}
               <div className="pt-[10px]">
                 {uploadedFiles?.length > 0 && (
                   <div className="flex flex-wrap gap-[10px]">
@@ -866,6 +794,7 @@ const RfqDetails = ({
                         className="p-1 relative bg-neutral-50 rounded-md"
                       >
                         <IconButton
+                          type="button"
                           aria-label="Remove file"
                           className="absolute -right-4 -top-5 flex justify-center text-center text-sm"
                           onClick={() => handleDeleteFile(index)}
@@ -896,7 +825,6 @@ const RfqDetails = ({
                   multiline
                   placeholder="Describe your RFQ's"
                   rows={4}
-                  // sx={{ mt: 1 }}
                   name="rfqDescription"
                   value={typedFormData?.rfqDescription || ''}
                   onChange={handleInputChange}
@@ -908,7 +836,7 @@ const RfqDetails = ({
             <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
               <Button disabled={isCreatingRfq} variant="contained" color="primary" className="w-full" type="submit">
                 {isCreatingRfq ? (
-                  <Chip label="Verified" color="success" size="sm" />
+                  <Loader2 className="animate-spin text-white" size={18} />
                 ) : (
                   'Publish your RFQ'
                 )}
@@ -940,7 +868,6 @@ interface SuccessModalProps {
 const SuccessModal = ({ open, onClose, rfqLink, onViewRfq }: SuccessModalProps) => {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(rfqLink);
-    // You can show a toast here if you want
     toast.success('Link copied to clipboard!', {
       position: 'top-right',
       style: {
@@ -961,7 +888,6 @@ const SuccessModal = ({ open, onClose, rfqLink, onViewRfq }: SuccessModalProps) 
         })
         .catch(console.error);
     } else {
-      // Fallback for browsers that don't support Web Share API
       handleCopyLink();
     }
   };
@@ -995,17 +921,17 @@ const SuccessModal = ({ open, onClose, rfqLink, onViewRfq }: SuccessModalProps) 
       </DialogContent>
 
       <DialogActions className="justify-center pb-6">
-        <Button variant="outlined" onClick={handleCopyLink} className="mr-4">
+        <Button type="button" variant="outlined" onClick={handleCopyLink} className="mr-4">
           <ContentCopy className="mr-2 h-4 w-4" />
           Copy Link
         </Button>
 
-        <Button variant="outlined" onClick={handleShare} className="mr-4">
+        <Button type="button" variant="outlined" onClick={handleShare} className="mr-4">
           <Share className="mr-2 h-4 w-4" />
           Share
         </Button>
 
-        <Button variant="contained" color="primary" onClick={onViewRfq}>
+        <Button type="button" variant="contained" color="primary" onClick={onViewRfq}>
           View RFQ
         </Button>
       </DialogActions>
