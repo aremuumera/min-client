@@ -34,15 +34,14 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
   const { user, isAuth } = useSelector((state: any) => state.auth);
   const pathname = usePathname();
   const { id, rfqId } = products;
+  const effectiveId = id || rfqId || products?._id;
 
-  const productPATHENMAE = ['/dashboard/products/all-mineral-cp', '/dashboard/products/product-detail'];
+  const productPATHENMAE = ['/dashboard/products/all-mineral-cp', '/dashboard/products/details'];
   const rfqPATHENMAE = ['/dashboard/products/rfq-products', '/dashboard/rfqs/details'];
 
   // Determine item type based on current route
   const getItemType = () => {
-    if (productPATHENMAE.some(path => pathname?.includes(path))) {
-      return 'product';
-    } else if (rfqPATHENMAE.some(path => pathname?.includes(path))) {
+    if (rfqPATHENMAE.some(path => pathname?.includes(path))) {
       return 'rfq';
     }
     return 'product';
@@ -52,7 +51,7 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
 
   // 1. Check initial saved status
   const { data: savedStatus, refetch: refetchSavedStatus } = useCheckSavedStatusQuery(
-    { userId: user?.id, itemId: String(itemType === 'product' ? id : rfqId), itemType },
+    { userId: user?.id, itemId: String(effectiveId), itemType },
     {
       skip: !user?.id,
       refetchOnMountOrArgChange: true
@@ -74,7 +73,7 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
   // Determine if item is saved
   const isSaved = savedStatus?.isSaved ||
     (savedItems?.length > 0 && savedItems?.some((item: any) =>
-      item.itemId == id && item.itemType === itemType
+      item.itemId == effectiveId && item.itemType === itemType
     ));
 
   // Track if we've shown the login alert
@@ -110,7 +109,7 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
 
     try {
       toggleSavedItem({
-        itemId: String(itemType === 'product' ? id : rfqId),
+        itemId: String(effectiveId),
         itemType,
         userId: user.id
       }).unwrap()

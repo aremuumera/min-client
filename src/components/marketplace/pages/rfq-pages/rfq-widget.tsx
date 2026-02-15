@@ -10,6 +10,7 @@ import LoginModal from '@/utils/login-modal';
 import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
 import { useAlert } from '@/providers';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
+import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import { paths } from '@/config/paths';
 
 const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
@@ -35,7 +36,7 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
   } = rfqProduct || {};
 
   // rfqId handling: sometimes API returns _id or id
-  const effectiveRfqId = rfqId || rfqProduct?.rfqId || rfqProduct?._id;
+  const effectiveRfqId = rfqId || rfqProduct?.rfqId || rfqProduct?.id || rfqProduct?._id;
 
   const isOwner = isAuth && user?.id === userId;
 
@@ -76,9 +77,12 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
                 )}
               </div>
             </div>
-            <div className="flex items-center text-green-800 bg-green-50 px-2 py-1 rounded-md text-xs font-medium">
-              <Calendar className="mr-1.5 w-3 h-3" />
-              {updatedAt ? format(new Date(updatedAt), 'dd/MM/yyyy') : 'N/A'}
+            <div className="flex items-center gap-2">
+              <ToggleSaveButton setShowLoginModal={setShowLoginModalForSave} products={rfqProduct} />
+              <div className="flex items-center text-green-800 bg-green-50 px-2 py-1 rounded-md text-xs font-medium">
+                <Calendar className="mr-1.5 w-3 h-3" />
+                {updatedAt ? format(new Date(updatedAt), 'dd/MM/yyyy') : 'N/A'}
+              </div>
             </div>
           </div>
 
@@ -112,7 +116,7 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
 
         <div className="p-3 border-t border-gray-100 flex gap-3 mt-auto">
           <Link
-            href={`/dashboard/rfqs/details/${effectiveRfqId}/${formatCompanyNameForUrl(rfqProductName || 'rfq')}`}
+            href={paths.marketplace.rfqDetails(effectiveRfqId, formatCompanyNameForUrl(rfqProductName || 'rfq'))}
             className="flex-1 text-center py-2 px-3 text-sm font-medium text-green-600 border border-green-600 rounded-md hover:bg-green-50 transition-colors"
           >
             View more info

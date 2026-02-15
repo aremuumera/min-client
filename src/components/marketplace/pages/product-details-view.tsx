@@ -7,6 +7,8 @@ import NoProducts from '@/utils/no-products';
 // import ProductDetailsSkeleton from '@/utils/skeleton/product-detail-skeleton'; // Need migration of this
 import ProductSkeleton from '@/utils/skeleton/product-skeleton'; // Reuse generic product skeleton for now
 import { ViewModeProvider } from '@/contexts/view-product-mode';
+import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import DetailImageWidget from './product-details/detail-image-widget';
 import CompanyDetailInfo from './product-details/company-detail-info';
@@ -15,38 +17,13 @@ import ProductTabs from './product-details/tabs/product-tabs';
 import ProductDetailReview from './product-details/product-detail-review';
 import AlsoLikeProduct from './product-details/also-like-product';
 import SideBar from '../layout/sidebar'; // Import sidebar if needed or if layout handles it.
-// The layout handles SideBar. But ProductDetails replaces the Listing view.
-// In the original code `ProductDetailsMarket` returns a full layout with `TopNav` commented out?
-// `ProductDetailsMarket` is rendered inside `MarketPlace` layout which has `SideBar`?
-// In `App.js` or `routes`: `/products` has `MarketLayout` which has `Outlet`.
-// `AllProduct` is an outlet page. `ProductDetails` is an outlet page.
-// The `MarketLayout` has `SideBar` on the left.
-// `ProductDetails` has `className="lg:flex-row flex-col lg:flex items-start gap-[30px]"` in original code?
-// Wait, `ProductDetailsMarket` code:
-// `<div className="w-full px-[10px] mt-[100px] ... max-w-[1280px] ...">`
-// It seems `ProductDetails` is a full page width component, possibly NOT showing the sidebar alongside it?
-// Let's check `MarketPlace/Layout/MarketPlace.jsx`. 
-// If `MarketPlace.jsx` layout *always* shows sidebar, then details will be squeezed.
-// But usually details pages are full width or have their own layout.
-
-// However, my `layout.tsx` in `src/app/products/layout.tsx` includes:
-// `<div className="flex md:gap-x-[20px] max-w-[1800px]"><div className="..."><SideBar /></div> ... {children} ...`
-// So `children` (the page) will be rendered NEXT to the sidebar.
-// Does `ProductDetails` want this?
-// The original `ProductDetailsMarket` has:
-// `<div className="pt-[60px] ... lg:flex-row ... flex ... items-start gap-[30px]">`
-// It divides into `DetailImageWidget` (left) and `DetailsInfoMarket` (right).
-// This structure fits INSIDE the main content area of `MarketLayout`.
-// So it should be fine.
-
-// Note: `ProductDetailsMarket` has `ViewModeProvider` in original.
-// My `products/layout.tsx` has `ViewModeProvider`. So I don't need it again here.
 
 interface ProductDetailsViewProps {
   id: string;
 }
 
 const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
+  const router = useRouter();
   const { data, isLoading, isError } = useGetAllProductDetailsQuery(
     { productId: id },
     { refetchOnMountOrArgChange: true, skip: !id }
@@ -67,8 +44,17 @@ const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
   const prodData = data.product;
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto pb-10">
-      <div className="pt-6 flex flex-col lg:flex-row items-start gap-8 lg:gap-12">
+    <div className="w-full max-w-[1600px] mx-auto pb-10 ">
+      <div className="mb-6 ">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+      </div>
+      <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12">
         {/* Left Column: Images & Company Info (Desktop) */}
         <div className="w-full lg:w-[55%] xl:w-[50%] flex flex-col gap-6">
           <DetailImageWidget images={prodData?.images} />

@@ -24,7 +24,7 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
     <div className="px-4 py-4 w-full bg-[#F5F5F5] border rounded-[20px] border-[#E0E0E0] flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         {/* Left Side: Breadcrumbs and Filter Button */}
-        <div className="flex items-center gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4 w-full md:flex-1 md:min-w-0">
           <button
             onClick={onToggleSidebar}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 border ${isSidebarOpen
@@ -43,7 +43,7 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
                   <div key={index} className="flex items-center shrink-0">
                     {index > 0 && <span className="mx-2 text-gray-300">/</span>}
                     {index === breadcrumbs.length - 1 ? (
-                      <span className="font-semibold text-gray-700 truncate max-w-[150px] sm:max-w-none">
+                      <span className="font-semibold text-gray-700 truncate max-w-[120px] sm:max-w-[200px] md:max-w-[250px]">
                         {crumb.title}
                       </span>
                     ) : (

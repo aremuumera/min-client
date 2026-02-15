@@ -9,7 +9,7 @@ import { decodeCompanyNameFromUrl } from '@/utils/url-formatter';
 import { useRouter } from 'next/navigation';
 import CompanyProfileHero from './company-profile/company-profile-hero';
 import CompanyProfileTabs from './company-profile/tabs/company-profile-tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { companyUsersData } from '@/components/marketplace/pages/fake-product-data'; // Need to migrate or assume empty/unneeded?
 // The original code used `companyUsersData` to match `detailProduct` but then passed `theProduct` (from API) to components.
 // `const theProduct = data ? data : {};`
@@ -52,7 +52,7 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   if (isError || !data) {
     return (
       // Simple error state
-      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      <div className="fixed inset-0 z-11100 flex items-center justify-center bg-black bg-opacity-75">
         <h2 className="text-xl font-bold text-gray-800 mb-2">Company Not Found</h2>
         <button onClick={() => router.back()} className="text-green-600 hover:underline">
           Go Back
@@ -62,8 +62,17 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   }
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen pb-10">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+    <div className="w-full bg-gray-50 min-h-screen pb-10 px-4">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="mb-6 pt-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+        </div>
         <CompanyProfileHero products={data} />
         <div className="mt-8">
           <CompanyProfileTabs products={data} />

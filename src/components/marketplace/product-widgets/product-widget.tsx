@@ -5,9 +5,8 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { PromoBadges, VerifiedBadges } from './badges';
 import { CertificateBadge, PricingBadge } from './badges';
-import { MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
-import { FaStar } from 'react-icons/fa6';
 import { useViewMode } from '@/contexts/view-product-mode';
+import { MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import { paths } from '@/config/paths'; // Assuming paths are migrated here or I should check. 
 // I previously saw @/config/paths in imports, let's assume it's there or I might need to migrate it. 
 // I'll check paths file existence, but for now I will assume @/config/paths.
@@ -17,6 +16,7 @@ import ShareButton from './share-button';
 import LoginModal from '@/utils/login-modal';
 // import { Button } from '@/components/ui/button'; // Replacing with custom or tailwind
 import Image from 'next/image';
+import { FaStar } from 'react-icons/fa';
 
 // Temporary assets imports - standardizing assets
 // import CE from '/assets/CE_logo.png' // Need to make sure assets exist in public
@@ -75,10 +75,10 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
 
                 <div className='relative scroll-smooth'>
                     <div className='gap-[10px]'>
-                        <div className={`group transition-all duration-300 hover:shadow-md ${isGridView ? 'flex w-full max-w-[300px] flex-col min-h-[530px] flex-grow' : 'flex flex-row w-full justify-around gap-[30px]'} shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full`}>
+                        <div className={`group transition-all duration-300 hover:shadow-md ${isGridView ? 'flex w-full flex-col flex-grow' : 'flex flex-row w-full justify-around gap-[30px]'} shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full`}>
                             {/* images  */}
                             <div>
-                                <div className={`${isGridView ? 'max-w-[300px] w-full aspect-square md:h-[230px]' : 'max-w-[430px] w-full aspect-[4/3] md:h-[280px]'} widget_image_container relative h-auto overflow-hidden rounded-xl`}>
+                                <div className={`${isGridView ? 'w-full aspect-square md:h-[230px]' : 'max-w-[430px] w-full aspect-[4/3] md:h-[280px]'} widget_image_container relative h-auto overflow-hidden rounded-xl`}>
                                     <div className="absolute inset-0 z-0">
                                         {/* Image Carousel */}
                                         <Link href={productCardRoute} className="w-full h-full flex" style={imageContainerStyle}>

@@ -8,8 +8,8 @@ import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { useAlert } from '@/providers/alert-provider';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { links, real, Category, SubCategory } from '@/lib/marketplace-data';
-import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { links, real, Category, SubCategory, countries, MoqUnits } from '@/lib/marketplace-data';
+import { ChevronDown, ChevronUp, Search, X, Star } from 'lucide-react';
 import { IoSearch } from 'react-icons/io5';
 
 // Assets
@@ -24,22 +24,21 @@ interface SideBarProps {
 }
 
 const SortBy = [
+  { value: 'price_asc', label: 'Price: Low to High', hasProd: true, hasRfq: false },
+  { value: 'price_desc', label: 'Price: High to Low', hasProd: true, hasRfq: false },
   { value: 'newest', label: 'Newest Arrivals', hasProd: true, hasRfq: true },
-  { value: 'price_low', label: 'Price: Low to High', hasProd: true, hasRfq: false },
-  { value: 'price_high', label: 'Price: High to Low', hasProd: true, hasRfq: false },
-  { value: 'rating', label: 'Rating: High to Low', hasProd: true, hasRfq: false },
-  { value: 'popularity', label: 'Most Popular', hasProd: true, hasRfq: true },
+  { value: 'popular', label: 'Most Popular', hasProd: true, hasRfq: true },
 ];
 
-export const MoqUnits = ['kg', 'tons', 'g', 'lb', 'oz', 'm3', 'l', 'barrels', 'units'];
-export const Moq = MoqUnits;
-
-// Fake data for store ratings images
 const storeReviews = [
-  { value: '4', img: '/assets/4-star.png' }, // Placeholder paths
-  { value: '3', img: '/assets/3-star.png' },
-  { value: '2', img: '/assets/2-star.png' },
-  { value: '1', img: '/assets/1-star.png' },
+  //  { value: '4', img: '/assets/4-star.png' }, // Placeholder paths
+  // { value: '3', img: '/assets/3-star.png' },
+  // { value: '2', img: '/assets/2-star.png' },
+  // { value: '1', img: '/assets/1-star.png' },
+  { value: '5', label: '5 Stars' },
+  { value: '4', label: '4 Stars & Up' },
+  { value: '3', label: '3 Stars & Up' },
+  { value: '2', label: '2 Stars & Up' },
 ];
 
 const rfqChecks = [
@@ -47,6 +46,8 @@ const rfqChecks = [
   { name: 'pending', label: 'Pending' },
   { name: 'open', label: 'Open' },
   { name: 'closed', label: 'Closed' },
+  { name: 'quoted', label: 'Quoted' },
+  { name: 'expired', label: 'Expired' },
 ];
 
 const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => {
@@ -78,12 +79,23 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
 
   // Local UI states
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
-  // const [filteredCountries, setFilteredCountries] = useState(countries); // need countries data
-  const [filteredCountries, setFilteredCountries] = useState<any[]>([]); // Initialize empty or import countries
+  const [filteredCountries, setFilteredCountries] = useState(countries);
   const [moqValue, setMoqValue] = useState(filters.quantity || '');
   const [minPrice, setMinPrice] = useState(filters.minPrice || '');
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice || '');
   const [selectedMoqUnit, setSelectedMoqUnit] = useState(filters.measure || '');
+
+  useEffect(() => {
+    if (locationSearchTerm) {
+      setFilteredCountries(
+        countries.filter((country) =>
+          country.name.toLowerCase().includes(locationSearchTerm.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredCountries(countries);
+    }
+  }, [locationSearchTerm]);
 
   const prodCheck = pathname?.includes('/dashboard/products/all-mineral-cp');
   const rfqCheck = pathname?.includes('/dashboard/products/rfq-products');
@@ -97,7 +109,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   const handleReset = () => {
     dispatch(resetFilters());
     setLocationSearchTerm('');
-    // setFilteredCountries(countries);
+    setFilteredCountries(countries);
     setMinPrice('');
     setMaxPrice('');
     setSelectedMoqUnit('');
@@ -139,6 +151,11 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
 
   const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSort(event.target.value));
+  };
+
+  const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target;
+    dispatch(setFilter({ filterType: 'rating', value: checked ? name : null }));
   };
 
   const handleSelectMoqChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -208,16 +225,45 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
                   className={`transition-all duration-500 ease-in-out ${activeCategory === category.id ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
                     } overflow-hidden`}
                 >
-                  <div className="overflow-y-auto max-h-[300px]">
+                  <div className="overflow-y-auto max-h-[400px]">
                     {category.children?.map((subCategory) => (
                       <div key={subCategory.id}>
-                        {/* Subcategory rendering logic */}
-                        <div className={`py-[8px] pl-6 pr-2 text-[.8rem] hover:bg-gray-50
-                               ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
-                          <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`}>
-                            {subCategory.name}
-                          </Link>
-                        </div>
+                        {subCategory.children && subCategory.children.length > 0 ? (
+                          <>
+                            <div
+                              onClick={() => category.id && toggleSubCategory(category.id, subCategory.id!)}
+                              className={`py-[8px] pl-4 pr-2 text-[.8rem] flex justify-between items-center cursor-pointer hover:bg-gray-50
+                                ${pathname?.includes(subCategory.tag || '') ? 'bg-green-50 text-green-600 font-medium' : 'text-gray-600'}`}
+                            >
+                              <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`} className="flex-1">
+                                {subCategory.name}
+                              </Link>
+                              <span className="text-xs">
+                                {activeSubCategory === `${category.id}-${subCategory.id}` ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </span>
+                            </div>
+                            <div
+                              className={`transition-all duration-500 ease-in-out ${activeSubCategory === `${category.id}-${subCategory.id}` ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                                } overflow-hidden pl-4`}
+                            >
+                              {subCategory.children.map((item) => (
+                                <div key={item.id} className={`py-1.5 pl-4 pr-2 text-[0.75rem] hover:text-green-600 transition-colors
+                                  ${pathname?.includes(item.tag || '') ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                  <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}/${item.tag}`}>
+                                    {item.name}
+                                  </Link>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <div className={`py-[8px] pl-6 pr-2 text-[.8rem] hover:bg-gray-50
+                                ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
+                            <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`}>
+                              {subCategory.name}
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -243,7 +289,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
     <div className={`h-full bg-white flex flex-col ${isMobile ? 'w-full' : 'w-72 border-r border-gray-100 shadow-sm'}`}>
       {isMobile && (
         <div className="flex justify-end p-2 border-b">
-          <button onClick={onClose}><X size={24} /></button>
+          <button onClick={onClose} aria-label="Close sidebar"><X size={24} /></button>
         </div>
       )}
 
@@ -251,7 +297,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
         {/* Categories Header */}
         <div className="flex justify-between items-center mt-4 mb-2">
           <h2 className="font-semibold text-[0.95rem] text-gray-900">Categories</h2>
-          {!isMobile && hasActiveFilters() && (
+          {hasActiveFilters() && (
             <button onClick={handleReset} className="text-[0.8rem] text-green-600 underline hover:text-green-700">
               Clear filters
             </button>
@@ -260,22 +306,107 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
         <div className="h-px bg-gray-200 mb-2"></div>
 
         {/* Categories List */}
-        <div className="text-gray-900">
+        <div className="text-gray-900 border-b border-gray-100 pb-2">
           {rfqCheck ? renderRfqCategories() : real?.map((category) => (
             <div key={category.id} className="mb-1">
-              <Link
-                href={`/dashboard/products/all-mineral-cp/${category?.tag}`}
-                className={`block py-[10px] px-[8px] text-[.85rem] font-[500] border-b-[1px] border-b-gray-100 hover:text-green-600 transition-colors
-                        ${pathname?.includes(category?.tag || '') ? 'bg-green-50 text-green-600 rounded-md' : ''}`}
-                onClick={() => onClose()}
-              >
-                {category.name}
-              </Link>
+              {category.children && category.children.length > 0 ? (
+                <>
+                  <div
+                    onClick={() => category.id && toggleCategory(category.id)}
+                    className={`py-2.5 px-2 cursor-pointer text-[0.85rem] font-medium flex justify-between items-center transition-colors rounded-lg group
+                        ${pathname?.includes(category.tag || '') ? 'bg-green-50 text-green-600' : 'text-gray-700 hover:text-green-600'}`}
+                  >
+                    <Link href={`/dashboard/products/all-mineral-cp/${category.tag}`} className="flex-1">
+                      {category.name}
+                    </Link>
+                    <span className="text-sm">
+                      {activeCategory === category.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </span>
+                  </div>
+                  <div
+                    className={`transition-all duration-500 ease-in-out ${activeCategory === category.id ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+                      } overflow-hidden`}
+                  >
+                    {category.children.map((subCategory) => (
+                      <div key={subCategory.id}>
+                        {subCategory.children && subCategory.children.length > 0 ? (
+                          <>
+                            <div
+                              onClick={() => category.id && toggleSubCategory(category.id, subCategory.id!)}
+                              className={`py-2 pl-6 pr-2 text-[0.8rem] flex justify-between items-center cursor-pointer hover:text-green-600
+                                 ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}
+                            >
+                              <Link href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}`} className="flex-1">
+                                {subCategory.name}
+                              </Link>
+                              <span className="text-xs">
+                                {activeSubCategory === `${category.id}-${subCategory.id}` ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </span>
+                            </div>
+                            <div
+                              className={`transition-all duration-300 ease-in-out ${activeSubCategory === `${category.id}-${subCategory.id}` ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+                                } overflow-hidden pl-4`}
+                            >
+                              {subCategory.children.map((item) => (
+                                <div key={item.id} className={`py-1.5 pl-6 pr-2 text-[0.75rem] hover:text-green-600 transition-colors
+                                    ${pathname?.includes(item.tag || '') ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                  <Link href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}/${item.tag}`}>
+                                    {item.name}
+                                  </Link>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <div className={`py-2 pl-6 pr-2 text-[0.8rem] hover:text-green-600 transition-colors
+                            ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
+                            <Link href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}`}>
+                              {subCategory.name}
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <Link
+                  href={`/dashboard/products/all-mineral-cp/${category?.tag}`}
+                  className={`block py-2.5 px-2 text-[0.85rem] font-medium border-b border-gray-100 hover:text-green-600 transition-colors
+                          ${pathname?.includes(category?.tag || '') ? 'bg-green-50 text-green-600 rounded-md' : 'text-gray-700'}`}
+                  onClick={() => onClose()}
+                >
+                  {category.name}
+                </Link>
+              )}
             </div>
           ))}
         </div>
 
         {/* Filters */}
+        {/* RFQ Status Filter */}
+        {rfqCheck && (
+          <div className="mt-6">
+            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">RFQ Status</h2>
+            <div className="h-px bg-gray-200 mb-3"></div>
+            <div className="space-y-2">
+              {rfqChecks.map((rfq) => (
+                <label key={rfq.name} className="flex items-center gap-2 text-sm cursor-pointer hover:text-green-600 group">
+                  <input
+                    type="radio"
+                    name="rfqStatus"
+                    value={rfq.name}
+                    checked={(filters.rfqsStatus || 'All') === rfq.name}
+                    onChange={handleRfqChange}
+                    className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <span className="text-gray-700 group-hover:text-green-600 font-medium">{rfq.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Location Filter */}
         <div className="mt-6">
           <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Location</h2>
@@ -289,24 +420,31 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
             />
           </div>
-          {/* Countries List - Placeholder since I didn't import countries yet */}
-          {/* <div className="max-h-[160px] overflow-y-auto border border-gray-100 rounded-md p-2 space-y-2">
-                    {filteredCountries.map((country: any) => (
-                        <label key={country.name} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                name={country.name}
-                                checked={filters.location?.includes(country.name) || false}
-                                onChange={handleLocationChange}
-                                className="rounded text-green-600 focus:ring-green-500"
-                            />
-                            <span>{country.name}</span>
-                        </label>
-                    ))}
-                 </div> */}
+          <div className="max-h-[160px] overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1.5 scrollbar-hide bg-gray-50/30 font-medium">
+            {filteredCountries.map((country: any) => (
+              <label key={country.name} className="flex items-center gap-2.5 text-sm cursor-pointer hover:bg-white p-1.5 rounded-md transition-all group group-hover:shadow-sm">
+                <input
+                  type="checkbox"
+                  name={country.name}
+                  checked={filters.location?.includes(country.name) || false}
+                  onChange={handleLocationChange}
+                  className="w-4 h-4 rounded text-green-600 focus:ring-green-500 border-gray-300"
+                />
+                <div className="flex items-center gap-2">
+                  {country.flag && (
+                    <img src={country.flag} alt={`${country.name} flag`} className="w-5 h-3.5 object-cover rounded shadow-sm border border-gray-100" />
+                  )}
+                  <span className="text-gray-700 group-hover:text-green-700">{country.name}</span>
+                </div>
+              </label>
+            ))}
+            {filteredCountries.length === 0 && (
+              <div className="text-center text-gray-400 py-6 text-xs italic">No locations found</div>
+            )}
+          </div>
         </div>
 
-        {/* Sort By */}
+        {/* Sort By Filter */}
         <div className="mt-6">
           <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Sort By</h2>
           <div className="h-px bg-gray-200 mb-3"></div>
@@ -319,7 +457,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
                   value={option.value}
                   checked={sort === option.value}
                   onChange={handleSortChange}
-                  className="text-green-600 focus:ring-green-500"
+                  className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300"
                 />
                 <span>{option.label}</span>
               </label>
@@ -327,7 +465,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
           </div>
         </div>
 
-        {/* Price */}
+        {/* Price Filter */}
         {prodCheck && (
           <div className="mt-6">
             <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Price</h2>
@@ -353,10 +491,77 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
             </div>
             <button
               onClick={handlePriceChange}
-              className="w-full py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+              className="w-full py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-[0.98] mt-2 outline-none"
             >
-              Apply
+              Apply Price Filter
             </button>
+          </div>
+        )}
+
+        {/* MOQ Filter */}
+        {prodCheck && (
+          <div className="mt-8">
+            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Minimum Order Quantity</h2>
+            <div className="h-px bg-gray-200 mb-3"></div>
+            <div className="flex items-center gap-2 p-1.5 border border-gray-300 rounded-xl bg-gray-50/50 hover:bg-white transition-colors focus-within:ring-2 focus-within:ring-green-500/20 focus-within:border-green-600">
+              <select
+                value={selectedMoqUnit}
+                onChange={handleSelectMoqChange}
+                className="bg-transparent text-[0.8rem] font-semibold focus:outline-none max-w-[80px] cursor-pointer text-gray-700"
+              >
+                <option value="">Unit</option>
+                {MoqUnits?.map(unit => (
+                  <option key={unit} value={unit.toLowerCase()}>{unit}</option>
+                ))}
+              </select>
+              <div className="w-px h-6 bg-gray-300 shrink-0"></div>
+              <input
+                type="text"
+                placeholder="Value"
+                value={moqValue}
+                onChange={(e) => setMoqValue(e.target.value)}
+                className="bg-transparent text-sm w-full focus:outline-none placeholder:text-gray-400 font-medium"
+              />
+              <button
+                onClick={handleMoqSearch}
+                className="p-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md active:scale-95"
+              >
+                <IoSearch size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Store Reviews Filter */}
+        {prodCheck && (
+          <div className="mt-8">
+            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Store Reviews</h2>
+            <div className="h-px bg-gray-200 mb-4"></div>
+            <div className="space-y-3.5">
+              {storeReviews.map((rating) => (
+                <label key={rating.value} className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="rating"
+                    value={rating.value}
+                    checked={filters.rating === rating.value}
+                    onChange={(e) => {
+                      dispatch(setFilter({ filterType: 'rating', value: e.target.value }));
+                      if (isMobile) onClose();
+                    }}
+                    className="w-4.5 h-4.5 text-green-600 focus:ring-green-500 border-gray-300 cursor-pointer"
+                  />
+                  <div className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                    <div className="flex text-yellow-400">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} size={14} fill={i < parseInt(rating.value) ? "currentColor" : "none"} className={i < parseInt(rating.value) ? "" : "text-gray-300"} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">{rating.label}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -3,15 +3,10 @@
 import React, { useState } from 'react';
 import { useDeleteSavedItemMutation, useGetSavedItemsQuery } from '@/redux/features/savedFeature/saved_api';
 import { Box } from '@/components/ui/box';
-// TODO: Migrate CircularProgress from @mui/material
-import { Grid } from '@/components/ui/grid';
 import { Tabs, Tab } from '@/components/ui/tabs';
 import { Typography } from '@/components/ui/typography';
 
 import { motion, Variants } from 'framer-motion';
-// import SavedProductWidget from './SavedProductWidget';
-// import SavedRfqWidget from './SavedRfqWidget';
-import { useSelector } from 'react-redux';
 
 import NoSavedItems from './nowish';
 import SavedRfqWidget from './savedRfqWiidget';
@@ -131,20 +126,21 @@ const SavedItemsDashboard = () => {
           {tabValue === 'products' && (
             <Box sx={{ mb: 4 }}>
               {products.length > 0 ? (
-                <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                  <Grid container spacing={3}>
-                    {products.map((product: any) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-                        <motion.div variants={itemVariants}>
-                          <SavedProductWidget
-                            products={product}
-                            onDelete={() => handleDelete(product.id, 'product')}
-                            isSaved={true}
-                          />
-                        </motion.div>
-                      </Grid>
-                    ))}
-                  </Grid>
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 min-[360px]:grid-cols-2! md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+                >
+                  {products.map((product: any) => (
+                    <motion.div variants={itemVariants} key={product.id}>
+                      <SavedProductWidget
+                        products={product}
+                        onDelete={() => handleDelete(product.id, 'product')}
+                        isSaved={true}
+                      />
+                    </motion.div>
+                  ))}
                 </motion.div>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -158,20 +154,21 @@ const SavedItemsDashboard = () => {
           {tabValue === 'rfqs' && (
             <Box>
               {rfqs.length > 0 ? (
-                <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                  <Grid container spacing={3}>
-                    {rfqs.map((rfq: any) => (
-                      <Grid item xs={12} sm={6} md={4} key={rfq.rfqId || rfq.id}>
-                        <motion.div variants={itemVariants}>
-                          <SavedRfqWidget
-                            rfqProduct={rfq}
-                            onDelete={() => handleDelete(rfq.rfqId || rfq.id, 'rfq')}
-                            isSaved={true}
-                          />
-                        </motion.div>
-                      </Grid>
-                    ))}
-                  </Grid>
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"
+                >
+                  {rfqs.map((rfq: any) => (
+                    <motion.div variants={itemVariants} key={rfq.rfqId || rfq.id}>
+                      <SavedRfqWidget
+                        rfqProduct={rfq}
+                        onDelete={() => handleDelete(rfq.rfqId || rfq.id, 'rfq')}
+                        isSaved={true}
+                      />
+                    </motion.div>
+                  ))}
                 </motion.div>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>

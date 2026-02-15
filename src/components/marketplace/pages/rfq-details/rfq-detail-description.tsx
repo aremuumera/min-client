@@ -9,6 +9,7 @@ import QuoteRequestModal from '@/components/marketplace/modals/quote-request-mod
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import { useAlert } from '@/providers';
 import { paths } from '@/config/paths';
+import { useAppSelector } from '@/redux';
 
 // Image Modal Component
 const ImageModal = ({ isOpen, onClose, imageUrl }: { isOpen: boolean, onClose: () => void, imageUrl: string }) => {
@@ -39,7 +40,7 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
   });
 
   const { showAlert } = useAlert();
-  const { isAuth, user } = useSelector((state: any) => state.auth);
+  const { isAuth, user } = useAppSelector((state) => state.auth);
 
   if (!rfqProduct) return null;
 

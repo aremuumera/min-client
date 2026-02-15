@@ -6,7 +6,7 @@ import { FormControl, InputLabel, FormHelperText } from '@/components/ui/form-co
 import { MenuItem } from '@/components/ui/menu';
 import { Select } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ListItemText } from '@/components/ui/list'; 
+import { ListItemText } from '@/components/ui/list';
 import { Box } from '@/components/ui/box';
 import { PiWarningLight } from "react-icons/pi";
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,22 +14,22 @@ import { MdNavigateBefore, MdNavigateNext, MdPerson as Person, MdCalendarToday a
 import { Card, CardContent, CardActions } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
-import { formatCompanyNameForUrl } from '@/utils/UrlFormatter';
-    import { useAppSelector } from '@/redux';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
+import { useAppSelector } from '@/redux';
 
 const RfQProductReview = ({ handleNext, setActiveStep, activeStep, handleBack }: { handleNext: () => void, setActiveStep: (step: number) => void, activeStep: number, handleBack: () => void }) => {
     const { rfqProductDetailsFormData } = useAppSelector((state) => state?.rfqProduct);
-    const {  rfqProductCategory,  rfqProductSubCategory,   selectedShippings, selectedPayments, 
-        quantityMeasure, deliveryPeriod,   durationOfSupply,  paymentTermsDescribed, 
-        quantityRequired,  rfqDescription,  rfqProductName,  selectedCountry, 
-        selectedCountryName,  selectedState,  selectedStateName,   shippingTermsDescribed,  streetNo, 
-        zipCode 
-      } = rfqProductDetailsFormData;
-      
-      console.log(rfqProductSubCategory, selectedCountryName, streetNo, zipCode);
-      
+    const { rfqProductCategory, rfqProductSubCategory, selectedShippings, selectedPayments,
+        quantityMeasure, deliveryPeriod, durationOfSupply, paymentTermsDescribed,
+        quantityRequired, rfqDescription, rfqProductName, selectedCountry,
+        selectedCountryName, selectedState, selectedStateName, shippingTermsDescribed, streetNo,
+        zipCode
+    } = rfqProductDetailsFormData;
 
-      const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    console.log(rfqProductSubCategory, selectedCountryName, streetNo, zipCode);
+
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         handleNext();
     }
@@ -75,12 +75,12 @@ const RfQProductReview = ({ handleNext, setActiveStep, activeStep, handleBack }:
 
                                     <p>
                                         <span className="font-bold">Location: </span>
-                                         {selectedCountryName}
+                                        {selectedCountryName}
                                     </p>
 
                                     <p>
                                         <span className="font-bold">State: </span>
-                                         {selectedStateName}
+                                        {selectedStateName}
                                     </p>
 
                                     <p>

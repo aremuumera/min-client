@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import LoginModal from '@/utils/login_check_modal';
+import LoginModal from '@/utils/login-modal';
 import { paths } from '@/config/paths';
-import { formatCompanyNameForUrl } from '@/utils/UrlFormatter';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import { MdAttachFile, MdCalendarToday, MdDelete, MdPerson } from 'react-icons/md';
 import { Box } from '@/components/ui/box';
+import { IconButton } from '@/components/ui/icon-button';
+import { Tooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { format } from 'date-fns';
@@ -59,14 +61,17 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
       <div className="shadow-md hover:shadow-lg transition-shadow h-full flex flex-col relative bg-white rounded-lg overflow-hidden">
         {/* Delete button for saved items */}
         {isSaved && (
-          <div style={{ position: 'absolute', top: 120, right: 8, zIndex: 2 }}>
-            <button
-              title="Remove from saved items"
-              onClick={onDelete}
-              className="p-1 bg-white/80 hover:bg-white/90 rounded-full"
-            >
-              <MdDelete className="text-red-500 text-sm" />
-            </button>
+          <div className="absolute top-3 right-3 m-2 z-20">
+            <Tooltip title="Remove from saved items">
+              <IconButton
+                onClick={onDelete}
+                aria-label="Remove from saved items"
+                size="sm"
+                className="bg-white/80 hover:bg-white/90"
+              >
+                <MdDelete className="text-red-500" />
+              </IconButton>
+            </Tooltip>
           </div>
         )}
 
@@ -131,21 +136,19 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
           )}
         </div>
 
-        <div className="flex justify-between px-3 pb-3 mt-auto">
+        <div className="p-3 border-t border-gray-100 flex gap-3 mt-auto">
           <Link
-            href={`/dashboard/rfqs/details/${rfqIdentifier}/${formatCompanyNameForUrl(productName)}`}
-            className="text-green-600! bg-transparent! border! border-green-600 hover:bg-green-100!"
+            href={paths.marketplace.rfqDetails(rfqIdentifier, formatCompanyNameForUrl(productName))}
+            className="flex-1 text-center py-2 px-3 text-sm font-medium text-green-600 border border-green-600 rounded-md hover:bg-green-50 transition-colors"
           >
             View more info
           </Link>
-          {/* <Button
-            size="small"
+          <button
             onClick={handleRequestQuote}
-            fullWidth
-            className="!text-white !bg-green-600 hover:!bg-green-700"
+            className="flex-1 py-2 px-3 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
           >
             Contact Now
-          </Button> */}
+          </button>
         </div>
       </div>
 

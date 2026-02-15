@@ -43,7 +43,7 @@ import { PiWarningLight } from 'react-icons/pi';
 import { Option } from '@/components/core/option';
 import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { toast } from '@/components/core/toaster';
-import { Moq } from '@/components/marketplace/layout/sidebar';
+import { MoqUnits as Moq } from '@/lib/marketplace-data.ts';
 
 interface SupplierProductDetailsProps {
   handleNext: () => void;

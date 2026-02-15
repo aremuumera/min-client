@@ -7,10 +7,9 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { MdNavigateBefore, MdNavigateNext, MdDelete } from 'react-icons/md';
 import { FaStar } from 'react-icons/fa6';
-import { formatCompanyNameForUrl } from '@/utils/UrlFormatter';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import { paths } from '@/config/paths';
-// import ShareButton from '../MarketPlace/saved_share/share_button';
-import LoginModal from '@/utils/login_check_modal';
+import LoginModal from '@/utils/login-modal';
 import ShareButton from '@/components/marketplace/product-widgets/share-button';
 
 const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
@@ -22,17 +21,21 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
         window.scrollTo(0, 0);
     };
 
-    const handleNext = () => {
+    const handleNext = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         setCurrentIndex((currentIndex + 1) % (products?.images?.length || 1));
     };
 
-    const handlePrev = () => {
+    const handlePrev = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         setCurrentIndex((currentIndex - 1 + (products?.images?.length || 1)) % (products?.images?.length || 1));
     };
 
     const imageContainerStyle = {
-        width: `${products?.images?.length * 100}%`,
-        transform: `translateX(-${(currentIndex / products?.images?.length) * 100}%)`,
+        width: `${(products?.images?.length || 1) * 100}%`,
+        transform: `translateX(-${(currentIndex / (products?.images?.length || 1)) * 100}%)`,
         transition: "transform 0.5s ease-in-out",
     };
 
@@ -46,49 +49,56 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
         storeProfile,
         quantity,
         measure,
-        images,
         id
-    } = products;
+    } = products || {};
+
+    // Safety check
+    if (!products) return null;
 
     const productCardRoute = `/dashboard/products/details/${id}/${formatCompanyNameForUrl(product_name)}`;
 
     return (
-        <div className='relative'>
-            <div className='group shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full flex flex-col'>
+        <div className='relative h-full'>
+            <div className='group transition-all duration-300 hover:shadow-md shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full flex flex-col justify-between'>
                 {/* Delete button for saved items */}
                 {isSaved && (
                     <div className="absolute top-3 right-3 m-2 z-20">
                         <Tooltip title="Remove from saved items">
                             <IconButton
-                                onClick={onDelete}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onDelete();
+                                }}
                                 aria-label="Remove from saved items"
                                 size="sm"
-                                className="bg-white/80 hover:bg-white/90"
+                                className="bg-white/80 hover:bg-white/90 shadow-sm transition-all"
                             >
-                                <MdDelete color="error" />
+                                <MdDelete className="text-red-500" />
                             </IconButton>
                         </Tooltip>
                     </div>
                 )}
 
                 {/* Images */}
-                <div>
-                    <div className="widget_image_container relative aspect-square md:h-[230px]">
+                <div className="relative">
+                    <div className="widget_image_container relative aspect-square md:h-[230px] overflow-hidden rounded-xl bg-gray-50">
                         <div className="w-full h-full flex" style={imageContainerStyle}>
-                            {products?.images?.map((j: any, i: any) => (
+                            {products?.images?.map((j: string, i: number) => (
                                 <div
-                                    className="relative h-full rounded-t-xl overflow-hidden shrink-0"
+                                    className="relative h-full shrink-0"
                                     style={{ width: `${100 / (products?.images?.length || 1)}%` }}
                                     key={i}
                                 >
                                     <Link
                                         href={productCardRoute}
                                         onClick={handleScroll}
+                                        className="block w-full h-full"
                                     >
                                         <img
                                             src={j}
                                             alt={product_name}
-                                            className="w-full h-full object-cover rounded-[20px]"
+                                            className="w-full h-full object-cover"
                                         />
                                     </Link>
                                 </div>
@@ -96,87 +106,83 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                         </div>
 
                         {/* Navigation buttons */}
-                        <Box className='opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
-                            <button
-                                onClick={handleNext}
-                                className="absolute z-[10] right-2 top-[50%]"
-                            >
-                                <MdNavigateNext className="text-gray-200 bg-[#727272] w-[20px] h-[20px] rounded-full text-[22px]" />
-                            </button>
+                        <div className='absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10'>
                             <button
                                 onClick={handlePrev}
-                                className="absolute z-[10] left-2 top-[50%]"
+                                className="pointer-events-auto w-8 h-8 rounded-full bg-white/70 hover:bg-white flex items-center justify-center text-gray-800 shadow-sm backdrop-blur-sm transition-colors"
                             >
-                                <MdNavigateBefore className="text-gray-200 bg-[#727272] w-[20px] h-[20px] rounded-full text-[22px]" />
+                                <MdNavigateBefore className="text-xl" />
                             </button>
-                        </Box>
+                            <button
+                                onClick={handleNext}
+                                className="pointer-events-auto w-8 h-8 rounded-full bg-white/70 hover:bg-white flex items-center justify-center text-gray-800 shadow-sm backdrop-blur-sm transition-colors"
+                            >
+                                <MdNavigateNext className="text-xl" />
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Image indicators */}
-                    <div className="">
-                        <div className="flex justify-center mt-[3px] gap-[10px]">
-                            {products?.images?.map((_: any, i: any) => (
-                                <div
-                                    key={i}
-                                    className={`rounded-full w-2 h-2 ${currentIndex === i ? "bg-[#000] " : "bg-gray-300"
-                                        }`}
-                                />
-                            ))}
-                        </div>
+                    {/* Pagination Dots */}
+                    <div className="flex justify-center mt-2 gap-1.5">
+                        {products?.images?.map((_: any, i: number) => (
+                            <div
+                                key={i}
+                                className={`rounded-full h-1.5 transition-all duration-300 ${currentIndex === i ? "bg-gray-800 w-4" : "bg-gray-300 w-1.5"
+                                    }`}
+                            />
+                        ))}
                     </div>
                 </div>
 
-                {/* Product description */}
-                <div className="flex-grow">
-                    <h2 className='pt-[5px] sm:text-[15px] text-[13px] flex flex-row w-full font-[500]'>{product_name}</h2>
-                    <div className='pt-[10px]'>
+                {/* Product details */}
+                <div className="flex-grow flex flex-col mt-3">
+                    <h2 className='text-[14px] font-medium line-clamp-2 min-h-[40px] text-gray-800'>
+                        {product_name}
+                    </h2>
+
+                    <div className='mt-2 flex items-baseline gap-2'>
                         {prev_price && (
-                            <span className='sm:text-[24px] text-[1.1rem] font-[700]'>${prev_price}</span>
+                            <span className='text-[20px] font-bold text-gray-900'>${prev_price}</span>
                         )}
                         {real_price && (
-                            <span className='text-[14px] font-[400] pl-[10px] text-[#666666]'><del>${real_price}</del></span>
+                            <span className='text-[13px] text-gray-500 line-through decoration-gray-400'>${real_price}</span>
                         )}
                     </div>
 
-                    {quantity && (
-                        <div className='py-[px]'>
-                            <span className='sm:text-[15px] text-[12px] font-[400]'>M.O.Q:</span>
-                            <span className='sm:text-[15px] text-[12px] font-[400] pl-[10px]'>{quantity}{measure}</span>
-                        </div>
-                    )}
-
-                    {delivery_period && (
-                        <div className='py-[px]'>
-                            <span className='sm:text-[15px] text-[12px] font-[400]'>Del.Period:</span>
-                            <span className='sm:text-[15px] text-[12px] font-[400] pl-[10px]'>{delivery_period}</span>
-                        </div>
-                    )}
-
-                    <div className='py-[4px] flex justify-between items-center gap-[5px]'>
-                        <span className='flex items-center gap-[2px]'>
-                            <span><FaStar /></span>
-                            <span className='sm:text-[15px] text-[12px] font-[400]'>
-                                <b>{Math.round((productRating?.average || 0) * 100) / 100}</b>/5.0
-                            </span>
-                            <span className='sm:text-[15px] text-[12px] pl-[5px] font-[400]'>
-                                {`(${productRating?.count || 0})`}
-                            </span>
-                        </span>
-                        {/* <div className='flex items-center gap-[10px]'>
-                            <span className='hidden sm:inline'>
-                                <ShareButton productName={product_name} />
-                            </span>
-                        </div> */}
-                    </div>
-
-                    <div className="pt-[10px] flex gap-[10px]">
-                        {country?.flagImage && (
-                            <div className='w-7 h-10'>
-                                <img src={country?.flagImage} alt='Country Flag' className='' />
+                    <div className="space-y-1 mt-2">
+                        {quantity && (
+                            <div className='flex items-center text-[13px]'>
+                                <span className='text-gray-500 font-medium'>M.O.Q:</span>
+                                <span className='pl-1 text-gray-800'>{quantity} {measure}</span>
                             </div>
                         )}
+
+                        {delivery_period && (
+                            <div className='flex items-center text-[13px]'>
+                                <span className='text-gray-500 font-medium'>Del. Period:</span>
+                                <span className='pl-1 text-gray-800'>{delivery_period}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className='mt-3 flex justify-between items-center bg-yellow-50/50 px-2 py-1 rounded-md border border-yellow-100/50'>
+                        <span className='flex items-center gap-1.5'>
+                            <FaStar className="text-yellow-400 text-xs" />
+                            <span className='text-[12px] font-bold text-gray-800'>
+                                {Math.round((productRating?.average || 0) * 100) / 100}
+                            </span>
+                            <span className='text-[11px] text-gray-500'>
+                                ({productRating?.count || 0})
+                            </span>
+                        </span>
+                    </div>
+
+                    <div className="mt-3 pt-3 flex items-center gap-2 border-t border-gray-100">
+                        {country?.flagImage && (
+                            <img src={country?.flagImage} alt='Country' className='w-4 h-auto object-contain shrink-0' />
+                        )}
                         <Link
-                            className='sm:text-[15px] text-[12px] cursor-pointer font-[500] underline'
+                            className='text-[12px] font-medium text-gray-600 hover:text-green-600 hover:underline truncate'
                             href={`/dashboard/business/${storeProfile?.company_name}`}
                         >
                             {storeProfile?.company_name}
@@ -184,12 +190,12 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                     </div>
                 </div>
 
-                {/* Button */}
-                <div className="flex flex-col pt-[10px] items-end justify-center gap-[10px] w-full mt-auto">
+                {/* Action Button */}
+                <div className="mt-4">
                     <Link href={productCardRoute} className="w-full">
                         <Button
                             variant="contained"
-                            className="w-full text-xs cursor-pointer"
+                            className="w-full text-sm font-medium h-10 rounded-lg bg-[#0a9150] hover:bg-[#087f45] transition-colors"
                         >
                             Contact Now
                         </Button>
@@ -200,7 +206,6 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
             <LoginModal
                 isOpen={showLoginModalForSave}
                 onClose={() => setShowLoginModalForSave(false)}
-                loginPath={paths.auth.signIn}
             />
         </div>
     );

@@ -43,7 +43,7 @@ import { useParams } from 'next/navigation';
 import { z } from 'zod';
 
 import { useAlert } from '@/providers';
-import { Moq } from '@/components/marketplace/layout/sidebar';
+import { MoqUnits as Moq } from '@/lib/marketplace-data.ts';
 
 import nigeriaLgas from '../../../utils/location-lga.json';
 import nigeriaStates from '../../../utils/location-state.json';

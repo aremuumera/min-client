@@ -3,7 +3,7 @@ import { TiTick } from "react-icons/ti";
 import { FaCopy, FaShareAlt, FaEye } from "react-icons/fa";
 import { toast } from 'sonner';
 import { WEB_URL } from '@/lib/legacy-config';
-import { formatCompanyNameForUrl } from '@/utils/UrlFormatter';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import { useAppSelector } from '@/redux';
 
 const ConfirmSupplierProductsInfo = () => {

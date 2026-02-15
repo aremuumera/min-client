@@ -54,7 +54,7 @@ const RfqDetailsView = ({ id }: { id: string }) => {
   return (
     <ViewModeProvider>
       <div className="w-full bg-gray-50 min-h-screen">
-        <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8 ">
+        <div className="max-w-[1280px] mx-auto ">
           <div className="mb-6">
             <button
               onClick={() => router.back()}

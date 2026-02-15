@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import SideBar from '@/components/marketplace/layout/sidebar';
 import TopNav from '@/components/marketplace/layout/top-nav';
 import { ViewModeProvider } from '@/contexts/view-product-mode';
@@ -11,6 +12,13 @@ export default function MarketplaceLayout({
     children: React.ReactNode;
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const pathname = usePathname();
+
+    // Check if current path is a detail page
+    const isDetailPage =
+        pathname.includes('/products/details/') ||
+        pathname.includes('/rfqs/details/') ||
+        pathname.includes('/business/');
 
     return (
         <ViewModeProvider>
@@ -33,10 +41,12 @@ export default function MarketplaceLayout({
 
                     {/* Main Content Area */}
                     <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                        <div className="sticky -top-20 z-40 bg-white  border-b border-gray-100">
-                            <TopNav onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} isSidebarOpen={sidebarOpen} />
-                        </div>
-                        <main className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
+                        {!isDetailPage && (
+                            <div className="sticky bottom-80 z-40 bg-white border-b border-gray-100">
+                                <TopNav onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} isSidebarOpen={sidebarOpen} />
+                            </div>
+                        )}
+                        <main className="flex-1 overflow-y-auto pt-4 px-4 lg:px-0 scroll-smooth">
                             {children}
                         </main>
                     </div>

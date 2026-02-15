@@ -892,5 +892,105 @@ export const real: Category[] = [
 ];
 
 export const countries = [
-    // ... existing countries array ...
+    // African countries involved in mining
+    { name: 'Nigeria', region: 'Africa', flag: 'https://flagcdn.com/ng.svg' },
+    {
+        name: 'South Africa',
+        region: 'Africa',
+        flag: 'https://flagcdn.com/za.svg',
+        mainResources: ['Gold', 'Platinum', 'Diamonds', 'Coal'],
+    },
+    {
+        name: 'Ghana',
+        region: 'Africa',
+        flag: 'https://flagcdn.com/gh.svg',
+        mainResources: ['Gold', 'Bauxite', 'Manganese'],
+    },
+    {
+        name: 'DRC',
+        region: 'Africa',
+        flag: 'https://flagcdn.com/cd.svg',
+        mainResources: ['Cobalt', 'Copper', 'Diamonds', 'Coltan'],
+    },
+    {
+        name: 'Zambia',
+        region: 'Africa',
+        flag: 'https://flagcdn.com/zm.svg',
+        mainResources: ['Copper', 'Cobalt', 'Emeralds'],
+    },
+    {
+        name: 'Botswana',
+        region: 'Africa',
+        flag: 'https://flagcdn.com/bw.svg',
+        mainResources: ['Diamonds', 'Copper', 'Nickel'],
+    },
+    // Western countries involved in mining
+    {
+        name: 'Canada',
+        region: 'Western',
+        flag: 'https://flagcdn.com/ca.svg',
+        mainResources: ['Gold', 'Copper', 'Zinc', 'Uranium'],
+    },
+    {
+        name: 'United States',
+        region: 'Western',
+        flag: 'https://flagcdn.com/us.svg',
+        mainResources: ['Coal', 'Copper', 'Gold', 'Rare Earth Elements'],
+    },
+    {
+        name: 'Australia',
+        region: 'Western',
+        flag: 'https://flagcdn.com/au.svg',
+        mainResources: ['Iron Ore', 'Coal', 'Gold', 'Bauxite'],
+    },
+    {
+        name: 'United Kingdom',
+        region: 'Western',
+        flag: 'https://flagcdn.com/gb.svg',
+        mainResources: ['Coal', 'Potash', 'Limestone'],
+    },
+    // China
+    {
+        name: 'China',
+        region: 'Asia',
+        flag: 'https://flagcdn.com/cn.svg',
+        mainResources: ['Coal', 'Rare Earth Elements', 'Gold', 'Graphite'],
+    },
+];
+
+export const MoqUnits = [
+    'Tons',
+    'Kg',
+    'gr',
+    'square meter',
+    'square feet',
+    'Cubic meter',
+    'meter',
+    'slab',
+    'set',
+    'piece',
+    'box',
+    'barrel',
+    'lb',
+    'oz',
+    'l',
+    'ml',
+    'm',
+    'cm',
+    'mm',
+    'sqm',
+    'sqft',
+    'cum',
+    'cuft',
+    'pcs',
+    'sets',
+    'pairs',
+    'bags',
+    'boxes',
+    'cartons',
+    'pallets',
+    'rolls',
+    'sheets',
+    'units',
+    'others'
 ];

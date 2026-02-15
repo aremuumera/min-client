@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGetAllRfqQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useGetAllProductQuery } from '@/redux/features/supplier-products/products_api';
-import { formatCompanyNameForUrl } from '@/utils/UrlFormatter';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Loader, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';

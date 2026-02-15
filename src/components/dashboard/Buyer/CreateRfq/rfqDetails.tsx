@@ -59,7 +59,7 @@ import { toast } from 'sonner';
 import { Option } from '@/components/core/option';
 import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { paths } from '@/config/paths';
-import { Moq } from '@/components/marketplace/layout/sidebar';
+import { MoqUnits as Moq } from '@/lib/marketplace-data';
 
 import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
 import { useAppDispatch, useAppSelector } from '@/redux';

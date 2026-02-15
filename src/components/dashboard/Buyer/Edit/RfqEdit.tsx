@@ -1,6 +1,5 @@
 "use client";
 
-// import { Select } from '@/components/ui/select';
 import { Typography } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/input';
@@ -35,9 +34,8 @@ import { Option } from '@/components/core/option';
 
 import { mockData } from '../ListedRfqs';
 import RfqInputEditModal from './InpputEditModal';
-import { Moq } from '@/components/marketplace/layout/sidebar';
-// If not found, define it.
-import { paymentTerms, shippingTerms as shippingTermsFields } from '@/components/dashboard/Supplier/CreateProducts/paymentTerms'; // Corrected path?
+import { MoqUnits as Moq } from '@/lib/marketplace-data';
+import { paymentTerms, shippingTerms as shippingTermsFields } from '@/components/dashboard/Supplier/CreateProducts/paymentTerms';
 import { useGetRfqDetailsForbuyQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useSelector } from 'react-redux';
 import { formatDate } from '@/utils/helper';

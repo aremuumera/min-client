@@ -8,10 +8,10 @@ import { MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import { FaStar } from 'react-icons/fa6';
 import { useViewMode } from '@/contexts/viewProductMode';
 import { paths } from '@/config/paths';
-import { formatCompanyNameForUrl } from '@/utils/UrlFormatter';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import ShareButton from '@/components/marketplace/product-widgets/share-button';
-import LoginModal from '@/utils/login_check_modal';
+import LoginModal from '@/utils/login-modal';
 
 interface ProductProps {
   products: {
@@ -67,7 +67,7 @@ const ProductWidgets = ({ products }: ProductProps) => {
     id,
   } = products;
 
-  const productCardRoute = `${paths.marketplace.productDetails(id)}/${formatCompanyNameForUrl(product_name)}`;
+  const productCardRoute = paths.marketplace.productDetails(id, formatCompanyNameForUrl(product_name));
 
   const imageContainerStyle = {
     width: `${(products?.images?.length || 1) * 100}%`,
