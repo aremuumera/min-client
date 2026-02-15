@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiOutlineInformationCircle } from 'react-icons/hi';
 
 const SlidingNotice = () => {
+  /*
   const notices = [
     {
       title: "Submit Company Info",
@@ -13,6 +14,22 @@ const SlidingNotice = () => {
       description: "If you want to be a verified buyer"
     }
   ];
+  */
+
+  const notices = [
+    {
+      title: "Marketplace Tip",
+      description: "Keep your product catalog updated to improve search visibility and buyer trust."
+    },
+    {
+      title: "Engagement Hint",
+      description: "Respond to RFQs and messages promptly to increase your business rating."
+    },
+    {
+      title: "Pro Feature",
+      description: "Check your Activity Timeline frequently for real-time engagement updates."
+    }
+  ];
 
   const [currentNotice, setCurrentNotice] = useState(0);
 
@@ -21,7 +38,7 @@ const SlidingNotice = () => {
     const interval = setInterval(() => {
       setCurrentNotice((prev) => (prev + 1) % notices.length);
     }, 5000); // Change slide every 5 seconds
-    
+
     return () => clearInterval(interval);
   }, [notices.length]);
 
@@ -38,7 +55,7 @@ const SlidingNotice = () => {
             className="absolute inset-0 flex items-center"
           >
             <div className="flex items-center w-full">
-              <HiOutlineInformationCircle className="text-blue-500 w-5 h-5 flex-shrink-0" />
+              <HiOutlineInformationCircle className="text-blue-500 w-5 h-5 shrink-0" />
               <div className="ml-3">
                 <span className="font-medium text-sm md:text-base">
                   {notices[currentNotice].title}:
@@ -51,7 +68,7 @@ const SlidingNotice = () => {
           </motion.div>
         </AnimatePresence>
       </div>
-      
+
       {/* Indicator dots */}
       {/* <div className="flex justify-center pb-2">
         {notices.map((_, index) => (

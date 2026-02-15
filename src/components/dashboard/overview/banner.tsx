@@ -168,6 +168,84 @@ const Banner = () => {
         </div>
       </div> */}
 
+      {/* <ActionUpdates /> */}
+
+      <div className="pb-4">
+        {/* <div className="w-full pb-4 md:pb-6">
+          <h1 className="text-xl md:text-2xl lg:text-3xl tracking-tighter font-bold text-gray-900">
+            Ready to take your business beyond borders?
+          </h1>
+          <p className="text-sm md:text-base tracking-tighter lg:text-lg text-gray-500 font-medium mt-2">
+            It only takes 3 simple steps to get started! <br /> We recommend suppliers complete this process before listing their products.
+          </p>
+        </div> */}
+
+        <div className="py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+          {BannerInfo.map((info, index) => (
+            <div
+              key={index}
+              className="group w-full flex flex-col gap-3 md:gap-4 rounded-xl border border-[#e5e7eb] p-5 md:p-6 bg-white hover:border-primary-500 transition-all"
+            >
+              <div className="w-10 h-10 md:w-12 md:h-12 flex justify-center items-center bg-primary-50 rounded-lg text-primary-600">
+                {info.userIcon}
+              </div>
+              <div className="grow">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 pb-1">
+                  {info.title}
+                </h2>
+                <p className="text-gray-500 text-sm md:text-base leading-relaxed">
+                  {info.description}
+                </p>
+              </div>
+              <Link
+                className="text-primary-600 font-bold flex items-center gap-1 mt-auto hover:gap-2 transition-all"
+                href={info.buttonLink}
+              >
+                {info.buttonText} <FiArrowUpRight className="text-lg" />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-2">
+        <div className="w-full py-4 md:py-6">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+            Become a premium User
+          </h1>
+          <p className="text-sm md:text-base lg:text-lg text-gray-500 font-medium mt-2">
+            Unlock exclusive benefits and powerful tools designed to grow your business faster.
+          </p>
+        </div>
+        <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          {MinMegPlans.map((info, index) => (
+            <div
+              key={index}
+              className="group w-full flex flex-col gap-3 md:gap-4 rounded-xl border border-[#e5e7eb] p-5 md:p-6 bg-white hover:border-primary-500 transition-all"
+            >
+              <div className="w-10 h-10 md:w-12 md:h-12 flex justify-center items-center bg-primary-50 rounded-lg text-primary-600">
+                {info.userIcon}
+              </div>
+              <div className="grow">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 pb-1">
+                  {info.title}
+                </h2>
+                <p className="text-gray-500 text-sm md:text-base leading-relaxed">
+                  {info.description}
+                </p>
+              </div>
+              <Link
+                className="text-primary-600 font-bold flex items-center gap-1 mt-auto hover:gap-2 transition-all"
+                href={info.buttonLink}
+              >
+                {info.buttonText} <FiArrowUpRight className="text-lg" />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Previous Layout (Preserved as requested)
       <div className="py-4 px-4 lg:px-0">
         <div className="w-full py-4 md:py-6">
           <h1 className="text-xl md:text-2xl lg:text-3xl tracking-tighter font-medium">
@@ -177,78 +255,9 @@ const Banner = () => {
             It only takes 3 simple steps let’s get started! <br /> To ensure a smooth experience, we recommend suppliers complete this process before listing their products.
           </p>
         </div>
-
-        <div className="py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-5">
-          {BannerInfo.map((info, index) => (
-            <div
-              key={index}
-              className="w-full flex flex-col gap-3 md:gap-4 rounded-lg md:rounded-xl lg:rounded-[20px] border border-[#c6c6c6] p-4 md:p-5 lg:p-6 bg-[#F9F9F9]"
-            >
-              <div className="w-10 h-10 md:w-12 md:h-12 flex justify-center items-center bg-white rounded-full">
-                {info.userIcon}
-              </div>
-              <div className="flex-grow">
-                <h2 className="text-lg md:text-xl lg:text-2xl font-medium pb-2">
-                  {info.title}
-                </h2>
-                <p className="text-[#8895A2] text-sm md:text-base lg:text-lg">
-                  {info.description}
-                </p>
-              </div>
-              <Link
-                className="text-primary flex items-center gap-1 mt-auto"
-                href={info.buttonLink}
-              >
-                {info.buttonText}{' '}
-                <span>
-                  <FiArrowUpRight className="text-primary" />
-                </span>
-              </Link>
-            </div>
-          ))}
-        </div>
+        ... (rest of old code)
       </div>
-
-      <ActionUpdates />
-      <div className="">
-        <div className="w-full py-4 md:py-6 px-4 lg:px-0">
-          <h1 className="text-xl md:text-2xl lg:text-3xl font-medium">
-            Become a premium User
-          </h1>
-          <p className="text-sm md:text-base lg:text-lg text-[#8895A2] font-normal mt-2">
-            Unlock exclusive benefits, and powerful tools all designed to grow your business faster with our Premium plans!
-          </p>
-        </div>
-        <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 px-4 lg:px-0">
-          {MinMegPlans.map((info, index) => (
-            <div
-              key={index}
-              className="w-full flex flex-col gap-3 md:gap-4 rounded-lg md:rounded-xl lg:rounded-[20px] border border-[#c6c6c6] p-4 md:p-5 lg:p-6 bg-[#F9F9F9]"
-            >
-              <div className="w-10 h-10 md:w-12 md:h-12 flex justify-center items-center bg-white rounded-full">
-                {info.userIcon}
-              </div>
-              <div className="flex-grow">
-                <h2 className="text-lg md:text-xl lg:text-2xl font-medium pb-2">
-                  {info.title}
-                </h2>
-                <p className="text-[#8895A2] text-sm md:text-base lg:text-lg">
-                  {info.description}
-                </p>
-              </div>
-              <Link
-                className="text-primary flex items-center gap-1 mt-auto"
-                href={info.buttonLink}
-              >
-                {info.buttonText}{' '}
-                <span>
-                  <FiArrowUpRight className="text-primary" />
-                </span>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
+      */}
     </div>
   );
 };
