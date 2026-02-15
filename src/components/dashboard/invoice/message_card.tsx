@@ -151,15 +151,16 @@ export function InvoiceMessageCard({ invoice, position = 'left' }: InvoiceMessag
   return (
     <Card
       className={cn(
-        "max-w-[400px] border-2 rounded-lg shadow-md",
-        position === 'right' ? "border-primary-main bg-primary-50" : "border-gray-300 bg-white"
+        "max-w-[400px] border-2 rounded-lg border-[#F5F5F5] py-4",
+        position === 'right' ? " bg-primary-50" : "border-[#F5F5F5] bg-white"
       )}
     >
       <CardContent>
         {/* Header */}
-        <Stack direction="row" spacing={1} className="items-center mb-4">
-          <DescriptionIcon className="text-primary-main" size={24} />
-          <Typography variant="subtitle1" fontWeight="bold">
+        <div className="sm:flex items-center mb-4 ">
+
+          <Typography variant="body1" fontWeight="semibold" className="flex items-center gap-2 mb-2 sm:mb-0">
+            <DescriptionIcon className="text-primary-main" size={24} />
             Trade Agreement
           </Typography>
           <Box className="ml-auto">
@@ -170,7 +171,7 @@ export function InvoiceMessageCard({ invoice, position = 'left' }: InvoiceMessag
               icon={getStatusIcon(invoice.status)}
             />
           </Box>
-        </Stack>
+        </div>
 
         <Divider className="mb-4" />
 

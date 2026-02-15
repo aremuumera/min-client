@@ -17,7 +17,7 @@ import { useParams } from 'next/navigation';
 import { usePathname } from '@/hooks/use-pathname';
 
 import { InvoiceMessageCard } from '../invoice/message_card';
-import { ChatContext, Message } from './chat_com/chat_context';
+import { ChatContext, Message } from '@/providers/chat-provider';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/redux';
 
@@ -50,7 +50,7 @@ export function MessageBox({ message }: { message: Message }) {
   const position = message?.senderId === user?.id ? 'right' : 'left';
   const avatarBgColor = stringToColor(message?.senderName || 'User');
   const { deleteAttachment, markMessageAsDelivered, markMessageAsRead } = React.useContext(ChatContext);
-  
+
   // State for modal
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const params = useParams();
@@ -150,6 +150,7 @@ export function MessageBox({ message }: { message: Message }) {
           marginBottom: '0.5rem',
           width: '100%',
         }}
+
       >
         <Stack
           direction={position === 'right' ? 'row-reverse' : 'row'}
@@ -224,24 +225,25 @@ export function MessageBox({ message }: { message: Message }) {
             style={{
               paddingLeft: '0.5rem',
               paddingRight: '0.5rem',
-              paddingTop: '0.25rem',
-              paddingBottom: '0.25rem',
+              paddingTop: '0.75rem',
+              paddingBottom: '0.75rem',
               borderRadius: '0.5rem',
-              ...(position === 'right' && {
-                backgroundColor: '#10b981',
-                color: 'white',
-              }),
+              // ...(position === 'right' && {
+              //   backgroundColor: '#10b981',
+              //   color: 'white',
+              // }),
             }}
+            className={`  ${position === 'right' ? 'bg-primary-500!' : 'bg-white'}`}
           >
             <Stack spacing={1}>
               <div>
-                <Typography variant="subtitle2" className="cursor-pointer">
+                <Typography variant="subtitle2" className={`cursor-pointer ${position === 'right' ? 'text-white!' : 'text-black'}`}>
                   {`${message?.senderName}  -  (${message?.senderCompanyName})`}
                 </Typography>
               </div>
 
               {/* Handle text messages */}
-              <Typography color="inherit" variant="body1">
+              <Typography color="inherit" variant="body1" className={`${position === 'right' ? 'text-white!' : 'text-black'}`}>
                 {message.text}
               </Typography>
               {/* Handle attachments if they exist */}
@@ -260,7 +262,7 @@ export function MessageBox({ message }: { message: Message }) {
                             padding: '0.25rem',
                             borderRadius: '0.25rem',
                             backgroundColor: 'rgba(0,0,0,0.05)',
-                            border: '1px dashed rgba(0,0,0,0.2)',
+                            border: '1px dashed #f5f5f5',
                           }}
                         >
                           <Stack direction="row" spacing={1} className="items-center">

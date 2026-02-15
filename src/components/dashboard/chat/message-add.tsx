@@ -1,20 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { 
-  Avatar, 
-  IconButton, 
-  Stack, 
-  Input, 
-  Tooltip, 
-  CircularProgress 
+import {
+  Avatar,
+  IconButton,
+  Stack,
+  Input,
+  Tooltip,
+  CircularProgress
 } from '@/components/ui';
 
 import { Paperclip as PaperclipIcon } from '@phosphor-icons/react/dist/ssr/Paperclip';
 import { PaperPlaneTilt as PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr/PaperPlaneTilt';
 import { useSelector } from 'react-redux';
 
-import { ChatContext } from './chat_com/chat_context';
+import { ChatContext } from '@/providers/chat-provider';
 import { generateTextAvatar, stringToColor } from './message-box';
 
 interface MessageAddProps {

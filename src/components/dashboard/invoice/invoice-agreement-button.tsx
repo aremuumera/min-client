@@ -7,7 +7,7 @@ import { Popover } from '@/components/ui/popover';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Typography } from '@/components/ui/typography';
 
-import { ChatContext } from '../chat/chat_com/chat_context';
+import { ChatContext } from '@/providers/chat-provider';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useTheme } from '@/providers';
 
@@ -53,7 +53,9 @@ export const InvoiceAgreementButton = ({ thread, hasExistingInvoice, onOpenModal
         </Box>
       )} */}
       <Box sx={{ display: 'flex', alignItems: { sm: 'center', xs: 'end', justifyContent: 'end' }, gap: 1 }}>
-        {!isMobile && (
+        <div
+          className='md:block hidden'
+        >
           <Tooltip
             content="Create Trade Agreement for Inspection"
             position="bottom"
@@ -69,43 +71,17 @@ export const InvoiceAgreementButton = ({ thread, hasExistingInvoice, onOpenModal
               Create Agreement
             </Button>
           </Tooltip>
-        )}
+        </div>
 
-        {/* MOBILE */}
-            <Popover
-              open={open}
-              onOpenChange={(o) => !o && handleClose()}
-              position="bottom"
-              align="center"
-              trigger={
-                <Button
-                  variant="outlined"
-                  size="sm"
-                  className="min-w-[40px] px-1"
-                >
-                  <DescriptionIcon className="h-4 w-4" />
-                </Button>
-              }
-            >
-              <Box className="p-4 max-w-[240px]">
-                <Typography variant="body2" className="mb-4">
-                  Create Trade Agreement for Inspection.
-                </Typography>
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => {
-                    onOpenModal();
-                    handleClose();
-                  }}
-                  disabled={hasExistingInvoice}
-                  size="sm"
-                  className="capitalize"
-                >
-                  Create Agreement
-                </Button>
-              </Box>
-            </Popover>
+        <Button
+          variant="outlined"
+          size="sm"
+          className="min-w-[40px] px-1 md:hidden  flex items-center justify-center"
+          onClick={onOpenModal}
+          disabled={hasExistingInvoice}
+        >
+          <DescriptionIcon className="h-4 w-4" />
+        </Button>
       </Box>
     </Box>
   );

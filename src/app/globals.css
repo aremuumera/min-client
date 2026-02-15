@@ -580,3 +580,19 @@ input:-webkit-autofill:active {
     flex-wrap: wrap;
   }
 }
+
+/* ============================================
+   LEGACY MUI COMPATIBILITY LAYER
+   ============================================ */
+
+:root {
+  --mui-palette-primary-main: var(--color-primary-500);
+  --mui-palette-primary-dark: var(--color-primary-700);
+  --mui-palette-primary-contrastText: #ffffff;
+  --mui-palette-divider: var(--color-divider);
+  --mui-palette-action-selected: var(--color-primary-50);
+  --mui-palette-action-hover: var(--color-neutral-50);
+  --mui-palette-text-secondary: var(--color-foreground-secondary);
+  /* RGB values for alpha channel composition */
+  --mui-palette-primary-mainChannel: 22 179 100;
+}

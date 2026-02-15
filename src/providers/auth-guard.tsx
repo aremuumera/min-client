@@ -19,7 +19,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   );
 
   // AppCheck (refresh token)
-  const { isLoading, isError, refetch } = useAppCheckQuery(undefined,
+  const { isLoading, isError, refetch, isUninitialized } = useAppCheckQuery(undefined,
     {
       skip: typeof window === 'undefined' || !localStorage.getItem('chimpstate'),
     }
@@ -35,11 +35,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const now = Date.now();
     // Only refetch on navigation if we are authenticated 
     // AND it has been more than 15 seconds since the last refresh
-    if (isAuth && now - lastRefetchTime.current > 15000) {
+    // AND the query is initialized
+    if (isAuth && !isUninitialized && now - lastRefetchTime.current > 15000) {
       lastRefetchTime.current = now;
       refetch();
     }
-  }, [pathname, isAuth, refetch]);
+  }, [pathname, isAuth, refetch, isUninitialized]);
 
   // Token expiration check
   React.useEffect(() => {

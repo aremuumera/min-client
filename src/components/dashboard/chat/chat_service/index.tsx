@@ -25,7 +25,7 @@ import {
 import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { toast } from 'sonner';
 
-import { chatNotificationService } from '../chat_com/chat_notif_service';
+import { chatNotificationService } from '../chat_notif_service';
 
 export const chatService = {
   // Start a new conversation
@@ -196,9 +196,9 @@ export const chatService = {
 
       // Get conversation to find recipient
       const conversationDoc = await getDoc(doc(db, 'conversations', conversationId));
-    const conversationData = conversationDoc.data();
-    if (!conversationData) throw new Error('Conversation data not found');
-    const recipientId = conversationData.participants.find((id: string) => id !== senderId);
+      const conversationData = conversationDoc.data();
+      if (!conversationData) throw new Error('Conversation data not found');
+      const recipientId = conversationData.participants.find((id: string) => id !== senderId);
 
       if (!recipientId) {
         throw new Error('Recipient not found in conversation');

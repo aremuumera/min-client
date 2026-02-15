@@ -44,7 +44,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
             "sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300 ease-in-out",
             finalRelease && (isCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")
         )}>
-            <div className="h-20 px-6 lg:px-10 flex items-center justify-between">
+            <div className="h-20  lg:px-10 flex items-center justify-between">
                 {/* Mobile Menu & Left section */}
                 <div className="flex items-center gap-4">
                     {finalRelease && (

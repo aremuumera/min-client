@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux';
 import { dayjs } from '@/lib/dayjs';
 import { usePathname } from '@/hooks/use-pathname';
 
-import { ChatContext } from './chat_com/chat_context';
+import { ChatContext } from '@/providers/chat-provider';
 import { generateTextAvatar, stringToColor } from './message-box';
 
 function getDisplayContent(lastMessage: any, userId: string): string {

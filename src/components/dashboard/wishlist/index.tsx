@@ -94,7 +94,7 @@ const SavedItemsDashboard = () => {
         bgcolor: 'background.paper',
         p: { xs: 2, md: 4 },
         borderRadius: 2,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        // boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
       }}
     >
       <Typography
@@ -130,10 +130,10 @@ const SavedItemsDashboard = () => {
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
-                  className="grid grid-cols-1 min-[360px]:grid-cols-2! md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6"
                 >
                   {products.map((product: any) => (
-                    <motion.div variants={itemVariants} key={product.id}>
+                    <motion.div variants={itemVariants} key={product.id} className="min-w-0">
                       <SavedProductWidget
                         products={product}
                         onDelete={() => handleDelete(product.id, 'product')}
@@ -158,13 +158,13 @@ const SavedItemsDashboard = () => {
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6"
                 >
                   {rfqs.map((rfq: any) => (
-                    <motion.div variants={itemVariants} key={rfq.rfqId || rfq.id}>
+                    <motion.div variants={itemVariants} key={rfq.id} className="min-w-0">
                       <SavedRfqWidget
                         rfqProduct={rfq}
-                        onDelete={() => handleDelete(rfq.rfqId || rfq.id, 'rfq')}
+                        onDelete={() => handleDelete(rfq.id, 'rfq')}
                         isSaved={true}
                       />
                     </motion.div>

@@ -9,7 +9,7 @@ import { CircularProgress } from '@/components/ui/progress';
 import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
-import { ChatContext } from './chat_com/chat_context';
+import { ChatContext } from '@/providers/chat-provider';
 import { useEffect } from 'react';
 
 interface ThreadViewProps {
@@ -50,7 +50,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
     }
   }, [messages]);
 
-  if (loading) {
+  if (loading && !thread) {
     return (
       <Box className="flex items-center justify-center h-full flex-auto">
         <CircularProgress />
@@ -70,12 +70,14 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
   return (
     <Box className="flex flex-col flex-auto min-h-0 h-full">
-      <ThreadToolbar thread={thread} />
+      <div className='ml-2'>
+        <ThreadToolbar thread={thread} />
+      </div>
       <Stack
         ref={messagesRef}
         spacing={2}
         className="flex-auto overflow-y-auto p-6"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {messages.map((message: any) => (
           <MessageBox key={message.id} message={message} />

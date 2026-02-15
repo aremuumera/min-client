@@ -1,88 +1,122 @@
-'use client';
-
-import * as React from 'react';
-import { paths } from '@/config/paths';
-import { Box } from '@/components/ui/box';
-import { IconButton } from '@/components/ui/icon-button';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { List as ListIcon } from '@phosphor-icons/react/dist/ssr/List';
-import { useRouter } from 'next/navigation';
+import {
+  Box,
+  CircularProgress,
+  Divider,
+  IconButton,
+  Stack,
+  Typography
+} from '@/components/ui';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { usePathname } from '@/hooks/use-pathname';
 
-import { ChatContext } from './chat-context';
+import { ChatContext } from '@/providers/chat-provider';
 import { Sidebar } from './sidebar';
 
 export function ChatView({ children }: { children?: React.ReactNode }) {
+  const params = useParams();
+  const conversationId = params?.conversationId as string;
   const {
-    contacts,
-    threads,
+    conversations,
+    activeConversation,
+    notifications,
+    setActiveConversation,
     messages,
-    createThread,
+    loading,
     openDesktopSidebar,
     setOpenDesktopSidebar,
     openMobileSidebar,
     setOpenMobileSidebar,
-  } = React.useContext(ChatContext);
-
+  } = useContext(ChatContext);
   const router = useRouter();
-
   const pathname = usePathname();
 
-  // The layout does not have a direct access to the current thread id param, we need to extract it from the pathname.
-  const segments = pathname.split('/').filter(Boolean);
-  const currentThreadId = (segments.length === 4 || segments.length === 5) ? segments[3] : undefined;
+  // console.log('conversations', conversations);
+  // console.log('activeConversation', activeConversation);
+  // console.log('messages', messages);
+  // console.log('loading', loading);
+  //   console.log('notifications', notifications);
 
   const mdDown = useMediaQuery('down', 'md');
 
-  const handleContactSelect = React.useCallback(
-    (contactId: string) => {
-      const threadId = createThread({ type: 'direct', recipientId: contactId });
+  // Set active conversation when URL param changes
+  useEffect(() => {
+    if (conversationId && Array.isArray(conversations) && conversations.length > 0) {
+      const conversation = conversations.find((c) => c.conversationId === conversationId);
+      if (conversation) {
+        setActiveConversation(conversation);
+      }
+    }
+  }, [conversationId, conversations, setActiveConversation]);
 
-      router.push(paths.dashboard.chat.thread('direct', threadId!));
+  // Handle conversation selection
+  const handleContactSelect = useCallback(
+    (conversationId: string) => {
+      if (conversationId && Array.isArray(conversations) && conversations.length > 0) {
+        const conversation = conversations.find((c) => c.conversationId === conversationId);
+        if (conversation) {
+          setActiveConversation(conversation);
+        }
+      }
     },
-    [router, createThread]
+    [setActiveConversation, conversations, router]
   );
 
-  const handleThreadSelect = React.useCallback(
-    (threadType: string, threadId: string, itemId: string = '0') => {
-      router.push(paths.dashboard.chat.thread(threadType, threadId, itemId));
+  // Handle thread / active conversation selection
+  const handleThreadSelect = useCallback(
+    (threadType: any, threadId: any, itemId: any) => {
+      router.push(`/dashboard/chat/${threadType}/${threadId}/${itemId}`);
     },
     [router]
   );
 
-  return (
-    <Box sx={{ display: 'flex', flex: '1 1 0', minHeight: 0 }}>
-      <Sidebar
-        contacts={contacts}
-        currentThreadId={currentThreadId}
-        messages={messages}
-        onCloseMobile={() => {
-          setOpenMobileSidebar(false);
-        }}
-        onSelectContact={handleContactSelect}
-        onSelectThread={handleThreadSelect}
-        openDesktop={openDesktopSidebar}
-        openMobile={openMobileSidebar}
-        threads={threads}
-      />
-      <Box sx={{ display: 'flex', flex: '1 1 auto', flexDirection: 'column', overflow: 'hidden' }}>
-        <Box sx={{ borderBottom: '1px solid var(--mui-palette-divider)', display: 'flex', flex: '0 0 auto', p: 2 }}>
-          <IconButton
-            aria-label="Toggle sidebar"
-            onClick={() => {
-              if (mdDown) {
-                setOpenMobileSidebar((prev: boolean) => !prev);
-              } else {
-                setOpenDesktopSidebar((prev: boolean) => !prev);
-              }
-            }}
-          >
-            <ListIcon />
-          </IconButton>
-        </Box>
-        {children}
+  const handleSidebarToggle = () => {
+    if (mdDown) {
+      setOpenMobileSidebar((prev) => !prev);
+    } else {
+      setOpenDesktopSidebar((prev) => !prev);
+    }
+  };
+
+  const handleCloseMobileSidebar = () => {
+    setOpenMobileSidebar(false);
+  };
+
+  // Loading state
+  if (loading && conversations.length === 0) {
+    return (
+      <Box className="flex justify-center items-center h-screen flex-1">
+        <CircularProgress />
       </Box>
-    </Box>
+    );
+  }
+
+  return (
+    <>
+      <Box className="flex flex-1 min-h-0 h-full">
+        <Sidebar
+          conversations={conversations}
+          currentConversationId={activeConversation?.conversationId}
+          currentThreadId={activeConversation?.conversationId || activeConversation?.conversationId as any}
+          messages={messages}
+          onCloseMobile={handleCloseMobileSidebar}
+          onSelectContact={handleContactSelect}
+          onSelectConversation={handleThreadSelect}
+          openDesktop={openDesktopSidebar}
+          openMobile={openMobileSidebar}
+          threads={conversations}
+        />
+        <Box className="flex flex-[1_1_auto] flex-col overflow-hidden">
+          <Box className="border-b border-neutral-200 flex flex-[0_0_auto]">
+            <IconButton onClick={handleSidebarToggle} aria-label='Toggle Sidebar'>
+              <ListIcon />
+            </IconButton>
+          </Box>
+          {children}
+        </Box>
+      </Box>
+    </>
   );
 }

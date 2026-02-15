@@ -43,7 +43,7 @@ import { useParams } from 'next/navigation';
 import { z } from 'zod';
 
 import { useAlert } from '@/providers';
-import { MoqUnits as Moq } from '@/lib/marketplace-data.ts';
+import { MoqUnits as Moq } from '@/lib/marketplace-data';
 
 import nigeriaLgas from '../../../utils/location-lga.json';
 import nigeriaStates from '../../../utils/location-state.json';
@@ -355,8 +355,10 @@ export function InvoiceAgreementModal({
         unitType: threadType === 'rfq' ? itemData.quantityMeasure : prev.unitType,
         unitPrice: threadType === 'product' ? itemData.real_price : prev.unitPrice,
         deliveryLocation: threadType === 'product' ? `` : itemData.productDestination || prev.deliveryLocation,
-        // samplingState: threadType === 'product' ? itemData.selected_state : prev.samplingState,
-        samplingAddress: threadType === 'product' ? itemData.full_address : prev.samplingAddress,
+        samplingState: threadType === 'product' ? itemData.selected_state : itemData.rfqState || prev.samplingState,
+        samplingLGA: threadType === 'product' ? itemData.selected_lga : itemData.rfqLga || prev.samplingLGA,
+        samplingAddress: threadType === 'product' ? itemData.full_address : itemData.rfqAddress || prev.samplingAddress,
+        currency: threadType === 'product' ? itemData.unitCurrency : 'NGN',
       }));
     }
   }, [itemData, threadType, open, isEditMode]);
@@ -372,7 +374,7 @@ export function InvoiceAgreementModal({
 
   //  ENHANCED HANDLE CHANGE - Clear error when field is edited
   const handleChange = (field: string) => (event: any) => {
-    const value = event.target.value as string;
+    const value = (event?.target ? event.target.value : event) as string;
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
       if (field === 'tradeType' && value === 'LOCAL') {
@@ -605,9 +607,9 @@ export function InvoiceAgreementModal({
             </Alert>
 
             <Box className="bg-gray-50 p-4 rounded-md">
-              <Typography variant="subtitle2" gutterBottom>
+              {/* <Typography variant="subtitle2" gutterBottom>
                 {threadType === 'product' ? 'Product' : 'RFQ'} Details
-              </Typography>
+              </Typography> */}
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <TextField
@@ -657,26 +659,26 @@ export function InvoiceAgreementModal({
                 />
               </Grid>
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth error={hasError('unitType')}>
-                  <FormLabel>Unit Type *</FormLabel>
-                  <Select
-                    value={formData.unitType}
-                    onChange={handleChange('unitType')}
-                    MenuProps={{
-                      PaperProps: {
-                        style: { maxHeight: 250 },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">Select Unit type</MenuItem>
-                    {Moq.map((unit, i) => (
-                      <MenuItem key={i} value={unit}>
-                        {unit}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {hasError('unitType') && <FormHelperText>{getErrorMessage('unitType')}</FormHelperText>}
-                </FormControl>
+                <Select
+                  label="Unit Type *"
+                  value={formData.unitType}
+                  onChange={handleChange('unitType')}
+                  fullWidth
+                  error={hasError('unitType')}
+                  errorMessage={getErrorMessage('unitType')}
+                  MenuProps={{
+                    PaperProps: {
+                      style: { maxHeight: 250 },
+                    },
+                  }}
+                >
+                  <MenuItem value="">Select Unit type</MenuItem>
+                  {Moq.map((unit, i) => (
+                    <MenuItem key={i} value={unit}>
+                      {unit}
+                    </MenuItem>
+                  ))}
+                </Select>
               </Grid>
 
               {/* <Grid item xs={12} md={4}>
@@ -863,26 +865,26 @@ export function InvoiceAgreementModal({
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={hasError('inspectionTime')}>
-                  <FormLabel>Inspection Time *</FormLabel>
-                  <Select
-                    value={formData.inspectionTime}
-                    onChange={handleChange('inspectionTime')}
-                    MenuProps={{
-                      PaperProps: {
-                        style: { maxHeight: 250 },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">Select Time</MenuItem>
-                    {timeSlots.map((time, i) => (
-                      <MenuItem key={i} value={time}>
-                        {time}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {hasError('inspectionTime') && <FormHelperText>{getErrorMessage('inspectionTime')}</FormHelperText>}
-                </FormControl>
+                <Select
+                  label="Inspection Time *"
+                  value={formData.inspectionTime}
+                  onChange={handleChange('inspectionTime')}
+                  fullWidth
+                  error={hasError('inspectionTime')}
+                  errorMessage={getErrorMessage('inspectionTime')}
+                  MenuProps={{
+                    PaperProps: {
+                      style: { maxHeight: 250 },
+                    },
+                  }}
+                >
+                  <MenuItem value="">Select Time</MenuItem>
+                  {timeSlots.map((time, i) => (
+                    <MenuItem key={i} value={time}>
+                      {time}
+                    </MenuItem>
+                  ))}
+                </Select>
               </Grid>
             </Grid> */}
 
@@ -891,52 +893,50 @@ export function InvoiceAgreementModal({
             <Typography variant="h6">Sampling Location</Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={hasError('samplingState')}>
-                  <FormLabel>State *</FormLabel>
-                  <Select
-                    value={formData.samplingState}
-                    onChange={handleChange('samplingState')}
-                    MenuProps={{
-                      PaperProps: {
-                        style: { maxHeight: 250 },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">Select State</MenuItem>
-                    {nigeriaStates.map((state, i) => (
-                      <MenuItem key={i} value={state.value}>
-                        {state.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {hasError('samplingState') && <FormHelperText>{getErrorMessage('samplingState')}</FormHelperText>}
-                </FormControl>
+                <Select
+                  label="State *"
+                  value={formData.samplingState}
+                  onChange={handleChange('samplingState')}
+                  fullWidth
+                  error={hasError('samplingState')}
+                  errorMessage={getErrorMessage('samplingState')}
+                  MenuProps={{
+                    PaperProps: {
+                      style: { maxHeight: 250 },
+                    },
+                  }}
+                >
+                  <MenuItem value="">Select State</MenuItem>
+                  {nigeriaStates.map((state, i) => (
+                    <MenuItem key={i} value={state.value}>
+                      {state.label}
+                    </MenuItem>
+                  ))}
+                </Select>
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={hasError('samplingLGA')}>
-                  <FormLabel>LGA *</FormLabel>
-                  <Select
-                    value={formData.samplingLGA}
-                    onChange={handleChange('samplingLGA')}
-                    disabled={!formData.samplingState}
-                    MenuProps={{
-                      PaperProps: {
-                        style: { maxHeight: 250 },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">Select LGA</MenuItem>
-                    {(nigeriaLgas as any)[formData.samplingState]?.map((lga: any, i: number) => (
-                      <MenuItem key={i} value={lga.value}>
-                        {lga.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <FormHelperText>
-                    {hasError('samplingLGA') ? getErrorMessage('samplingLGA') : 'Select state first'}
-                  </FormHelperText>
-                </FormControl>
+                <Select
+                  label="LGA *"
+                  value={formData.samplingLGA}
+                  onChange={handleChange('samplingLGA')}
+                  disabled={!formData.samplingState}
+                  fullWidth
+                  error={hasError('samplingLGA')}
+                  errorMessage={hasError('samplingLGA') ? getErrorMessage('samplingLGA') : 'Select state first'}
+                  MenuProps={{
+                    PaperProps: {
+                      style: { maxHeight: 250 },
+                    },
+                  }}
+                >
+                  <MenuItem value="">Select LGA</MenuItem>
+                  {(nigeriaLgas as any)[formData.samplingState]?.map((lga: any, i: number) => (
+                    <MenuItem key={i} value={lga.value}>
+                      {lga.label}
+                    </MenuItem>
+                  ))}
+                </Select>
               </Grid>
 
               <Grid item xs={12}>
@@ -1213,7 +1213,15 @@ export function InvoiceAgreementModal({
     <Dialog
       open={open}
       onClose={handleClose}
-      className="min-h-[70vh]"
+      maxWidth="xl"
+      PaperProps={{
+        sx: {
+          maxHeight: '90vh',
+          m: 2,
+          display: 'flex',
+          flexDirection: 'column'
+        }
+      }}
     >
       <DialogTitle>
         <Box className="flex justify-between items-center w-full">
@@ -1225,18 +1233,18 @@ export function InvoiceAgreementModal({
               {`${thread?.currentOtherUserName} - (${thread?.currentOtherUserCompanyName})` || 'Counterparty'}
             </b> for <b> {thread.itemTitle}</b>
           </Typography>
-          <IconButton
+          {/* <IconButton
             aria-label="Close"
             onClick={onClose}
             size="sm"
             className="bg-gray-200 hover:bg-gray-300 p-2 rounded-full ml-2"
           >
             <CloseIcon />
-          </IconButton>
+          </IconButton> */}
         </Box>
       </DialogTitle>
 
-      <DialogContent dividers>
+      <DialogContent dividers className="[scrollbar-width:none]">
         <Stepper activeStep={activeStep} orientation={isMobile ? 'vertical' : 'horizontal'} className="mb-8">
           {steps.map((label) => (
             <Step key={label}>

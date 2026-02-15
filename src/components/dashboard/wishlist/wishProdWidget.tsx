@@ -58,11 +58,11 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
     const productCardRoute = `/dashboard/products/details/${id}/${formatCompanyNameForUrl(product_name)}`;
 
     return (
-        <div className='relative h-full'>
-            <div className='group transition-all duration-300 hover:shadow-md shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full flex flex-col justify-between'>
+        <div className='relative h-full w-full max-w-[250px]'>
+            <div className='group transition-all duration-300 hover:shadow-md border border-[#e5e7eb]   mb-[14px] bg-[#ffffff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full flex flex-col justify-between'>
                 {/* Delete button for saved items */}
                 {isSaved && (
-                    <div className="absolute top-3 right-3 m-2 z-20">
+                    <div className="absolute top-2 right-2 m-2 z-20">
                         <Tooltip title="Remove from saved items">
                             <IconButton
                                 onClick={(e) => {
@@ -135,7 +135,7 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                 </div>
 
                 {/* Product details */}
-                <div className="flex-grow flex flex-col mt-3">
+                <div className="grow flex flex-col mt-3">
                     <h2 className='text-[14px] font-medium line-clamp-2 min-h-[40px] text-gray-800'>
                         {product_name}
                     </h2>

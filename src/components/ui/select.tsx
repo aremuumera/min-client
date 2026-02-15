@@ -128,9 +128,20 @@ function Select({
       }
     };
 
+    const handleScroll = (e: Event) => {
+      if (isOpen && listRef.current && listRef.current.contains(e.target as Node)) {
+        return;
+      }
+      if (isOpen) setIsOpen(false);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    window.addEventListener('scroll', handleScroll, true); // Capture scroll events from any container
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isOpen]);
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {

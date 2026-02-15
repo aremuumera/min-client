@@ -58,13 +58,17 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
 
   return (
     <>
-      <div className="shadow-md hover:shadow-lg transition-shadow h-full flex flex-col relative bg-white rounded-lg overflow-hidden">
+      <div className=" hover:shadow-lg transition-shadow border border-[#e5e7eb] h-full flex flex-col relative bg-white rounded-lg overflow-hidden">
         {/* Delete button for saved items */}
         {isSaved && (
-          <div className="absolute top-3 right-3 m-2 z-20">
+          <div className="absolute top-0 right-3 m-2 z-20">
             <Tooltip title="Remove from saved items">
               <IconButton
-                onClick={onDelete}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete();
+                }}
                 aria-label="Remove from saved items"
                 size="sm"
                 className="bg-white/80 hover:bg-white/90"

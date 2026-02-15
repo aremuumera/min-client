@@ -87,7 +87,8 @@ export const DirectSearch = React.forwardRef<HTMLDivElement, DirectSearchProps>(
 
   return (
     <ClickAwayListener onClickAway={onClickAway}>
-      <Stack ref={ref} spacing={2} tabIndex={-1}>
+      <Stack ref={ref} spacing={2} className='mr-2 pt-2'
+        tabIndex={-1}>
         <OutlinedInput
           onChange={onChange}
           onFocus={onFocus}

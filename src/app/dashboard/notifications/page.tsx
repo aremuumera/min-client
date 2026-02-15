@@ -16,7 +16,7 @@ import { cn } from '@/utils/helper';
 
 import { dayjs } from '@/lib/dayjs';
 import { chatService } from '@/components/dashboard/chat/chat_service';
-import { ChatContext } from '@/components/dashboard/chat/chat_com/chat_context';
+import { ChatContext } from '@/providers/chat-provider';
 import { useAppSelector } from '@/redux';
 
 interface Notification {

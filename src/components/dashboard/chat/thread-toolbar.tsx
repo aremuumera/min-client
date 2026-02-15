@@ -2,21 +2,9 @@ import * as React from 'react';
 import { Avatar } from '@/components/ui/avatar';
 
 import { Box } from '@/components/ui/box';
-import { IconButton } from '@/components/ui/icon-button';
-import { ListItemIcon } from '@/components/ui/list';
-import { Menu } from '@/components/ui/menu';
-import { MenuItem } from '@/components/ui/menu';
 import { Stack } from '@/components/ui/stack';
 
 import { Typography } from '@/components/ui/typography';
-import { Archive as ArchiveIcon } from '@phosphor-icons/react/dist/ssr/Archive';
-import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
-import { Camera as CameraIcon } from '@phosphor-icons/react/dist/ssr/Camera';
-import { DotsThree as DotsThreeIcon } from '@phosphor-icons/react/dist/ssr/DotsThree';
-import { Phone as PhoneIcon } from '@phosphor-icons/react/dist/ssr/Phone';
-import { Prohibit as ProhibitIcon } from '@phosphor-icons/react/dist/ssr/Prohibit';
-import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
-
 import { usePopover } from '@/hooks/use-popover';
 
 import { InvoiceAgreementModal } from '../invoice/invoice_modal';
@@ -43,6 +31,7 @@ export function ThreadToolbar({ thread }: any) {
           minHeight: '64px',
           px: 2,
           py: 1,
+
         }}
       >
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center', minWidth: 0 }}>
@@ -67,8 +56,7 @@ export function ThreadToolbar({ thread }: any) {
             </Typography>
           </Box>
         </Stack>
-        {/* 
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        {/* <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <IconButton>
             <PhoneIcon />
           </IconButton>
@@ -77,15 +65,14 @@ export function ThreadToolbar({ thread }: any) {
           </IconButton>
           <Tooltip title="More options">
             <IconButton onClick={popover.handleOpen} ref={popover.anchorRef}>
-              <DotsThreeIcon weight="bold"  />
+              <DotsThreeIcon weight="bold" />
             </IconButton>
           </Tooltip>
-        </Stack>
-         */}
+        </Stack> */}
         {thread.itemType !== 'business' && (
-          <InvoiceAgreementButton 
-            thread={thread} 
-            onOpenModal={() => setOpenInvoiceModal(true)} 
+          <InvoiceAgreementButton
+            thread={thread}
+            onOpenModal={() => setOpenInvoiceModal(true)}
             hasExistingInvoice={!!thread.hasExistingInvoice}
           />
         )}

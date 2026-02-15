@@ -81,7 +81,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                 <main className="grow w-full">
                     <div className={cn(
                         "p-6 lg:p-10 max-w-[1600px] mx-auto",
-                        pathname?.includes('/dashboard/products') || pathname?.includes('/dashboard/rfqs') ? "p-0 max-w-none" : ""
+                        pathname?.includes('/dashboard/products') || pathname?.includes('/dashboard/rfqs') || pathname?.includes('/dashboard/chat') ? "p-0 max-w-none" : "",
+                        pathname?.includes('/dashboard/chat') ? "h-[calc(100vh-80px)]" : ""
                     )}>
                         {children}
                     </div>

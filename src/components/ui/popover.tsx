@@ -20,10 +20,10 @@ export interface PopoverProps extends Omit<React.HTMLAttributes<HTMLDivElement>,
 }
 
 const positionClasses = {
-  top: 'bottom-full mb-2',
-  bottom: 'top-full mt-2',
-  left: 'right-full mr-2',
-  right: 'left-full ml-2',
+  top: 'bottom-full mb-1',
+  bottom: 'top-full mt-1',
+  left: 'right-full mr-1',
+  right: 'left-full ml-1',
 };
 
 const alignClasses = {
@@ -89,9 +89,9 @@ function Popover({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -5 : 5 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
+            exit={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -5 : 5 }}
             transition={{ duration: 0.1 }}
             className={cn(
               'absolute z-50 min-w-[150px] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg',

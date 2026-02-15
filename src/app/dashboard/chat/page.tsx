@@ -1,8 +1,12 @@
-'use client';
-
 import * as React from 'react';
-import { ChatView } from '@/components/dashboard/chat/chat-view';
+import { Box, Typography } from '@/components/ui';
 
 export default function ChatPage() {
-  return <ChatView />;
+  return (
+    <Box className="flex flex-col items-center justify-center flex-auto h-full">
+      <Typography variant="h6" color="textSecondary">
+        Select a conversation to start messaging
+      </Typography>
+    </Box>
+  );
 }

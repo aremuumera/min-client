@@ -17,8 +17,9 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
 import { dayjs } from '@/lib/dayjs';
-import { ChatContext } from '../chat/chat_com/chat_context';
-import { chatService } from '../chat/chat_service';
+import { ChatContext } from '@/providers/chat-provider';
+// import { chatService } from '../chat/chat_service';
+import { chatService } from '@/components/dashboard/chat/chat_service';
 import { cn } from '@/utils/helper';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
@@ -86,7 +87,7 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
             }}
             className={cn(
                 "w-[calc(100vw-32px)] sm:w-[380px]",
-                isMobile && "fixed left-4 right-4 top-20 translate-x-0! right-auto!"
+                isMobile && "fixed left-4 right-4 top-[72px] translate-x-0! right-auto!"
             )}
             position="bottom"
             align={isMobile ? 'center' : 'end'}
@@ -102,7 +103,7 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
                 </Stack>
             </Stack>
 
-            <div className="max-h-[400px] overflow-y-auto w-full pb-2">
+            <div className="max-h-[400px] overflow-y-auto w-full pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {notifications.length === 0 ? (
                     <Box className="p-4 flex justify-center">
                         <Typography variant="subtitle2" className="text-neutral-500">
@@ -123,7 +124,7 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
                 )}
             </div>
 
-            {notifications.length > 5 && (
+            {notifications.length > 0 && (
                 <div className="p-2 border-t border-neutral-200">
                     <Tooltip content="View all notifications">
                         <Button

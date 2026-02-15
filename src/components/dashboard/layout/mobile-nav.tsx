@@ -43,7 +43,7 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps) {
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="absolute left-0 top-0 bottom-0 w-80 bg-neutral-950 text-white flex flex-col shadow-2xl z-202"
+                            className="absolute left-0 top-0 bottom-0 w-80 bg-black text-white flex flex-col shadow-2xl z-202"
                         >
                             <div className="flex items-center justify-between p-6 border-b border-white/10">
                                 <Logo color="light" height={40} />

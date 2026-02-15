@@ -68,7 +68,7 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
             }}
             className={cn(
                 "w-[calc(100vw-32px)] sm:w-[320px]",
-                isMobile && "fixed left-4 right-4 top-20 translate-x-0! right-auto!"
+                isMobile && "fixed left-4 right-4 top-[72px] translate-x-0! right-auto!"
             )}
             position="bottom"
             align={isMobile ? 'center' : 'end'}
@@ -88,7 +88,7 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                 >
                     {getInitials()}
                 </Avatar>
-                <Box className="ml-4 overflow-hidden">
+                <Box className="ml-4 overflow-hidden flex flex-col gap-1">
                     <Typography
                         variant="h6"
                         className="font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis"
@@ -97,7 +97,7 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                     </Typography>
 
                     <Box className="flex items-center mt-1">
-                        <RoleIcon size={14} weight="bold" className="text-neutral-500" />
+                        <RoleIcon size={16} weight="bold" className="text-neutral-500 mr-2" />
                         <Typography
                             variant="body2"
                             color="text.secondary"
