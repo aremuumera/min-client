@@ -230,7 +230,7 @@ export function InvoiceAgreementModal({
   //  ADD VALIDATION ERRORS STATE
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const { user } = useSelector((state: any) => state.auth);
+  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
   const params = useParams();
   const itemId = params?.itemId as string;
   const threadType = params?.threadType as string;
@@ -263,18 +263,20 @@ export function InvoiceAgreementModal({
         supplierId: existingInvoice.supplierId,
       };
     }
+    const currentUserId = isTeamMember ? ownerUserId : user.id;
+
     if (threadType === 'product') {
       const supplierId = itemData?.supplierId || thread?.supplierId;
-      const buyerId = user.id === supplierId ? thread?.otherUserId : user.id;
+      const buyerId = currentUserId === supplierId ? thread?.otherUserId : currentUserId;
       return { buyerId, supplierId };
     } else if (threadType === 'rfq') {
       const buyerId = itemData?.userId || thread?.buyerId;
-      const supplierId = user.id === buyerId ? thread?.otherUserId : user.id;
+      const supplierId = currentUserId === buyerId ? thread?.otherUserId : currentUserId;
       return { buyerId, supplierId };
     }
     return {
-      buyerId: user.role === 'buyer' ? user.id : thread?.otherUserId,
-      supplierId: user.role === 'supplier' ? user.id : thread?.otherUserId,
+      buyerId: user.role === 'buyer' ? currentUserId : thread?.otherUserId,
+      supplierId: user.role === 'supplier' ? currentUserId : thread?.otherUserId,
     };
   };
 
@@ -448,7 +450,7 @@ export function InvoiceAgreementModal({
         sourceType: formData.sourceType,
         sourceId: formData.sourceId,
         buyerId: formData.buyerId,
-        supplierId: supplierId,
+        supplierId: formData.supplierId,
         productName: formData.productName,
         productCategory: formData.productCategory,
         quantity: parseFloat(formData.quantity),

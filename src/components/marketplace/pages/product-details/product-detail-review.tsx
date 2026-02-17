@@ -33,7 +33,8 @@ const ProductDetailReview = ({ products }: { products: any }) => {
     productRating,
   } = products || {};
 
-  const { isAuth, user } = useSelector((state: any) => state.auth);
+  const { isAuth, user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
   // Need to verify if review_api exists and useSubmitReviewMutation is exported
   // If not, I'll need to create a dummy hook or fix imports.
   // Assuming it exists based on task.md
@@ -78,7 +79,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
     }
   };
 
-  const canPostReview = isAuth && user?.id !== supplierId;
+  const canPostReview = isAuth && effectiveUserId !== supplierId;
   const hasReviews = reviews && reviews.length > 0;
   const totalReviews = reviews?.length || 0;
 
@@ -167,7 +168,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
               Write a Review
             </button>
           )}
-          {!isAuth && user?.id !== supplierId && (
+          {!isAuth && effectiveUserId !== supplierId && (
             <button
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
               onClick={() => setShowLoginModal(true)}
@@ -196,7 +197,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
               Write a Review
             </button>
           )}
-          {!isAuth && user?.id !== supplierId && (
+          {!isAuth && effectiveUserId !== supplierId && (
             <button
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors flex-1"
               onClick={() => setShowLoginModal(true)}
@@ -263,7 +264,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
       ) : (
         <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
           <p className="text-gray-500 mb-4">No reviews yet. Be the first to review!</p>
-          {user?.id !== supplierId && (
+          {effectiveUserId !== supplierId && (
             <button
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
               onClick={() => (canPostReview ? setShowReviewModal(true) : setShowLoginModal(true))}

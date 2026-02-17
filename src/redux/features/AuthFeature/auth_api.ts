@@ -145,3 +145,27 @@ export const ChangePassword = createAsyncThunk(
         }
     }
 );
+
+export const DeactivateAccount = createAsyncThunk(
+    'auth/DeactivateAccount',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await authService.DeactivateAccount();
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(handleApiError(error));
+        }
+    }
+);
+
+export const UpdateUserPreferences = createAsyncThunk(
+    'auth/UpdatePreferences',
+    async (data: any, { rejectWithValue }) => {
+        try {
+            const response = await authService.UpdatePreferences(data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(handleApiError(error));
+        }
+    }
+);

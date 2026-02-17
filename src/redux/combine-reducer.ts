@@ -23,6 +23,8 @@ import supplierProfileApi from './features/supplier-profile/supplier_profile_api
 import supplierProfileReducer from './features/supplier-profile/supplier_profile_slice';
 import waitlistReducer from './features/waitlist/waitlist_slice';
 import { authApi } from './features/AuthFeature/auth_api_rtk';
+import { teamApi } from './features/team/teamApi';
+import activityApi from './features/activity/activityApi';
 
 // Persist configuration for auth reducer only (1:1 with original)
 const authPersistConfig = {
@@ -66,6 +68,8 @@ const rootReducer = combineReducers({
     [inspectorApi.reducerPath]: inspectorApi.reducer,
     [invoiceApi.reducerPath]: invoiceApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
+    [teamApi.reducerPath]: teamApi.reducer,
+    [activityApi.reducerPath]: activityApi.reducer,
 
 });
 

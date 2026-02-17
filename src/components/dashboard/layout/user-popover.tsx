@@ -14,6 +14,7 @@ import { MenuItem } from '@/components/ui/menu';
 import { Popover } from '@/components/ui/popover';
 import { Typography } from '@/components/ui/typography';
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
+import { Buildings as CompanyIcon } from '@phosphor-icons/react/dist/ssr/Buildings';
 import { EnvelopeSimple as EnvelopeIcon } from '@phosphor-icons/react/dist/ssr/EnvelopeSimple';
 import { IdentificationBadge as RoleIcon } from '@phosphor-icons/react/dist/ssr/IdentificationBadge';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
@@ -25,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { RouterLink } from '@/components/core/link';
 import { cn } from '@/utils/helper';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { Chip } from '@/components/ui/chip';
 
 interface UserPopoverProps {
     trigger: React.ReactNode;
@@ -68,7 +70,7 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
             }}
             className={cn(
                 "w-[calc(100vw-32px)] sm:w-[320px]",
-                isMobile && "fixed left-4 right-4 top-[72px] translate-x-0! right-auto!"
+                isMobile && "fixed left-4 right-4 top-[72px] translate-x-0!"
             )}
             position="bottom"
             align={isMobile ? 'center' : 'end'}
@@ -89,12 +91,32 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                     {getInitials()}
                 </Avatar>
                 <Box className="ml-4 overflow-hidden flex flex-col gap-1">
-                    <Typography
-                        variant="h6"
-                        className="font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                        {user?.firstName} {user?.lastName}
-                    </Typography>
+                    <div className="flex items-center gap-2">
+                        <Typography
+                            variant="h6"
+                            className="font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                            {user?.firstName} {user?.lastName}
+                        </Typography>
+                        {user?.team_role && (
+                            <Chip
+                                label={user.team_role}
+                                variant="soft"
+                                color={user.team_role === 'owner' ? 'primary' : 'secondary'}
+                                size="sm"
+                                className="capitalize px-2 py-0 h-5"
+                            />
+                        )}
+                    </div>
+
+                    {user?.companyName && (
+                        <Box className="flex items-center mt-1">
+                            <CompanyIcon size={16} weight="bold" className="text-neutral-500 mr-2" />
+                            <Typography variant="body2" className="ml-1 font-medium text-neutral-600">
+                                {user.companyName}
+                            </Typography>
+                        </Box>
+                    )}
 
                     <Box className="flex items-center mt-1">
                         <RoleIcon size={16} weight="bold" className="text-neutral-500 mr-2" />
@@ -107,8 +129,8 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                         </Typography>
                     </Box>
 
-                    <Box className="flex items-center mt-1">
-                        <EnvelopeIcon size={14} weight="bold" className="text-neutral-500" />
+                    <Box className="flex items-center  mt-1">
+                        <EnvelopeIcon size={16} weight="bold" className="text-neutral-500" />
                         <Typography
                             variant="body2"
                             color="text.secondary"
@@ -123,15 +145,15 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
             {finalRelease && (
                 <>
                     <List className="p-1">
-                        <MenuItem as={RouterLink} href={paths.dashboard.settings.account} onClick={onClose}>
+                        <MenuItem as={RouterLink} href={paths.dashboard.settings.account} onClick={onClose} className='gap-2'>
                             <ListItemIcon>
-                                <UserIcon />
+                                <UserIcon size={16} />
                             </ListItemIcon>
                             Account
                         </MenuItem>
-                        <MenuItem as={RouterLink} href={paths.dashboard.settings.security} onClick={onClose}>
+                        <MenuItem as={RouterLink} href={paths.dashboard.settings.security} onClick={onClose} className='gap-2'>
                             <ListItemIcon>
-                                <LockKeyIcon />
+                                <LockKeyIcon size={16} />
                             </ListItemIcon>
                             Security
                         </MenuItem>

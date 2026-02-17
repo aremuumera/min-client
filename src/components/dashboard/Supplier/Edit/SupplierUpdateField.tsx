@@ -47,7 +47,7 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [openPreview, setOpenPreview] = useState(false);
   const [profileDescriptionFields, setProfileDescriptionFields] = useState<{ header: string; description: string }[]>([{ header: '', description: '' }]);
-  const { user, appData } = useAppSelector((state) => state.auth);
+  const { user, appData, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: string } | null>(null);
 
@@ -243,9 +243,8 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const supplierId = user?.id;
+      const supplierId = isTeamMember ? ownerUserId : user?.id;
       const productId = data?.id;
-
       if (!supplierId || !productId) {
         throw new Error('Missing required IDs');
       }
@@ -776,7 +775,7 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
 
                 {field.type === 'headerDescription' && (
                   <>
-                    <div className="space-y-2 !relative overflow-y-auto" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <div className="space-y-2 relative! overflow-y-auto" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}

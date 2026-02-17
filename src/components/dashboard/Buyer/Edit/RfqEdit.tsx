@@ -53,12 +53,11 @@ const EditRfQs = ({ open, rows, onClose }: any) => {
   const [mediaAttachments, setMediaAttachments] = useState([]);
 
 
-  const { user, appData } = useSelector((state: any) => state.auth);
-
+  const { user, appData, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
   const exampleRoute = 'http://localhost:3000/products/details/2/High-Purity-Limestone-for-Industrial-Use'
 
   const { data, isLoading, isError } = useGetRfqDetailsForbuyQuery({
-    buyerId: user?.id,
+    buyerId: isTeamMember ? ownerUserId : user?.id,
     rfqId: listedRfqId
   },
     {

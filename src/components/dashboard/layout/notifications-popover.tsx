@@ -44,7 +44,8 @@ interface NotificationsPopoverProps {
 
 export function NotificationsPopover({ trigger, onClose, open }: NotificationsPopoverProps) {
     const router = useRouter();
-    const { user } = useSelector((state: any) => state.auth);
+    const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+    const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
     const chatContext = useContext(ChatContext);
     const notifications: Notification[] = chatContext?.notifications || [];
     const clearSingleNotification = chatContext?.clearSingleNotification;
@@ -55,7 +56,7 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
         try {
             const unreadNotifications = notifications.filter((n) => !n.isRead);
             for (const notification of unreadNotifications) {
-                await chatService.markConversationAsRead(notification.conversationId, user.id);
+                await chatService.markConversationAsRead(notification.conversationId, effectiveUserId);
             }
         } catch (error) {
             console.error('Error marking notifications as read:', error);

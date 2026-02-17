@@ -12,12 +12,38 @@ interface SupplierProfileState {
 }
 
 const initialState: SupplierProfileState = {
-    profileDetailsFormData: {},
+    profileDetailsFormData: {
+        companyName: '',
+        companyDescription: '',
+        businessCategory: '',
+        totalEmployees: '',
+        yearEstablished: '',
+        yearExperience: '',
+        businessType: '',
+        totalRevenue: '',
+        selectedPayments: [],
+        selectedShippings: [],
+    },
     supplierProfileLogo: [],
     supplierProfileBanner: [],
     profileDescriptionFields: [{ header: '', description: '' }],
-    supplierMediaInfo: {},
-    supplierLocationInfo: {},
+    supplierMediaInfo: {
+        companyEmail: '',
+        companyPhone: '',
+        facebook: '',
+        instagram: '',
+        linkedIn: '',
+        xSocial: '',
+    },
+    supplierLocationInfo: {
+        selectedCountry: '',
+        selectedState: '',
+        fullAddress: '',
+        longitude: '',
+        latitude: '',
+        streetNo: '',
+        zipCode: '',
+    },
 };
 
 const supplierProfileSlice = createSlice({

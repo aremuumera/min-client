@@ -13,14 +13,13 @@ import { useAppSelector } from '@/redux';
 const AnalyticsCards = () => {
 
     const { limit, page } = useAppSelector((state) => state.marketplace);
-
-    const { user } = useAppSelector((state) => state.auth);
+    const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
 
 
     const { data, isLoading: isRfqLoaing, isError } = useGetAllRfqByBuyerIdQuery({
         limit,
         page,
-        buyerId: user?.id,
+        buyerId: isTeamMember ? ownerUserId : user?.id,
     }, {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,
@@ -32,7 +31,7 @@ const AnalyticsCards = () => {
     const { data: prodData, isLoading: isProdLoading, isError: isProdError } = useGetAllProductBySupplierIdQuery({
         limit,
         page,
-        supplierId: user?.id,
+        supplierId: isTeamMember ? ownerUserId : user?.id,
     }, {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,

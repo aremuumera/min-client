@@ -110,6 +110,23 @@ export const authApi = createApi({
                 body: data,
             }),
         }),
+
+        // Team Setup
+        teamSetup: builder.mutation({
+            query: (body) => ({
+                url: '/team/setup',
+                method: 'POST',
+                body,
+            }),
+        }),
+
+        // Blind Validate Invite Token
+        validateInvite: builder.query({
+            query: (token: string) => ({
+                url: `/inspectors/invite/validate/${token}`,
+                method: 'GET',
+            }),
+        }),
     }),
 });
 
@@ -124,4 +141,6 @@ export const {
     useForgotPasswordMutation,
     useResetPasswordMutation,
     useChangePasswordMutation,
+    useTeamSetupMutation,
+    useValidateInviteQuery,
 } = authApi;

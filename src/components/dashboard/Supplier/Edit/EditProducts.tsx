@@ -37,10 +37,10 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
   const [mediaImages, setMediaImages] = useState([]);
   const [mediaAttachments, setMediaAttachments] = useState([]);
 
-  const { user, appData } = useSelector((state: any) => state.auth);
+  const { user, appData, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
 
   const { data, isLoading, isError } = useGetAllProductDetailsForSupQuery({
-    supplierId: user?.id,
+    supplierId: isTeamMember ? ownerUserId : user?.id,
     productId: listedSupplierProductId
   },
     {

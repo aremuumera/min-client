@@ -50,7 +50,28 @@ import { useAppDispatch, useAppSelector, useAppStore } from '@/redux';
 
 import { paymentTerms, shippingTerms } from '../CreateProducts/paymentTerms';
 
+import { z } from 'zod';
+import { MultiCheckboxSelect, SearchableSelect } from '@/components/ui';
+
 const steps = ['Company Description', 'Contact Info', 'Location', 'Confirm details'];
+
+const stepSchema = z.object({
+  companyName: z.string().min(1, 'Company name is required'),
+  companyDescription: z.string().min(1, 'Company description is required'),
+  businessCategory: z.string().min(1, 'Business category is required'),
+  totalEmployees: z.string().min(1, 'Total employees is required'),
+  yearEstablished: z.string().min(1, 'Year of established is required').refine(val => !isNaN(Number(val)), 'Must be a valid year'),
+  yearExperience: z.string().min(1, 'Year of experience is required'),
+  businessType: z.string().min(1, 'Business type is required'),
+  totalRevenue: z.string().min(1, 'Total revenue is required'),
+  selectedPayments: z.array(z.string()).min(1, 'Terms of payment is required'),
+  selectedShippings: z.array(z.string()).min(1, 'Shipping options is required'),
+});
+
+const descriptionFieldSchema = z.object({
+  header: z.string().min(1, 'Header is required'),
+  description: z.string().min(1, 'Description is required'),
+});
 
 interface ProfileDescriptionField {
   header: string;
@@ -83,22 +104,14 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
   const handlePreviewOpen = () => setOpenPreview(true);
   const handlePreviewClose = () => setOpenPreview(false);
 
-  const validateEachDescriptionField = (index: number, field: 'header' | 'description', value: string) => {
-    const fieldKey = `${field}${index}`;
-    setErrors((prevErrors) => {
-      const newErrors = { ...prevErrors };
-      if (!value?.trim()) {
-        newErrors[fieldKey] = `${field === 'header' ? 'Header' : 'Description'} is required`;
-      } else {
-        delete newErrors[fieldKey];
-      }
-      return newErrors;
-    });
-  };
-
   const handleDescriptionChange = (index: number, field: 'header' | 'description', value: string) => {
     dispatch(updateProfileDescriptionField({ index, field, value }));
-    validateEachDescriptionField(index, field, value);
+    // Clear field-specific error
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[`${field}${index}`];
+      return newErrors;
+    });
   };
 
   const handleAddDescriptionField = (e: React.MouseEvent) => {
@@ -109,68 +122,48 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
     dispatch(removeProfileDescriptionField(index));
   };
 
-  // const handleFileChange = (event) => {
-  //   const files = event.target.files;
-  //   if (files.length > 0) {
-  //     console.log('Selected files:', files);
-  //   }
-  // };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { name: string; value: any } }) => {
     const { name, value } = e.target;
-    // setSelectedPayments(value);
     dispatch(updateProfileDetailsFormData({ [name]: value }));
-    validateForm();
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
-  };
-
-  const handlePaymentChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch(updateProfileDetailsFormData({ selectedPayments: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
-  };
-
-  const handleShippingChange = (e: any) => {
-    const { name, value } = e.target;
-    // setSelectedShippingOptions(value);
-    dispatch(updateProfileDetailsFormData({ selectedShippings: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
   };
 
   const validateForm = () => {
-    let newErrors: Record<string, string> = {};
-    if (!profileDetailsFormData.companyName) newErrors.companyName = 'Company name is required.';
-    if (!profileDetailsFormData.companyDescription) newErrors.companyDescription = 'Company description is required.';
-    if (!profileDetailsFormData.businessCategory) newErrors.businessCategory = 'Business category is required.';
-    if (!profileDetailsFormData.yearEstablished || isNaN(Number(profileDetailsFormData.yearEstablished)))
-      newErrors.yearEstablished = 'Valid year is required.';
-    if (!profileDetailsFormData.yearExperience || isNaN(Number(profileDetailsFormData.yearExperience)))
-      newErrors.yearExperience = 'Valid experience is required.';
-    if (!profileDetailsFormData.totalEmployees) newErrors.totalEmployees = 'Total employees is required.';
-    if (!profileDetailsFormData.businessType) newErrors.businessType = 'Business type is required.';
-    if (!profileDetailsFormData.selectedPayments || profileDetailsFormData.selectedPayments.length === 0)
-      newErrors.selectedPayments = 'Terms of payment is required.';
-    if (!profileDetailsFormData.selectedShippings || profileDetailsFormData.selectedShippings.length === 0)
-      newErrors.selectedShippings = 'Shipping options is required.';
-    if (!profileDetailsFormData.totalRevenue) newErrors.totalRevenue = 'Total revenue is required.';
-    if (!profileDetailsFormData.companyDescription) newErrors.companyDescription = 'Company description is required.';
+    try {
+      stepSchema.parse(profileDetailsFormData);
 
-    setErrors(newErrors);
-    console.log('Validation errors:', newErrors);
-
-    if (Object.keys(newErrors).length > 0) {
-      const firstError = Object.values(newErrors)[0] as string;
-      toast.error(firstError, {
-        position: 'top-right',
-        duration: 3000,
-        style: {
-          background: '#f44336',
-          color: '#fff',
-        },
+      // Validate additional description fields
+      const fieldErrors: Record<string, string> = {};
+      profileDescriptionFields.forEach((field, index) => {
+        const result = descriptionFieldSchema.safeParse(field);
+        if (!result.success) {
+          result.error.issues.forEach((issue: any) => {
+            fieldErrors[`${issue.path[0]}${index}`] = issue.message;
+          });
+        }
       });
-    }
 
-    return Object.keys(newErrors).length === 0;
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+        toast.error('Please fill in all description fields correctly');
+        return false;
+      }
+
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          newErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(newErrors);
+
+        const firstError = Object.values(newErrors)[0] as string;
+        toast.error(firstError);
+      }
+      return false;
+    }
   };
 
 
@@ -181,33 +174,11 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       const file = files[0]; // Get the first file
       const isValidFile = (file: File) => {
         if (file.size > 5 * 1024 * 1024) {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            productImages: 'File size must not exceed 5MB',
-          }));
-          toast.error('File size must not exceed 5MB', {
-            position: 'top-right',
-            style: {
-              background: '#f44336',
-              color: '#fff',
-            },
-            duration: 3000,
-          });
+          toast.error('File size must not exceed 5MB');
           return false;
         }
         if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            productImages: 'Supported formats: PNG, JPEG, WEBP',
-          }));
-          toast.error('Unsupported file format', {
-            position: 'top-right',
-            style: {
-              background: '#f44336',
-              color: '#fff',
-            },
-            duration: 3000,
-          });
+          toast.error('Unsupported file format');
           return false;
         }
         return true;
@@ -216,9 +187,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       if (!isValidFile(file)) {
         return; // Stop execution if the file is invalid
       }
-
-      // Clear errors if the file is valid
-      setErrors((prevErrors) => ({ ...prevErrors, productImages: '' }));
 
       // Get current file from the store
       const currentFile = store.getState().supplierProfile.supplierProfileLogo as any;
@@ -242,10 +210,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
         console.error('Error storing new file:', error);
       }
     } else {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        productImages: 'Only 1 image is required',
-      }));
+      toast.error('Only 1 image is required');
     }
   };
 
@@ -270,34 +235,12 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       const file = files[0]; // Get the first file
       const isValidFile = (file: File) => {
         if (file.size > 5 * 1024 * 1024) {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            productImages: 'File size must not exceed 5MB',
-          }));
-          toast.error('File size must not exceed 5MB', {
-            position: 'top-right',
-            style: {
-              background: '#f44336',
-              color: '#fff',
-            },
-            duration: 3000,
-          });
+          toast.error('File size must not exceed 5MB');
           return false;
         }
 
         if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            productImages: 'Supported formats: PNG, JPEG, WEBP',
-          }));
-          toast.error('Unsupported file format', {
-            position: 'top-right',
-            style: {
-              background: '#f44336',
-              color: '#fff',
-            },
-            duration: 3000,
-          });
+          toast.error('Unsupported file format');
           return false;
         }
         return true;
@@ -306,9 +249,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       if (!isValidFile(file)) {
         return; // Stop execution if the file is invalid
       }
-
-      // Clear errors if the file is valid
-      setErrors((prevErrors) => ({ ...prevErrors, productImages: '' }));
 
       // Get current file from the store
       const currentFile = store.getState().supplierProfile.supplierProfileBanner as any;
@@ -332,10 +272,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
         console.error('Error storing new file:', error);
       }
     } else {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        productImages: 'Only 1 image is required',
-      }));
       toast.error('Only 1 image is required');
     }
   };
@@ -381,12 +317,11 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   margin="normal"
                   placeholder="eg...  Mineral ltd."
                   name="companyName"
-                  value={profileDetailsFormData?.companyName}
+                  value={profileDetailsFormData?.companyName || ''}
                   onChange={handleInputChange}
                   error={!!errors.companyName}
-                  helperText={errors.companyName}
+                  helperText={errors.companyName || "This will be display name on your company profile"}
                 />
-                <p className="text-[#696969] text-[.75rem]">This will be display name on your company profile</p>
               </div>
               <div className="w-full">
                 <TextField
@@ -395,12 +330,11 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   margin="normal"
                   placeholder="e.g. 12, 15 - 200"
                   name="totalEmployees"
-                  value={profileDetailsFormData?.totalEmployees}
+                  value={profileDetailsFormData?.totalEmployees || ''}
                   onChange={handleInputChange}
                   error={!!errors.totalEmployees}
                   helperText={errors.totalEmployees}
                 />
-                <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p>
               </div>
             </div>
 
@@ -413,12 +347,11 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   margin="normal"
                   placeholder="eg... 2025"
                   name="yearEstablished"
-                  value={profileDetailsFormData?.yearEstablished}
+                  value={profileDetailsFormData?.yearEstablished || ''}
                   onChange={handleInputChange}
                   error={!!errors.yearEstablished}
                   helperText={errors.yearEstablished}
                 />
-                <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p>
               </div>
               <div className="w-full">
                 <TextField
@@ -427,114 +360,69 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   margin="normal"
                   placeholder="eg... 15+ "
                   name="yearExperience"
-                  value={profileDetailsFormData?.yearExperience}
+                  value={profileDetailsFormData?.yearExperience || ''}
                   onChange={handleInputChange}
                   error={!!errors.yearExperience}
                   helperText={errors.yearExperience}
                 />
-                <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p>
               </div>
             </div>
 
             {/* section 3 */}
-            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
+            <div className="flex flex-col pt-[15px] md:flex-row gap-[15px] items-center justify-center">
               {/* business category section */}
               <div className="w-full">
-                <FormControl fullWidth error={!!errors.businessCategory}>
-                  <InputLabel id="businessCategory-label">Business category</InputLabel>
-                  <Select
-                    name="businessCategory"
-                    value={profileDetailsFormData.businessCategory || ''}
-                    label="Business category"
-                    onChange={handleInputChange}
-                    className="w-full"
-                  >
-                    {businessData.businessCategory.map((category) => (
-                      <MenuItem key={category} value={category}>
-                        {category}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.businessCategory && <FormHelperText>{errors.businessCategory}</FormHelperText>}
-                </FormControl>
-                <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p>
+                <SearchableSelect
+                  label="Business Category"
+                  name="businessCategory"
+                  options={businessData.businessCategory.map(c => ({ value: c, label: c }))}
+                  value={profileDetailsFormData.businessCategory || ''}
+                  onChange={(e: any) => handleInputChange({ target: { name: 'businessCategory', value: e.target.value } })}
+                  placeholder="Select category"
+                  errorMessage={errors.businessCategory}
+                  fullWidth
+                />
               </div>
 
               {/* business type section */}
               <div className="w-full">
-                <FormControl fullWidth error={!!errors.businessType}>
-                  <InputLabel>Business Type</InputLabel>
-                  <Select
-                    name="businessType"
-                    value={profileDetailsFormData.businessType || ''}
-                    label="Business type"
-                    onChange={handleInputChange}
-                    className="w-full"
-                  >
-                    {businessData.businessType.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.businessType && <FormHelperText>{errors.businessType}</FormHelperText>}
-                </FormControl>
-                <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p>
+                <SearchableSelect
+                  label="Business Type"
+                  name="businessType"
+                  options={businessData.businessType.map(t => ({ value: t, label: t }))}
+                  value={profileDetailsFormData.businessType || ''}
+                  onChange={(e: any) => handleInputChange({ target: { name: 'businessType', value: e.target.value } })}
+                  placeholder="Select type"
+                  errorMessage={errors.businessType}
+                  fullWidth
+                />
               </div>
             </div>
 
             {/* section 4 */}
-            <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-center justify-center">
+            <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-start">
               <div className="w-full">
-                <FormControl fullWidth error={!!errors.selectedPayments}>
-                  <Typography variant="body2" className="mb-2 font-medium">Terms of Payment</Typography>
-                  <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
-                    {paymentTerms.map((term) => (
-                      <div key={term.code} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`payment-${term.code}`}
-                          checked={(profileDetailsFormData.selectedPayments || []).indexOf(term.code) > -1}
-                          onChange={() => {
-                            const current = profileDetailsFormData.selectedPayments || [];
-                            const next = current.includes(term.code)
-                              ? current.filter((c: string) => c !== term.code)
-                              : [...current, term.code];
-                            handlePaymentChange({ target: { value: next } } as any);
-                          }}
-                        />
-                        <label htmlFor={`payment-${term.code}`} className="text-sm cursor-pointer">{term.code}</label>
-                      </div>
-                    ))}
-                  </div>
-                  {errors.selectedPayments && <FormHelperText>{errors.selectedPayments}</FormHelperText>}
-                </FormControl>
-                {/* <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p> */}
+                <MultiCheckboxSelect
+                  label="Terms of Payment"
+                  options={paymentTerms.map(t => ({ value: t.code, label: `${t.code} - ${t.name}` }))}
+                  value={profileDetailsFormData.selectedPayments || []}
+                  onChange={(val) => handleInputChange({ target: { name: 'selectedPayments', value: val } })}
+                  placeholder="Select payment terms"
+                  errorMessage={errors.selectedPayments}
+                  fullWidth
+                />
               </div>
 
               <div className="w-full">
-                <FormControl fullWidth error={!!errors.selectedShippings}>
-                  <Typography variant="body2" className="mb-2 font-medium">Shipping Options</Typography>
-                  <div className="grid grid-cols-2 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
-                    {shippingTerms.map((term) => (
-                      <div key={term.code} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`shipping-${term.code}`}
-                          checked={(profileDetailsFormData.selectedShippings || []).indexOf(term.code) > -1}
-                          onChange={() => {
-                            const current = profileDetailsFormData.selectedShippings || [];
-                            const next = current.includes(term.code)
-                              ? current.filter((c: string) => c !== term.code)
-                              : [...current, term.code];
-                            handleShippingChange({ target: { value: next } } as any);
-                          }}
-                        />
-                        <label htmlFor={`shipping-${term.code}`} className="text-sm cursor-pointer">{term.code}</label>
-                      </div>
-                    ))}
-                  </div>
-                  {errors.selectedShippings && <FormHelperText>{errors.selectedShippings}</FormHelperText>}
-                </FormControl>
-                {/* <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p> */}
+                <MultiCheckboxSelect
+                  label="Shipping Options"
+                  options={shippingTerms.map(t => ({ value: t.code, label: `${t.code} - ${t.name}` }))}
+                  value={profileDetailsFormData.selectedShippings || []}
+                  onChange={(val) => handleInputChange({ target: { name: 'selectedShippings', value: val } })}
+                  placeholder="Select shipping options"
+                  errorMessage={errors.selectedShippings}
+                  fullWidth
+                />
               </div>
             </div>
 
@@ -546,41 +434,13 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   margin="normal"
                   placeholder="e.g... 2.5m, 2.5b, 10.2m"
                   name="totalRevenue"
-                  value={profileDetailsFormData?.totalRevenue}
+                  value={profileDetailsFormData?.totalRevenue || ''}
                   onChange={handleInputChange}
                   error={!!errors.totalRevenue}
                   helperText={errors.totalRevenue}
                 />
-                {/* <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p> */}
               </div>
               <div className="w-full">
-                {/* <FormControl fullWidth>
-                          <InputLabel>ExportMarket</InputLabel>
-                          <Select 
-                          defaultValue="" 
-                          // name="state"
-                          value={profileDetailsFormData?.selectedShippings}
-                          onChange={handleShippingChange}
-                          renderValue={(selected) => selected.join(", ")}
-                          MenuProps={{
-                            PaperProps: {
-                              style: {
-                                maxHeight: 250, // Adjust this value for height
-                              },
-                            },
-                          }}
-                          >
-                          <Option value="">Select a category</Option>
-                            {shippingTerms.map((term) => (
-                              <MenuItem key={term.code} value={term.code}>
-                                <Checkbox checked={selectedShippings.indexOf(term.code) > -1} />
-                                <ListItemText primary={`${term.code} - ${term.name}`} />
-                              </MenuItem>
-                            ))}
-                            <Option value="es">Spain</Option>
-                          </Select>
-                        </FormControl> */}
-                {/* <p className="text-[#696969] text-[.75rem]">Choose the category of your business</p> */}
               </div>
             </div>
 
@@ -597,9 +457,8 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   value={profileDetailsFormData.companyDescription}
                   onChange={handleInputChange}
                   error={!!errors.companyDescription}
-                  helperText={errors.companyDescription}
+                  helperText={errors.companyDescription || "Describe your company"}
                 />
-                <p className="text-[#696969] text-[.75rem]">Describe your company</p>
               </div>
             </div>
 
@@ -704,18 +563,19 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   </Box>
                   {/* Display Uploaded File Name */}
                   <div className="pt-[10px]">
-                    {supplierProfileLogo && (
-                      <div className="flex flex-wrap gap-[10px]">
+                    {supplierProfileLogo && !Array.isArray(supplierProfileLogo) && (
+                      <div className="flex flex-wrap gap-[10px] ">
                         <Box
                           className="relative p-1 bg-[#f7f7f7] rounded-[5px]"
                         >
-                          <Button
+                          <IconButton
                             className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
-                            onClick={() => handleLogoDeleteFile()} // Delete the current file
+                            onClick={() => handleLogoDeleteFile()}
+                            aria-label="delete logo"
                           >
-                            <MdOutlineCancel className="z-20" />
-                          </Button>
-                          <Typography variant="body2">
+                            <MdOutlineCancel className="z-20 text-red-500" />
+                          </IconButton>
+                          <Typography variant="body2" className="px-2">
                             {(supplierProfileLogo as any)?.name}
                           </Typography>
                         </Box>
@@ -749,10 +609,17 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
                   </Box>
 
                   <div className="pt-[10px]">
-                    {supplierProfileBanner && (
+                    {supplierProfileBanner && !Array.isArray(supplierProfileBanner) && (
                       <div className="flex flex-wrap gap-[10px]">
                         <Box className="relative p-1 bg-[#f7f7f7] rounded-[5px]">
-                          <Typography variant="body2">
+                          <IconButton
+                            className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
+                            onClick={() => handleDeleteBannerFile()}
+                            aria-label="delete banner"
+                          >
+                            <MdOutlineCancel className="z-20 text-red-500" />
+                          </IconButton>
+                          <Typography variant="body2" className="px-2">
                             {supplierProfileBanner && !Array.isArray(supplierProfileBanner)
                               ? (supplierProfileBanner as any).name
                               : ''}

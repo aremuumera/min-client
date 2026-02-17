@@ -77,7 +77,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [openDesktopSidebar, setOpenDesktopSidebar] = React.useState(true);
   const [openMobileSidebar, setOpenMobileSidebar] = React.useState(false);
-  const { user } = useSelector((state: any) => state.auth);
+  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
   const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`;
 
   const router = useRouter();
@@ -90,9 +91,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let unsubscribe = null;
 
-    if (user?.id) {
+    if (effectiveUserId) {
       setLoading(true);
-      unsubscribe = chatService.getUserConversations(user.id, (conversationList: Conversation[]) => {
+      unsubscribe = chatService.getUserConversations(effectiveUserId, (conversationList: Conversation[]) => {
         setConversations(conversationList);
         setLoading(false);
       });
@@ -107,8 +108,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let unsubscribe = null;
 
-    if (user?.id) {
-      unsubscribe = chatService.getUserNotifications(user.id, (notificationList: any[]) => {
+    if (effectiveUserId) {
+      unsubscribe = chatService.getUserNotifications(effectiveUserId, (notificationList: any[]) => {
         setNotifications(notificationList);
       });
     }
@@ -127,8 +128,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setMessages(messageList);
 
         // Mark conversation as read if it has unread messages
-        if (user && activeConversation.unreadCount > 0) {
-          chatService.markConversationAsRead(activeConversation.conversationId, user.id);
+        if (effectiveUserId && activeConversation.unreadCount > 0) {
+          chatService.markConversationAsRead(activeConversation.conversationId, effectiveUserId);
         }
       });
     } else {
@@ -142,22 +143,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // In your conversation component
   useEffect(() => {
-    if (!activeConversation || !user?.id) return;
+    if (!activeConversation || !effectiveUserId) return;
 
-    const unsubscribe = chatService.trackConversationActivity(activeConversation.conversationId, user.id);
+    const unsubscribe = chatService.trackConversationActivity(activeConversation.conversationId, effectiveUserId);
 
     return () => {
       unsubscribe(); // Clean up when component unmounts
     };
-  }, [activeConversation, user]);
+  }, [activeConversation, effectiveUserId]);
 
   // Function to start a new conversation
   const startConversation = useCallback(
     async (recipientId: string, itemData: any) => {
-      if (!user) return null;
+      if (!effectiveUserId) return null;
 
       try {
-        const conversationId = await chatService.startConversation(user.id, recipientId, itemData);
+        const conversationId = await chatService.startConversation(effectiveUserId, recipientId, itemData);
 
         return conversationId;
       } catch (error) {
@@ -165,7 +166,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
     },
-    [user]
+    [effectiveUserId]
   );
 
   // Function to send a message
@@ -242,15 +243,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const clearAllNotifications = useCallback(async () => {
-    if (!user?.id) return false;
+    if (!effectiveUserId) return false;
     try {
-      await chatService.clearAllNotifications(user.id);
+      await chatService.clearAllNotifications(effectiveUserId);
       return true;
     } catch (error) {
       console.error('Error clearing all notifications:', error);
       return false;
     }
-  }, [user]);
+  }, [effectiveUserId]);
 
   const markMessageAsDelivered = useCallback(async (conversationId: string, messageId: string) => {
     try {
@@ -284,7 +285,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // In ChatProvider component
   useEffect(() => {
-    if (!activeConversation || !user?.id) return;
+    if (!activeConversation || !effectiveUserId) return;
 
     const unreadMessages = messages.filter((msg) => msg.senderId !== user.id && !msg.isRead);
 
@@ -300,7 +301,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       // Also update the conversation to mark it as read
-      chatService.markConversationAsRead(activeConversation.conversationId, user.id);
+      chatService.markConversationAsRead(activeConversation.conversationId, effectiveUserId);
 
       batch.update(doc(db, 'conversations', activeConversation.conversationId), {
         isRead: true,
@@ -308,13 +309,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       // Update user's unread count
-      batch.update(doc(db, 'userConversations', user.id), {
+      batch.update(doc(db, 'userConversations', effectiveUserId), {
         [`conversations.${activeConversation.conversationId}.unreadCount`]: 0,
       });
 
       batch.commit().catch(console.error);
     }
-  }, [messages, activeConversation, user]);
+  }, [messages, activeConversation, effectiveUserId]);
 
   const value = {
     conversations, // List of conversations for the current user

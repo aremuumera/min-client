@@ -15,52 +15,53 @@ import { useDeleteRFQMutation } from '@/redux/features/buyer-rfq/rfq-api';
 import { CircularProgress } from '@/components/ui';
 
 const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose: () => void }) => {
- 
-    const { user } = useSelector((state: any) => state?.auth);
 
-    const [deleteRFQ, {data, isLoading, isError}] = useDeleteRFQMutation();
-  
-  
-      const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-       
-        console.log('data:', data);
-        try {
-        const response =  await deleteRFQ({
-             rfqId: rows?.rfqId,
-            buyerId: user?.id
-          }).unwrap();
-          toast.success(`${response?.data?.message  || ` ${rows?.rfqProductName} 'deleted successfully'` } `,   
-            {
-              position: 'top-right',
-              duration: 3000,
-              style: {
-                background: '#4CAF50',
-                color: '#fff',
-              }}
-          );
-          onClose();
-        } catch (error: any) {
-          toast.error(`Error deleting product: ${error?.data?.message || 'Something went wrong'}`, {
-            position: 'top-right',
-            duration: 3000,
-            style: {
-              background: '#f44336',
-              color: '#fff',
-            },
-          });
-          console.error('Error deleting product:', error);
+  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state?.auth);
+
+  const [deleteRFQ, { data, isLoading, isError }] = useDeleteRFQMutation();
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    console.log('data:', data);
+    try {
+      const response = await deleteRFQ({
+        rfqId: rows?.rfqId,
+        buyerId: isTeamMember ? ownerUserId : user?.id
+      }).unwrap();
+      toast.success(`${response?.data?.message || ` ${rows?.rfqProductName} 'deleted successfully'`} `,
+        {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#4CAF50',
+            color: '#fff',
+          }
         }
-      }
+      );
+      onClose();
+    } catch (error: any) {
+      toast.error(`Error deleting product: ${error?.data?.message || 'Something went wrong'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#f44336',
+          color: '#fff',
+        },
+      });
+      console.error('Error deleting product:', error);
+    }
+  }
 
-   
+
   return (
     <div>
       <CustomModal open={open} onClose={onClose}>
         <div className="w-full  ">
-          <form 
+          <form
             onSubmit={handleSubmit}
-          className="!w-full">
+            className="w-full!">
             <Box
               sx={{
                 background: 'white',
@@ -88,7 +89,7 @@ const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose
                     color: 'red',
                   }}
                 >
-                  <RiDeleteBin6Line className="!text-[50px]" />
+                  <RiDeleteBin6Line className="text-[50px]!" />
                 </Box>
               </Box>
               <Box
@@ -111,7 +112,7 @@ const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose
                       fontWeight: '500',
                     }}
                   >
-                    You are about to delete <span style={{fontWeight: 'bold', fontSize:'1.4rem' }} >{rows?.rfqProductName}</span>
+                    You are about to delete <span style={{ fontWeight: 'bold', fontSize: '1.4rem' }} >{rows?.rfqProductName}</span>
                   </Typography>
                   <Typography
                     sx={{
@@ -259,30 +260,30 @@ const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose
                 onClick={onClose}
                 variant="outlined"
                 color="error"
-                
+
                 className="w-full"
                 fullWidth
                 type='button'
               >
                 Cancel
               </Button>
-              <Button 
-               variant="contained"
-                color="error" 
+              <Button
+                variant="contained"
+                color="error"
                 className="w-full"
-                 fullWidth
-                 type='submit'
+                fullWidth
+                type='submit'
                 disabled={isLoading}
-                 >
-                 {isLoading ? (
+              >
+                {isLoading ? (
                   <CircularProgress
-                      size={24} 
-                      color="inherit" 
-                      className="text-white"
+                    size={24}
+                    color="inherit"
+                    className="text-white"
                   />
-                  ) : (
-                    "Delete"
-                  )}
+                ) : (
+                  "Delete"
+                )}
               </Button>
             </Box>
           </form>

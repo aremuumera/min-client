@@ -184,6 +184,8 @@ const step4FilesSchema = z.object({
   authorized_signatories: z.instanceof(File).nullable().optional(),
   trade_license: z.instanceof(File, { message: 'Trade license is required' }).nullable(),
   other_regulatory_permits: z.array(z.instanceof(File)).optional(),
+  accreditation_docs: z.instanceof(File).nullable().optional(),
+  insurance_info: z.instanceof(File).nullable().optional(),
 });
 
 const directorSchema = z.object({
@@ -327,8 +329,9 @@ const SearchableSelect = ({
 const BusinessCategoryModal = ({ open, setShowCategoryModal, onComplete }: any) => {
   const [category, setCategory] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { user } = useAppSelector((state) => state.auth);
-  const userId = user?.id;
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const userId = effectiveUserId;
   const [updateCategory, { isLoading, error }] = useUpdateBusinessCategoryMutation();
   const { data: statusData, refetch } = useGetVerificationStatusQuery(userId, { skip: !userId });
   const verificationStatus = (statusData as any)?.data?.verificationStatus;
@@ -1628,7 +1631,12 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }:
     authorized_signatories: null,
     trade_license: null,
     other_regulatory_permits: [],
+    accreditation_docs: null,
+    insurance_info: null,
   });
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state: any) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const userRole = user?.role;
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
@@ -1721,6 +1729,8 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }:
         authorized_signatories: files.authorized_signatories,
         trade_license: files.trade_license || (verificationData?.trade_license_url ? new File([], 'existing') : null),
         other_regulatory_permits: files.other_regulatory_permits,
+        accreditation_docs: files.accreditation_docs || (verificationData?.accreditationDocs ? new File([], 'existing') : null),
+        insurance_info: files.insurance_info || (verificationData?.insuranceInfo ? new File([], 'existing') : null),
       };
 
       const validatedFiles = step4FilesSchema.parse(filesToValidate);
@@ -1758,6 +1768,8 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }:
               'authorized_signatories',
               'trade_license',
               'other_regulatory_permits',
+              'accreditation_docs',
+              'insurance_info',
             ].includes(fieldName)
           ) {
             fieldFileErrors[fieldName] = error.message;
@@ -1931,6 +1943,48 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }:
             error={fileErrors.authorized_signatories}
           />
         </Grid>
+
+        {userRole === 'inspector' && (
+          <>
+            <Grid item xs={12} className="mt-4">
+              <Typography variant="subtitle1" fontWeight="600" color="primary">
+                Inspector Credentials
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Please provide your professional accreditation and insurance details.
+              </Typography>
+              <Divider className="my-2" />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FileUploadField
+                label="Accreditation Documents"
+                name="accreditation_docs"
+                file={files.accreditation_docs}
+                isExisting={!!verificationData?.accreditationDocs}
+                existingUrl={verificationData?.accreditationDocs?.url}
+                onChange={handleFileChange}
+                required={!verificationData?.accreditationDocs}
+                error={fileErrors.accreditation_docs}
+                disabled={!isEditable}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FileUploadField
+                label="Professional Insurance Info"
+                name="insurance_info"
+                file={files.insurance_info}
+                isExisting={!!verificationData?.insuranceInfo}
+                existingUrl={verificationData?.insuranceInfo?.url}
+                onChange={handleFileChange}
+                required={!verificationData?.insuranceInfo}
+                error={fileErrors.insurance_info}
+                disabled={!isEditable}
+              />
+            </Grid>
+          </>
+        )}
       </Grid>
 
       {error && (
@@ -2851,8 +2905,9 @@ const BusinessVerification = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categorySelected, setCategorySelected] = useState(false);
   const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
-  const { user, appData } = useAppSelector((state: any) => state.auth);
-  const userId = user?.id;
+  const { user, appData, isTeamMember, ownerUserId } = useAppSelector((state: any) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const userId = effectiveUserId;
   const userRole = user?.role;
   const isBusinessVerified = appData?.businessVerification?.isVerified;
   const isSupplierProfileCreated = appData?.isProfileCreated;

@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z as zod } from 'zod';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
-import { useSignupMutation } from '@/redux/features/AuthFeature/auth_api_rtk';
+import { useSignupMutation, useValidateInviteQuery } from '@/redux/features/AuthFeature/auth_api_rtk';
 
 import { registerSuccess, setAwaitingOTPVerification, setUserEmail, setUserVType } from '@/redux/features/AuthFeature/auth_slice';
 import { useAlert } from '@/providers/alert-provider';
@@ -56,7 +56,20 @@ const defaultValues: FormData = {
 
 export function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
+
+  const inviteToken = searchParams.get('token');
+  // const roleFromUrl = searchParams.get('role');
+
+  // Validate invite if token exists
+  const {
+    data: inviteData,
+    isLoading: validatingInvite,
+    error: inviteError
+  } = useValidateInviteQuery(inviteToken as string, {
+    skip: !inviteToken,
+  });
 
   const [signup, { isLoading: loading }] = useSignupMutation();
 
@@ -68,19 +81,30 @@ export function SignUpForm() {
     phoneNumber: '',
     countryCode: '',
     countryName: '',
-    role: 'buyer' as 'buyer' | 'supplier',
+    role: (inviteToken ? 'inspector' : 'buyer') as 'buyer' | 'supplier' | 'inspector',
   });
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues,
     resolver: zodResolver(schema),
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    if (inviteToken && inviteData) {
+      setPhoneData(prev => ({
+        ...prev,
+        role: inviteData.role as 'buyer' | 'supplier' | 'inspector'
+      }));
+      // EMAIL PRE-FILL REMOVED FOR SECURITY: User must manually type their email to prove identity.
+    }
+  }, [inviteToken, inviteData]);
 
   const validatePhone = (value: string) => {
     const phoneRegex = /^[0-9]{10,15}$/;
@@ -113,6 +137,7 @@ export function SignUpForm() {
       role: phoneData.role,
       verificationType: verificationType,
       businessName: values.companyName,
+      inviteToken: inviteToken || undefined,
     };
 
     try {
@@ -127,6 +152,45 @@ export function SignUpForm() {
       showAlert(err?.message || err?.data?.message || 'An error occurred during signup. Please try again.', 'error');
     }
   };
+
+  if (inviteToken && validatingInvite) {
+    return (
+      <div className="w-full h-[400px] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-green-600" />
+        <p className="text-gray-500 font-medium">Validating your invitation...</p>
+      </div>
+    );
+  }
+
+  const roleMismatch = inviteToken && inviteData && inviteData.role !== phoneData.role;
+
+  if (inviteToken && (inviteError || roleMismatch)) {
+    const errorMsg = roleMismatch
+      ? `This invitation is for a ${inviteData.role} account, but the link specified ${phoneData.role}.`
+      : (inviteError as any)?.data?.message || 'The invitation link is invalid or has expired.';
+    return (
+      <div className="w-full space-y-8 animate-in fade-in duration-700">
+        <div className="bg-red-50 border border-red-200 p-6 rounded-2xl text-center space-y-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8 text-red-600 rotate-45" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900">Invalid Invitation</h2>
+            <p className="text-gray-600 max-w-sm mx-auto">
+              {/* {errorMsg} */}
+              If you believe this is an error, please contact support or your administrator.
+            </p>
+          </div>
+          {/* <Button variant="outline" className="mt-4" onClick={() => router.push(paths.auth.signIn)}>
+            Back to Sign In
+          </Button> */}
+        </div>
+      </div>
+    );
+  }
+
+  // Security check: If URL role exists but doesn't match invite role, we show the invite banner with the REAL role
+  // This prevents fake URLs from misleading the user.
 
   return (
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -147,32 +211,46 @@ export function SignUpForm() {
       </div>
 
       <div className="space-y-6">
-        {/* Role Selection */}
-        <div className="flex flex-col gap-3">
-          <label className="text-sm font-medium text-gray-700 text-center">Sign up as a Buyer or Supplier</label>
-          <div className="flex gap-2 p-1.5 bg-gray-100 rounded-full">
-            <button
-              onClick={() => setPhoneData({ ...phoneData, role: 'buyer' })}
-              className={cn(
-                "flex-1 py-2 px-6 rounded-full text-sm font-semibold transition-all",
-                phoneData.role === 'buyer' ? "bg-green-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
-              )}
-              type="button"
-            >
-              Buyer
-            </button>
-            <button
-              onClick={() => setPhoneData({ ...phoneData, role: 'supplier' })}
-              className={cn(
-                "flex-1 py-2 px-6 rounded-full text-sm font-semibold transition-all",
-                phoneData.role === 'supplier' ? "bg-green-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
-              )}
-              type="button"
-            >
-              Supplier
-            </button>
+        {/* Role Selection or Invite Banner */}
+        {inviteToken ? (
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-start gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-blue-900">You've been invited!</p>
+              <p className="text-xs text-blue-700">
+                You are signing up as a verified {phoneData.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}.
+              </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <label className="text-sm font-medium text-gray-700 text-center">Sign up as a Buyer or Supplier</label>
+            <div className="flex gap-2 p-1.5 bg-gray-100 rounded-full">
+              <button
+                onClick={() => setPhoneData({ ...phoneData, role: 'buyer' })}
+                className={cn(
+                  "flex-1 py-2 px-6 rounded-full text-sm font-semibold transition-all",
+                  phoneData.role === 'buyer' ? "bg-green-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
+                )}
+                type="button"
+              >
+                Buyer
+              </button>
+              <button
+                onClick={() => setPhoneData({ ...phoneData, role: 'supplier' })}
+                className={cn(
+                  "flex-1 py-2 px-6 rounded-full text-sm font-semibold transition-all",
+                  phoneData.role === 'supplier' ? "bg-green-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
+                )}
+                type="button"
+              >
+                Supplier
+              </button>
+            </div>
+          </div>
+        )}
 
         <form className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

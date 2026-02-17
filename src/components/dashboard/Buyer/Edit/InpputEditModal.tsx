@@ -31,7 +31,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
 
   const { data: mainCategoryData } = useGetMainCategoryQuery();
 
@@ -303,9 +303,11 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
       if (isAttachmentField) mediaType = 'attachments';
       // if (itemToDelete?.type) mediaType = itemToDelete.type === 'image' ? 'images' : 'attachments';
 
+      const currentUserId = isTeamMember ? ownerUserId : user?.id;
+
       if (selectedAttachmentFiles.length > 0) {
         await updateRfqMedia({
-          buyerId: user?.id,
+          buyerId: currentUserId,
           rfqId: data?.rfqId,
           rfqData: mediaFormData,
           ...(itemToDelete && { publicId: itemToDelete.id })
@@ -343,7 +345,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
     e.preventDefault();
 
     try {
-      const buyerId = user?.id;
+      const buyerId = isTeamMember ? ownerUserId : user?.id;
       const rfqId = data?.rfqId;
 
       if (!buyerId || !rfqId) {
@@ -444,7 +446,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
       if (!itemToDelete) return;
       // Call your deleteRfqMedia API with the item ID
       await deleteRfqMedia({
-        buyerId: user?.id,
+        buyerId: isTeamMember ? ownerUserId : user?.id,
         rfqId: data?.rfqId,
         publicId: itemToDelete?.id,
       }).unwrap();

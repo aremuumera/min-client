@@ -99,7 +99,12 @@ function Select({
 
   // If children are provided instead of options array
   const derivedOptions = React.useMemo(() => {
-    if (options.length > 0) return options;
+    if (options.length > 0) {
+      return options.map((opt) => ({
+        ...opt,
+        isSelectable: opt.isSelectable !== undefined ? opt.isSelectable : true,
+      }));
+    }
     if (!children) return [];
 
     return React.Children.toArray(children)
@@ -237,9 +242,10 @@ function Select({
               top: `${containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 0}px`,
               left: `${containerRef.current ? containerRef.current.getBoundingClientRect().left : 0}px`,
               width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
+              zIndex: 9999,
             }}
             className={cn(
-              'z-[9999] overflow-auto rounded-lg border border-neutral-200',
+              'overflow-auto rounded-lg border border-neutral-200',
               'bg-white shadow-lg',
               'max-h-[250px]'
             )}
@@ -252,7 +258,10 @@ function Select({
               return (
                 <li
                   key={option.value || index}
-                  onClick={() => {
+                  onMouseDown={(e) => {
+                    // Use onMouseDown to prevent blur from happening before click
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (!option.disabled) {
                       onChange?.({ target: { value: option.value, name } });
                       setIsOpen(false);

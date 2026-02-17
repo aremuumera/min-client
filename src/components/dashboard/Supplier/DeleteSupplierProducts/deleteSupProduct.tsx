@@ -12,7 +12,7 @@ import { CircularProgress } from '@/components/ui/progress';
 const DeleteSupProducts = ({ open, rows, onClose }: any) => {
 
   const [deleteProduct, { data, isLoading, isError }] = useDeleteProductMutation();
-  const { user } = useSelector((state: any) => state?.auth);
+  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state?.auth);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
     try {
       const response = await deleteProduct({
         productId: rows?.id,
-        supplierId: user?.id
+        supplierId: isTeamMember ? ownerUserId : user?.id
       }).unwrap();
       toast.success(`${response?.data?.message || ` ${rows?.product_name} 'deleted successfully'`} `,
         {

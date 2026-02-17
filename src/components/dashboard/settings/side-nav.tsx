@@ -9,6 +9,7 @@ import { UserCircle, Bell, ShieldCheck, Users, Scale, CreditCard } from 'lucide-
 import { RootState } from '@/redux/store';
 import { cn } from '@/utils/helper';
 import { paths } from '@/config/paths';
+import { usePermission } from '@/hooks/usePermission';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
 
 const navItems = [
@@ -16,17 +17,19 @@ const navItems = [
     { key: 'notifications', title: 'Notifications', href: paths.dashboard.settings.notifications, icon: Bell },
     { key: 'security', title: 'Security', href: paths.dashboard.settings.security, icon: ShieldCheck },
     { key: 'business', title: 'Business', href: paths.dashboard.settings.business, icon: Users },
+    { key: 'team', title: 'Team', href: paths.dashboard.settings.team, icon: Users },
     { key: 'legal', title: 'Legals', href: paths.dashboard.settings.legals, icon: Scale },
 ];
 
 export function SettingsSideNav() {
     const pathname = usePathname();
-    const { user } = useSelector((state: RootState) => state.auth);
-    const userRole = user?.role;
+    const canManageTeam = usePermission('team_management');
 
     const filteredItems = navItems.filter(item => {
-        if (item.key === 'business' && (userRole === 'admin' || userRole === 'buyer')) {
-            return false;
+        //  if (item.key === 'business' && (userRole === 'admin' || userRole === 'buyer')) {
+        //     return false;
+        if (['business', 'team', 'legal'].includes(item.key)) {
+            return canManageTeam;
         }
         return true;
     });

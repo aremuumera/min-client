@@ -28,7 +28,7 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
   handleBack: () => void;
 }) => {
   const { productPaymentData, serverReadyData, serverReadyImagesData, serverReadyAttachmentData } = useAppSelector((state) => state?.product);
-  const { user } = useAppSelector((state) => state?.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state?.auth);
   const dispatch = useDispatch();
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
@@ -108,7 +108,7 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
 
         // Send the FormData to the API
         const response = await validateProductStep({
-          supplierId: user?.id,
+          supplierId: isTeamMember ? ownerUserId : user?.id,
           body: formDataToSend,
         }).unwrap();
 

@@ -31,7 +31,8 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
   const { showAlert } = useAlert();
   // Use 'any' for now if RootState is not fully typed or migration is partial, 
   // but ideally we should use RootState.
-  const { user, isAuth } = useSelector((state: any) => state.auth);
+  const { user, isAuth, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
   const pathname = usePathname();
   const { id, rfqId } = products;
   const effectiveId = id || rfqId || products?._id;
@@ -51,18 +52,18 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
 
   // 1. Check initial saved status
   const { data: savedStatus, refetch: refetchSavedStatus } = useCheckSavedStatusQuery(
-    { userId: user?.id, itemId: String(effectiveId), itemType },
+    { userId: effectiveUserId, itemId: String(effectiveId), itemType },
     {
-      skip: !user?.id,
+      skip: !effectiveUserId,
       refetchOnMountOrArgChange: true
     }
   );
 
   // 2. Get all saved items for cache consistency
   const { data: savedItems } = useGetSavedItemsQuery({
-    userId: user?.id
+    userId: effectiveUserId
   }, {
-    skip: !user?.id,
+    skip: !effectiveUserId,
     refetchOnMountOrArgChange: true,
     pollingInterval: 30000
   });
@@ -111,7 +112,7 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
       toggleSavedItem({
         itemId: String(effectiveId),
         itemType,
-        userId: user.id
+        userId: effectiveUserId
       }).unwrap()
         .then((result) => {
           refetchSavedStatus();

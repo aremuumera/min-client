@@ -234,22 +234,20 @@ const ListedRfQs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [filteredData, setFilteredData] = useState(mockData);
-  const { user, appData } = useAppSelector((state) => state.auth);
+  const { user, appData, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch = useDispatch();
   const router = useRouter();
 
   const params = {
-    buyerId: user?.id,
+    buyerId: isTeamMember ? ownerUserId : user?.id,
     page: page + 1,
     limit: rowsPerPage,
     q: searchTerm,
     category: categoryFilter,
     sort: "createdAt",
   };
-
-
   const { data, isLoading, isError } = useGetAllRfqByBuyerIdQuery(params);
 
 
@@ -305,7 +303,7 @@ const ListedRfQs = () => {
           value={searchTerm}
           onChange={handleSearch}
           // borderRadius='40px'
-          className="w-full md:w-[30%]  py-2 !rounded-[60px] "
+          className="w-full md:w-[30%]  py-2 rounded-[60px]! "
         />
         <Select
           value={categoryFilter}

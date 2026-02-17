@@ -32,6 +32,14 @@ const ChnagePasswordCurrent = (userData: any) => {
     return AxiosInstance.post(`/auth/current/change-password`, userData);
 };
 
+const DeactivateAccount = () => {
+    return AxiosInstance.post(`/auth/current/deactivate`);
+};
+
+const UpdatePreferences = (data: any) => {
+    return AxiosInstance.put(`/auth/current/preferences`, data);
+};
+
 const authService = {
     VerifyOTPService,
     SignUpService,
@@ -40,6 +48,8 @@ const authService = {
     ForgotPasswordService,
     ResendOTPService,
     ChnagePasswordCurrent,
+    DeactivateAccount,
+    UpdatePreferences,
 };
 
 export default authService;

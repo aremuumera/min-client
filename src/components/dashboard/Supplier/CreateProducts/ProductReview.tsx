@@ -58,7 +58,7 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
   } = productLocation;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { user } = useAppSelector((state) => state?.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state?.auth);
   const dispatch = useDispatch();
 
   const [createProduct, { isLoading }] = useCreateProductMutation();
@@ -150,10 +150,9 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
 
 
       const response = await createProduct({
-        supplierId: user?.id,
+        supplierId: isTeamMember ? ownerUserId : user?.id,
         body: formData
       }).unwrap();
-
       //   console.log('API
       if (response && response.message) {
         toast.success(`${response?.message || 'Product listed successfully!'}`);
@@ -195,7 +194,7 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
               <div className='bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-4'>
                 <div className='relative h-[300px] rounded-xl overflow-hidden bg-gray-50'>
                   <div className="w-full h-full flex" style={imageContainerStyle}>
-                    {uploadedFiles?.map((j, i) => (
+                    {uploadedFiles?.map((j: any, i: number) => (
                       <div
                         className="relative h-full shrink-0"
                         style={{ width: `${100 / (uploadedFiles?.length || 1)}%` }}
@@ -228,7 +227,7 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
                       </button>
 
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                        {uploadedFiles.map((_, i) => (
+                        {uploadedFiles.map((_: any, i: number) => (
                           <div
                             key={i}
                             className={`h-1.5 rounded-full transition-all ${currentIndex === i ? "w-6 bg-primary" : "w-1.5 bg-white/60"

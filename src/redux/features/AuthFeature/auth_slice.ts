@@ -14,11 +14,16 @@ interface AuthState {
     numb: any | null;
     loading: boolean;
     error: string | null;
+    permissions: string[];
+    isTeamMember: boolean;
+    team_role?: string;
+    ownerUserId?: string;
     vType: string;
     reginfo: any;
     rtype: string;
     email: string;
     phone: string;
+    announcements_enabled: boolean;
     verificationStatus: boolean;
     requestedLocation: string | null;
     showEntryModal: boolean;
@@ -35,11 +40,14 @@ const initialState: AuthState = {
     numb: null,
     loading: false,
     error: '',
+    isTeamMember: false,
+    permissions: [],
     vType: '',
     reginfo: {},
     rtype: '',
     email: (typeof window !== 'undefined' && localStorage.getItem('email')) || '',
     phone: (typeof window !== 'undefined' && localStorage.getItem('phone')) || '',
+    announcements_enabled: true,
     verificationStatus: false,
     requestedLocation: null,
     showEntryModal: false,
@@ -85,11 +93,17 @@ const AuthSlice = createSlice({
             state.user = action.payload?.user;
             state.token = action.payload?.ac;
             state.numb = action.payload?.fc;
+            state.appData = action.payload?.data;
             state.isAuth = true;
             state.isInitialized = true;
             state.loading = false;
             state.error = null;
             state.awaitingOTPVerification = false;
+            state.isTeamMember = action.payload?.user?.isTeamMember || false;
+            state.team_role = action.payload?.user?.team_role;
+            state.permissions = action.payload?.user?.permissions || [];
+            state.ownerUserId = action.payload?.user?.ownerUserId;
+            state.announcements_enabled = action.payload?.user?.announcements_enabled ?? true;
             if (typeof window !== 'undefined') localStorage.setItem('chimpstate', action.payload.ac);
             initialStateFromLocalStorage();
         },
@@ -103,6 +117,11 @@ const AuthSlice = createSlice({
             state.isAuth = true;
             state.isInitialized = true;
             state.awaitingOTPVerification = false;
+            state.isTeamMember = action.payload.user?.isTeamMember || false;
+            state.team_role = action.payload.user?.team_role;
+            state.permissions = action.payload.user?.permissions || [];
+            state.ownerUserId = action.payload.user?.ownerUserId;
+            state.announcements_enabled = action.payload.user?.announcements_enabled ?? true;
             if (typeof window !== 'undefined') localStorage.setItem('chimpstate', action.payload.ac);
             initialStateFromLocalStorage();
         },
@@ -176,6 +195,11 @@ const AuthSlice = createSlice({
                 state.appData = action.payload?.data;
                 state.isAuth = true;
                 state.error = null;
+                state.isTeamMember = action.payload?.user?.isTeamMember || false;
+                state.team_role = action.payload?.user?.team_role;
+                state.permissions = action.payload?.user?.permissions || [];
+                state.ownerUserId = action.payload?.user?.ownerUserId;
+                state.announcements_enabled = action.payload?.user?.announcements_enabled ?? true;
                 if (typeof window !== 'undefined') localStorage.setItem('chimpstate', action.payload.ac);
 
             })

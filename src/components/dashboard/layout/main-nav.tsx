@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Bell, Menu, Search, User as UserIcon } from 'lucide-react';
 import { usePopover } from '@/hooks/use-popover';
 import { useDialog } from '@/hooks/use-dialog';
@@ -14,6 +13,7 @@ import { NavItemConfig } from '@/config/dashboard-config';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { useAppSelector } from '@/redux/hooks';
 import { cn } from '@/utils/helper';
+import { Chip } from '@/components/ui/chip';
 
 interface MainNavProps {
     items: NavItemConfig[];
@@ -99,11 +99,22 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                         </AvatarFallback> */}
                                     </Avatar>
                                     <div className="hidden lg:block text-left mr-2">
-                                        <p className="text-sm font-bold text-gray-900 leading-none">
-                                            {user?.firstName} {user?.lastName}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm font-bold text-gray-900 leading-none">
+                                                {user?.firstName} {user?.lastName}
+                                            </p>
+                                            {user?.team_role && (
+                                                <Chip
+                                                    label={user.team_role}
+                                                    variant="soft"
+                                                    color={user.team_role === 'owner' ? 'primary' : 'secondary'}
+                                                    size="sm"
+                                                    className="capitalize px-1.5 py-0 h-4 text-[9px]"
+                                                />
+                                            )}
+                                        </div>
                                         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">
-                                            {user?.role || 'Member'}
+                                            {user?.companyName} {user?.role ? `• ${user.role}` : ''}
                                         </p>
                                     </div>
                                 </button>

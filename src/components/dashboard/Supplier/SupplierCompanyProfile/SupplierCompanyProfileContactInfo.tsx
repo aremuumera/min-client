@@ -6,18 +6,33 @@ import { updateSupplierMediaInfo } from "@/redux/features/supplier-profile/suppl
 import validateSocialURL from "@/utils/helper";
 import { useAppSelector } from "@/redux";
 
-const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeStep, handleBack }:{
+import { z } from 'zod';
+import { toast } from 'sonner';
+
+const contactSchema = z.object({
+  companyEmail: z.string().min(1, 'Company email is required').email('Invalid email address'),
+  companyPhone: z.string().min(1, 'Company phone number is required').regex(/^\d{10,15}$/, 'Invalid phone number'),
+  linkedIn: z.string().min(1, 'LinkedIn URL is required').refine(val => validateSocialURL(val, 'linkedin'), 'Invalid LinkedIn URL'),
+  facebook: z.string().min(1, 'Facebook URL is required').refine(val => validateSocialURL(val, 'facebook'), 'Invalid Facebook URL'),
+  instagram: z.string().min(1, 'Instagram URL is required').refine(val => validateSocialURL(val, 'instagram'), 'Invalid Instagram URL'),
+  xSocial: z.string().min(1, 'X (Twitter) URL is required').refine(val => validateSocialURL(val, 'x'), 'Invalid X URL'),
+  zipCode: z.string().optional(),
+  streetNo: z.string().min(1, 'Street number is required'),
+  fullAddress: z.string().min(1, 'Full address is required'),
+});
+
+const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeStep, handleBack }: {
   handleNext: () => void;
   setActiveStep: (step: number) => void;
   activeStep: number;
   handleBack: () => void;
 }) => {
-  const { supplierMediaInfo, profileDetailsFormData, profileDescriptionFields, supplierProfileLogo, supplierProfileBanner  } = useAppSelector((state) => state?.supplierProfile);
+  const { supplierMediaInfo } = useAppSelector((state) => state?.supplierProfile);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const dispatch = useDispatch();
 
   // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     dispatch(updateSupplierMediaInfo({ [name]: value })); // Update Redux state
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" })); // Clear errors for the field
@@ -25,79 +40,30 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
 
   // Validate form fields
   const validateForm = () => {
-    let newErrors: any = {};
+    try {
+      contactSchema.parse(supplierMediaInfo);
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          newErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(newErrors);
 
-    // Required fields
-    if (!supplierMediaInfo?.companyEmail) newErrors.companyEmail = "Company email is required.";
-    if (!supplierMediaInfo?.companyPhone) newErrors.companyPhone = "Company phone number is required.";
-    if (!supplierMediaInfo?.linkedIn) newErrors.linkedIn = "LinkedIn URL is required.";
-    if (!supplierMediaInfo?.facebook) newErrors.facebook = "Facebook URL is required.";
-    if (!supplierMediaInfo?.instagram) newErrors.instagram = "Instagram URL is required.";
-    if (!supplierMediaInfo?.xSocial) newErrors.xSocial = "X (Twitter) URL is required.";
-    // if (!supplierMediaInfo?.zipCode) newErrors.zipCode = "Zip code is required.";
-    if (!supplierMediaInfo?.streetNo) newErrors.streetNo = "Street number is required.";
-    if (!supplierMediaInfo?.fullAddress) newErrors.fullAddress = "Full address is required.";
-
-    
-    // Email validation
-    if (supplierMediaInfo?.companyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierMediaInfo?.companyEmail)) {
-      newErrors.companyEmail = "Invalid email address.";
-    }
-
-    // Phone number validation
-    if (supplierMediaInfo?.companyPhone && !/^\d{10,15}$/.test(supplierMediaInfo?.companyPhone)) {
-      newErrors.companyPhone = "Invalid phone number.";
-    }
-
-    // URL validation
-    const urlPattern = /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;    if (supplierMediaInfo?.linkedIn && !urlPattern.test(supplierMediaInfo?.linkedIn)) {
-      newErrors.linkedIn = "Invalid LinkedIn URL.";
-    }
-    if (supplierMediaInfo?.linkedIn) {
-      if (!validateSocialURL(supplierMediaInfo.linkedIn, 'linkedin')) {
-        newErrors.linkedIn = "Please enter a valid LinkedIn URL (e.g., https://linkedin.com/in/username)";
+        const firstError = Object.values(newErrors)[0] as string;
+        toast.error(firstError);
       }
+      return false;
     }
-    
-    if (supplierMediaInfo?.facebook) {
-      if (!validateSocialURL(supplierMediaInfo.facebook, 'facebook')) {
-        newErrors.facebook = "Please enter a valid Facebook URL (e.g., https://facebook.com/username)";
-      }
-    }
-
-    if (supplierMediaInfo?.instagram) {
-      if (!validateSocialURL(supplierMediaInfo.instagram, 'instagram')) {
-        newErrors.instagram = "Please enter a valid Instagram URL (e.g., https://instagram.com/username)";
-      }
-    }
-    if (supplierMediaInfo?.xSocial) {
-      if (!validateSocialURL(supplierMediaInfo.xSocial, 'x')) {
-        newErrors.xSocial = "Please enter a valid X (Twitter) URL (e.g., https://x.com/username)";
-      }
-    }
-
-    // if (supplierMediaInfo?.xSocial && !urlPattern.test(supplierMediaInfo?.xSocial)) {
-    //   newErrors.xSocial = "Invalid X (Twitter) URL.";
-    // }
-
-    console.log('Validation errors:', newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      console.log('Failed validation for:', Object.keys(newErrors));
-    }
-
-    setErrors(newErrors); // Set errors
-    return Object.keys(newErrors).length === 0; // Return true if no errors
   };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (validateForm()) {
-      // console.log("Form data is valid:", supplierMediaInfo, profileDetailsFormData, profileDescriptionFields, supplierProfileLogo, supplierProfileBanner );
       handleNext(); // Proceed to the next step
-    } else {
-      console.log("Form has errors:", errors);
     }
   };
 
@@ -247,15 +213,14 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
             disabled={activeStep === 0}
             onClick={handleBack}
             variant="outlined"
-            color="primary"
             className="w-full"
+            type="button"
           >
             Back
           </Button>
           <Button
             type="submit"
             variant="contained"
-            color="primary"
             className="w-full"
           >
             {"Save and Continue"}

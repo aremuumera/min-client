@@ -104,6 +104,28 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Supplier is verified but hasn't created store profile yet — block all routes
+    // except overview and the profile creation page
+    const userRole = user?.role;
+    const isSupplierProfileCreated = appData?.isProfileCreated;
+    const allowedWithoutProfile = [
+      paths.dashboard.overview,
+      paths.dashboard.products.companyProfile,
+      paths.dashboard.settings.account,
+    ];
+    const isOnAllowedRoute = allowedWithoutProfile.some((route) => pathname.startsWith(route));
+
+    if (
+      isBusinessVerified &&
+      userRole === 'supplier' &&
+      !isSupplierProfileCreated &&
+      !isOnAllowedRoute
+    ) {
+      setShowProfileModal(true);
+      router.replace(paths.dashboard.overview);
+      return;
+    }
+
     // Redirect to saved location after login
     if (requestedLocation) {
       const targetLocation = requestedLocation;
@@ -119,6 +141,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     dispatch,
     router,
     user,
+    appData,
     isBusinessVerified,
     isLoading,
     isError,

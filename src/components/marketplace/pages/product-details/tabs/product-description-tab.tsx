@@ -14,9 +14,10 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { showAlert } = useAlert();
 
-  const { isAuth, user } = useSelector((state: any) => state.auth);
+  const { isAuth, user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
 
-  const isOwner = isAuth && user?.id === supplierId;
+  const isOwner = isAuth && effectiveUserId === supplierId;
 
   const handleRequestQuote = () => {
     if (isOwner) {

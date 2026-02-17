@@ -41,12 +41,13 @@ const itemVariants: Variants = {
 const SavedItemsDashboard = () => {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState('products');
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
 
   const { data, isLoading, error, refetch } = useGetSavedItemsQuery(
-    { userId: user?.id },
+    { userId: effectiveUserId },
     {
-      skip: !user?.id,
+      skip: !effectiveUserId,
       refetchOnMountOrArgChange: true,
       refetchOnFocus: true,
       refetchOnReconnect: true,
@@ -61,7 +62,7 @@ const SavedItemsDashboard = () => {
 
   const handleDelete = async (itemId: string, itemType: string) => {
     try {
-      await deleteSavedItem({ userId: user.id, itemId, itemType });
+      await deleteSavedItem({ userId: effectiveUserId, itemId, itemType });
       refetch();
     } catch (err) {
       console.error('Failed to delete saved item:', err);

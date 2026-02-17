@@ -34,8 +34,9 @@ const baseQuery = fetchBaseQuery({
         }
 
         // Get token from Redux state (exact parity)
+        // We use any here to avoid circular dependency issues with RootState
         const state: any = getState();
-        const token = state.auth.token;
+        const token = state.auth?.token;
 
         // Fallback to localStorage if not in Redux state (exact parity)
         const localToken = typeof window !== 'undefined' ? localStorage.getItem('chimpstate') : null;
@@ -87,6 +88,9 @@ export const baseQueryWithReauth: BaseQueryFn<
                 api.dispatch(setToken(newAccessToken));
                 api.dispatch(loginRefresh(newRefresh))
 
+                // api.dispatch({ type: 'auth/setToken', payload: newAccessToken });
+                // api.dispatch({ type: 'auth/loginRefresh', payload: newRefresh });
+
                 isRefreshing = false;
                 onTokenRefreshed(newAccessToken);
 
@@ -95,7 +99,9 @@ export const baseQueryWithReauth: BaseQueryFn<
             } else {
                 // console.error('Refresh failed or session truly expired - logging out');
                 isRefreshing = false;
+                // Using string-based action types to break circular dependency with auth_slice
                 api.dispatch(logout());
+                //  api.dispatch({ type: 'auth/logout' });
             }
         } else {
             // Already refreshing, queue this request to wait for the new token

@@ -22,20 +22,21 @@ import {
   useAppDispatch,
   useAppSelector,
 } from '@/redux/hooks';
-import { Box } from '@/components/ui/box';
-import { Button } from '@/components/ui/button';
 import {
+  Box,
+  Button,
   FormControl,
   FormHelperText,
   InputLabel,
-} from '@/components/ui/form-control';
-import { IconButton } from '@/components/ui/icon-button';
-import { CircularProgress } from '@/components/ui/progress';
-import { Input, TextField } from '@/components/ui/input';
-import { MenuItem } from '@/components/ui/menu';
-import { Modal } from '@/components/ui/modal';
-import { Select } from '@/components/ui/select';
-import { Typography } from '@/components/ui/typography';
+  IconButton,
+  CircularProgress,
+  Input,
+  TextField,
+  MenuItem,
+  Modal,
+  Select,
+  Typography,
+} from '@/components/ui';
 import { FaUpload } from 'react-icons/fa6';
 import { MdOutlineCancel } from 'react-icons/md';
 import { PiWarningLight } from 'react-icons/pi';
@@ -43,7 +44,9 @@ import { PiWarningLight } from 'react-icons/pi';
 import { Option } from '@/components/core/option';
 import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { toast } from '@/components/core/toaster';
-import { MoqUnits as Moq } from '@/lib/marketplace-data.ts';
+import { MoqUnits as Moq } from '@/lib/marketplace-data';
+import { z } from 'zod';
+import { MultiCheckboxSelect, SearchableSelect } from '@/components/ui';
 
 interface SupplierProductDetailsProps {
   handleNext: () => void;
@@ -55,6 +58,27 @@ interface SupplierProductDetailsProps {
   productAttachments: File[];
   setProductAttachments: React.Dispatch<React.SetStateAction<File[]>>;
 }
+
+const productSchema = z.object({
+  productName: z.string().min(1, 'Product name is required'),
+  deliveryPeriod: z.string().min(1, 'Delivery period is required'),
+  unitCurrency: z.string().min(1, 'Unit currency is required'),
+  realPrice: z.string().min(1, 'Real price is required').refine(val => !isNaN(Number(val)), 'Must be a valid number'),
+  prevPrice: z.string().optional(),
+  composition: z.string().min(1, 'Composition is required'),
+  density: z.string().min(1, 'Density is required'),
+  measure: z.string().min(1, 'Measure unit is required'),
+  quantity: z.string().min(1, 'Quantity is required'),
+  productHeaderDescription: z.string().min(1, 'Header description is required').max(500, 'Maximum 500 characters'),
+  productMainCategory: z.string().min(1, 'Main category is required'),
+  productCategory: z.string().optional(),
+  productSubCategory: z.string().optional(),
+});
+
+const descriptionFieldSchema = z.object({
+  header: z.string().min(1, 'Header is required'),
+  description: z.string().min(1, 'Description is required'),
+});
 
 const steps = ['Create Product', 'Product Location', 'Payment terms', 'Confirm Product Information'];
 let DB_VERSION = 1;
@@ -85,7 +109,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
     serverReadyData,
     uploadedAttachment,
   }: any = useAppSelector((state: any) => state.product || {});
-  const { user } = useAppSelector((state: any) => state.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state: any) => state.auth);
 
   const [selectedCategories, setSelectedCategories] = useState({
     mainCategory: { id: '', name: '', tag: '' },
@@ -185,8 +209,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
   };
 
   // Handle adding new header-description fields
-  const handleAddDescriptionField = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleAddDescriptionField = () => {
     // setDescriptionFields([...descriptionFields, { header: "", description: "" }]);
     dispatch(addDescriptionField());
   };
@@ -315,8 +338,12 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
     }
   };
 
+  type BaseChangeEvent =
+    | React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    | { target: { name: string; value: any } };
+
   const maxCharacters = 500;
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | { name?: string; value: unknown }>) => {
+  const handleInputChange = (e: BaseChangeEvent) => {
     const { name, value } = e.target as { name: string; value: string };
 
     // Apply character limit validation only for productHeaderDescription
@@ -335,94 +362,41 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
   };
 
   const validateForm = () => {
-    const newErrors: any = {};
-    if (!productDetailsFormData?.productName?.trim()) {
-      newErrors.productName = 'Product name is required';
-    }
+    try {
+      productSchema.parse(productDetailsFormData);
 
-    // Category validation
-    const mainCategory = mainCatData?.find((cat: any) => cat.original_id === selectedCategories.mainCategory.id);
+      // Validate description fields
+      const fieldErrors: Record<string, string> = {};
+      descriptionFields.forEach((field: any, index: number) => {
+        const result = descriptionFieldSchema.safeParse(field);
+        if (!result.success) {
+          result.error.issues.forEach((issue: any) => {
+            fieldErrors[`description${issue.path[0]}${index}`] = issue.message;
+          });
+        }
+      });
 
-    // Validate main category is selected
-    if (!selectedCategories.mainCategory.id) {
-      newErrors.productMainCategory = 'Main category is required';
-    }
-    // Validate if product category is required (when main category has submenu)
-    else if (mainCategory?.submenu && !selectedCategories.productCategory.id) {
-      newErrors.productCategory = 'Product category is required';
-    }
-    // Validate if subcategory is required (when product category has submenu)
-    else if (
-      selectedCategories.productCategory.id &&
-      (productCatData as any)?.children?.find((cat: any) => cat.original_id === selectedCategories.productCategory.id)?.submenu &&
-      !selectedCategories.subCategory.id
-    ) {
-      newErrors.productSubCategory = 'Sub category is required';
-    }
-    if (!productDetailsFormData?.realPrice?.trim() || isNaN(productDetailsFormData?.realPrice)) {
-      newErrors.realPrice = 'Real price is required and must be a number';
-    }
-
-    // if (!productDetailsFormData?.prevPrice || isNaN(productDetailsFormData?.prevPrice)) {
-    //   newErrors.prevPrice = 'Previous price must be a number';
-    // }
-
-    // if (!productDetailsFormData?.composition?.trim()) {
-    //   newErrors.composition = 'Composition is required';
-    // }
-
-    // if (!productDetailsFormData?.density || !/^\d+(\.\d+)?\s?g\/cm³$/.test(productDetailsFormData?.density)) {
-    //   newErrors.density = 'Density must be in the format "2.68 g/cm³"';
-    // }
-
-    if (!productDetailsFormData?.deliveryPeriod?.trim()) {
-      newErrors.deliveryPeriod = 'Delivery period is required';
-    }
-
-    if (!productDetailsFormData?.measure) {
-      newErrors.measure = 'Measure unit is required';
-    }
-
-    if (!productDetailsFormData?.quantity?.trim()) {
-      newErrors.quantity = 'Quantity value is required';
-    }
-
-    if (
-      !productDetailsFormData?.productHeaderDescription?.trim() &&
-      productDetailsFormData?.productHeaderDescription > maxCharacters
-    ) {
-      newErrors.productHeaderDescription = 'Product Header Description is required';
-    }
-
-    // if (!productDetailsFormData?.color?.trim()) {
-    //   newErrors.color = 'Color is required';
-    // }
-
-    // if (!productDetailsFormData?.hardness?.trim()) {
-    //   newErrors.hardness = 'Hardness is required';
-    // }
-
-    // if (uploadedFiles.length < 5) {
-    //   newErrors.productImages = 'Minimum of 5 images is required';
-    // }
-
-    descriptionFields.forEach((field: any, index: number) => {
-      if (!field.header?.trim()) {
-        newErrors[`descriptionHeader${index}`] = 'Header is required';
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+        toast.error('Please fill in all description fields correctly');
+        return false;
       }
-      if (!field.description?.trim()) {
-        newErrors[`descriptionContent${index}`] = 'Description is required';
+
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          newErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(newErrors);
+
+        const firstError = Object.values(newErrors)[0] as string;
+        toast.error(firstError);
       }
-    });
-
-    setErrors(newErrors as Record<string, string>);
-
-    if (Object.keys(newErrors).length > 0) {
-      const firstError = Object.values(newErrors)[0] as string;
-      toast.error(firstError);
+      return false;
     }
-
-    return Object.keys(newErrors).length === 0;
   };
 
   const validateFilesBeforeSubmit = () => {
@@ -506,10 +480,9 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
       // Send the data to API
       const response = await validateProductStep({
-        supplierId: user?.id,
+        supplierId: isTeamMember ? ownerUserId : user?.id,
         body: formData,
       }).unwrap();
-
       console.log('API Response:', response);
       toast.success(`${response?.message || 'Product details submitted successfully!'}`, {
         position: 'top-right',
@@ -575,27 +548,18 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
             {/*  price section */}
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
-              <FormControl fullWidth error={!!errors.unitCurrency}>
-                <Select
-                  name="unitCurrency"
-                  value={productDetailsFormData?.unitCurrency || ''}
-                  onChange={handleInputChange}
-                  label="Unit Currency"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 250,
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>Select Currency</em>
-                  </MenuItem>
-                  <MenuItem value="NGN">NGN</MenuItem>
-                  <MenuItem value="USD">USD</MenuItem>
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label="Unit Currency"
+                options={[
+                  { value: 'NGN', label: 'NGN' },
+                  { value: 'USD', label: 'USD' },
+                ]}
+                value={productDetailsFormData?.unitCurrency || ''}
+                onChange={(e: any) => handleInputChange({ target: { name: 'unitCurrency', value: e.target.value } })}
+                placeholder="Select Currency"
+                errorMessage={errors.unitCurrency}
+                fullWidth
+              />
 
               <TextField
                 label="Real Price"
@@ -710,64 +674,44 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
             {/* all category selection */}
             <div className="flex flex-col md:flex-row gap-[15px] pt-4 items-center justify-center">
-              <FormControl fullWidth error={!!errors.productMainCategory}>
-                <Select
-                  value={selectedCategories.mainCategory.id}
-                  onChange={(e) => {
-                    const selected = (mainCatData as any[]).find((cat: any) => cat.original_id === e.target.value);
-                    handleCategoryChanges('mainCategory', e.target.value as string, selected?.name, selected?.tag);
-                  }}
-                  label="Main Product Category"
-                  disabled={isMainCatLoading}
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 250, // Adjust this value for height
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>Select a main category</em>
-                  </MenuItem>
-                  {mainCatData?.map((category: any) => (
-                    <MenuItem key={category.original_id} value={category.original_id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label="Main Product Category"
+                options={mainCatData?.map((category: any) => ({
+                  value: category.original_id,
+                  label: category.name,
+                })) || []}
+                value={selectedCategories.mainCategory.id}
+                onChange={(e: any) => {
+                  const selectedId = e.target.value;
+                  const selected = (mainCatData as any[]).find((cat: any) => cat.original_id === selectedId);
+                  handleCategoryChanges('mainCategory', selectedId, selected?.name, selected?.tag);
+                }}
+                placeholder="Select a main category"
+                disabled={isMainCatLoading}
+                errorMessage={errors.productMainCategory}
+                fullWidth
+              />
 
               {/* Only show Product Category select if the selected main category has submenu: true */}
               {selectedCategories.mainCategory.id &&
                 mainCatData?.find((cat: any) => cat.original_id === selectedCategories.mainCategory.id)?.submenu && (
-                  <FormControl fullWidth error={!!errors.productCategory}>
-                    <Select
-                      value={selectedCategories.productCategory.id}
-                      onChange={(e) => {
-                        const selected = (productCatData as any)?.children?.find((cat: any) => cat.original_id === e.target.value);
-                        handleCategoryChanges('productCategory', e.target.value as string, selected?.name, selected?.tag);
-                      }}
-                      label="Product Category"
-                      disabled={isProductCatLoading}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 250,
-                          },
-                        },
-                      }}
-                    >
-                      <MenuItem value="">
-                        <em>Select a category</em>
-                      </MenuItem>
-                      {productCatData?.children?.map((category: any) => (
-                        <MenuItem key={category.original_id} value={category.original_id}>
-                          {category.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <SearchableSelect
+                    label="Product Category"
+                    options={productCatData?.children?.map((category: any) => ({
+                      value: category.original_id,
+                      label: category.name,
+                    })) || []}
+                    value={selectedCategories.productCategory.id}
+                    onChange={(e: any) => {
+                      const selectedId = e.target.value;
+                      const selected = (productCatData as any)?.children?.find((cat: any) => cat.original_id === selectedId);
+                      handleCategoryChanges('productCategory', selectedId, selected?.name, selected?.tag);
+                    }}
+                    placeholder="Select a category"
+                    disabled={isProductCatLoading}
+                    errorMessage={errors.productCategory}
+                    fullWidth
+                  />
                 )}
             </div>
 
@@ -777,365 +721,341 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
               {selectedCategories.productCategory.id &&
                 productCatData?.children?.find((cat: any) => cat.original_id === selectedCategories.productCategory.id)
                   ?.submenu && (
-                  <FormControl fullWidth error={!!errors.productSubCategory}>
-                    <Select
-                      value={selectedCategories.subCategory.id}
-                      onChange={(e) => {
-                        const selected = (subCatData as any)?.children?.find((cat: any) => cat.original_id === e.target.value);
-                        handleCategoryChanges('subCategory', e.target.value as string, selected?.name, selected?.tag);
-                      }}
-                      label="Product Sub Category"
-                      disabled={isSubCatLoading}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 250, // Adjust this value for height
-                          },
-                        },
-                      }}
-                    >
-                      <MenuItem value="">
-                        <em>Select a sub-category</em>
-                      </MenuItem>
-                      {subCatData?.children?.map((category: any) => (
-                        <MenuItem key={category.original_id} value={category.original_id}>
-                          {category.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <SearchableSelect
+                    label="Product Sub Category"
+                    options={subCatData?.children?.map((category: any) => ({
+                      value: category.original_id,
+                      label: category.name,
+                    })) || []}
+                    value={selectedCategories.subCategory.id}
+                    onChange={(e: any) => {
+                      const selectedId = e.target.value;
+                      const selected = (subCatData as any)?.children?.find((cat: any) => cat.original_id === selectedId);
+                      handleCategoryChanges('subCategory', selectedId, selected?.name, selected?.tag);
+                    }}
+                    placeholder="Select a sub-category"
+                    disabled={isSubCatLoading}
+                    errorMessage={errors.productSubCategory}
+                    fullWidth
+                  />
                 )}
-
-              {/* ... other form fields ... */}
             </div>
+            {/* ... other form fields ... */}
+          </div>
 
-            {/* Measure */}
-            <div className="flex flex-col pt-[10px] md:flex-row gap-[15px] items-center justify-center">
-              <FormControl fullWidth error={!!errors.measure}>
-                <Select
-                  name="measure"
-                  value={productDetailsFormData?.measure || ''}
-                  onChange={handleInputChange}
-                  label="Measure"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 250, // Adjust this value for height
-                      },
-                    },
-                  }}
-                >
-                  <Option value="">Select a measure unit</Option>
-                  {Moq.map((unit: any) => (
-                    <Option key={unit} value={unit}>
-                      {unit}
-                    </Option>
-                  ))}
-                </Select>
-                {errors.measure && <FormHelperText>{errors.measure}</FormHelperText>}
-              </FormControl>
-              <FormControl fullWidth>
-                {/* <InputLabel>M.O.Q / Available Quantity</InputLabel> */}
-                <TextField
-                  label="M.O.Q / Available Quantity"
-                  fullWidth
-                  margin="normal"
-                  name="quantity"
-                  placeholder="Enter your M.O.Q value and select the measure unit"
-                  value={productDetailsFormData?.quantity || ''}
-                  onChange={handleInputChange}
-                  error={!!errors.quantity}
-                  helperText={errors.quantity}
-                />
-              </FormControl>
-            </div>
+          {/* Measure */}
+          <div className="flex flex-col pt-[10px] md:flex-row gap-[15px] items-center justify-center">
+            <SearchableSelect
+              label="Measure"
+              options={Moq.map((unit: any) => ({
+                value: unit,
+                label: unit,
+              }))}
+              value={productDetailsFormData?.measure || ''}
+              onChange={(e: any) => handleInputChange({ target: { name: 'measure', value: e.target.value } })}
+              placeholder="Select a measure unit"
+              errorMessage={errors.measure}
+              fullWidth
+            />
+            <TextField
+              label="M.O.Q / Available Quantity"
+              fullWidth
+              margin="normal"
+              name="quantity"
+              placeholder="Enter your M.O.Q value and select the measure unit"
+              value={productDetailsFormData?.quantity || ''}
+              onChange={handleInputChange}
+              error={!!errors.quantity}
+              helperText={errors.quantity}
+            />
+          </div>
 
-            <div className="pt-8">
-              <TextField
-                label="Product Header Description"
-                fullWidth
-                multiline
-                rows={5}
-                margin="normal"
-                name="productHeaderDescription"
-                placeholder="Enter a brief, engaging product description to be displayed at the top of the page..."
-                value={productDetailsFormData?.productHeaderDescription || ''}
-                onChange={handleInputChange}
-                error={!!errors.productHeaderDescription}
-                helperText={
-                  errors.productHeaderDescription
-                    ? errors.productHeaderDescription
-                    : `${maxCharacters - productDetailsFormData?.productHeaderDescription?.length || 0} characters remaining`
-                }
-              />
-              {/* <p className="text-[#696969] text-right text-[.75rem]">{productDetailsFormData?.productHeaderDescription?.length} / 200</p> */}
-            </div>
+          <div className="pt-8">
+            <TextField
+              label="Product Header Description"
+              fullWidth
+              multiline
+              rows={5}
+              margin="normal"
+              name="productHeaderDescription"
+              placeholder="Enter a brief, engaging product description to be displayed at the top of the page..."
+              value={productDetailsFormData?.productHeaderDescription || ''}
+              onChange={handleInputChange}
+              error={!!errors.productHeaderDescription}
+              helperText={
+                errors.productHeaderDescription
+                  ? errors.productHeaderDescription
+                  : `${maxCharacters - productDetailsFormData?.productHeaderDescription?.length || 0} characters remaining`
+              }
+            />
+            {/* <p className="text-[#696969] text-right text-[.75rem]">{productDetailsFormData?.productHeaderDescription?.length} / 200</p> */}
+          </div>
 
-            {/* Description Fields */}
-            <div className="pt-[20px]">
-              <h2 className="font-medium pb-3 text-[1rem]">Product Detail Description</h2>
-              <div className="space-y-2 relative!">
-                {descriptionFields.map((field: any, index: number) => (
-                  <div key={index}>
-                    {index === 0 ? (
-                      ''
-                    ) : (
-                      <IconButton
-                        onClick={() => handelClearDescriptionField(index)}
-                        className="flex absolute right-0 justify-center text-center text-[1.4rem]"
-                        aria-label="clear description field"
-                      >
-                        <MdOutlineCancel className="z-20" />
-                      </IconButton>
-                    )}
-                    <div>
-                      <TextField
-                        label={`${index === 0 ? '1' : `${index + 1}:`} Header`}
-                        fullWidth
-                        name="header"
-                        value={field.header}
-                        onChange={(e) => handleDescriptionChange(index, 'header', e.target.value)}
-                        margin="normal"
-                        placeholder="Enter header"
-                        error={!!errors[`header${index}`]}
-                        helperText={errors[`header${index}`]}
-                      />
-                      <Box sx={{ mt: '8px' }}>
-                        {/* <TextEditor
+          {/* Description Fields */}
+          <div className="pt-[20px]">
+            <h2 className="font-medium pb-3 text-[1rem]">Product Detail Description</h2>
+            <div className="space-y-2 relative!">
+              {descriptionFields.map((field: any, index: number) => (
+                <div key={index}>
+                  {index === 0 ? (
+                    ''
+                  ) : (
+                    <IconButton
+                      onClick={() => handelClearDescriptionField(index)}
+                      className="flex absolute right-0 justify-center text-center text-[1.4rem]"
+                      aria-label="clear description field"
+                    >
+                      <MdOutlineCancel className="z-20" />
+                    </IconButton>
+                  )}
+                  <div>
+                    <TextField
+                      label={`${index === 0 ? '1' : `${index + 1}:`} Header`}
+                      fullWidth
+                      name="header"
+                      value={field.header}
+                      onChange={(e) => handleDescriptionChange(index, 'header', e.target.value)}
+                      margin="normal"
+                      placeholder="Enter header"
+                      error={!!errors[`header${index}`]}
+                      helperText={errors[`header${index}`]}
+                    />
+                    <Box sx={{ mt: '8px' }}>
+                      {/* <TextEditor
                           name="description"
                           placeholder="Describe your product here..."
                           value={field.description}
                            onUpdate={({ editor }) => handleDescriptionChange(index, "description", editor.getText())}
                         /> */}
-                        <TextField
-                          label="Section Description"
-                          fullWidth
-                          multiline
-                          rows={5}
-                          margin="normal"
-                          name="description"
-                          placeholder="Describe your product here..."
-                          value={field.description}
-                          onChange={(e) => handleDescriptionChange(index, 'description', e.target.value)}
-                        />
-                        {errors[`description${index}`] && (
-                          <Typography variant="body2" color="error">
-                            {errors[`description${index}`]}
-                          </Typography>
-                        )}
-                      </Box>
-                    </div>
+                      <TextField
+                        label="Section Description"
+                        fullWidth
+                        multiline
+                        rows={5}
+                        margin="normal"
+                        name="description"
+                        placeholder="Describe your product here..."
+                        value={field.description}
+                        onChange={(e) => handleDescriptionChange(index, 'description', e.target.value)}
+                      />
+                      {errors[`description${index}`] && (
+                        <Typography variant="body2" color="error">
+                          {errors[`description${index}`]}
+                        </Typography>
+                      )}
+                    </Box>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Preview Modal Button */}
+          <div className="py-[20px] flex gap-4 w-full">
+            <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type="button">
+              Preview
+            </Button>
+            <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" sx={{}} color="primary" type="button">
+              Add Description Field
+            </Button>
+          </div>
+
+          {/* Preview Modal */}
+          <Modal open={openPreview} onClose={handlePreviewClose}>
+            <Box sx={{ maxWidth: 500, margin: 'auto', padding: 4, backgroundColor: '#fff', borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Preview Description
+              </Typography>
+              <div>
+                {descriptionFields.map((field: any, index: number) => (
+                  <Box key={index} sx={{ mt: 3 }}>
+                    <Typography variant="h6">{field.header}</Typography>
+                    <Typography pt={'8px'} variant="body1">
+                      {field.description}
+                    </Typography>
+                  </Box>
                 ))}
               </div>
-            </div>
-
-            {/* Preview Modal Button */}
-            <div className="py-[20px] flex gap-4 w-full">
-              <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type="button">
-                Preview
+              <Button variant="contained" sx={{ mt: '26px' }} onClick={handlePreviewClose} color="secondary" type="button">
+                Close Preview
               </Button>
-              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" sx={{}} color="primary" type="button">
-                Add Description Field
-              </Button>
-            </div>
+            </Box>
+          </Modal>
 
-            {/* Preview Modal */}
-            <Modal open={openPreview} onClose={handlePreviewClose}>
-              <Box sx={{ maxWidth: 500, margin: 'auto', padding: 4, backgroundColor: '#fff', borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Preview Description
-                </Typography>
-                <div>
-                  {descriptionFields.map((field: any, index: number) => (
-                    <Box key={index} sx={{ mt: 3 }}>
-                      <Typography variant="h6">{field.header}</Typography>
-                      <Typography pt={'8px'} variant="body1">
-                        {field.description}
+          {/*  this is for Product Images */}
+          <div>
+            <div className="py-[20px]">
+              <h2 className="font-medium text-[1.4rem]">Upload Product Images</h2>
+              <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images is required to list products</p>
+            </div>
+            <Box
+              sx={{
+                width: '100%',
+                height: '150px',
+                border: '2px dashed #ccc',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                position: 'relative',
+                backgroundColor: '#ffff',
+                '&:hover': {
+                  backgroundColor: '#f7f7f7',
+                },
+              }}
+              onClick={() => document.getElementById('file-upload')?.click()} // Trigger input on box click
+            >
+              <FaUpload size={20} color="#888" />
+              <input
+                id="file-upload"
+                type="file"
+                onChange={handleFileChange}
+                placeholder="Click to Upload/browse file"
+                className="hidden"
+                multiple
+                accept="image/png, image/jpeg, image/webp"
+              />
+              <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
+              <p className="text-[#696969] text-[.75rem]">
+                Image must not exceed 5mb | Supported format: *jpg, *png, *webp
+              </p>
+            </Box>
+            {/* Display Uploaded Files' Names */}
+            <div className="pt-[10px]">
+              {uploadedFiles.length > 0 && (
+                <div className="flex flex-wrap gap-[10px]">
+                  {uploadedFiles.map((fileName: any, index: number) => (
+                    <Box
+                      key={index}
+                      sx={{ padding: '5px', position: 'relative', backgroundColor: '#f7f7f7', borderRadius: '5px' }}
+                    >
+                      <IconButton
+                        type="button"
+                        className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
+                        onClick={() => handleDeleteFile(index)}
+                        aria-label={`delete file ${index + 1}`}
+                      >
+                        <MdOutlineCancel className="z-20" />
+                      </IconButton>
+                      <Typography variant="body2">
+                        {index + 1}: {fileName.name} ({(fileName.size / 1024 / 1024).toFixed(2)}MB)
                       </Typography>
+                      {fileName.size > 5 * 1024 * 1024 && (
+                        <Typography color="error" variant="caption">
+                          File too large!
+                        </Typography>
+                      )}
                     </Box>
                   ))}
                 </div>
-                <Button variant="contained" sx={{ mt: '26px' }} onClick={handlePreviewClose} color="secondary" type="button">
-                  Close Preview
-                </Button>
-              </Box>
-            </Modal>
+              )}
+            </div>
+          </div>
 
-            {/*  this is for Product Images */}
-            <div>
-              <div className="py-[20px]">
-                <h2 className="font-medium text-[1.4rem]">Upload Product Images</h2>
-                <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images is required to list products</p>
-              </div>
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '150px',
-                  border: '2px dashed #ccc',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  backgroundColor: '#ffff',
-                  '&:hover': {
-                    backgroundColor: '#f7f7f7',
-                  },
-                }}
-                onClick={() => document.getElementById('file-upload')?.click()} // Trigger input on box click
-              >
-                <FaUpload size={20} color="#888" />
-                <input
-                  id="file-upload"
-                  type="file"
-                  onChange={handleFileChange}
-                  placeholder="Click to Upload/browse file"
-                  className="hidden"
-                  multiple
-                  accept="image/png, image/jpeg, image/webp"
-                />
-                <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
-                <p className="text-[#696969] text-[.75rem]">
-                  Image must not exceed 5mb | Supported format: *jpg, *png, *webp
-                </p>
-              </Box>
-              {/* Display Uploaded Files' Names */}
-              <div className="pt-[10px]">
-                {uploadedFiles.length > 0 && (
-                  <div className="flex flex-wrap gap-[10px]">
-                    {uploadedFiles.map((fileName: any, index: number) => (
-                      <Box
-                        key={index}
-                        sx={{ padding: '5px', position: 'relative', backgroundColor: '#f7f7f7', borderRadius: '5px' }}
+          {/*  this is for Attachment */}
+          <div>
+            <div className="py-[20px]">
+              <h2 className="font-medium text-[1.4rem]">Upload Attachment</h2>
+              <p className="text-[#7b7b7b] text-[.9rem] ">
+                Attachment could be document about the product, details, or any other relevant information about the
+                product
+              </p>
+            </div>
+            <Box
+              sx={{
+                width: '100%',
+                height: '150px',
+                border: '2px dashed #ccc',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                position: 'relative',
+                backgroundColor: '#ffff',
+                '&:hover': {
+                  backgroundColor: '#f7f7f7',
+                },
+              }}
+              onClick={() => document.getElementById('attachment-upload')?.click()} // Trigger input on box click
+            >
+              <FaUpload size={20} color="#888" />
+              <input
+                id="attachment-upload"
+                type="file"
+                onChange={handleAttachmentChange}
+                placeholder="Click to Upload/browse file"
+                className="hidden"
+                multiple
+                accept="image/png, image/jpeg, application/pdf"
+              />
+              <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
+              <p className="text-[#696969] text-[.75rem]">
+                Attachment must not exceed 5mb | Supported format: *jpeg, *png, *pdf
+              </p>
+            </Box>
+
+            <div className="pt-[10px]">
+              {uploadedAttachment?.length > 0 && (
+                <div className="flex flex-wrap gap-[10px]">
+                  {uploadedAttachment?.map((fileName: any, index: number) => (
+                    <Box
+                      key={index}
+                      sx={{ padding: '5px', backgroundColor: '#f7f7f7', position: 'relative', borderRadius: '5px' }}
+                    >
+                      <IconButton
+                        type="button"
+                        className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
+                        onClick={() => handleDeleteAttachment(index)}
+                        aria-label={`delete attachment ${index + 1}`}
                       >
-                        <IconButton
-                          className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
-                          onClick={() => handleDeleteFile(index)}
-                          aria-label={`delete file ${index + 1}`}
-                        >
-                          <MdOutlineCancel className="z-20" />
-                        </IconButton>
-                        <Typography variant="body2">
-                          {index + 1}: {fileName.name} ({(fileName.size / 1024 / 1024).toFixed(2)}MB)
+                        <MdOutlineCancel className="z-20" />
+                      </IconButton>
+                      <Typography variant="body2">
+                        {index + 1}: {fileName.name} ({(fileName.size / 1024 / 1024).toFixed(2)}MB)
+                      </Typography>
+                      {fileName.size > 5 * 1024 * 1024 && (
+                        <Typography color="error" variant="caption">
+                          File too large!
                         </Typography>
-                        {fileName.size > 5 * 1024 * 1024 && (
-                          <Typography color="error" variant="caption">
-                            File too large!
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      )}
+                    </Box>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
 
-            {/*  this is for Attachment */}
-            <div>
-              <div className="py-[20px]">
-                <h2 className="font-medium text-[1.4rem]">Upload Attachment</h2>
-                <p className="text-[#7b7b7b] text-[.9rem] ">
-                  Attachment could be document about the product, details, or any other relevant information about the
-                  product
-                </p>
-              </div>
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '150px',
-                  border: '2px dashed #ccc',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  backgroundColor: '#ffff',
-                  '&:hover': {
-                    backgroundColor: '#f7f7f7',
-                  },
-                }}
-                onClick={() => document.getElementById('attachment-upload')?.click()} // Trigger input on box click
-              >
-                <FaUpload size={20} color="#888" />
-                <input
-                  id="attachment-upload"
-                  type="file"
-                  onChange={handleAttachmentChange}
-                  placeholder="Click to Upload/browse file"
-                  className="hidden"
-                  multiple
-                  accept="image/png, image/jpeg, application/pdf"
+          <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
+            <Button
+              disabled={isLoading || activeStep === steps.length - 1}
+              variant="contained"
+              color="primary"
+              className="w-full min-h-[48px]"
+              type="submit"
+              sx={{
+                '&.Mui-disabled': {
+                  background: (theme: any) => theme.palette.primary.main,
+                  opacity: 1,
+                  color: '#fff',
+                },
+              }}
+            >
+              {isLoading ? (
+                <CircularProgress
+                  size={24}
+                  color="inherit"
+                  className="text-white"
                 />
-                <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
-                <p className="text-[#696969] text-[.75rem]">
-                  Attachment must not exceed 5mb | Supported format: *jpeg, *png, *pdf
-                </p>
-              </Box>
-
-              {/* Display Uploaded Files' Names */}
-              <div className="pt-[10px]">
-                {uploadedAttachment?.length > 0 && (
-                  <div className="flex flex-wrap gap-[10px]">
-                    {uploadedAttachment?.map((fileName: any, index: number) => (
-                      <Box
-                        key={index}
-                        sx={{ padding: '5px', backgroundColor: '#f7f7f7', position: 'relative', borderRadius: '5px' }}
-                      >
-                        <IconButton
-                          className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
-                          onClick={() => handleDeleteAttachment(index)}
-                          aria-label={`delete attachment ${index + 1}`}
-                        >
-                          <MdOutlineCancel className="z-20" />
-                        </IconButton>
-                        <Typography variant="body2">
-                          {index + 1}: {fileName.name} ({(fileName.size / 1024 / 1024).toFixed(2)}MB)
-                        </Typography>
-                        {fileName.size > 5 * 1024 * 1024 && (
-                          <Typography color="error" variant="caption">
-                            File too large!
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
-              <Button
-                disabled={isLoading || activeStep === steps.length - 1}
-                variant="contained"
-                color="primary"
-                className="w-full min-h-[48px]"
-                type="submit"
-                sx={{
-                  '&.Mui-disabled': {
-                    background: (theme: any) => theme.palette.primary.main,
-                    opacity: 1,
-                    color: '#fff',
-                  },
-                }}
-              >
-                {isLoading ? (
-                  <CircularProgress
-                    size={24}
-                    color="inherit"
-                    className="text-white"
-                  />
-                ) : activeStep === steps.length - 1 ? (
-                  'Finish'
-                ) : (
-                  'Save and Continue'
-                )}
-              </Button>
-            </div>
+              ) : activeStep === steps.length - 1 ? (
+                'Finish'
+              ) : (
+                'Save and Continue'
+              )}
+            </Button>
           </div>
         </form>
       </div>

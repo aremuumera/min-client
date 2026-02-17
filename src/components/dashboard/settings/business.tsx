@@ -129,6 +129,8 @@ interface AuthState {
     user?: {
         id?: string;
     };
+    isTeamMember: boolean;
+    ownerUserId?: string;
 }
 
 interface RootState {
@@ -466,8 +468,8 @@ const DirectorsSection: React.FC<DirectorsSectionProps | any> = ({ data, directo
 // Main Business Component
 const Businesss: React.FC = () => {
     const router = useRouter();
-    const { user } = useSelector((state: RootState) => state.auth);
-    const userId = user?.id;
+    const { user, isTeamMember, ownerUserId } = useSelector((state: RootState) => state.auth);
+    const userId = isTeamMember ? ownerUserId : user?.id;
 
     const { data: detailsData, isLoading: loadingDetails } = useGetVerificationDetailsQuery(userId);
     const { data: statusData, isLoading: loadingStatus } = useGetVerificationStatusQuery(userId);

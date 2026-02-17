@@ -30,7 +30,7 @@ const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
   );
 
   if (isLoading) {
-    return <div className="mt-10"><ProductSkeleton count={1} /></div>; // Simple skeleton suitable for details? Not really but works.
+    return <div className="mt-10"><ProductSkeleton count={1} /></div>;   // Simple skeleton suitable for details? Not really but works.
   }
 
   if (isError || !data?.product) {

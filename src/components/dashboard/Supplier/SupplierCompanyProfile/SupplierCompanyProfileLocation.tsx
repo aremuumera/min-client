@@ -9,9 +9,10 @@ import { Country, State, IState } from 'country-state-city';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { toast } from '@/components/core/toaster';
+import { toast } from 'sonner';
 import { RootState } from '@/redux/store';
 import { clearAllFilesFromIndexedDB, getAllFilesFromIndexedDBForServer } from '@/utils/indexDb';
+import { z } from 'zod';
 
 interface SupplierLocationInfo {
   longitude?: string;
@@ -25,14 +26,20 @@ interface SupplierLocationInfo {
   [key: string]: any;
 }
 
+const locationSchema = z.object({
+  selectedCountry: z.string().min(1, 'Country is required'),
+  selectedState: z.string().min(1, 'State is required'),
+  fullAddress: z.string().min(1, 'Full address is required'),
+  longitude: z.string().min(1, 'Longitude is required'),
+  latitude: z.string().min(1, 'Latitude is required'),
+});
+
 const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep, handleBack }: any) => {
   const {
     supplierLocationInfo,
     supplierMediaInfo,
     profileDetailsFormData,
     profileDescriptionFields,
-    // supplierProfileLogo,
-    // supplierProfileBanner,
   } = useSelector((state: RootState) => state.supplierProfile);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -42,8 +49,8 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
   const [responseData, setResponseData] = useState<any>(null);
 
   const dispatch = useDispatch();
-
   const [createStoreProfile, { isLoading }] = useCreateStoreProfileMutation();
+  const router = useRouter();
 
   // Prepare country options
   const countryOptions = React.useMemo(() =>
@@ -81,74 +88,40 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
     setStates(State.getStatesOfCountry(countryCode));
     dispatch(updateSupplierLocationInfo({ selectedState: '' }));
-    setErrors((prevErrors) => ({ ...prevErrors, country: '' }));
+    setErrors((prevErrors) => ({ ...prevErrors, selectedCountry: '' }));
   };
 
   // Handle state change
   const handleStateChange = (event: any) => {
     dispatch(updateSupplierLocationInfo({ selectedState: event.target.value }));
-    setErrors((prevErrors) => ({ ...prevErrors, state: '' }));
+    setErrors((prevErrors) => ({ ...prevErrors, selectedState: '' }));
   };
 
   // Validate form fields
   const validateForm = () => {
-    let newErrors: Record<string, string> = {};
-    const info = supplierLocationInfo as SupplierLocationInfo;
+    try {
+      locationSchema.parse(supplierLocationInfo);
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          newErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(newErrors);
 
-    if (!info?.longitude) newErrors.longitude = 'Longitude is required.';
-    if (!info?.latitude) newErrors.latitude = 'Latitude is required.';
-    if (!info?.fullAddress) newErrors.fullAddress = 'Full address is required.';
-    if (!info?.selectedCountry) newErrors.country = 'Country is required.';
-    if (!info?.selectedState) newErrors.state = 'State is required.';
-
-    setErrors(newErrors); // Set errors
-
-    if (Object.keys(newErrors).length > 0) {
-      const firstError = Object.values(newErrors)[0] as string;
-      toast.error(firstError);
+        const firstError = Object.values(newErrors)[0] as string;
+        toast.error(firstError);
+      }
+      return false;
     }
-
-    return Object.keys(newErrors).length === 0; // Return true if no errors
   };
-
-  // Handle form submission
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   const [logoFiles, bannerFiles] = await Promise.all([
-  //     getAllFilesFromIndexedDBForServer('supplierProfileLogo'),
-  //     getAllFilesFromIndexedDBForServer('supplierProfileBanner')
-  //   ]);
-
-  //   const payload = {
-  //     ...supplierLocationInfo,
-  //     ...supplierMediaInfo,
-  //     ...profileDetailsFormData,
-  //     ...profileDescriptionFields,
-  //     supplierProfileLogo: logoFiles,
-  //     supplierProfileBanner: bannerFiles,
-  //   };
-  //   // console.log("Form data is valid:", supplierMediaInfo, profileDetailsFormData, );
-
-  //    console.log("Form data payload", payload);
-
-  //   if (!validateForm()) {
-  //     console.log("Form data is valid:", supplierLocationInfo);
-  //     handleNext(); // Proceed to the next step
-  //   } else {
-  //     console.log("Form has errors:", errors);
-  //   }
-  // };
-
-  useEffect(() => {
-    console.log('ResponseData state changed:', responseData);
-  }, [responseData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      console.log('Form has errors:', errors);
       return;
     }
 
@@ -159,12 +132,10 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
         getAllFilesFromIndexedDBForServer('supplierProfileBanner'),
       ]);
 
-      // Create FormData object
-      // Create FormData object
       const formData = new FormData();
       const locationInfo = supplierLocationInfo as SupplierLocationInfo;
 
-      // 1. Append location info
+      // Append all required data
       formData.append('longitude', locationInfo.longitude || '');
       formData.append('latitude', locationInfo.latitude || '');
       formData.append('selectedCountry', locationInfo.selectedCountry || '');
@@ -174,7 +145,6 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
       formData.append('streetNo', locationInfo.streetNo || '');
       formData.append('zipCode', locationInfo.zipCode || '');
 
-      // 2. Append company profile details
       formData.append('companyName', profileDetailsFormData.companyName);
       formData.append('companyEmail', supplierMediaInfo.companyEmail);
       formData.append('companyPhone', supplierMediaInfo.companyPhone);
@@ -186,18 +156,13 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
       formData.append('businessCategory', profileDetailsFormData.businessCategory);
       formData.append('companyDescription', profileDetailsFormData.companyDescription);
 
-      // 3. Append social media info
       formData.append('facebook', supplierMediaInfo.facebook);
       formData.append('instagram', supplierMediaInfo.instagram);
       formData.append('linkedIn', supplierMediaInfo.linkedIn);
       formData.append('xSocial', supplierMediaInfo.xSocial);
 
-      // 4. Append arrays and complex objects
-      // formData.append('selectedPayments', JSON.stringify(supplierLocationInfo.selectedPayments));
-      // formData.append('selectedShippings', JSON.stringify(supplierLocationInfo.selectedShippings));
       formData.append('productDetailDescription', JSON.stringify(profileDescriptionFields));
 
-      // 5. Append files if they exist
       if (logoFiles && logoFiles.length > 0) {
         formData.append('logo', logoFiles[0]);
       }
@@ -205,178 +170,130 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
         formData.append('banner', bannerFiles[0]);
       }
 
-      // For debugging: Verify FormData before submission
-      console.log('logoFiles', logoFiles);
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      console.log('🚀 Starting API call...'); // Add this
-
-      // Call the API mutation
       const response = await createStoreProfile({
         profileData: formData,
         supplierId: user?.id,
       }).unwrap();
 
-      console.log('✅ API Response received:', response); // This is crucial
-      console.log('✅ Response type:', typeof response); // Add this
-      console.log('✅ Response keys:', Object.keys(response || {}));
-
-      console.log('API Response:', response);
       setResponseData(response.data);
       toast.success('Profile created successfully');
 
-      // console.log("API Response:", response);
+      // Cleanup
       dispatch(resetProductState());
-      clearAllFilesFromIndexedDB('supplierProfileLogo')
-        .then((data: any) => {
-          console.log('all indexdb data cleared:', data);
-        })
-        .catch((error: any) => {
-          console.error('Error:', error);
-        });
-
-      clearAllFilesFromIndexedDB('supplierProfileBanner')
-        .then((data: any) => {
-          console.log('all indexdb data cleared:', data);
-        })
-        .catch((error: any) => {
-          console.error('Error:', error);
-        });
+      await Promise.all([
+        clearAllFilesFromIndexedDB('supplierProfileLogo'),
+        clearAllFilesFromIndexedDB('supplierProfileBanner')
+      ]);
 
       setShowSuccessModal(true);
     } catch (error: any) {
-      toast.error(`${error?.data?.message + error?.data?.error || 'Profile creation failed'}`, {
-        position: 'top-right',
-        duration: 3000, // Corrected from autoClose
-        style: {
-          background: '#F44336',
-          color: '#fff',
-        },
-      });
+      toast.error(error?.data?.message || error?.data?.error || 'Profile creation failed');
       console.error('Submission failed:', error);
-      // Optionally show error to user
     }
   };
 
-  const payload = {
-    ...supplierLocationInfo,
-    ...supplierMediaInfo,
-    ...profileDetailsFormData,
-    productDetailDescription: profileDescriptionFields,
-    // supplierProfileLogo: logoFiles,
-    // supplierProfileBanner: bannerFiles,
-  };
-
-  console.log('Form data payload', payload, supplierMediaInfo);
-
   return (
     <div>
-      <form onSubmit={handleSubmit} className="">
-        <div>
-          <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
-            <div className="w-full">
+      <div className="lg:px-6 py-2">
+        <form onSubmit={handleSubmit}>
+          <div>
+            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
+              <div className="w-full">
+                <SearchableSelect
+                  label="Country"
+                  options={countryOptions}
+                  value={supplierLocationInfo?.selectedCountry || ''}
+                  onChange={handleCountryChange}
+                  placeholder="Select country"
+                  errorMessage={errors.selectedCountry}
+                  fullWidth
+                />
+              </div>
+
+              <div className="w-full">
+                <SearchableSelect
+                  label="State"
+                  options={stateOptions}
+                  value={supplierLocationInfo?.selectedState || ''}
+                  onChange={handleStateChange}
+                  placeholder="Select state"
+                  disabled={!supplierLocationInfo?.selectedCountry || states.length === 0}
+                  errorMessage={errors.selectedState}
+                  helperText={!supplierLocationInfo?.selectedCountry ? "Kindly select your country before the state" : ""}
+                  fullWidth
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col pt-[15px] md:flex-row gap-[15px] items-center justify-center">
+              <div className="w-full">
+                <TextField
+                  label="Longitude"
+                  name="longitude"
+                  fullWidth
+                  placeholder="eg... 123.456"
+                  value={supplierLocationInfo?.longitude || ''}
+                  onChange={handleInputChange}
+                  error={!!errors.longitude}
+                  helperText={errors.longitude}
+                />
+              </div>
+              <div className="w-full">
+                <TextField
+                  label="Latitude"
+                  name="latitude"
+                  fullWidth
+                  placeholder="eg... 45.678"
+                  value={supplierLocationInfo?.latitude || ''}
+                  onChange={handleInputChange}
+                  error={!!errors.latitude}
+                  helperText={errors.latitude}
+                />
+              </div>
+            </div>
+
+            <div className="pt-[20px]">
               <TextField
-                label="Longitude"
-                name="longitude"
+                name="fullAddress"
+                label="Full Address"
                 fullWidth
-                margin="normal"
-                placeholder="eg... 123.456"
-                value={supplierLocationInfo?.longitude || ''}
+                multiline
+                placeholder="Enter your Company Full Address"
+                rows={4}
+                value={supplierLocationInfo?.fullAddress || ''}
                 onChange={handleInputChange}
-                error={!!errors.longitude}
-                helperText={errors.longitude}
-              />
-            </div>
-            <div className="w-full">
-              <TextField
-                label="Latitude"
-                name="latitude"
-                fullWidth
-                margin="normal"
-                placeholder="eg... 45.678"
-                value={supplierLocationInfo?.latitude || ''}
-                onChange={handleInputChange}
-                error={!!errors.latitude}
-                helperText={errors.latitude}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-center justify-center">
-            <div className="w-full">
-              <SearchableSelect
-                label="Country"
-                options={countryOptions}
-                value={supplierLocationInfo?.selectedCountry || ''}
-                onChange={handleCountryChange}
-                placeholder="Select country"
-                searchPlaceholder="Search countries..."
-                errorMessage={errors.country}
-                fullWidth
+                error={!!errors.fullAddress}
+                helperText={errors.fullAddress}
               />
             </div>
 
-            <div className="w-full">
-              <SearchableSelect
-                label="State"
-                options={stateOptions}
-                value={supplierLocationInfo?.selectedState || ''}
-                onChange={handleStateChange}
-                placeholder="Select state"
-                searchPlaceholder="Search states..."
-                disabled={!supplierLocationInfo?.selectedCountry || states.length === 0}
-                errorMessage={errors.state}
-                helperText="Kindly select your country before the state"
-                fullWidth
-              />
+            <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                variant="outlined"
+                className="w-full"
+                type="button"
+              >
+                Back
+              </Button>
+              <Button
+                disabled={isLoading}
+                variant="contained"
+                className="w-full min-h-[48px]"
+                type="submit"
+              >
+                {isLoading ? <CircularProgress size={24} className="text-white" /> : 'Finish'}
+              </Button>
             </div>
           </div>
+        </form>
+      </div>
 
-          <div className="pt-[20px]">
-            <TextField
-              id="fullAddress"
-              name="fullAddress"
-              label="Full Address"
-              fullWidth
-              multiline
-              placeholder="Enter your Company Full Address"
-              rows={4}
-              value={supplierLocationInfo?.fullAddress || ''}
-              onChange={handleInputChange}
-              error={!!errors.fullAddress}
-              helperText={errors.fullAddress}
-            />
-          </div>
-        </div>
-
-        <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            variant="outlined"
-            color="primary"
-            className="w-full"
-          >
-            Back
-          </Button>
-          <Button
-            disabled={isLoading || activeStep === steps.length - 1}
-            variant="contained"
-            color="primary"
-            className="w-full min-h-[48px]"
-            type="submit"
-          >
-            {isLoading ? <CircularProgress size={24} className="text-white" /> : 'Save and Continue'}
-          </Button>
-        </div>
-      </form>
       {showSuccessModal && (
         <SuccessModal
           onEdit={() => {
             setShowSuccessModal(false);
-            // handleNext();
             window.location.reload();
           }}
           responseData={responseData}
@@ -395,14 +312,14 @@ const SuccessModal = ({ onEdit, onClose, responseData }: any) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4"
       style={{ zIndex: 2900 }}
     >
       <motion.div
         initial={{ scale: 0.8, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4"
+        className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full"
       >
         <div className="text-center">
           <motion.div
@@ -427,9 +344,7 @@ const SuccessModal = ({ onEdit, onClose, responseData }: any) => {
             <Button
               variant="contained"
               onClick={() => {
-                console.log('Company name:', responseData?.company_name);
-                console.log('Navigate function:', router.push);
-                router.push(`/business/${responseData?.company_name}`);
+                router.push(`/business/${responseData?.company_name || ''}`);
                 onClose();
               }}
               className="w-full sm:w-auto"

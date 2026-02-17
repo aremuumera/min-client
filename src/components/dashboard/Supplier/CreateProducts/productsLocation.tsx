@@ -12,7 +12,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
   const [states, setStates] = useState<any[]>([]);
   const [errors, setErrors] = useState<any>({});
   const { productLocation } = useSelector((state: any) => state?.product);
-  const { user } = useSelector((state: any) => state?.auth);
+  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state?.auth);
   const dispatch = useDispatch();
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
@@ -128,7 +128,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
 
         // Send the FormData to the API
         const response = await validateProductStep({
-          supplierId: user?.id,
+          supplierId: isTeamMember ? ownerUserId : user?.id,
           body: formDataToSend,
         }).unwrap();
 

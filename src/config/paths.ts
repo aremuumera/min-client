@@ -23,6 +23,7 @@ export const paths = {
         newPasswordRequired: '/auth/new-password-required',
         resetPassword: '/auth/reset-password',
         verifyCode: '/auth/verify-code',
+        teamSetup: '/auth/team-setup',
     },
     company: {
         aboutUs: '/about-us',
@@ -77,6 +78,7 @@ export const paths = {
             security: '/dashboard/settings/security',
             business: '/dashboard/settings/business',
             legals: '/dashboard/settings/legals',
+            team: '/dashboard/settings/team',
         },
         analytics: '/dashboard/analytics',
         chat: {
@@ -85,6 +87,12 @@ export const paths = {
             thread: (threadType: string, threadId: string | number, itemId: string | number = '0') => `/dashboard/chat/${threadType}/${threadId}/${itemId}`,
         },
         notifications: '/dashboard/notifications',
+
+        // inspections
+        inspections: {
+            list: '/dashboard/inspections',
+            detail: (id: string | number) => `/dashboard/inspections/${id}`,
+        },
 
         // supplier listing
         products: {
@@ -174,6 +182,8 @@ export const routeAccess = {
         paths.marketplace.products,
         paths.marketplace.allCp,
         paths.marketplace.recentRfQ,
+        // inspections
+        paths.dashboard.inspections.list,
         // paths.marketplace.mainCategory(':mainCategoryId'),
     ],
 };

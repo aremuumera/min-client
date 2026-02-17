@@ -435,13 +435,13 @@ export const mockData = [
 const ListedProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const { user, appData } = useAppSelector((state) => state.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch = useAppDispatch();
 
   const params = {
-    supplierId: user?.id,
+    supplierId: isTeamMember ? ownerUserId : user?.id,
     page: page + 1,
     limit: rowsPerPage,
     q: searchTerm,

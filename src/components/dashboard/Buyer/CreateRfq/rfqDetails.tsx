@@ -40,7 +40,8 @@ import {
   TextField,
   Typography,
   ListItemText,
-  FormHelperText
+  FormHelperText,
+  Chip,
 } from '@/components/ui';
 import { Loader2 } from 'lucide-react';
 import {
@@ -60,10 +61,26 @@ import { Option } from '@/components/core/option';
 import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { paths } from '@/config/paths';
 import { MoqUnits as Moq } from '@/lib/marketplace-data';
+import { z } from 'zod';
+
+const rfqSchema = z.object({
+  rfqProductName: z.string().min(1, 'Product name is required'),
+  durationOfSupply: z.string().min(1, 'Duration of supply is required'),
+  quantityMeasure: z.string().min(1, 'Quantity measure is required'),
+  quantityRequired: z.string().min(1, 'Quantity required is required'),
+  deliveryPeriod: z.string().min(1, 'Delivery period is required'),
+  rfqProductMainCategory: z.string().min(1, 'Main category is required'),
+  rfqProductCategory: z.string().optional(),
+  rfqProductSubCategory: z.string().optional(),
+  rfqDescription: z.string().min(1, 'RFQ description is required'),
+  paymentTermsDescribed: z.string().min(1, 'Payment terms description is required'),
+  shippingTermsDescribed: z.string().min(1, 'Shipping terms description is required'),
+  selectedPayments: z.array(z.string()).min(1, 'Select at least one payment term'),
+  selectedShippings: z.array(z.string()).min(1, 'Select at least one shipping term'),
+});
 
 import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
 import { useAppDispatch, useAppSelector } from '@/redux';
-import { Chip } from '@/components/ui/chip';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 
@@ -125,7 +142,7 @@ const RfqDetails = ({
   const { rfqProductDetailsFormData, rfqSuccessData, states } = useAppSelector((state) => state?.rfqProduct);
   const typedFormData = rfqProductDetailsFormData as RfqFormData;
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const { user } = useAppSelector((state) => state?.auth);
+  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state?.auth);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [createdRfqId, setCreatedRfqId] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -327,68 +344,29 @@ const RfqDetails = ({
   };
 
   const validateForm = () => {
-    const requiredFields = {
-      rfqProductName: 'Product name is required.',
-      durationOfSupply: 'Duration of supply is required.',
-      quantityMeasure: 'Quantity measure is required.',
-      quantityRequired: 'Quantity required is mandatory.',
-      deliveryPeriod: 'Delivery period is required.',
-      // rfqProductCategory: "Please select a product category.",
-      // rfqProductSubCategory: "Please select a product sub-category.",
-      rfqDescription: 'RFQ description is required.',
-      paymentTermsDescribed: 'Payment terms description is required.',
-      shippingTermsDescribed: 'Shipping terms description is required.',
-    };
-    const mainCategory = mainCatData?.find((cat: CategoryData) => cat.original_id === selectedCategories.mainCategory.id);
-
-    const listFields = {
-      selectedPayments: 'Select at least one payment term.',
-      selectedShippings: 'Select at least one shipping term.',
-    };
-
-    let newErrors: Record<string, string> = {};
-
-    // Check required text fields
-    Object.entries(requiredFields).forEach(([field, message]) => {
-      if (!rfqProductDetailsFormData?.[field]) {
-        newErrors[field] = message;
+    try {
+      rfqSchema.parse({
+        ...rfqProductDetailsFormData,
+        rfqProductMainCategory: selectedCategories.mainCategory.name,
+        rfqProductCategory: selectedCategories.productCategory.name,
+        rfqProductSubCategory: selectedCategories.subCategory.name,
+        selectedPayments: rfqProductDetailsFormData?.selectedPayments || [],
+        selectedShippings: rfqProductDetailsFormData?.selectedShippings || [],
+      });
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          newErrors[issue.path[0] as string] = issue.message;
+        });
+        setErrors(newErrors);
+        const firstError = Object.values(newErrors)[0] as string;
+        toast.error(firstError);
       }
-    });
-
-    // Validate main category is selected
-    if (!selectedCategories.mainCategory.id) {
-      newErrors.productMainCategory = 'Main category is required';
-      // toast.success("Main category is required ", {
-      //   position: 'top-right',
-      //   style: {
-      //     background: '#f44336',
-      //     color: '#fff',
-      //   },
-      //   autoClose: 3000,
-      // });
+      return false;
     }
-    // Validate if product category is required (when main category has submenu)
-    else if (mainCategory?.submenu && !selectedCategories.productCategory.id) {
-      newErrors.productCategory = 'Product category is required';
-    }
-    // Validate if subcategory is required (when product category has submenu)
-    else if (
-      selectedCategories.productCategory.id &&
-      productCatData?.children?.find((cat: CategoryItem) => cat.original_id === selectedCategories.productCategory.id)?.submenu &&
-      !selectedCategories.subCategory.id
-    ) {
-      newErrors.productSubCategory = 'Sub category is required';
-    }
-
-    // Check list fields
-    Object.entries(listFields).forEach(([field, message]) => {
-      if (!rfqProductDetailsFormData?.[field]?.length) {
-        newErrors[field] = message;
-      }
-    });
-    //  console.log('validation errors', newErrors)
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   // console.log("Form submitted successfully:", rfqProductDetailsFormData);
@@ -456,10 +434,9 @@ const RfqDetails = ({
       }
       console.log('you', formData);
       const res = await createRFQ({
-        buyerId: user?.id,
+        buyerId: isTeamMember ? ownerUserId : user?.id,
         rfqData: formData,
       }).unwrap();
-
       console.log('res', res);
 
       toast.success('RFQ created successfully', {
@@ -600,7 +577,7 @@ const RfqDetails = ({
                   placeholder="Select a main category"
                   disabled={isMainCatLoading}
                 />
-                {errors.productMainCategory && <FormHelperText error>{errors.productMainCategory}</FormHelperText>}
+                {errors.rfqProductMainCategory && <FormHelperText error>{errors.rfqProductMainCategory}</FormHelperText>}
               </div>
 
               {selectedCategories.mainCategory.id &&
@@ -621,7 +598,7 @@ const RfqDetails = ({
                       placeholder="Select a category"
                       disabled={isProductCatLoading}
                     />
-                    {errors.productCategory && <FormHelperText error>{errors.productCategory}</FormHelperText>}
+                    {errors.rfqProductCategory && <FormHelperText error>{errors.rfqProductCategory}</FormHelperText>}
                   </div>
                 )}
             </div>
@@ -646,7 +623,7 @@ const RfqDetails = ({
                       placeholder="Select a sub-category"
                       disabled={isSubCatLoading}
                     />
-                    {errors.productSubCategory && <FormHelperText error>{errors.productSubCategory}</FormHelperText>}
+                    {errors.rfqProductSubCategory && <FormHelperText error>{errors.rfqProductSubCategory}</FormHelperText>}
                   </div>
                 )}
             </div>

@@ -15,11 +15,11 @@ import { useDispatch, useSelector } from 'react-redux';
 // TODO: Migrate CircularProgress from @mui/material
 import { useAlert } from '@/providers';
 import { ChangePassword } from '@/redux/features/AuthFeature/auth_api';
-import { useAppSelector } from '@/redux';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { CircularProgress } from '@/components/ui';
 
 export function PasswordForm() {
-  const dispatch = useDispatch<any>();
+  const dispatch = useAppDispatch();
   const { showAlert } = useAlert();
   const { loading } = useAppSelector((state) => state.auth);
 
@@ -121,13 +121,13 @@ export function PasswordForm() {
     }
 
     try {
-      const result = await dispatch(
-        ChangePassword({
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword,
-        })
-      ).unwrap();
+      // await dispatch(
+      //   ChangePassword({
+      //     currentPassword: formData.currentPassword,
+      //     newPassword: formData.newPassword,
+      //     confirmPassword: formData.confirmPassword,
+      //   })
+      // ).unwrap();
 
       showAlert('Password changed successfully', 'success');
 

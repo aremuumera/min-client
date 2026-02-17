@@ -4,29 +4,28 @@ import React from 'react';
 import { Box } from '@/components/ui/box';
 import { Typography } from '@/components/ui/typography';
 import { CheckCircle, Circle, ArrowRight } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { RootState, useAppSelector } from '@/redux';
+import { useAppSelector } from '@/redux/hooks';
 import Link from 'next/link';
 import { paths } from '@/config/paths';
 import { useGetAllProductBySupplierIdQuery } from '@/redux/features/supplier-products/products_api';
 import { useGetAllRfqByBuyerIdQuery } from '@/redux/features/buyer-rfq/rfq-api';
 
 export const ProfileHealth = () => {
-    const { appData, user } = useSelector((state: RootState) => state.auth);
+    const { appData, user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
     const { limit, page } = useAppSelector((state) => state.marketplace);
 
     // Fetch products to check listing status
     const { data: prodData } = useGetAllProductBySupplierIdQuery({
         limit,
         page,
-        supplierId: user?.id,
+        supplierId: isTeamMember ? ownerUserId : user?.id,
     }, { skip: !user?.id });
 
     // Fetch RFQs to check buyer activity
     const { data: rfqData } = useGetAllRfqByBuyerIdQuery({
         limit,
         page,
-        buyerId: user?.id,
+        buyerId: isTeamMember ? ownerUserId : user?.id,
     }, { skip: !user?.id });
 
     const isBusinessVerified = appData?.businessVerification?.isVerified;

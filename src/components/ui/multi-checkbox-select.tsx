@@ -44,6 +44,7 @@ export function MultiCheckboxSelect({
     const [isOpen, setIsOpen] = React.useState(false);
     const [searchTerm, setSearchTerm] = React.useState('');
     const containerRef = React.useRef<HTMLDivElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     const filteredOptions = options.filter((option) =>
         option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -61,17 +62,32 @@ export function MultiCheckboxSelect({
         onChange([]);
     };
 
-    // Close on click outside
+    // Close on click outside and scroll
     React.useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+            const target = e.target as Node;
+            if (
+                containerRef.current && !containerRef.current.contains(target) &&
+                (!dropdownRef.current || !dropdownRef.current.contains(target))
+            ) {
                 setIsOpen(false);
             }
         };
 
+        const handleScroll = (e: Event) => {
+            if (isOpen && dropdownRef.current && dropdownRef.current.contains(e.target as Node)) {
+                return;
+            }
+            if (isOpen) setIsOpen(false);
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [isOpen]);
 
     const hasError = !!errorMessage;
 
@@ -104,9 +120,16 @@ export function MultiCheckboxSelect({
             >
                 <div className="flex-1 min-w-0">
                     {value.length > 0 ? (
-                        <span className="block truncate text-sm text-neutral-900">
-                            {value.map(v => options.find(opt => opt.value === v)?.label || v).join(', ')}
-                        </span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="truncate text-sm text-neutral-900">
+                                {options.find(opt => opt.value === value[0])?.label || value[0]}
+                            </span>
+                            {value.length > 1 && (
+                                <span className="shrink-0 text-xs font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-full">
+                                    +{value.length - 1}
+                                </span>
+                            )}
+                        </div>
                     ) : (
                         <span className="block truncate text-sm text-neutral-400">{placeholder}</span>
                     )}
@@ -131,6 +154,7 @@ export function MultiCheckboxSelect({
             {isOpen && (
                 <Portal>
                     <div
+                        ref={dropdownRef}
                         style={{
                             position: 'fixed',
                             top: `${containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 0}px`,
@@ -138,7 +162,7 @@ export function MultiCheckboxSelect({
                             width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
                         }}
                         className={cn(
-                            'z-[9999] overflow-hidden rounded-lg border border-neutral-200',
+                            'z-50 overflow-hidden rounded-lg border border-neutral-200',
                             'bg-white shadow-lg'
                         )}
                     >

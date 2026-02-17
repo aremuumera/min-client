@@ -145,14 +145,14 @@ export function ResetPasswordForm() {
               <Button type="submit" className="w-full py-6 font-semibold" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : 'Send Reset Code'}
               </Button>
-              <Button
+              {/* <Button
                 type="button"
                 variant="outlined"
                 onClick={() => setResetMethod('phone')}
                 className="w-full py-6"
               >
                 Reset with Phone Number
-              </Button>
+              </Button> */}
             </div>
           </form>
         ) : (
