@@ -294,7 +294,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
         <SuccessModal
           onEdit={() => {
             setShowSuccessModal(false);
-            window.location.reload();
+            handleNext();
           }}
           responseData={responseData}
           onClose={() => setShowSuccessModal(false)}
@@ -344,7 +344,8 @@ const SuccessModal = ({ onEdit, onClose, responseData }: any) => {
             <Button
               variant="contained"
               onClick={() => {
-                router.push(`/business/${responseData?.company_name || ''}`);
+                const slug = responseData?.slug || responseData?.company_name || '';
+                router.push(`/business/${slug}`);
                 onClose();
               }}
               className="w-full sm:w-auto"

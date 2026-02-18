@@ -8,24 +8,26 @@ import { Switch } from '@/components/ui/switch';
 import { Typography } from '@/components/ui/typography';
 import { EnvelopeSimple as EnvelopeSimpleIcon } from '@phosphor-icons/react/dist/ssr/EnvelopeSimple';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { UpdateUserPreferences } from '@/redux/features/AuthFeature/auth_api';
 import { toast } from 'sonner';
+import { useUpdateUserPreferencesMutation } from '@/redux/features/AuthFeature/settings';
 
 export function EmailNotifications() {
     const dispatch = useAppDispatch();
     const { announcements_enabled } = useAppSelector((state) => state.auth);
     const [isToggling, setIsToggling] = React.useState(false);
+    const [UpdateUserPreferences, { isLoading }] = useUpdateUserPreferencesMutation();
 
     const handleToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const checked = e.target.checked;
         setIsToggling(true);
         try {
-            const resultAction = await dispatch(UpdateUserPreferences({ announcements_enabled: checked }));
-            if (UpdateUserPreferences.fulfilled.match(resultAction)) {
-                toast.success(`Announcements ${checked ? 'enabled' : 'disabled'}`);
-            } else {
+            const resultAction = await UpdateUserPreferences({ announcements_enabled: checked })
+            if (resultAction.error) {
                 toast.error('Failed to update preferences');
+            } else {
+                toast.success(`Announcements ${checked ? 'enabled' : 'disabled'}`);
             }
+
         } catch (error) {
             toast.error('An unexpected error occurred');
         } finally {

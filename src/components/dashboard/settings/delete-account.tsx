@@ -6,35 +6,30 @@ import { Typography } from '@/components/ui/typography';
 import { Warning as WarningIcon } from '@phosphor-icons/react/dist/ssr/Warning';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/modal';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { DeactivateAccount } from '@/redux/features/AuthFeature/auth_api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { logout } from '@/redux/features/AuthFeature/auth_slice';
+import { useDeactivateAccountMutation } from '@/redux/features/AuthFeature/settings';
 
 export function DeleteAccount() {
     const [isModalOpen, setIsModalOpen] = React.useState(false);
-    const [isDeactivating, setIsDeactivating] = React.useState(false);
     const dispatch = useAppDispatch();
     const router = useRouter();
     const { team_role } = useAppSelector((state) => state.auth);
+    const [deactivateAccount, { isLoading }] = useDeactivateAccountMutation();
+
 
     const isOwner = team_role === 'owner';
 
     const handleDeactivate = async () => {
-        setIsDeactivating(true);
         try {
-            const resultAction = await dispatch(DeactivateAccount());
-            if (DeactivateAccount.fulfilled.match(resultAction)) {
-                toast.success('Account deactivated successfully');
-                dispatch(logout());
-                router.push('/auth/login');
-            } else {
-                toast.error((resultAction.payload as any)?.message || 'Failed to deactivate account');
-            }
+            const resultAction = await deactivateAccount(undefined);
+            toast.success('Account deactivated successfully');
+            dispatch(logout());
+            router.push('/auth/login');
         } catch (error) {
             toast.error('An unexpected error occurred');
         } finally {
-            setIsDeactivating(false);
             setIsModalOpen(false);
         }
     };
@@ -74,7 +69,7 @@ export function DeleteAccount() {
 
             <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <ModalHeader>
-                    <Typography variant="h6" className="font-bold text-red-900">Confirm Deactivation</Typography>
+                    <span className="font-bold text-red-900">Confirm Deactivation</span>
                 </ModalHeader>
                 <ModalBody>
                     <Typography className="text-sm text-gray-700">
@@ -85,14 +80,14 @@ export function DeleteAccount() {
                     <Button
                         variant="outlined"
                         onClick={() => setIsModalOpen(false)}
-                        disabled={isDeactivating}
+                        disabled={isLoading}
                     >
                         Cancel
                     </Button>
                     <Button
                         className="bg-red-600 text-white hover:bg-red-700"
                         onClick={handleDeactivate}
-                        isLoading={isDeactivating}
+                        loading={isLoading}
                     >
                         Confirm Deactivation
                     </Button>

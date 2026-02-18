@@ -3,8 +3,7 @@
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-// import { AppCheck } from '@/redux/features/AuthFeature/auth_api'; // Removed thunk
-import { useAppCheckQuery } from '@/redux/features/AuthFeature/auth_api_rtk'; // Added RTK hook
+import { useAppCheckQuery } from '@/redux/features/AuthFeature/auth_api_rtk';
 import { logout, setRequestedLocation } from '@/redux/features/AuthFeature/auth_slice';
 import { paths, requiresVerification } from '@/config/paths';
 import { Modal, ModalHeader, ModalBody, Button, Box } from '@/components/ui';

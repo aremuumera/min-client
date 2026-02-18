@@ -15,7 +15,7 @@ export default function SecuritySettingsPage() {
             </div>
 
             <PasswordForm />
-            <MultiFactor />
+            {/* <MultiFactor /> */}
         </div>
     );
 }

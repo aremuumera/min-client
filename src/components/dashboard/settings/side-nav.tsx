@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { UserCircle, Bell, ShieldCheck, Users, Scale, CreditCard } from 'lucide-react';
 import { RootState } from '@/redux/store';
@@ -23,6 +23,7 @@ const navItems = [
 
 export function SettingsSideNav() {
     const pathname = usePathname();
+    const router = useRouter();
     const canManageTeam = usePermission('team_management');
 
     const filteredItems = navItems.filter(item => {
@@ -67,17 +68,32 @@ export function SettingsSideNav() {
 
             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hidden md:block">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-green-600 border border-gray-100 shadow-sm">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-green-600 border border-[#EFEFEF] ">
                         <CreditCard size={18} />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-gray-900">Billing Plan</h4>
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase">Free Tier</p>
+                        <h4 className="text-sm font-bold text-gray-900">Subscription</h4>
+                        {/* Placeholder for Subscription Status */}
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                            <p className="text-[10px] font-semibold text-gray-500 uppercase">Pending / Free</p>
+                        </div>
                     </div>
                 </div>
-                <Button variant="outlined" className="w-full bg-white text-xs font-bold rounded-xl py-3 h-auto hover:bg-green-600 hover:text-white hover:border-green-600 transition-all">
-                    Upgrade Now
-                </Button>
+
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Status</span>
+                        <span className="font-medium text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">Pending</span>
+                    </div>
+                    <Button
+                        // variant="outlined" 
+                        onClick={() => router.push('/pricing')}
+                        className="w-full text-xs font-bold rounded-xl py-3 h-auto bg-green-600 hover:text-white border border-gray-200 shadow-sm transition-all"
+                    >
+                        Upgrade Plan
+                    </Button>
+                </div>
             </div>
         </div>
     );

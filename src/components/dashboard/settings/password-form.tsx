@@ -14,14 +14,14 @@ import { Password as PasswordIcon } from '@phosphor-icons/react/dist/ssr/Passwor
 import { useDispatch, useSelector } from 'react-redux';
 // TODO: Migrate CircularProgress from @mui/material
 import { useAlert } from '@/providers';
-import { ChangePassword } from '@/redux/features/AuthFeature/auth_api';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { CircularProgress } from '@/components/ui';
+import { useChangePasswordMutation } from '@/redux/features/AuthFeature/settings';
 
 export function PasswordForm() {
   const dispatch = useAppDispatch();
   const { showAlert } = useAlert();
-  const { loading } = useAppSelector((state) => state.auth);
+  const [changePassword, { isLoading }] = useChangePasswordMutation();
 
   const [formData, setFormData] = React.useState({
     currentPassword: '',
@@ -121,13 +121,8 @@ export function PasswordForm() {
     }
 
     try {
-      // await dispatch(
-      //   ChangePassword({
-      //     currentPassword: formData.currentPassword,
-      //     newPassword: formData.newPassword,
-      //     confirmPassword: formData.confirmPassword,
-      //   })
-      // ).unwrap();
+      const res = await changePassword(formData).unwrap();
+      console.log('res', res);
 
       showAlert('Password changed successfully', 'success');
 
@@ -214,7 +209,7 @@ export function PasswordForm() {
               <Button
                 variant="contained"
                 type="submit"
-                disabled={loading ||
+                disabled={isLoading ||
                   !formData.currentPassword ||
                   !formData.newPassword ||
                   !formData.confirmPassword ||
@@ -223,7 +218,7 @@ export function PasswordForm() {
                   !!errors.confirmPassword
                 }
               >
-                {loading ? (
+                {isLoading ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
                   'Update Password'
