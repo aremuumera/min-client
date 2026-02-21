@@ -110,8 +110,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
 
         // 1b. Role-based isolation for Inspectors
         if (userRole === 'inspector') {
-            // Keep only: Dashboard Overview, Inspections, and Settings:Account
-            return items.filter(section => ['dashboards', 'inspections', 'general'].includes(section.key))
+            // Keep only: Dashboard Overview, Inspections, Services, and Settings:Account
+            return items.filter(section => ['dashboards', 'inspections', 'services', 'general'].includes(section.key))
                 .map(section => {
                     if (section.key === 'dashboards') {
                         return {
@@ -145,6 +145,21 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
 
                 // Explicitly block Inspections for non-inspectors/admin
                 if (section.key === 'inspections' && userRole !== 'inspector' && userRole !== 'admin') {
+                    return false;
+                }
+
+                // Explicitly block Services for non-inspectors/admin
+                if (section.key === 'services' && userRole !== 'inspector' && userRole !== 'admin') {
+                    return false;
+                }
+
+                // Explicitly block Supplier/Product section for non-suppliers/admin
+                if (section.key === 'product' && userRole !== 'supplier' && userRole !== 'admin' && userRole !== 'buyer') {
+                    return false;
+                }
+
+                // Explicitly block Buyer/RFQ section for non-buyers/admin
+                if (section.key === 'rfq' && userRole !== 'buyer' && userRole !== 'admin') {
                     return false;
                 }
 

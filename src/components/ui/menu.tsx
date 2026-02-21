@@ -3,6 +3,21 @@
 import * as React from 'react';
 import { cn } from '@/utils/helper';
 import { Popover, type PopoverProps } from './popover';
+import { PortalPopover, type PortalPopoverProps } from './portal-popover';
+
+/* ============================================
+   MENU CONTEXT
+   ============================================ */
+
+interface MenuContextValue {
+  onItemClick: () => void;
+}
+
+const MenuContext = React.createContext<MenuContextValue | undefined>(undefined);
+
+function useMenuContext() {
+  return React.useContext(MenuContext);
+}
 
 /* ============================================
    MENU ROOT
@@ -11,15 +26,34 @@ import { Popover, type PopoverProps } from './popover';
 export interface MenuProps extends Omit<PopoverProps, 'children'> {
   /** Menu items or sub-components */
   children: React.ReactNode;
+  /** Whether to use a portal for the dropdown */
+  usePortal?: boolean;
 }
 
-function Menu({ trigger, children, ...props }: MenuProps) {
+function Menu({ trigger, children, usePortal = false, open: controlledOpen, onOpenChange, ...props }: MenuProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const setOpen = onOpenChange !== undefined ? onOpenChange : setUncontrolledOpen;
+
+  const handleItemClick = () => {
+    setOpen(false);
+  };
+
+  const PopoverComponent = usePortal ? (PortalPopover as any) : Popover;
+
   return (
-    <Popover trigger={trigger} {...props}>
-      <div className="py-1 min-w-[200px]" role="menu">
-        {children}
-      </div>
-    </Popover>
+    <MenuContext.Provider value={{ onItemClick: handleItemClick }}>
+      <PopoverComponent
+        trigger={trigger}
+        open={open}
+        onOpenChange={setOpen}
+        {...props}
+      >
+        <div className="py-1 min-w-[200px]" role="menu">
+          {children}
+        </div>
+      </PopoverComponent>
+    </MenuContext.Provider>
   );
 }
 
@@ -41,8 +75,14 @@ export interface MenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElem
 }
 
 const MenuItem = React.forwardRef<HTMLButtonElement, MenuItemProps>(
-  ({ className, selected = false, disabled = false, children, as: Component = 'button', value, ...props }, ref) => {
+  ({ className, onClick, selected = false, disabled = false, children, as: Component = 'button', value, ...props }, ref) => {
     const isOption = Component === 'option';
+    const menuContext = useMenuContext();
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (onClick) onClick(e);
+      if (menuContext) menuContext.onItemClick();
+    };
 
     return (
       <Component
@@ -59,6 +99,7 @@ const MenuItem = React.forwardRef<HTMLButtonElement, MenuItemProps>(
           !isOption && 'focus-visible:outline-none focus:bg-neutral-50',
           className
         )}
+        onClick={handleClick}
         {...props}
       >
         {children}

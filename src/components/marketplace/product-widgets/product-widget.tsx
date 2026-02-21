@@ -184,7 +184,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                 <div className="pt-[15px] flex items-center gap-[10px] border-t border-gray-100 mt-2">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     {country?.flagImage && <img src={country.flagImage} alt='Country' className='w-5 h-auto object-contain' />}
-                                    <Link href={`/dashboard/business/${storeProfile?.company_name}`} className='text-[13px] text-gray-600 hover:text-green-600 font-medium hover:underline truncate' >
+                                    <Link href={`/dashboard/business/${formatCompanyNameForUrl(storeProfile?.company_name)}`} className='text-[13px] text-gray-600 hover:text-green-600 font-medium hover:underline truncate' >
                                         {storeProfile?.company_name}
                                     </Link>
                                 </div>

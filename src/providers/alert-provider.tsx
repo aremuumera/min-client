@@ -49,7 +49,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
       {openAlert && (
         <Portal>
-          <div className="fixed top-4 right-4 z-[9999] min-w-[300px] animate-in fade-in slide-in-from-right-4">
+          <div className="fixed top-4 right-4 z-[20000] min-w-[300px] animate-in fade-in slide-in-from-right-4">
             <Alert
               severity={alertSeverity}
               onClose={closeAlert}

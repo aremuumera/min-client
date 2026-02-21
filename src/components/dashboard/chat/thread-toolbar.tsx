@@ -9,7 +9,7 @@ import { usePopover } from '@/hooks/use-popover';
 
 import { InvoiceAgreementModal } from '../invoice/invoice_modal';
 import { InvoiceAgreementButton } from '../invoice/invoice-agreement-button';
-import { generateTextAvatar, stringToColor } from './message-box';
+import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
 export function ThreadToolbar({ thread }: any) {
   const popover = usePopover();
@@ -47,12 +47,16 @@ export function ThreadToolbar({ thread }: any) {
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography noWrap variant="subtitle2">
-              {thread.itemType !== 'business'
-                ? `${thread.otherUserName}  -  (${thread.otherCompanyName || 'Individual'})`
-                : ''}
+              {thread.conversationType === 'trade' || thread.itemType === 'trade'
+                ? 'Min-meg Trade Desk'
+                : thread.itemType !== 'business'
+                  ? `${thread.otherUserName}  -  (${thread.otherCompanyName || 'Individual'})`
+                  : ''}
             </Typography>
             <Typography noWrap variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-              {thread.itemType !== 'business' ? thread.itemTitle : thread.otherUserName}
+              {thread.conversationType === 'trade' || thread.itemType === 'trade'
+                ? thread.itemTitle || 'Trade Room'
+                : thread.itemType !== 'business' ? thread.itemTitle : thread.otherUserName}
             </Typography>
           </Box>
         </Stack>
@@ -69,13 +73,13 @@ export function ThreadToolbar({ thread }: any) {
             </IconButton>
           </Tooltip>
         </Stack> */}
-        {thread.itemType !== 'business' && (
+        {/* {thread.itemType !== 'business' && (
           <InvoiceAgreementButton
             thread={thread}
             onOpenModal={() => setOpenInvoiceModal(true)}
             hasExistingInvoice={!!thread.hasExistingInvoice}
           />
-        )}
+        )} */}
       </Stack>
       {/* <Menu anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open}>
         <MenuItem>

@@ -5,7 +5,8 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { User, Send, MapPin, X } from 'lucide-react';
 import LoginModal from '@/utils/login-modal';
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import { useAlert } from '@/providers';
 import { paths } from '@/config/paths';
@@ -231,6 +232,8 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
         onClose={() => setShowLoginModalForSave(false)}
         loginPath={paths.auth.signIn}
       />
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
@@ -242,6 +245,19 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
         receiverName={`${buyer?.first_name} ${buyer?.last_name}`}
         companyName={`${buyer?.business_name}`}
         rfqMessage={'Request About this RFQ'}
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={() => setShowQuoteModal(false)}
+        product={{
+          id: effectiveRfqId.toString(),
+          name: rfqProductName,
+          mineral_tag: rfqProduct.mineral_tag || 'mineral', // Assuming mineral_tag is in rfqProduct
+          supplier_id: userId?.toString()
+        }}
+        itemType="rfq"
       />
       <ImageModal isOpen={imageModal.isOpen} onClose={() => setImageModal({ ...imageModal, isOpen: false })} imageUrl={imageModal.imageUrl} />
     </div>

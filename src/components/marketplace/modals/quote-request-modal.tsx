@@ -136,7 +136,9 @@ const QuoteRequestModal = ({
     setQuoteMessage('');
 
     if (action === 'chat' && conversationId) {
-      router.push(`/dashboard/chat/${itemType}/${conversationId}/${itemId}`);
+      // Commenting out direct chat redirection for trade flows
+      // router.push(`/dashboard/chat/${itemType}/${conversationId}/${itemId}`);
+      router.push('/dashboard/chat'); // Go to general chat instead or stay on page
     } else if (action === 'marketplace') {
       router.push('/products');
     }
@@ -155,12 +157,13 @@ const QuoteRequestModal = ({
               Your request has been delivered to the recipient. You can now continue the conversation in chat.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
+              {/* Commenting out direct Go to Chat button for trade flows */}
+              {/* <button
                 className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
                 onClick={() => handleAction('chat')}
               >
                 Go to Chat
-              </button>
+              </button> */}
               <button
                 className="w-full py-2 border border-gray-300 rounded hover:bg-gray-50 transition"
                 onClick={() => handleAction('marketplace')}

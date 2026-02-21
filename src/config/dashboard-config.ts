@@ -2,6 +2,7 @@
 import { paths } from '@/config/paths';
 import { IconName } from '@/components/dashboard/layout/nav-icons';
 import { PermissionKey } from '@/hooks/usePermission';
+import { permission } from 'process';
 
 export interface NavItemConfig {
     key: string;
@@ -28,6 +29,7 @@ export const dashboardConfig: DashboardConfig = {
             title: 'DASHBOARD',
             items: [
                 { key: 'overview', title: 'Overview', href: paths.dashboard.overview, icon: 'house' },
+                { key: 'my-trade-inquiries', title: 'My Trade Inquiries', href: '/dashboard/my-trade-inquiries', icon: 'receipt-long' },
                 { key: 'analytics', title: 'Analytics', href: paths.dashboard.analytics, icon: 'chart-pie', permission: 'analytics' },
                 { key: 'invoice', title: 'Invoices', href: paths.dashboard.invoices, icon: 'receipt-long', permission: 'invoices' },
                 { key: 'marketplace', title: 'Marketplace', href: paths.marketplace.products, icon: 'credit-card', permission: 'products' },
@@ -47,6 +49,7 @@ export const dashboardConfig: DashboardConfig = {
                     items: [
                         { key: 'products:create', title: 'Create product', href: paths.dashboard.products.create, permission: 'products' },
                         { key: 'supplier-list', title: 'Listed products', href: paths.dashboard.products.list, permission: 'products' },
+                        { key: 'supplier-trade-inquiries', title: 'Order Inquiries', href: '/dashboard/received-inquiries', permission: 'products' },
                         { key: 'supplier-company-profile', title: 'Store profile', href: paths.dashboard.products.companyProfile, permission: 'settings' },
                     ],
                 },
@@ -65,6 +68,7 @@ export const dashboardConfig: DashboardConfig = {
                     items: [
                         { key: 'rfq:create', title: 'Create Rfq', href: paths.dashboard.rfqs.create, permission: 'rfq' },
                         { key: 'rfq', title: 'Listed RFQs', href: paths.dashboard.rfqs.list, permission: 'rfq' },
+                        { key: 'buyer-trade-inquiries', title: 'Order Inquiries', href: '/dashboard/my-trade-inquiries', permission: 'rfq' },
                     ],
                 },
             ],
@@ -76,6 +80,27 @@ export const dashboardConfig: DashboardConfig = {
             title: 'INSPECTIONS',
             items: [
                 { key: 'inspections:list', title: 'Assignments', href: paths.dashboard.inspections.list, icon: 'receipt-long', permission: 'inspectors' },
+                { key: 'inspections:analytics', title: 'Analytics', href: paths.dashboard.inspections.analytics, icon: 'chart-pie', permission: 'inspectors' },
+            ],
+        },
+
+        // section services (Inspector Specific)
+        {
+            key: 'services',
+            title: 'SERVICES',
+            items: [
+                {
+                    key: 'inspector-services',
+                    title: 'My Services',
+                    icon: 'shopping-bag-open',
+                    permission: 'inspectors',
+                    items: [
+                        { key: 'services:matrix', title: 'Capability Matrix', href: paths.dashboard.inspections.services.matrix, permission: 'inspectors' },
+                        { key: 'services:pricing', title: 'Pricing & Addons', href: paths.dashboard.inspections.services.pricing, permission: 'inspectors' },
+                        { key: 'services:limits', title: 'Operational Limits', href: paths.dashboard.inspections.services.limits, permission: 'inspectors' },
+                    ],
+                },
+                { key: 'inspector-profile', title: 'Company Profile', href: paths.dashboard.inspections.profile, icon: 'users', permission: 'inspectors' },
             ],
         },
 

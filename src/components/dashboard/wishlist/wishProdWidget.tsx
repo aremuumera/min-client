@@ -183,7 +183,7 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                         )}
                         <Link
                             className='text-[12px] font-medium text-gray-600 hover:text-green-600 hover:underline truncate'
-                            href={`/dashboard/business/${storeProfile?.company_name}`}
+                            href={`/dashboard/business/${formatCompanyNameForUrl(storeProfile?.company_name)}`}
                         >
                             {storeProfile?.company_name}
                         </Link>

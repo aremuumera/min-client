@@ -28,6 +28,8 @@ import businessVerificationApiV1 from './features/business_verification_feature/
 import inspectorApi from './features/inspector/inspector_api';
 import activityApi from './features/activity/activityApi';
 import invoiceApi from './features/invoice/invoice_api';
+import tradeApi from './features/trade/trade_api';
+import definitionApi from './features/definitions/definition_api';
 
 const persistConfig = {
     key: 'root',
@@ -49,6 +51,8 @@ const persistConfig = {
         'enquiryApi',
         'inspectorApi',
         'invoiceApi',
+        'tradeApi',
+        'definitionApi',
     ],
 };
 
@@ -78,7 +82,9 @@ export const makeStore = () => {
                 inspectorApi.middleware,
                 invoiceApi.middleware,
                 teamApi.middleware,
-                activityApi.middleware
+                activityApi.middleware,
+                tradeApi.middleware,
+                definitionApi.middleware
             ) as any,
     });
 };

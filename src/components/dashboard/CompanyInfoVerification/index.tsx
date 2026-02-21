@@ -63,7 +63,7 @@ import { motion } from 'framer-motion';
 import { useAppSelector } from '@/redux/hooks';
 import { useRouter } from 'next/navigation';
 import { paths } from '@/config/paths';
-import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Building2 } from 'lucide-react';
 import { z } from 'zod';
 
 import { useAlert } from '@/providers';
@@ -337,20 +337,37 @@ const BusinessCategoryModal = ({ open, setShowCategoryModal, onComplete }: any) 
   const verificationStatus = (statusData as any)?.data?.verificationStatus;
   const { showAlert } = useAlert();
 
-  const cat = [
-    {
-      name: 'Miner',
-      sub: 'miner',
-      label: 'Miner',
-      des: 'I am a licensed miner and I have the license/permit',
-    },
-    {
-      name: 'Trader',
-      sub: 'trader_dealer',
-      label: 'Trader / Dealer',
-      des: 'I have a licensed registered business and I have license/permit',
-    },
-  ];
+  const role = user?.role;
+
+  const cat = role === 'inspector'
+    ? [
+      {
+        name: 'Inspection Agency / Company',
+        sub: 'inspection_agency',
+        label: 'Inspection Agency / Company',
+        des: 'We are a registered company providing professional inspection services',
+      },
+      {
+        name: 'Independent Inspector',
+        sub: 'independent_inspector',
+        label: 'Independent Inspector',
+        des: 'I am a licensed professional inspector working independently',
+      },
+    ]
+    : [
+      {
+        name: 'Miner',
+        sub: 'miner',
+        label: 'Miner',
+        des: 'I am a licensed miner and I have the license/permit',
+      },
+      {
+        name: 'Trader',
+        sub: 'trader_dealer',
+        label: 'Trader / Dealer',
+        des: 'I have a licensed registered business and I have license/permit',
+      },
+    ];
 
   const handleSubmit = async () => {
     try {
@@ -2017,29 +2034,118 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }:
 };
 
 const CompletionStep = () => {
-  const nextSteps = [
-    {
-      icon: <Storefront className="text-[40px]" />,
-      title: 'Build Your Profile',
-      description: 'Create a compelling supplier profile to showcase your business to potential buyers',
-      color: '#10b981',
-      status: 'Ready',
+  const { user } = useAppSelector((state: any) => state.auth);
+  const userRole = user?.role;
+
+  const contentMap = {
+    supplier: {
+      nextSteps: [
+        {
+          icon: <Storefront className="text-[40px]" />,
+          title: 'Build Your Profile',
+          description: 'Create a compelling supplier profile to showcase your business to potential buyers',
+          color: '#10b981',
+          status: 'Ready',
+        },
+        {
+          icon: <Handshake className="text-[40px]" />,
+          title: 'Start Trading',
+          description: 'Connect with verified buyers and sellers in your industry',
+          color: '#10b981',
+          status: 'Coming Soon',
+        },
+        {
+          icon: <TrendingUp className="text-[40px]" />,
+          title: 'Source Products',
+          description: 'Access our global marketplace to find quality products and suppliers',
+          color: '#10b981',
+          status: 'Coming Soon',
+        },
+      ],
+      footerText: "Once your business is verified, you'll unlock full access to create your supplier profile, list products, connect with buyers, and start trading on our platform."
     },
-    {
-      icon: <Handshake className="text-[40px]" />,
-      title: 'Start Trading',
-      description: 'Connect with verified buyers and sellers in your industry',
-      color: '#10b981',
-      status: 'Coming Soon',
+    buyer: {
+      nextSteps: [
+        {
+          icon: <Business className="text-[40px]" />,
+          title: 'Build Buyer Profile',
+          description: 'Complete your buyer profile to establish trust with premium suppliers',
+          color: '#3b82f6',
+          status: 'Ready',
+        },
+        {
+          icon: <VerifiedUser className="text-[40px]" />,
+          title: 'Source Quality Minerals',
+          description: 'Browse through verified listings from licensed miners and traders',
+          color: '#3b82f6',
+          status: 'Coming Soon',
+        },
+        {
+          icon: <Description className="text-[40px]" />,
+          title: 'Request for Quotes',
+          description: 'Post RFQs to get customized offers from multiple suppliers',
+          color: '#3b82f6',
+          status: 'Coming Soon',
+        },
+      ],
+      footerText: "Once your business is verified, you'll be able to connect with verified suppliers, post detailed RFQs, and manage your sourcing process more efficiently."
     },
-    {
-      icon: <TrendingUp className="text-[40px]" />,
-      title: 'Source Products',
-      description: 'Access our global marketplace to find quality products and suppliers',
-      color: '#10b981',
-      status: 'Coming Soon',
+    inspector: {
+      nextSteps: [
+        {
+          icon: <People className="text-[40px]" />,
+          title: 'Build Inspector Profile',
+          description: 'Create a professional profile to showcase your inspection expertise',
+          color: '#f59e0b',
+          status: 'Ready',
+        },
+        {
+          icon: <Handshake className="text-[40px]" />,
+          title: 'Manage Assignments',
+          description: 'Efficiently track and manage your inspection assignments and reports',
+          color: '#f59e0b',
+          status: 'Coming Soon',
+        },
+        {
+          icon: <Search className="text-[40px]" />,
+          title: 'Conduct Inspections',
+          description: 'Access tools and templates for professional mineral inspections',
+          color: '#f59e0b',
+          status: 'Coming Soon',
+        },
+      ],
+      footerText: "Once your business is verified, you'll unlock full access to create your inspector profile, manage inspection requests, and provide trusted verification services on the platform."
     },
-  ];
+    default: {
+      nextSteps: [
+        {
+          icon: <Building2 className="text-[40px]" />,
+          title: 'Complete Profile',
+          description: 'Finish setting up your profile to unlock all platform features',
+          color: '#6b7280',
+          status: 'Ready',
+        },
+        {
+          icon: <Storefront className="text-[40px]" />,
+          title: 'Explore Marketplace',
+          description: 'Browse our extensive range of mineral products and services',
+          color: '#6b7280',
+          status: 'Coming Soon',
+        },
+        {
+          icon: <TrendingUp className="text-[40px]" />,
+          title: 'Grow Your Business',
+          description: 'Connect with global partners and scale your operations',
+          color: '#6b7280',
+          status: 'Coming Soon',
+        },
+      ],
+      footerText: "Once your business is verified, you'll unlock full access to all features and services tailored to your role on our platform."
+    }
+  };
+
+  const roleContent = contentMap[userRole as keyof typeof contentMap] || contentMap.default;
+  const nextSteps = roleContent.nextSteps;
 
   return (
     <Box className="text-center py-8">
@@ -2154,9 +2260,7 @@ const CompletionStep = () => {
           💡 What Happens Next?
         </Typography>
         <Typography variant="body2" className="opacity-95 text-center">
-          Once your business is verified, you'll unlock full access to create your supplier profile, list products,
-          connect with buyers, and start trading on our platform. We'll notify you as soon as your verification is
-          approved!
+          {roleContent.footerText} We'll notify you as soon as your verification is approved!
         </Typography>
       </MotionBox>
     </Box>
@@ -3089,17 +3193,23 @@ const BusinessVerification = () => {
           </Box>
 
           {/* Next Step Card */}
-          {!isSupplierProfileCreated && ['supplier', 'buyer_supplier'].includes(userRole) ? (
+          {!isSupplierProfileCreated && ['supplier', 'buyer_supplier', 'inspector'].includes(userRole) ? (
             <Card className="m-3 rounded-[12px] shadow-lg overflow-hidden">
               <CardContent className="p-8">
                 <Box className="flex items-center mb-6">
-                  <Storefront className="text-[40px] text-primary-main mr-4" />
+                  {userRole === 'inspector' ? (
+                    <People className="text-[40px] text-primary-main mr-4" />
+                  ) : (
+                    <Storefront className="text-[40px] text-primary-main mr-4" />
+                  )}
                   <Box>
                     <Typography variant="h5" fontWeight="bold" gutterBottom>
-                      Create Your Supplier Profile
+                      {userRole === 'inspector' ? 'Setup Your Inspector Profile' : 'Create Your Supplier Profile'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Set up your company profile to start connecting with buyers
+                      {userRole === 'inspector'
+                        ? 'Create your professional profile to start receiving inspection assignments'
+                        : 'Set up your company profile to start connecting with buyers'}
                     </Typography>
                   </Box>
                 </Box>
@@ -3107,21 +3217,35 @@ const BusinessVerification = () => {
                 <Divider className="my-3" />
 
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                  What you'll add:
+                  {userRole === 'inspector' ? "What you'll provide:" : "What you'll add:"}
                 </Typography>
 
                 <Grid container spacing={2} className="mb-6">
-                  {[
-                    { icon: <Business />, text: 'Company Overview' },
-                    { icon: <Description />, text: 'Products & Services' },
-                    { icon: <Handshake />, text: 'Business Capabilities' },
-                    { icon: <TrendingUp />, text: 'Market Presence' },
-                  ].map((item, i) => (
-                    <Grid item xs={12} sm={6} className="mb-6 flex items-center gap-4" key={i}>
-                      <Box className="text-primary-main">{item.icon}</Box>
-                      <Typography variant="body2">{item.text}</Typography>
-                    </Grid>
-                  ))}
+                  {userRole === 'inspector' ? (
+                    [
+                      { icon: <Business />, text: 'Company/Individual Details' },
+                      { icon: <Description />, text: 'Service Offerings' },
+                      { icon: <Handshake />, text: 'Experience & Regions' },
+                      { icon: <TrendingUp />, text: 'Certifications' },
+                    ].map((item, i) => (
+                      <Grid item xs={12} sm={6} className="mb-6 flex items-center gap-4" key={i}>
+                        <Box className="text-primary-main">{item.icon}</Box>
+                        <Typography variant="body2">{item.text}</Typography>
+                      </Grid>
+                    ))
+                  ) : (
+                    [
+                      { icon: <Business />, text: 'Company Overview' },
+                      { icon: <Description />, text: 'Products & Services' },
+                      { icon: <Handshake />, text: 'Business Capabilities' },
+                      { icon: <TrendingUp />, text: 'Market Presence' },
+                    ].map((item, i) => (
+                      <Grid item xs={12} sm={6} className="mb-6 flex items-center gap-4" key={i}>
+                        <Box className="text-primary-main">{item.icon}</Box>
+                        <Typography variant="body2">{item.text}</Typography>
+                      </Grid>
+                    ))
+                  )}
                 </Grid>
 
                 <Button
@@ -3130,7 +3254,11 @@ const BusinessVerification = () => {
                   fullWidth
                   endIcon={<ArrowForward />}
                   onClick={() => {
-                    router.push(`${paths.dashboard.products.companyProfile}`);
+                    if (userRole === 'inspector') {
+                      router.push(paths.dashboard.inspections.profile);
+                    } else {
+                      router.push(`${paths.dashboard.products.companyProfile}`);
+                    }
                   }}
                   className="py-1.5 rounded-lg text-lg normal-case"
                 >
@@ -3226,7 +3354,7 @@ const BusinessVerification = () => {
           </Box>
 
           {/* Desktop Stepper */}
-          <Box className="hidden md:block">
+          <Box className="hidden min-[904px]:block">
             <Stepper activeStep={activeStep} orientation="horizontal" className="mb-4">
               {steps.map((step, index) => {
                 const stepStatus = getStepStatus(index);
@@ -3279,7 +3407,7 @@ const BusinessVerification = () => {
           </Box>
 
           {/* Mobile Stepper */}
-          <Box className="block md:hidden mb-3">
+          <Box className="block min-[904px]:hidden mb-3">
             <Box className="flex items-center gap-2 mb-2">
               <Box
                 className="w-12 h-12 rounded-full flex items-center justify-center bg-primary-500 text-white"

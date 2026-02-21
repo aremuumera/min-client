@@ -11,7 +11,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Star, Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useAlert } from '@/providers';
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import ReviewModal from '@/components/marketplace/modals/review-modal';
 import { useRouter } from 'next/navigation';
 
@@ -236,7 +237,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
                   className="bg-white p-4 border border-gray-200 rounded-lg h-full flex flex-col shadow-sm hover:shadow-md transition-shadow"
                 >
                   {review.title && <h4 className="font-semibold text-gray-800 mb-1">{review.title}</h4>}
-                  <p className="text-gray-600 mb-6 flex-grow text-sm leading-relaxed">{review.comment}</p>
+                  <p className="text-gray-600 mb-6 grow text-sm leading-relaxed">{review.comment}</p>
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
                     <div>
                       <p className="font-bold text-sm text-gray-800">{review.reviewer?.name || 'Anonymous'}</p>
@@ -277,6 +278,8 @@ const ProductDetailReview = ({ products }: { products: any }) => {
       )}
 
       {/* Modals */}
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
@@ -287,6 +290,18 @@ const ProductDetailReview = ({ products }: { products: any }) => {
         itemType="product"
         companyName={supplierProfile?.company_name}
         receiverName={`${supplier?.first_name} ${supplier?.last_name}`}
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={() => setShowQuoteModal(false)}
+        product={{
+          id: productId.toString(),
+          name: product_name,
+          mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
+          supplier_id: supplierId?.toString()
+        }}
       />
 
       <ReviewModal

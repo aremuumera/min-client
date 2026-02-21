@@ -12,7 +12,8 @@ import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
 
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import { useAppSelector } from '@/redux';
 
 
@@ -163,6 +164,8 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
         loginPath={paths.auth.signIn}
       />
 
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={closeQuoteModal}
@@ -171,6 +174,19 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
         itemType="rfq"
         receiverId={rfqId}
         rfqMessage={'Request About this RFQ'}
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={closeQuoteModal}
+        product={{
+          id: rfqIdentifier.toString(),
+          name: productName,
+          mineral_tag: 'mineral', // Assuming mineral_tag is not available in wishlist
+          supplier_id: rfqProduct.userId?.toString()
+        }}
+        itemType="rfq"
       />
     </>
   );

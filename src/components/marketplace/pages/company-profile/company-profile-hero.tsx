@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Facebook, Linkedin, Instagram, Phone, Mail, CheckCircle2 } from 'lucide-react';
 import LoginModal from '@/utils/login-modal';
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import { useAlert } from '@/providers';
 import { paths } from '@/config/paths';
 
@@ -53,13 +54,13 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
   return (
     <div className="w-full">
       {/* Banner Image */}
-      <div className="relative w-full max-w-[1280px] mx-auto bg-gray-900 rounded-b-lg overflow-hidden md:rounded-lg md:mt-4">
-        <div className="w-full h-32 sm:h-40 md:h-52 lg:h-64 xl:h-72">
+      <div className="relative w-full max-w-[1280px] mx-auto bg-gray-900 md:mt-4 rounded-lg">
+        <div className="w-full h-32 sm:h-40 md:h-52 lg:h-64 xl:h-72 rounded-b-lg overflow-hidden md:rounded-lg">
           {banner ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img src={banner} alt={`${company_name} banner`} className="w-full h-full object-cover opacity-80" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-green-900 to-gray-900" />
+            <div className="w-full h-full bg-linear-to-r from-green-900 to-gray-900" />
           )}
         </div>
 
@@ -168,6 +169,8 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
         </div>
       </div>
 
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
@@ -177,6 +180,19 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
         receiverId={userId}
         itemId={supplierProfileId}
         receiverName={company_name}
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={() => setShowQuoteModal(false)}
+        product={{
+          id: supplierProfileId?.toString() || '',
+          name: company_name || 'Business',
+          mineral_tag: 'general', // Generic for business contact
+          supplier_id: userId?.toString()
+        }}
+        itemType="business"
       />
 
       <LoginModal

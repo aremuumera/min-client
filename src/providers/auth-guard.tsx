@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useAppCheckQuery } from '@/redux/features/AuthFeature/auth_api_rtk';
 import { logout, setRequestedLocation } from '@/redux/features/AuthFeature/auth_slice';
-import { paths, requiresVerification } from '@/config/paths';
+import { paths, requiresVerification, isPublicRoute } from '@/config/paths';
 import { Modal, ModalHeader, ModalBody, Button, Box } from '@/components/ui';
 import { jwtDecode } from 'jwt-decode';
 
@@ -76,12 +76,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   };
 
   React.useEffect(() => {
-    // If we are already authenticated from login, we don't need to wait for loading
-    // unless we really aren't initialized
-    if (!isInitialized && isLoading && !isAuth) return;
-
     // Not authenticated or user data missing
     if (!isAuth || !user) {
+      if (isPublicRoute(pathname)) return; // Allow public routes for guests
+
       // Double check if we are still loading or initializing
       if (isLoading && !isAuth) return;
 

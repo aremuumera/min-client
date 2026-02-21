@@ -7,7 +7,8 @@ import { format } from 'date-fns';
 import { User, Calendar, MapPin, Loader2 } from 'lucide-react'; // Replaced icons
 import Link from 'next/link';
 import LoginModal from '@/utils/login-modal';
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import { useAlert } from '@/providers';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
@@ -136,6 +137,8 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
         loginPath={paths.auth.signIn}
       />
 
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={closeQuoteModal}
@@ -147,6 +150,19 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
         itemId={effectiveRfqId}
         receiverId={userId}
         rfqMessage={'Request About this RFQ'}
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={closeQuoteModal}
+        product={{
+          id: effectiveRfqId.toString(),
+          name: rfqProductName,
+          mineral_tag: rfqProduct?.mineral_tag || 'mineral',
+          supplier_id: userId?.toString()
+        }}
+        itemType="rfq"
       />
     </>
   );

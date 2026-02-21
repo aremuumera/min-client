@@ -92,6 +92,14 @@ export const paths = {
         inspections: {
             list: '/dashboard/inspections',
             detail: (id: string | number) => `/dashboard/inspections/${id}`,
+            workbench: (id: string | number) => `/dashboard/inspections/workbench/${id}`,
+            profile: '/dashboard/inspections/profile',
+            analytics: '/dashboard/inspections/analytics',
+            services: {
+                matrix: '/dashboard/inspections/services/matrix',
+                limits: '/dashboard/inspections/services/limits',
+                pricing: '/dashboard/inspections/services/pricing',
+            }
         },
 
         // supplier listing
@@ -132,6 +140,8 @@ export const routeAccess = {
         paths.postYouRfq,
         // paths.product,
         paths.products,
+        '/dashboard/products/details',
+        '/dashboard/business',
         // Auth routes
         paths.auth.signIn,
         paths.auth.signUp,
@@ -184,6 +194,11 @@ export const routeAccess = {
         paths.marketplace.recentRfQ,
         // inspections
         paths.dashboard.inspections.list,
+        paths.dashboard.inspections.profile,
+        paths.dashboard.inspections.analytics,
+        paths.dashboard.inspections.services.matrix,
+        paths.dashboard.inspections.services.limits,
+        paths.dashboard.inspections.services.pricing,
         // paths.marketplace.mainCategory(':mainCategoryId'),
     ],
 };

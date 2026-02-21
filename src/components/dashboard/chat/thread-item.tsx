@@ -13,7 +13,7 @@ import { dayjs } from '@/lib/dayjs';
 import { usePathname } from '@/hooks/use-pathname';
 
 import { ChatContext } from '@/providers/chat-provider';
-import { generateTextAvatar, stringToColor } from './message-box';
+import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
 function getDisplayContent(lastMessage: any, userId: string): string {
   // If lastMessage is a string, just return it
@@ -66,7 +66,9 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
   const otherUser = messages.find((message: any) => message.senderId === otherUserId);
 
   // Format timestamp from lastMessageTime
-  const formattedTime = lastMessageTime ? dayjs(new Date(lastMessageTime.seconds * 1000)).fromNow() : '';
+  const formattedTime = lastMessageTime
+    ? dayjs(lastMessageTime instanceof Date ? lastMessageTime : (lastMessageTime as any).seconds * 1000).fromNow()
+    : '';
 
   // Generate text avatar from username
   const textAvatar = generateTextAvatar(otherUserName || '');
@@ -80,7 +82,7 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
       return 'var(--mui-palette-action-selected)';
     }
     if (unreadCount > 0) {
-      return 'rgba(var(--mui-palette-primary-mainChannel) / 0.08)'; // Light highlight for unread
+      return 'rgba(16, 185, 129, 0.08)'; // Light emerald-500 highlight for unread
     }
     return 'transparent';
   };
@@ -105,11 +107,11 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
       >
         {/* Text Avatar */}
         <Avatar
-          className={`${unreadCount > 0 ? 'ring-2 ring-[var(--mui-palette-primary-main)]' : ''}`}
+          className={`${unreadCount > 0 ? 'ring-2 ring-emerald-500' : ''}`}
           style={{
             backgroundColor: avatarBgColor,
-            height: '50px',
-            width: '50px',
+            height: '40px',
+            width: '40px',
             fontSize: 'var(--fontSize-sm)',
           }}
         >
@@ -142,7 +144,7 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
           {formattedTime}
           {unreadCount > 0 && (
             <Box
-              className="bg-[var(--mui-palette-primary-main)] text-white text-[12px] rounded-full absolute -right-[2px] -top-[25px] flex items-center justify-center p-1 h-[18px] min-w-[18px]"
+              className="bg-emerald-500 text-white text-[12px] rounded-full absolute -right-[2px] -top-[25px] flex items-center justify-center p-1 h-[18px] min-w-[18px]"
               style={{ zIndex: 50 }}
             >
               {unreadCount}

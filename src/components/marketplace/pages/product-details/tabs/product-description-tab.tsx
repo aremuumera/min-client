@@ -4,7 +4,8 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import LoginModal from '@/utils/login-modal';
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import { useAlert } from '@/providers';
 import { paths } from '@/config/paths';
 
@@ -76,6 +77,8 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
         </div>
       </div>
 
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
@@ -86,6 +89,18 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
         receiverId={supplierId}
         companyName={supplierProfile?.company_name}
         receiverName={`${supplier?.first_name} ${supplier?.last_name}`}
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={() => setShowQuoteModal(false)}
+        product={{
+          id: id.toString(),
+          name: product_name,
+          mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
+          supplier_id: supplierId?.toString()
+        }}
       />
 
       <LoginModal

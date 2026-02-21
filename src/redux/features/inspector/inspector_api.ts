@@ -101,6 +101,59 @@ export const inspectorApi = createApi({
         getInspectorStats: builder.query<any, void>({
             query: () => '/inspector/stats',
         }),
+
+        // ============ INSPECTOR CONFIGURATION ENDPOINTS ============
+        getInspectorCapabilities: builder.query<any, string>({
+            query: (userId) => `/inspectors/${userId}/capabilities`,
+            providesTags: (result, error, userId) => [{ type: 'InspectorCompany', id: `CAPS_${userId}` }],
+        }),
+        updateInspectorCapabilities: builder.mutation({
+            query: ({ userId, ...data }) => ({
+                url: `/inspectors/${userId}/capabilities`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { userId }) => [{ type: 'InspectorCompany', id: `CAPS_${userId}` }],
+        }),
+
+        getInspectorLimits: builder.query<any, string>({
+            query: (userId) => `/inspectors/${userId}/limits`,
+            providesTags: (result, error, userId) => [{ type: 'InspectorCompany', id: `LIMITS_${userId}` }],
+        }),
+        updateInspectorLimits: builder.mutation({
+            query: ({ userId, ...data }) => ({
+                url: `/inspectors/${userId}/limits`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { userId }) => [{ type: 'InspectorCompany', id: `LIMITS_${userId}` }],
+        }),
+
+        getInspectorPricing: builder.query<any, string>({
+            query: (userId) => `/inspectors/${userId}/pricing`,
+            providesTags: (result, error, userId) => [{ type: 'InspectorCompany', id: `PRICING_${userId}` }],
+        }),
+        updateInspectorPricing: builder.mutation({
+            query: ({ userId, ...data }) => ({
+                url: `/inspectors/${userId}/pricing`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { userId }) => [{ type: 'InspectorCompany', id: `PRICING_${userId}` }],
+        }),
+
+        getInspectorProfile: builder.query<any, string>({
+            query: (userId) => `/inspectors/${userId}/profile`,
+            providesTags: (result, error, userId) => [{ type: 'InspectorCompany', id: `PROFILE_${userId}` }],
+        }),
+        updateInspectorProfile: builder.mutation({
+            query: ({ userId, ...data }) => ({
+                url: `/inspectors/${userId}/profile`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { userId }) => [{ type: 'InspectorCompany', id: `PROFILE_${userId}` }],
+        }),
     }),
 });
 
@@ -119,6 +172,14 @@ export const {
     useSearchInspectorsQuery,
     useLazySearchInspectorsQuery,
     useGetInspectorStatsQuery,
+    useGetInspectorCapabilitiesQuery,
+    useUpdateInspectorCapabilitiesMutation,
+    useGetInspectorLimitsQuery,
+    useUpdateInspectorLimitsMutation,
+    useGetInspectorPricingQuery,
+    useUpdateInspectorPricingMutation,
+    useGetInspectorProfileQuery,
+    useUpdateInspectorProfileMutation,
 } = inspectorApi;
 
 export default inspectorApi;

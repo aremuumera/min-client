@@ -111,18 +111,63 @@ const circularColorClasses = {
 function CircularProgress({
   className,
   value = 0,
-  indeterminate = false,
+  indeterminate = true,
   size = 40,
-  strokeWidth = 4,
+  strokeWidth = 3,
   color = 'primary',
   ...props
 }: CircularProgressProps) {
+  const center = size / 2;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  // For indeterminate state, we just use a 1/4th arc
+  const arcLength = 0.25;
+  const dashOffset = indeterminate ? circumference * (1 - arcLength) : circumference * (1 - value / 100);
+
   return (
-    <Loader2
-      size={size}
-      className={cn('animate-spin', circularColorClasses[color], className)}
-      {...props}
-    />
+    <div
+      className={cn('relative inline-flex', className)}
+      style={{ width: size, height: size }}
+      role="progressbar"
+      aria-valuenow={indeterminate ? undefined : value}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className={cn(indeterminate && 'animate-spin')}
+        {...props}
+      >
+        {/* Background Track */}
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          className="stroke-neutral-200"
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress Arc */}
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          className={cn(
+            'transition-all duration-300 ease-in-out',
+            strokeColorClasses[color]
+          )}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${center} ${center})`}
+        />
+      </svg>
+    </div>
   );
 }
 

@@ -9,7 +9,8 @@ import { useSelector } from 'react-redux';
 import { useAlert } from '@/providers';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import ShareButton from '@/components/marketplace/product-widgets/share-button';
-import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 
 interface Products {
   id: string | number;
@@ -166,6 +167,8 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
         loginPath={paths.auth.signIn} // check path
       />
 
+
+      {/* 
       <QuoteRequestModal
         isOpen={showQuoteModal}
         onClose={closeQuoteModal}
@@ -176,6 +179,18 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
         itemId={id}
         initialMessage=""
         itemType="product"
+      /> 
+      */}
+
+      <ProductInquiryModal
+        isOpen={showQuoteModal}
+        onClose={closeQuoteModal}
+        product={{
+          id: id.toString(),
+          name: product_name,
+          mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
+          supplier_id: supplierId?.toString()
+        }}
       />
     </div>
   );

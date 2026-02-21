@@ -14,7 +14,7 @@ import {
   Box
 } from '@/components/ui';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
-import { generateTextAvatar, stringToColor } from './message-box';
+import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
 interface ContactResult {
   id: string;

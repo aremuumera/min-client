@@ -7,6 +7,7 @@ import { RootState } from '@/redux/store';
 import Banner from '@/components/dashboard/overview/banner';
 import BusinessVerificationOverview from '@/components/dashboard/overview/not-verified-view';
 import { ProfileHealth } from './profile-health';
+import { UpgradeBanner } from './upgrade-banner';
 import { ActivityTimeline } from './activity-timeline';
 
 export function Overviews() {
@@ -36,6 +37,7 @@ export function Overviews() {
 
                         {/* Main Stream (Banner) - 8 columns */}
                         <div className="lg:col-span-8 space-y-6">
+                            {/* <UpgradeBanner /> */}
                             <Banner />
                         </div>
 

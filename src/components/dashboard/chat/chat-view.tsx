@@ -17,7 +17,9 @@ import { Sidebar } from './sidebar';
 
 export function ChatView({ children }: { children?: React.ReactNode }) {
   const params = useParams();
-  const conversationId = params?.conversationId as string;
+  const threadId = params?.threadId as string;
+
+  console.log('params in chat', params);
   const {
     conversations,
     activeConversation,
@@ -33,29 +35,29 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // console.log('conversations', conversations);
-  // console.log('activeConversation', activeConversation);
-  // console.log('messages', messages);
-  // console.log('loading', loading);
-  //   console.log('notifications', notifications);
+  console.log('conversations', conversations);
+  console.log('activeConversation', activeConversation);
+  console.log('messages', messages);
+  console.log('loading', loading);
+  console.log('notifications', notifications);
 
   const mdDown = useMediaQuery('down', 'md');
 
   // Set active conversation when URL param changes
   useEffect(() => {
-    if (conversationId && Array.isArray(conversations) && conversations.length > 0) {
-      const conversation = conversations.find((c) => c.conversationId === conversationId);
+    if (threadId && Array.isArray(conversations) && conversations.length > 0) {
+      const conversation = conversations.find((c) => c.conversationId === threadId);
       if (conversation) {
         setActiveConversation(conversation);
       }
     }
-  }, [conversationId, conversations, setActiveConversation]);
+  }, [threadId, conversations, setActiveConversation]);
 
   // Handle conversation selection
   const handleContactSelect = useCallback(
-    (conversationId: string) => {
-      if (conversationId && Array.isArray(conversations) && conversations.length > 0) {
-        const conversation = conversations.find((c) => c.conversationId === conversationId);
+    (id: string) => {
+      if (id && Array.isArray(conversations) && conversations.length > 0) {
+        const conversation = conversations.find((c) => c.conversationId === id);
         if (conversation) {
           setActiveConversation(conversation);
         }

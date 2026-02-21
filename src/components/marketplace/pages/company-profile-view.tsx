@@ -24,17 +24,10 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   const router = useRouter();
 
   // The slug is likely URL encoded. Original code used decodeCompanyNameFromUrl.
-  // Next.js params usually are decoded, but let's be safe or just pass as is if API expects it.
-  // The original hook `useGetStoreProfileWebQuery` took `supplierName`.
-
-  // Note: If slug comes from [slug], it might be "Company-Name".
-  // decode might turn it to "Company Name".
-  // Let's assume decoding is needed if using the utils.
-  const decodedName = decodeURIComponent(slug); // Simple decode or use custom if generic
+  const decodedName = decodeCompanyNameFromUrl(slug);
 
   const { data, isLoading, isError } = useGetStoreProfileWebQuery({
-    supplierName: slug, // Pass raw slug or decoded? API usually handles url-friendly slugs.
-    // Original passed `companyName` from `useParams`.
+    supplierName: decodedName, // Pass decoded name for API matching
   }, {
     skip: !slug,
     refetchOnMountOrArgChange: true
@@ -62,9 +55,9 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   }
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen pb-10 px-4">
+    <div className="w-full bg-gray-50 min-h-screen pb-10 ">
       <div className="max-w-[1400px] mx-auto">
-        <div className="mb-6 pt-6">
+        <div className="mb-6">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium"

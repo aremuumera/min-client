@@ -15,7 +15,7 @@ import { PaperPlaneTilt as PaperPlaneTiltIcon } from '@phosphor-icons/react/dist
 import { useSelector } from 'react-redux';
 
 import { ChatContext } from '@/providers/chat-provider';
-import { generateTextAvatar, stringToColor } from './message-box';
+import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
 interface MessageAddProps {
   disabled?: boolean;

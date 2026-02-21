@@ -96,7 +96,7 @@ function SidebarContent({
   const [searchFocused, setSearchFocused] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState([]);
-  const [selectedType, setSelectedType] = React.useState('product');
+  const [selectedType, setSelectedType] = React.useState('all');
 
   // Calculate UNREAD conversation counts by type
   const conversationCounts = React.useMemo(() => {

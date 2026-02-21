@@ -11,6 +11,32 @@ import Link from 'next/link';
 const UnverifiedBanner = () => {
     const { appData, user } = useSelector((state: any) => state.auth);
     const IsBusinessStatus = appData?.businessVerification?.status;
+    const role = user?.role;
+
+    const contentMap = {
+        supplier: {
+            description: "Complete your business verification in minutes and get instant access to our full platform. Connect with verified buyers, list products, and grow your business globally.",
+            actionLabel: "Start Trading",
+            actionDescription: "Source and list products"
+        },
+        buyer: {
+            description: "Complete your business verification in minutes and get instant access to our full platform. Connect with verified suppliers, find products, and source quality materials for your business.",
+            actionLabel: "Start Sourcing",
+            actionDescription: "Source and find products"
+        },
+        inspector: {
+            description: "Complete your business verification in minutes and get instant access to our full platform. Join our network of professional inspectors and start verifying businesses.",
+            actionLabel: "Start Inspecting",
+            actionDescription: "Conduct and manage inspections"
+        },
+        default: {
+            description: "Complete your business verification in minutes and get instant access to our full platform. Connect with verified partners and grow your business globally.",
+            actionLabel: "Start Trading",
+            actionDescription: "Source and list products"
+        }
+    };
+
+    const roleContent = contentMap[role as keyof typeof contentMap] || contentMap.default;
 
     const theText =
         IsBusinessStatus === 'approved'
@@ -126,8 +152,7 @@ const UnverifiedBanner = () => {
                                 transition={{ delay: 0.5 }}
                                 className="text-xl text-gray-600 mb-10 max-w-2xl"
                             >
-                                Complete your business verification in minutes and get instant access to our full platform. Connect with
-                                verified buyers, list products, and grow your business globally.
+                                {roleContent.description}
                             </motion.p>
 
                             {/* Stats Grid */}
@@ -177,8 +202,8 @@ const UnverifiedBanner = () => {
                                                 />
                                             </svg>
                                         ),
-                                        label: 'Start Trading',
-                                        description: 'Source and list products',
+                                        label: roleContent.actionLabel,
+                                        description: roleContent.actionDescription,
                                     },
                                 ].map((stat, index) => (
                                     <motion.div

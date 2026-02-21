@@ -125,26 +125,19 @@ function Select({
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      const isInsideContainer = containerRef.current?.contains(target);
-      const isInsideDropdown = listRef.current?.contains(target);
       // Close if the click is outside both the container and the portal dropdown
-      if (!isInsideContainer && !isInsideDropdown) {
+      if (
+        containerRef.current && !containerRef.current.contains(target) &&
+        listRef.current && !listRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
 
-    const handleScroll = (e: Event) => {
-      if (isOpen && listRef.current && listRef.current.contains(e.target as Node)) {
-        return;
-      }
-      if (isOpen) setIsOpen(false);
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('scroll', handleScroll, true); // Capture scroll events from any container
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('scroll', handleScroll, true);
     };
   }, [isOpen]);
 
@@ -200,6 +193,7 @@ function Select({
       {/* Trigger */}
       <button
         type="button"
+        data-select-trigger="true"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
@@ -237,12 +231,13 @@ function Select({
         <Portal>
           <ul
             ref={listRef}
+            data-select-list="true"
             style={{
               position: 'fixed',
               top: `${containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 0}px`,
               left: `${containerRef.current ? containerRef.current.getBoundingClientRect().left : 0}px`,
               width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
-              zIndex: 9999,
+              zIndex: 15000,
             }}
             className={cn(
               'overflow-auto rounded-lg border border-neutral-200',

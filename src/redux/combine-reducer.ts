@@ -25,6 +25,8 @@ import waitlistReducer from './features/waitlist/waitlist_slice';
 import { authApi } from './features/AuthFeature/auth_api_rtk';
 import { teamApi } from './features/team/teamApi';
 import activityApi from './features/activity/activityApi';
+import definitionApi from './features/definitions/definition_api';
+import tradeApi from './features/trade/trade_api';
 
 // Persist configuration for auth reducer only (1:1 with original)
 const authPersistConfig = {
@@ -70,6 +72,8 @@ const rootReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
     [teamApi.reducerPath]: teamApi.reducer,
     [activityApi.reducerPath]: activityApi.reducer,
+    [definitionApi.reducerPath]: definitionApi.reducer,
+    [tradeApi.reducerPath]: tradeApi.reducer,
 
 });
 
