@@ -15,7 +15,7 @@ import ToggleSaveButton from './saved-button';
 import ShareButton from './share-button';
 import LoginModal from '@/utils/login-modal';
 // import { Button } from '@/components/ui/button'; // Replacing with custom or tailwind
-import Image from 'next/image';
+// import Image from 'next/image';
 import { FaStar } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '@/redux';
 import { toggleComparison } from '@/redux/features/comparison/comparison-slice';
@@ -72,6 +72,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
         transform: `translateX(-${(currentIndex / (normalizedImages.length || 1)) * 100}%)`,
         transition: "transform 0.5s ease-in-out",
     }
+
     const { product_name, prev_price, real_price, country, sold, productRating, delivery_period, reviews, storeProfile, quantity, measure, unitCurrency, images, id } = products || {};
 
     const currencySymbol = unitCurrency === 'NGN' || !unitCurrency ? '₦' : (unitCurrency === 'USD' ? '$' : unitCurrency);
@@ -98,32 +99,35 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                             <div>
                                 <div className={`${isGridView ? 'w-full aspect-square md:h-[230px]' : 'max-w-[430px] w-full aspect-[4/3] md:h-[280px]'} widget_image_container relative h-auto overflow-hidden rounded-xl`}>
                                     <div className="absolute inset-0 z-0">
-                                        {/* Image Carousel */}
+                                        {/* Image & Video Carousel */}
                                         <Link href={productCardRoute} className="w-full h-full flex" style={imageContainerStyle}>
-                                            {normalizedImages.map((media: any, i: number) => (
-                                                <div
-                                                    className={`relative h-full rounded-t-xl overflow-hidden shrink-0`}
-                                                    style={{ width: `${100 / (normalizedImages.length || 1)}%` }}
-                                                    key={i}
-                                                >
-                                                    {media.type === 'video' || media.url?.toLowerCase()?.endsWith('.mp4') || media.url?.toLowerCase()?.endsWith('.webm') ? (
-                                                        <video
-                                                            src={media.url}
-                                                            autoPlay
-                                                            muted
-                                                            loop
-                                                            playsInline
-                                                            className="w-full h-full object-cover rounded-[20px]"
-                                                        />
-                                                    ) : (
-                                                        <img
-                                                            src={media.url}
-                                                            alt={product_name || "Product Image"}
-                                                            className="w-full h-full object-cover rounded-[20px]"
-                                                        />
-                                                    )}
-                                                </div>
-                                            ))}
+                                            {normalizedImages.map((media: any, i: number) => {
+                                                const isVideo = media.type === 'video' || media.url?.toLowerCase()?.endsWith('.mp4') || media.url?.toLowerCase()?.endsWith('.webm');
+                                                return (
+                                                    <div
+                                                        className={`relative h-full rounded-t-xl overflow-hidden shrink-0`}
+                                                        style={{ width: `${100 / (normalizedImages.length || 1)}%` }}
+                                                        key={i}
+                                                    >
+                                                        {isVideo ? (
+                                                            <video
+                                                                src={media.url}
+                                                                autoPlay
+                                                                muted
+                                                                loop
+                                                                playsInline
+                                                                className="w-full h-full object-cover rounded-[20px]"
+                                                            />
+                                                        ) : (
+                                                            <img
+                                                                src={media.url}
+                                                                alt={product_name || "Product Image"}
+                                                                className="w-full h-full object-cover rounded-[20px]"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </Link>
                                     </div>
 
@@ -144,10 +148,9 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                     </div>
                                 </div>
 
-                                {/* Pagination Dots */}
                                 <div className="">
                                     <div className="flex justify-center mt-[3px] gap-[6px]">
-                                        {products?.images?.map((_: any, i: number) => {
+                                        {normalizedImages.map((_: any, i: number) => {
                                             return (
                                                 <div
                                                     key={i}

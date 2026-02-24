@@ -115,6 +115,7 @@ export const paths = {
             create: '/dashboard/rfq-list/create',
             update: (listedRfqId: string | number) => `/dashboard/rfq-list/update/${listedRfqId}`,
         },
+        calculator: '/dashboard/calculator',
     },
 
     waitlist: 'https://waitlist.minmeg.com/',
@@ -199,6 +200,7 @@ export const routeAccess = {
         paths.dashboard.inspections.services.matrix,
         paths.dashboard.inspections.services.limits,
         paths.dashboard.inspections.services.pricing,
+        paths.dashboard.calculator,
         // paths.marketplace.mainCategory(':mainCategoryId'),
     ],
 };

@@ -14,6 +14,7 @@ interface ProductInquiryModalProps {
     onClose: () => void;
     product: {
         id: string;
+        rfqId: string;
         external_id?: string;
         name: string;
         mineral_tag: string;
@@ -118,8 +119,10 @@ const ProductInquiryModal = ({
                 formDataPayload.append('delivery_country', offerData.delivery_country);
                 formDataPayload.append('delivery_address', offerData.delivery_address);
                 formDataPayload.append('timeline_type', offerData.timeline_type);
-                formDataPayload.append('recurring_frequency', isRecurring ? offerData.recurring_frequency : '');
-                formDataPayload.append('recurring_duration', isRecurring ? String(offerData.recurring_duration || '') : '');
+                if (isRecurring) {
+                    formDataPayload.append('recurring_frequency', offerData.recurring_frequency);
+                    formDataPayload.append('recurring_duration', String(offerData.recurring_duration || ''));
+                }
                 formDataPayload.append('description', offerData.description);
 
                 if (offerData.attachments && offerData.attachments.length > 0) {
@@ -128,7 +131,7 @@ const ProductInquiryModal = ({
                     });
                 }
 
-                await submitOffer({ rfqId: product.id, body: formDataPayload }).unwrap();
+                await submitOffer({ rfqId: product.rfqId, body: formDataPayload }).unwrap();
             } else {
                 const inquiryData = formData as typeof initialState;
                 const isRecurring = inquiryData.timeline_type === 'recurring';
@@ -225,7 +228,9 @@ const ProductInquiryModal = ({
                                         <div className="sm:col-span-2">
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Unit Price *</label>
                                             <div className="relative">
-                                                <DollarSign size={16} className="absolute left-3 top-3 text-gray-400" />
+                                                <div className="absolute left-3 top-3 text-gray-400 text-sm font-bold">
+                                                    {(formData as any).currency === 'NGN' ? '₦' : '$'}
+                                                </div>
                                                 <input type="number" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Price per unit"
                                                     value={(formData as any).unit_price} onChange={e => setFormData({ ...formData, unit_price: e.target.value } as any)} />
                                             </div>
@@ -307,8 +312,8 @@ const ProductInquiryModal = ({
                                                 onChange={(e) => {
                                                     const files = Array.from(e.target.files || []);
                                                     const validFiles = files.filter(f => {
-                                                        if (f.size > 10 * 1024 * 1024) {
-                                                            showAlert(`${f.name} is too large (>10MB)`, 'error');
+                                                        if (f.size > 15 * 1024 * 1024) {
+                                                            showAlert(`${f.name} is too large (>15MB)`, 'error');
                                                             return false;
                                                         }
                                                         if (f.type.startsWith('video/') && f.type !== 'video/mp4') {
@@ -322,7 +327,7 @@ const ProductInquiryModal = ({
                                             />
                                             <label htmlFor="offer-attachments" className="cursor-pointer flex flex-col items-center gap-2">
                                                 <Upload size={24} className="text-gray-400" />
-                                                <span className="text-xs text-gray-500">Click to upload (Max 10MB per file)</span>
+                                                <span className="text-xs text-gray-500">Click to upload (Max 15MB per file)</span>
                                             </label>
                                         </div>
                                         {formData.attachments?.length > 0 && (
@@ -653,12 +658,12 @@ const ProductInquiryModal = ({
                                 </div>
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                                {itemType === 'product' ? 'Inquiry Successfully Logged!' : 'Quote Submitted!'}
+                                {itemType === 'product' ? 'Inquiry Successfully Logged!' : `Quote Submitted for ${product.name}!`}
                             </h3>
                             <p className="text-sm text-gray-500 max-w-sm mx-auto mb-10 leading-relaxed">
                                 {itemType === 'product'
-                                    ? 'Our Team has received your request. We are contacting the supplier and will initiate the Procedural Documents shortly.'
-                                    : 'Your quote has been submitted to the Admin. Our team will review and relay it to the buyer shortly.'}
+                                    ? `Our Team has received your inquiry for ${product.name}. We are contacting the supplier and will initiate the Procedural Documents shortly.`
+                                    : 'Your competitive quote has been submitted to the Admin. Our team will review your offer against the requirements and relay it to the buyer shortly.'}
                             </p>
                             <button
                                 onClick={handleClose}

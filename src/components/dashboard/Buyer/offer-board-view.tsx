@@ -12,8 +12,10 @@ import { Select } from '@/components/ui/select';
 import { MenuItem } from '@/components/ui/menu';
 import { Button } from '@/components/ui/button';
 import { FormControl } from '@/components/ui/form-control';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronDown, Tag, Clock, PackageSearch, Eye } from 'lucide-react';
 import OfferDetailModal from './modals/OfferDetailModal';
+import RfqDetailModal from './modals/RfqDetailModal';
+import { format } from 'date-fns';
 
 const OfferBoardView = () => {
     const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
@@ -24,6 +26,8 @@ const OfferBoardView = () => {
     const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
     const [selectedOfferForDetail, setSelectedOfferForDetail] = useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isRfqDropdownOpen, setIsRfqDropdownOpen] = useState(false);
+    const [isRfqDetailModalOpen, setIsRfqDetailModalOpen] = useState(false);
 
     // Fetch active RFQs for dropdown
     const { data: activeRfqs, isLoading: isLoadingRfqs } = useGetAllRfqByBuyerIdQuery(
@@ -53,6 +57,20 @@ const OfferBoardView = () => {
         });
     };
 
+    const selectedRfq = rfqList.find((r: any) => r.rfqId === selectedRfqId);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const dropdown = document.getElementById('rfq-custom-dropdown');
+            if (dropdown && !dropdown.contains(event.target as Node)) {
+                setIsRfqDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-8">
@@ -72,30 +90,91 @@ const OfferBoardView = () => {
                 )}
             </div>
 
-            {/* RFQ Selector */}
-            <div className="max-w-md bg-white rounded-lg p-4 shadow-sm mb-8 border border-gray-100">
-                <FormControl fullWidth>
-                    <Select
-                        value={selectedRfqId}
-                        label="Select Active RFQ"
-                        onChange={(e: any) => {
-                            setSelectedRfqId(e.target.value);
-                            setSelectedOffersForProps([]); // Reset comparison when changing RFQ
-                        }}
-                    >
-                        {isLoadingRfqs ? (
-                            <MenuItem disabled><Loader2 className="animate-spin mr-2" size={16} /> Loading RFQs...</MenuItem>
-                        ) : rfqList.length === 0 ? (
-                            <MenuItem disabled>No Active RFQs Found</MenuItem>
-                        ) : (
-                            rfqList.map((rfq: any) => (
-                                <MenuItem key={rfq.rfqId} value={rfq.rfqId}>
-                                    {rfq.rfqProductName} - {rfq.quantityRequired} {rfq.quantityMeasure}
-                                </MenuItem>
-                            ))
+            {/* Custom RFQ Selector area */}
+            <div className="mb-8" id="rfq-custom-dropdown">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Active RFQ</label>
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-stretch">
+                    <div className="relative w-full sm:w-8/12 md:w-6/12 max-w-xl">
+                        {/* Dropdown Button */}
+                        <div
+                            className={`w-full bg-white border ${isRfqDropdownOpen ? 'border-primary-500 ring-2 ring-primary-100' : 'border-gray-300 hover:border-gray-400'} rounded-xl cursor-pointer min-h-[64px] transition-all flex items-center justify-between p-3 px-4`}
+                            onClick={() => setIsRfqDropdownOpen(!isRfqDropdownOpen)}
+                        >
+                            {isLoadingRfqs ? (
+                                <div className="flex items-center text-gray-500 gap-2"><Loader2 className="animate-spin" size={18} /> Loading your RFQs...</div>
+                            ) : selectedRfq ? (
+                                <div className="flex flex-col overflow-hidden pr-4">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-bold text-gray-900 truncate">{selectedRfq.rfqProductName}</span>
+                                        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full ${selectedRfq.status === 'active' || selectedRfq.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                            {selectedRfq.status}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                                        <span className="flex items-center gap-1"><PackageSearch size={12} /> {selectedRfq.quantityRequired} {selectedRfq.quantityMeasure}</span>
+                                        <span className="flex items-center gap-1"><Clock size={12} /> {format(new Date(selectedRfq.createdAt), 'MMM d, yyyy')}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-gray-500 font-medium">-- Please select an RFQ --</div>
+                            )}
+                            <ChevronDown className={`text-gray-400 transition-transform ${isRfqDropdownOpen ? 'rotate-180' : ''}`} size={20} />
+                        </div>
+
+                        {/* Dropdown Options List */}
+                        {isRfqDropdownOpen && rfqList.length > 0 && (
+                            <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl max-h-96 overflow-y-auto overflow-hidden custom-scrollbar">
+                                <div className="p-1">
+                                    {rfqList.map((rfq: any) => (
+                                        <div
+                                            key={rfq.rfqId}
+                                            className={`p-3 m-1 rounded-lg cursor-pointer transition-colors border ${selectedRfqId === rfq.rfqId ? 'bg-primary-50 border-primary-200' : 'border-transparent hover:bg-gray-50'}`}
+                                            onClick={() => {
+                                                setSelectedRfqId(rfq.rfqId);
+                                                setSelectedOffersForProps([]);
+                                                setIsRfqDropdownOpen(false);
+                                            }}
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <div className="font-bold text-gray-900 flex items-center gap-2">
+                                                    {rfq.rfqProductName}
+                                                    {selectedRfqId === rfq.rfqId && <span className="w-2 h-2 rounded-full bg-primary-500"></span>}
+                                                </div>
+                                                <span className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border ${rfq.status === 'active' || rfq.status === 'published' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'}`}>
+                                                    {rfq.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-[11px] text-gray-500 mt-1.5 flex-wrap">
+                                                <span className="bg-white px-1.5 py-0.5 rounded border border-gray-100">Vol: <strong className="text-gray-900">{rfq.quantityRequired} {rfq.quantityMeasure}</strong></span>
+                                                <span className="flex items-center gap-1"><Clock size={10} /> {format(new Date(rfq.createdAt), 'MMM dd, yyyy')}</span>
+                                                <span className="flex items-center gap-1"><Tag size={10} /> {rfq.rfqProductCategory}</span>
+                                            </div>
+                                            {rfq.rfqDescription && (
+                                                <p className="text-[11px] text-gray-400 mt-2 truncate max-w-full italic">"{rfq.rfqDescription}"</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         )}
-                    </Select>
-                </FormControl>
+                        {isRfqDropdownOpen && rfqList.length === 0 && !isLoadingRfqs && (
+                            <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl p-4 text-center text-sm text-gray-500">
+                                No active RFQs found.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* View Details Button */}
+                    {selectedRfq && (
+                        <Button
+                            variant="outlined"
+                            className="h-auto min-h-[64px] px-6 rounded-xl border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 font-semibold transition-all whitespace-nowrap"
+                            onClick={() => setIsRfqDetailModalOpen(true)}
+                        >
+                            <Eye className="mr-2 text-primary-500" size={18} /> View RFQ Details
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Offers Grid */}
@@ -142,6 +221,12 @@ const OfferBoardView = () => {
                 isOpen={isDetailModalOpen}
                 onClose={() => setIsDetailModalOpen(false)}
                 offer={selectedOfferForDetail}
+            />
+
+            <RfqDetailModal
+                isOpen={isRfqDetailModalOpen}
+                onClose={() => setIsRfqDetailModalOpen(false)}
+                rfq={selectedRfq}
             />
         </div>
     );

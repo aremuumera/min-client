@@ -1,4 +1,4 @@
-import { logout } from '@/redux/features/AuthFeature/auth_slice';
+import { logoutAndCleanup } from '@/redux/features/AuthFeature/auth_slice';
 import axios from 'axios';
 import { config } from '@/lib/config';
 
@@ -31,7 +31,7 @@ export const setupAxiosInterceptors = (store: any) => {
         async (error) => {
             // 401 or 403 triggers logout (exact parity with original)
             if (error.response?.status === 401 || error.response?.status === 403) {
-                store.dispatch(logout());
+                store.dispatch(logoutAndCleanup());
             }
             return Promise.reject(error);
         }

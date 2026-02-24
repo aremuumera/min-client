@@ -135,6 +135,12 @@ export const dashboardConfig: DashboardConfig = {
                         { key: 'settings:team', title: 'Team', href: paths.dashboard.settings.team, permission: 'team_management' },
                     ]
                 },
+                {
+                    key: 'calculator',
+                    title: 'Calculator',
+                    href: paths.dashboard.calculator,
+                    icon: 'calculator',
+                },
             ],
         },
     ],

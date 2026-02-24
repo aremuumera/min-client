@@ -69,9 +69,23 @@ const ProductTableSet = ({ columns = [], rows = [] }: any) => {
             <TableRow key={index} className="hover:bg-gray-50">
               <TableCell className="flex items-center gap-[10px] space-x-2">
                 <img
-                  src={row?.images?.length > 0 ? (row?.images[0].url || row?.images[0]) : '/assets/placeholder.png'}
+                  src={
+                    row?.images?.length > 0
+                      ? (
+                        row.images.find((img: any) => {
+                          const url = img?.url || img;
+                          return typeof url === 'string' && !url.toLowerCase().endsWith('.mp4');
+                        })?.url ||
+                        row.images.find((img: any) => {
+                          const url = img?.url || img;
+                          return typeof url === 'string' && !url.toLowerCase().endsWith('.mp4');
+                        }) ||
+                        (row?.images[0]?.url || row?.images[0])
+                      )
+                      : '/assets/placeholder.png'
+                  }
                   alt={row.product_name}
-                  className="w-16 h-16 rounded"
+                  className="w-16 h-16 rounded object-cover"
                 />
                 {row.product_name}
               </TableCell>

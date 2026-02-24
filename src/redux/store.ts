@@ -40,6 +40,8 @@ const persistConfig = {
         'supplierProfileApi',
         'rfqApi',
         'supplierProductApi',
+        'product',
+        'rfqProduct',
         'marketplace',
         'categoryApi',
         'savedItemsApi',

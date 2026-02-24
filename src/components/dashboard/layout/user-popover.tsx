@@ -1,9 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { logout } from '@/redux/features/AuthFeature/auth_slice';
-import { resetRFQState } from '@/redux/features/buyer-rfq/rfq-slice';
-import { resetProductState } from '@/redux/features/supplier-products/products_slice';
+import { logoutAndCleanup } from '@/redux/features/AuthFeature/auth_slice';
 import { paths } from '@/config/paths';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -53,9 +51,10 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
     };
 
     const handleLogout = () => {
-        dispatch(logout());
-        dispatch(resetProductState());
-        dispatch(resetRFQState());
+        // dispatch(logout());
+        // dispatch(resetProductState());
+        // dispatch(resetRFQState());
+        dispatch(logoutAndCleanup() as any);
         router.replace(paths.home);
     };
 

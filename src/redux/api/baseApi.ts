@@ -1,6 +1,6 @@
 import { fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import { config } from '@/lib/config';
-import { loginRefresh, logout, setToken } from '../features/AuthFeature/auth_slice';
+import { loginRefresh, logoutAndCleanup, setToken } from '../features/AuthFeature/auth_slice';
 
 export interface ApiResponse<T = any> {
     data: T;
@@ -50,10 +50,7 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
-/**
- * Shared base query with re-authentication logic
- * Ported from original bv_v1_api.js logic with added Mutex protection
- */
+
 export const baseQueryWithReauth: BaseQueryFn<
     string | FetchArgs,
     unknown,
@@ -101,7 +98,9 @@ export const baseQueryWithReauth: BaseQueryFn<
                 // console.error('Refresh failed or session truly expired - logging out');
                 isRefreshing = false;
                 // Using string-based action types to break circular dependency with auth_slice
-                api.dispatch(logout());
+                api.dispatch(logoutAndCleanup() as any);
+
+
                 //  api.dispatch({ type: 'auth/logout' });
             }
         } else {

@@ -228,14 +228,27 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
 
   const handleFileChange = (id: any, files: any) => {
     const isValidFile = (file: any) => {
+      if (file.type === 'video/mp4') {
+        const hasExistingVideo = attachments?.some((att: any) => att.url.toLowerCase().endsWith('.mp4') || att.url.toLowerCase().endsWith('.webm'));
+        const newVideoCountInPending = selectedAttachmentFiles.filter((f: any) => f.type === 'video/mp4').length;
+
+        const currentFileArray = Array.from(files);
+        const videoCountInCurrentBatch = currentFileArray.filter((f: any, i: number) => f.type === 'video/mp4' && i < currentFileArray.indexOf(file)).length;
+
+        if (hasExistingVideo || newVideoCountInPending + videoCountInCurrentBatch >= 1) {
+          toast.error('Only one video can be uploaded per RFQ');
+          return false;
+        }
+      }
+
       if (['image/png', 'image/jpeg', 'image/webp', 'application/pdf'].includes(file.type) && file.size > 5 * 1024 * 1024) {
         setErrors((prev: any) => ({ ...prev, productImages: 'File size must not exceed 5MB' }));
         toast.error('File size must not exceed 5MB');
         return false;
       }
-      if (file.type === 'video/mp4' && file.size > 10 * 1024 * 1024) {
-        setErrors((prev: any) => ({ ...prev, productImages: 'File size must not exceed 10MB' }));
-        toast.error('File size must not exceed 10MB');
+      if (file.type === 'video/mp4' && file.size > 15 * 1024 * 1024) {
+        setErrors((prev: any) => ({ ...prev, productImages: 'File size must not exceed 15MB' }));
+        toast.error('File size must not exceed 15MB');
         return false;
       }
       if (!['image/png', 'image/jpeg', 'image/webp', 'video/mp4', 'application/pdf'].includes(file.type)) {
@@ -539,7 +552,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
                       </p>
 
                       <p className="pt-3 text-left mb-2 text-sm">
-                        <b>Note:</b> Maximum of 5 attachment are allowed including the old ones and new ones
+                        <b>Note:</b> Maximum of 5 attachments are allowed including the old ones and new ones. Max image size: 5MB, Max video size: 10MB.
                       </p>
                       <Box
                         style={{ position: 'relative', paddingTop: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}

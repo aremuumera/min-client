@@ -8,7 +8,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/moda
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { logout } from '@/redux/features/AuthFeature/auth_slice';
+import { logoutAndCleanup } from '@/redux/features/AuthFeature/auth_slice';
 import { useDeactivateAccountMutation } from '@/redux/features/AuthFeature/settings';
 
 export function DeleteAccount() {
@@ -25,7 +25,7 @@ export function DeleteAccount() {
         try {
             const resultAction = await deactivateAccount(undefined);
             toast.success('Account deactivated successfully');
-            dispatch(logout());
+            dispatch(logoutAndCleanup() as any);
             router.push('/auth/login');
         } catch (error) {
             toast.error('An unexpected error occurred');

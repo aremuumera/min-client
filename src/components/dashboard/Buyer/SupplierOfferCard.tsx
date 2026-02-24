@@ -33,12 +33,12 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
     return (
         <div
             className={`
-                rounded-xl border bg-white p-6 relative transition-all duration-200
-                ${isSelected ? 'border-primary-500 shadow-md ring-1 ring-primary-500' : 'border-gray-200 shadow-sm'}
+                rounded-xl bg-white p-6 relative transition-all duration-200 border
+                ${isSelected ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-200'}
             `}
         >
             {/* Selection Checkbox */}
-            <div className="absolute -top-3 -right-3 bg-white rounded-full shadow-md z-10 p-1">
+            <div className="absolute -top-3 -right-3 bg-white rounded-full z-10 p-1 border border-gray-200">
                 <Checkbox
                     checked={isSelected}
                     onChange={onToggleSelect}

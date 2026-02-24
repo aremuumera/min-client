@@ -83,9 +83,41 @@ const AuthSlice = createSlice({
             state.loading = false;
             state.error = null;
             state.awaitingOTPVerification = false;
-            if (typeof window !== 'undefined') localStorage.removeItem('chimpstate');
             state.isAuth = false;
             state.isInitialized = true;
+            state.isTeamMember = false;
+            state.permissions = [];
+            state.team_role = undefined;
+            state.ownerUserId = undefined;
+            state.appData = null;
+            state.reginfo = {};
+            state.vType = '';
+            state.rtype = '';
+            state.email = '';
+            state.phone = '';
+            state.announcements_enabled = true;
+            state.verificationStatus = false;
+            state.requestedLocation = null;
+            state.showEntryModal = false;
+
+            if (typeof window !== 'undefined') {
+                // Clear auth token
+                localStorage.removeItem('chimpstate');
+
+                // Clear user-specific localStorage keys
+                localStorage.removeItem('email');
+                localStorage.removeItem('phone');
+                localStorage.removeItem('userLocation');
+                localStorage.removeItem('app.settings');
+
+                // Purge redux-persist storage (removes persist:root and persist:auth)
+                localStorage.removeItem('persist:root');
+                localStorage.removeItem('persist:auth');
+
+                // NOTE: We intentionally keep these device-level prefs:
+                // - 'colorMode', 'theme', 'dashboard-sidebar-collapsed'
+            }
+
             initialStateFromLocalStorage();
         },
         loginSuccess: (state, action: PayloadAction<any>) => {
@@ -263,5 +295,39 @@ export const {
     clearRequestedLocation,
     setShowEntryModal,
 } = AuthSlice.actions;
+
+// Thunk that dispatches logout AND resets all RTK Query API caches
+export const logoutAndCleanup = () => (dispatch: any) => {
+    // 1. Dispatch logout action (resets all slice state via extraReducers)
+    dispatch(logout());
+
+    // 2. Reset all RTK Query API caches to clear previous user's cached data
+    // We lazy-import to avoid circular dependencies
+    const apis = [
+        require('../enquiry/enquiry_api').default,
+        require('../supplier-products/products_api').default,
+        require('../buyer-rfq/rfq-api').default,
+        require('../supplier-profile/supplier_profile_api').default,
+        require('../categories/cat_api').default,
+        require('../savedFeature/saved_api').default,
+        require('../reviewFeature/review_api').default,
+        require('../chatFeature/chatApi').default,
+        require('../business_verification_feature/bv_api').default,
+        require('../blogs/blog_api').default,
+        require('../business_verification_feature/bv_v1_api').default,
+        require('../inspector/inspector_api').default,
+        require('../invoice/invoice_api').default,
+        require('../team/teamApi').teamApi,
+        require('../activity/activityApi').default,
+        require('../trade/trade_api').default,
+        require('../definitions/definition_api').default,
+    ];
+
+    apis.forEach((api) => {
+        if (api?.util?.resetApiState) {
+            dispatch(api.util.resetApiState());
+        }
+    });
+};
 
 export default AuthSlice.reducer;

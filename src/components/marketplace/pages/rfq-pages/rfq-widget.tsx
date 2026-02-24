@@ -21,7 +21,7 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
   const { showAlert } = useAlert();
 
   const {
-    id: rfqId, // Assuming 'id' is mapped to 'rfqId' or 'rfqId' exists. The original destructured rfqId.
+    rfqId, // Assuming 'id' is mapped to 'rfqId' or 'rfqId' exists. The original destructured rfqId.
     // If the data structure has id, we use it. Original code used rfqId from rfqProduct.
     userId,
     buyer,
@@ -158,6 +158,7 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
         onClose={closeQuoteModal}
         product={{
           id: effectiveRfqId.toString(),
+          rfqId: effectiveRfqId.toString(),
           name: rfqProductName,
           mineral_tag: rfqProduct?.mineral_tag || 'mineral',
           supplier_id: userId?.toString()

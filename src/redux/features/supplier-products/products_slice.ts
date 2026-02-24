@@ -88,6 +88,9 @@ const productSlice = createSlice({
             state.serverReadyAttachmentData = [];
         },
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', () => initialState);
+    },
 });
 
 export const {

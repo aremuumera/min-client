@@ -1,20 +1,19 @@
-
-import { 
-  Home, 
-  PieChart, 
-  Receipt, 
-  CreditCard, 
-  ShoppingBag, 
-  MessageCircle, 
-  Star, 
-  Settings, 
-  Users, 
-  Layout, 
-  FileText, 
-  FileWarning, 
-  Truck, 
-  Lock, 
-  Link as LinkIcon, 
+import {
+  Home,
+  PieChart,
+  Receipt,
+  CreditCard,
+  ShoppingBag,
+  MessageCircle,
+  Star,
+  Settings,
+  Users,
+  Layout,
+  FileText,
+  FileWarning,
+  Truck,
+  Lock,
+  Link as LinkIcon,
   ChevronDown,
   LogOut,
   Mail,
@@ -22,7 +21,8 @@ import {
   GraduationCap,
   Briefcase,
   Globe,
-  Plus
+  Plus,
+  Calculator
 } from 'lucide-react';
 
 export const icons = {
@@ -58,6 +58,7 @@ export const icons = {
   upload: Plus, // Placeholder/Alternative
   gear: Settings,
   users: Users,
+  calculator: Calculator,
 };
 
 export type IconName = keyof typeof icons;

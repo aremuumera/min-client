@@ -10,9 +10,7 @@ import { cn } from '@/utils/helper';
 import { Logo } from '@/utils/logo';
 import { icons } from './nav-icons';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
-import { logout } from '@/redux/features/AuthFeature/auth_slice';
-import { resetProductState } from '@/redux/features/supplier-profile/supplier_profile_slice';
-import { resetRFQState } from '@/redux/features/buyer-rfq/rfq-slice';
+import { logoutAndCleanup } from '@/redux/features/AuthFeature/auth_slice';
 
 import { AppDispatch } from '@/redux/store';
 import { Button } from '@/components/ui/button';
@@ -29,9 +27,7 @@ export function SideNav({ items = [], isCollapsed, onToggle }: SideNavProps) {
     const dispatch = useDispatch<AppDispatch>();
 
     const handleLogout = () => {
-        dispatch(logout());
-        dispatch(resetProductState());
-        dispatch(resetRFQState());
+        dispatch(logoutAndCleanup() as any);
     };
 
     return (

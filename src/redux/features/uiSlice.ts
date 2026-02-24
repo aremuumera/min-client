@@ -112,6 +112,12 @@ const uiSlice = createSlice({
             state.mobileMenuOpen = action.payload;
         },
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', (state) => {
+            // Reset everything except theme preference (device-level pref)
+            return { ...initialState, colorMode: state.colorMode };
+        });
+    },
 });
 
 export const {

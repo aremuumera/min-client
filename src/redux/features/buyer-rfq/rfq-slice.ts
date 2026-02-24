@@ -58,6 +58,9 @@ const rfqProductSlice = createSlice({
         },
         resetRFQState: () => initialState,
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', () => initialState);
+    },
 });
 
 export const {

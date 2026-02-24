@@ -84,6 +84,9 @@ const marketplaceSlice = createSlice({
             state.limit = initialState.limit;
         },
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', () => initialState);
+    },
 });
 
 export const { setFilter, resetFilters, resetFilterss, setSort, setSearch, setPage, setLimit } =

@@ -10,6 +10,26 @@ const ComparisonPage = () => {
     const { comparisonList } = useAppSelector((state) => state.comparison);
     const dispatch = useAppDispatch();
 
+    const getCurrencySymbol = (currency: string | undefined) => {
+        switch (currency) {
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'GBP': return '£';
+            case 'NGN': return '₦';
+            default: return '₦';
+        }
+    };
+
+    const formatPrice = (price: any) => {
+        if (!price) return '0.00';
+        const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+        if (isNaN(numPrice)) return '0.00';
+        return numPrice.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
     if (comparisonList.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
@@ -49,7 +69,7 @@ const ComparisonPage = () => {
                 </button>
             </div>
 
-            <div className="overflow-x-auto bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="overflow-x-auto scrollbar-hide bg-white rounded-2xl shadow-sm border border-gray-100">
                 <table className="w-full border-collapse">
                     <thead>
                         <tr>
@@ -60,23 +80,42 @@ const ComparisonPage = () => {
                                 <th key={product.id} className="p-6 border-b border-gray-100 min-w-[250px] relative group bg-white">
                                     <button
                                         onClick={() => dispatch(removeFromComparison(product.id))}
-                                        className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
+                                        className="absolute top-4 right-4 bg-red-500 text-white rounded-full p-1.5 shadow-sm hover:bg-red-600 transition-colors z-10"
                                     >
                                         <X size={20} />
                                     </button>
-                                    <div className="aspect-square w-full rounded-xl overflow-hidden bg-gray-50 mb-4 border border-gray-100">
-                                        <img
-                                            src={product.images?.[0]}
-                                            alt={product.product_name}
-                                            className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
-                                        />
+                                    <div className="aspect-square w-full rounded-xl overflow-hidden bg-gray-50 mb-4 border border-gray-100 flex items-center justify-center">
+                                        {(() => {
+                                            const firstImage: any = product?.images?.find(
+                                                (img: any) => img?.url && !img.url.toLowerCase().endsWith('.mp4') && !img.url.toLowerCase().endsWith('.webm')
+                                            ) || product?.images?.[0]; // Fallback to first if all are videos or none found
+
+                                            const imgUrl: string = typeof firstImage === 'string' ? firstImage : firstImage?.url;
+
+                                            if (imgUrl?.toLowerCase().endsWith('.mp4') || imgUrl?.toLowerCase().endsWith('.webm')) {
+                                                return (
+                                                    <video
+                                                        src={imgUrl}
+                                                        className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                                                        muted
+                                                    />
+                                                );
+                                            }
+                                            return (
+                                                <img
+                                                    src={imgUrl || '/assets/logo5.png'}
+                                                    alt={product.product_name}
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                                                />
+                                            );
+                                        })()}
                                     </div>
                                     <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 min-h-[3.5rem]">
                                         {product.product_name}
                                     </h3>
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="text-2xl font-black text-green-700">
-                                            {product.unitCurrency || '₦'}{product.real_price}
+                                            {getCurrencySymbol(product.unitCurrency)}{formatPrice(product.real_price)}
                                         </span>
                                         <span className="text-sm text-gray-400">/ {product.measure}</span>
                                     </div>
@@ -103,9 +142,18 @@ const ComparisonPage = () => {
                     </thead>
                     <tbody>
                         <ComparisonRow label="Category" products={comparisonList} field="product_category" />
+                        <ComparisonRow label="Sub Category" products={comparisonList} field="product_sub_category" placeholder="Not specified" />
+                        <ComparisonRow label="Supplier" products={comparisonList} render={(p: any) => p.supplier?.company_name || 'Individual Supplier'} />
                         <ComparisonRow label="M.O.Q" products={comparisonList} render={(p: any) => `${p.quantity} ${p.measure}`} />
+                        <ComparisonRow label="Delivery Period" products={comparisonList} field="delivery_period" placeholder="Not specified" />
+                        <ComparisonRow label="Color" products={comparisonList} field="color" placeholder="Not specified" />
+                        <ComparisonRow label="Composition" products={comparisonList} field="composition" placeholder="Not specified" />
+                        <ComparisonRow label="Density" products={comparisonList} field="density" placeholder="Not specified" />
+                        <ComparisonRow label="Hardness" products={comparisonList} field="hardness" placeholder="Not specified" />
                         <ComparisonRow label="Purity / Grade" products={comparisonList} field="purity_grade" placeholder="Not specified" />
                         <ComparisonRow label="Max Moisture" products={comparisonList} render={(p: any) => p.moisture_max ? `${p.moisture_max}%` : 'N/A'} />
+                        <ComparisonRow label="Supply Type" products={comparisonList} render={(p: any) => p.supply_type ? p.supply_type.charAt(0).toUpperCase() + p.supply_type.slice(1) : 'Immediate'} />
+                        <ComparisonRow label="Trade Scope" products={comparisonList} render={(p: any) => p.trade_scope ? p.trade_scope.charAt(0).toUpperCase() + p.trade_scope.slice(1) : 'Local'} />
                         <ComparisonRow label="Packaging" products={comparisonList} field="packaging" placeholder="Standard" />
                         <ComparisonRow label="Sampling" products={comparisonList} field="sampling_method" placeholder="Available on request" />
                         <ComparisonRow
@@ -127,7 +175,7 @@ const ComparisonPage = () => {
             <div className="mt-12 bg-green-50 rounded-3xl p-8 border border-green-100 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="max-w-xl text-center md:text-left">
                     <h2 className="text-2xl font-extrabold text-green-900 mb-2">Need project-specific quotes?</h2>
-                    <p className="text-green-700 font-medium">Create a Request for Quotation (RFQ) and let suppliers reach out to you with their best offers.</p>
+                    <p className="text-green-700 font-medium">Create a Request for Quotation (RFQ) and let suppliers submit their best offers.</p>
                 </div>
                 <Link
                     href="/dashboard/rfqs/create"

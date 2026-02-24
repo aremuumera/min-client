@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useAppCheckQuery } from '@/redux/features/AuthFeature/auth_api_rtk';
-import { logout, setRequestedLocation } from '@/redux/features/AuthFeature/auth_slice';
+import { logoutAndCleanup, setRequestedLocation } from '@/redux/features/AuthFeature/auth_slice';
 import { paths, requiresVerification, isPublicRoute } from '@/config/paths';
 import { Modal, ModalHeader, ModalBody, Button, Box } from '@/components/ui';
 import { jwtDecode } from 'jwt-decode';
@@ -72,12 +72,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         if (decoded.exp < Date.now() / 1000) {
           console.log('called-5')
 
-          dispatch(logout());
+          dispatch(logoutAndCleanup() as any);
           router.replace(paths.auth.signIn);
         }
       } catch (e) {
         console.log('called-4')
-        dispatch(logout());
+        dispatch(logoutAndCleanup() as any);
         router.replace(paths.auth.signIn);
       }
     };
@@ -109,7 +109,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
       // Only logout if we genuinely failed auth check and aren't just waiting
       if (isInitialized && !isAuth && !isLoading) {
-        dispatch(logout());
+        dispatch(logoutAndCleanup() as any);
         router.replace(paths.auth.signIn);
       }
       return;

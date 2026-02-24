@@ -90,6 +90,9 @@ const supplierProfileSlice = createSlice({
         },
         resetProductState: () => initialState,
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', () => initialState);
+    },
 });
 
 export const {

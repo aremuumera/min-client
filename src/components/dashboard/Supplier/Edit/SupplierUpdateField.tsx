@@ -479,8 +479,12 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
   const handleFileChange = (id: string, files: FileList | null) => {
     if (!files) return;
     const isValidFile = (file: File) => {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must not exceed 5MB', { position: 'top-right', duration: 3000 });
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? 15 * 1024 * 1024 : 5 * 1024 * 1024;
+      const maxSizeMB = isVideo ? 15 : 5;
+
+      if (file.size > maxSize) {
+        toast.error(`File size must not exceed ${maxSizeMB}MB`, { position: 'top-right', duration: 3000 });
         return false;
       }
 
@@ -489,7 +493,6 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
           toast.error('Supported formats: PNG, JPEG, WEBP, MP4', { position: 'top-right', duration: 3000 });
           return false;
         }
-        return true;
       }
 
       if (id === 'productAttachment') {
@@ -497,7 +500,22 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
           toast.error('Supported formats: PDF, DOC, DOCX, MP4', { position: 'top-right', duration: 3000 });
           return false;
         }
-        return true;
+      }
+
+      if (file.type.startsWith('video/')) {
+        const hasExistingVideo = images?.some((img: any) => img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm')) ||
+          attachments?.some((img: any) => img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm'));
+
+        const newVideoCountInPending = selectedProductImageFiles.filter(f => f.type.startsWith('video/')).length +
+          selectedAttachmentFiles.filter(f => f.type.startsWith('video/')).length;
+
+        const currentFileArray = Array.from(files);
+        const videoCountInCurrentBatch = currentFileArray.filter((f, i) => f.type.startsWith('video/') && i < currentFileArray.indexOf(file)).length;
+
+        if (hasExistingVideo || newVideoCountInPending + videoCountInCurrentBatch >= 1) {
+          toast.error('Only one video can be uploaded per product', { position: 'top-right', duration: 3000 });
+          return false;
+        }
       }
 
       return true;
@@ -588,11 +606,11 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                     {field.id === 'productImage' ? (
                       <>
                         <Typography variant="body1" className="text-center" gutterBottom>
-                          Update your images by removing the old ones or add new ones <br />
+                          Update your images/video by removing the old ones or add new ones <br />
                         </Typography>
 
                         <p className="">
-                          <b>Note:</b> At least 5 images are allowed including the old ones and new ones
+                          <b>Note:</b> At least 5 images are allowed including the old ones and new ones. Max image size: 5MB, Max video size: 10MB.
                         </p>
                         <Box className="relative w-full mt-4">
                           <Box
@@ -682,7 +700,7 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                       type="button"
                       onClick={() => document.getElementById(`file-input-${field.id}`)?.click()}
                     >
-                      Upload {field.label}
+                      Upload {field.id === 'productImage' ? 'Images / Video' : field.id === 'productVideo' ? 'Video' : field.label}
                     </Button>
                     <input
                       id={`file-input-${field.id}`}

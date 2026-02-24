@@ -105,6 +105,9 @@ export const businessCompanyInfoSlice = createSlice({
             state.isSubmitted = false;
         },
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', () => initialState);
+    },
 });
 
 export const {

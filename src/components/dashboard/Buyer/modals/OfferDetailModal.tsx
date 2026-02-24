@@ -28,6 +28,7 @@ interface OfferDetailModalProps {
 const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, offer }) => {
     const [shortlistOffer, { isLoading }] = useShortlistRfqOfferMutation();
     const { showAlert } = useAlert();
+    const [selectedMedia, setSelectedMedia] = React.useState<{ url: string; type: 'image' | 'video' } | null>(null);
 
     if (!isOpen || !offer) return null;
 
@@ -50,24 +51,38 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
         const isVideo = att.type === 'video' || att.url.match(/\.(mp4|mov|avi)$/i);
         const isPdf = att.type === 'document' || att.url.match(/\.(pdf)$/i);
 
+        const openMedia = (e: React.MouseEvent) => {
+            e.preventDefault();
+            if (isImage) {
+                setSelectedMedia({ url: att.url, type: 'image' });
+            } else if (isVideo) {
+                setSelectedMedia({ url: att.url, type: 'video' });
+            } else {
+                window.open(att.url, '_blank');
+            }
+        };
+
         return (
-            <div key={index} className="group relative bg-gray-50 rounded-xl border border-gray-200 overflow-hidden transition-all hover:border-primary-300">
+            <div key={index} className="group relative bg-gray-50 rounded-xl border border-gray-200 overflow-hidden transition-all hover:border-primary-300 cursor-pointer" onClick={openMedia}>
                 {isImage ? (
                     <img src={att.url} alt={`Attachment ${index}`} className="w-full h-32 object-cover" />
                 ) : isVideo ? (
-                    <div className="w-full h-32 bg-gray-900 flex items-center justify-center">
-                        <Video className="text-white opacity-50" size={32} />
-                    </div>
+                    <video src={att.url} className="w-full h-32 object-cover pointer-events-none" autoPlay muted loop playsInline />
                 ) : (
                     <div className="w-full h-32 flex items-center justify-center bg-gray-100">
                         <FileText className="text-gray-400" size={32} />
                     </div>
                 )}
-                <div className="p-2 flex justify-between items-center bg-white border-t border-gray-100">
+                {isVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-transparent transition-all pointer-events-none">
+                        <Video className="text-white opacity-80 z-10" size={32} />
+                    </div>
+                )}
+                <div className="p-2 flex justify-between items-center bg-white border-t border-gray-100 absolute bottom-0 w-full z-20">
                     <span className="text-[10px] font-medium text-gray-500 truncate max-w-[100px]">
                         {isImage ? 'Image' : isVideo ? 'Video' : 'Document'}
                     </span>
-                    <a href={att.url} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-gray-100 rounded">
+                    <a href={att.url} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-gray-100 rounded" onClick={(e) => e.stopPropagation()}>
                         <Download size={14} className="text-primary-600" />
                     </a>
                 </div>
@@ -77,14 +92,14 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
 
     return (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <div className="bg-white w-full max-w-2xl rounded-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">Offer Detail</h2>
                         <p className="text-xs text-gray-500 mt-0.5">Reference: {offer.external_id?.substring(0, 8)}...</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors shadow-sm">
+                    <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors border border-transparent hover:border-gray-200">
                         <X size={20} className="text-gray-500" />
                     </button>
                 </div>
@@ -174,20 +189,36 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                     <Button
                         onClick={handleShortlist}
                         variant={isShortlisted ? "contained" : "outlined"}
-                        className={`flex-1 h-12 text-base font-bold rounded-xl transition-all ${isShortlisted ? 'bg-yellow-500 hover:bg-yellow-600 active:scale-95 border-none shadow-lg' : 'hover:bg-primary-50'}`}
+                        className={`flex-1 h-12 text-base font-bold rounded-xl transition-all border ${isShortlisted ? 'bg-yellow-500 hover:bg-yellow-600 active:scale-95 border-yellow-600' : 'hover:bg-primary-50 border-gray-300'}`}
                         disabled={isLoading}
                     >
                         {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
                         {isShortlisted ? 'Un-shortlist Offer' : 'Shortlist Offer'}
                     </Button>
                     <Button
-                        className="flex-1 h-12 text-base font-bold bg-gray-900 hover:bg-black text-white rounded-xl shadow-md active:scale-95 transition-all"
+                        className="flex-1 h-12 text-base font-bold bg-gray-900 hover:bg-black text-white rounded-xl active:scale-95 transition-all"
                         onClick={onClose}
                     >
                         Close Details
                     </Button>
                 </div>
             </div>
+
+            {/* Media Expand Modal */}
+            {selectedMedia && (
+                <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/90 p-4" onClick={() => setSelectedMedia(null)}>
+                    <button className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors" onClick={() => setSelectedMedia(null)}>
+                        <X size={24} />
+                    </button>
+                    <div className="max-w-5xl max-h-[90vh] w-full flex justify-center object-contain" onClick={(e) => e.stopPropagation()}>
+                        {selectedMedia.type === 'image' ? (
+                            <img src={selectedMedia.url} alt="Expanded Media" className="max-w-full max-h-[90vh] object-contain rounded-lg border border-gray-700" />
+                        ) : (
+                            <video src={selectedMedia.url} className="max-w-full max-h-[90vh] rounded-lg border border-gray-700" controls autoPlay playsInline />
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -87,8 +87,8 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
     recurring_duration,
   } = rfqProduct;
 
-  // Handle potential id naming differences
-  const effectiveRfqId = rfqId || rfqProduct.rfqId || rfqProduct._id;
+  // Handle potential id naming differences - prioritize the UUID rfqId
+  const effectiveRfqId = rfqProduct.rfqId || rfqId || rfqProduct._id || rfqProduct.id;
 
   const isOwner = isAuth && user?.id === userId;
 
@@ -394,6 +394,7 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
         onClose={() => setShowQuoteModal(false)}
         product={{
           id: effectiveRfqId.toString(),
+          rfqId: effectiveRfqId.toString(),
           name: rfqProductName,
           mineral_tag: rfqProduct.mineral_tag || rfqProduct.category_tag || 'mineral', // Use category_tag as fallback
           supplier_id: userId?.toString()

@@ -269,8 +269,12 @@ const RfqDetails = ({
       const fileArray = Array.from(files);
 
       const validFiles = fileArray.filter((file) => {
-        if (file.size > 10 * 1024 * 1024) {
-          toast.error(`${file.name} exceeds 10MB limit and won't be uploaded`, {
+        const isVideo = file.type.startsWith('video/');
+        const maxSize = isVideo ? 15 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSizeMB = isVideo ? 15 : 5;
+
+        if (file.size > maxSize) {
+          toast.error(`${file.name} exceeds ${maxSizeMB}MB limit and won't be uploaded`, {
             position: 'top-right',
             style: {
               background: '#f44336',
@@ -946,7 +950,7 @@ const RfqDetails = ({
                 />
                 <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
                 <p className="text-[#696969] text-[.75rem]">
-                  Images/Docs must not exceed 10mb | Videos (MP4) max 1 | Supported: *jpg, *png, *webp, *mp4, *pdf
+                  Images/Docs must not exceed 5MB, Video 15MB | Max 1 Video | Supported: *jpg, *png, *webp, *mp4, *pdf
                 </p>
               </Box>
               <div className="pt-[10px]">

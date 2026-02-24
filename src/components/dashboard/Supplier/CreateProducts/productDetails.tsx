@@ -242,12 +242,16 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       const fileNames = fileArray.map((file) => file.name);
 
       const validFiles = fileArray.filter((file) => {
-        if (file.size > 10 * 1024 * 1024) {
+        const isVideo = file.type.startsWith('video/');
+        const maxSize = isVideo ? 15 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSizeMB = isVideo ? 15 : 5;
+
+        if (file.size > maxSize) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            productImages: 'File size must not exceed 10MB',
+            productImages: `File size must not exceed ${maxSizeMB}MB`,
           }));
-          toast.error(`${file.name} exceeds 10MB limit`, {
+          toast.error(`${file.name} exceeds ${maxSizeMB}MB limit`, {
             style: { background: '#f44336', color: '#fff' },
           });
           return false;
@@ -1037,7 +1041,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
           <div>
             <div className="py-[20px]">
               <h2 className="font-medium text-[1.4rem]">Upload Product Images / Video</h2>
-              <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images and maximum of 1 video is allowed to list product</p>
+              <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images and maximum of 1 video is allowed to list product. Max image size: 5MB, Max video size: 15MB.</p>
             </div>
             <Box
               sx={{
@@ -1070,7 +1074,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
               />
               <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
               <p className="text-[#696969] text-[.75rem]">
-                Image/Video must not exceed 5mb | Supported format: *jpg, *png, *webp, *mp4
+                Images must not exceed 5MB, Video max 15MB | Supported format: *jpg, *png, *webp, *mp4
               </p>
             </Box>
             {/* Display Uploaded Files' Names */}

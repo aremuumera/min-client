@@ -55,7 +55,8 @@ const waitlistSlice = createSlice({
             .addCase(waitlistEmail.rejected, (state, action: any) => {
                 state.loading = false;
                 state.error = action.payload || { message: 'An unexpected error occurred.' };
-            });
+            })
+            .addCase('auth/logout', () => initialState);
     },
 });
 

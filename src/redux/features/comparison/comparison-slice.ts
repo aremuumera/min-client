@@ -56,6 +56,9 @@ const comparisonSlice = createSlice({
             }
         }
     },
+    extraReducers: (builder) => {
+        builder.addCase('auth/logout', () => initialState);
+    },
 });
 
 export const { addToComparison, removeFromComparison, clearComparison, toggleComparison } = comparisonSlice.actions;

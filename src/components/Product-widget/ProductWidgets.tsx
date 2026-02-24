@@ -93,17 +93,23 @@ const ProductWidgets = ({ products }: ProductProps) => {
                     } relative h-[230px] overflow-hidden`}
                 >
                   <div className="w-full h-full flex" style={imageContainerStyle}>
-                    {products?.images?.map((j, i) => (
-                      <div className="relative h-full rounded-t-xl overflow-hidden flex-shrink-0" style={{ width: `${100 / (products?.images?.length || 1)}%` }} key={i}>
-                        <Link href={productCardRoute}>
-                          <img
-                            src={j}
-                            alt={product_name}
-                            className="w-full h-full object-cover rounded-[20px]"
-                          />
-                        </Link>
-                      </div>
-                    ))}
+                    {Array.isArray(products?.images) && products.images.filter((img: any) => {
+                      const url = img?.url || img;
+                      return typeof url === 'string' && !url.toLowerCase().endsWith('.mp4');
+                    }).map((j: any, i: number) => {
+                      const imgUrl = j?.url || j;
+                      return (
+                        <div className="relative h-full rounded-t-xl overflow-hidden flex-shrink-0" style={{ width: `${100 / (products?.images?.length || 1)}%` }} key={i}>
+                          <Link href={productCardRoute}>
+                            <img
+                              src={imgUrl}
+                              alt={product_name}
+                              className="w-full h-full object-cover rounded-[20px]"
+                            />
+                          </Link>
+                        </div>
+                      )
+                    })}
                   </div>
 
                   {/* next and previous button */}
@@ -118,7 +124,10 @@ const ProductWidgets = ({ products }: ProductProps) => {
                 </div>
                 <div>
                   <div className="flex justify-center mt-[3px] gap-[10px]">
-                    {products?.images?.map((_, i) => (
+                    {Array.isArray(products?.images) && products.images.filter((img: any) => {
+                      const url = img?.url || img;
+                      return typeof url === 'string' && !url.toLowerCase().endsWith('.mp4');
+                    }).map((_, i) => (
                       <div
                         key={i}
                         className={`rounded-full w-2 h-2 ${currentIndex === i ? 'bg-black' : 'bg-gray-300'
