@@ -64,7 +64,7 @@ export function SignInForm() {
 
     } catch (err: any) {
       const status = err?.status;
-      const message = err?.message || err?.data?.message || 'Login failed, Please try again later';
+      const message = err?.data?.message || err?.data?.error || err?.message || 'Login failed, Please try again later';
 
       if (status === 411) {
         dispatch(setUserEmail(values.email));

@@ -4,8 +4,7 @@
 import React from 'react';
 import { useGetAllProductDetailsQuery } from '@/redux/features/supplier-products/products_api';
 import NoProducts from '@/utils/no-products';
-// import ProductDetailsSkeleton from '@/utils/skeleton/product-detail-skeleton'; // Need migration of this
-import ProductSkeleton from '@/utils/skeleton/product-skeleton'; // Reuse generic product skeleton for now
+import ProductDetailsSkeleton from '@/utils/skeleton/product-detail-skeleton';
 import { ViewModeProvider } from '@/contexts/view-product-mode';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +29,7 @@ const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
   );
 
   if (isLoading) {
-    return <div className="mt-10"><ProductSkeleton count={1} /></div>;   // Simple skeleton suitable for details? Not really but works.
+    return <ProductDetailsSkeleton />;
   }
 
   if (isError || !data?.product) {

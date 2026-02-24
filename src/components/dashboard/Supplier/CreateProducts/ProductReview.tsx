@@ -49,7 +49,9 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
     color, composition, deliveryPeriod, density, hardness,
     measure, prevPrice, productCategory, productName,
     productSubCategory, quantity, realPrice, unitCurrency,
-    productHeaderDescription
+    productHeaderDescription, purity_grade, moisture_max,
+    packaging, sampling_method, supply_type, frequency,
+    duration, trade_scope
   } = productDetailsFormData;
 
   const {
@@ -77,6 +79,25 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
     transition: "transform 0.5s ease-in-out",
   };
 
+  const getCurrencySymbol = (currency: string | undefined) => {
+    switch (currency) {
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'NGN': return '₦';
+      default: return '₦';
+    }
+  };
+
+  const formatPrice = (price: any) => {
+    if (!price) return '0.00';
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(numPrice)) return '0.00';
+    return numPrice.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -98,6 +119,15 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
       formData.append('realPrice', realPrice);
       formData.append('quantity', quantity);
       formData.append('unitCurrency', unitCurrency || 'NGN');
+
+      formData.append('purity_grade', purity_grade || '');
+      formData.append('moisture_max', moisture_max || '');
+      formData.append('packaging', packaging || '');
+      formData.append('sampling_method', sampling_method || '');
+      formData.append('supply_type', supply_type || 'immediate');
+      formData.append('frequency', frequency || '');
+      formData.append('duration', duration || '');
+      formData.append('trade_scope', trade_scope || 'local');
 
       // Location Data
       formData.append('fullAddress', fullAddress);
@@ -200,11 +230,22 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
                         style={{ width: `${100 / (uploadedFiles?.length || 1)}%` }}
                         key={i}
                       >
-                        <img
-                          src={j.url}
-                          alt={productName}
-                          className="w-full h-full object-cover"
-                        />
+                        {j.type?.startsWith('video/') ? (
+                          <video
+                            src={j.url}
+                            className="w-full h-full object-cover"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                          />
+                        ) : (
+                          <img
+                            src={j.url}
+                            alt={productName}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -241,9 +282,9 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
                 <div className='mt-4'>
                   <h3 className='font-semibold text-gray-900 line-clamp-2'>{productName}</h3>
                   <div className='flex items-baseline gap-2 mt-1'>
-                    <span className='text-2xl font-bold text-primary'>{unitCurrency || 'NGN'} {realPrice}</span>
+                    <span className='text-2xl font-bold text-primary'>{getCurrencySymbol(unitCurrency)}{formatPrice(realPrice)}</span>
                     {prevPrice && (
-                      <span className='text-sm text-gray-400 line-through'>${prevPrice}</span>
+                      <span className='text-sm text-gray-400 line-through'>{getCurrencySymbol(unitCurrency)}{formatPrice(prevPrice)}</span>
                     )}
                   </div>
 
@@ -274,6 +315,18 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
                   <InfoRow label="Density" value={density} />
                   <InfoRow label="Hardness" value={hardness} />
                   <InfoRow label="Color" value={color} />
+                  <InfoRow label="Purity/Grade" value={purity_grade} />
+                  <InfoRow label="Max Moisture" value={moisture_max ? `${moisture_max}%` : ''} />
+                  <InfoRow label="Packaging" value={packaging} />
+                  <InfoRow label="Sampling" value={sampling_method} />
+                  <InfoRow label="Supply Type" value={supply_type} />
+                  {supply_type === 'contract' && (
+                    <>
+                      <InfoRow label="Frequency" value={frequency} />
+                      <InfoRow label="Duration" value={duration} />
+                    </>
+                  )}
+                  <InfoRow label="Trade Scope" value={trade_scope} />
                 </div>
               </div>
 

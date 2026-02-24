@@ -82,7 +82,9 @@ const RfqDataTable = ({ columns = [], rows = [] }: any) => {
                 {row.rfqProductName}
               </TableCell>
               <TableCell>{row.rfqProductCategory}</TableCell>
-              <TableCell>{row.quantityRequired}</TableCell>
+              <TableCell>{row.quantityRequired} {row.quantityMeasure}</TableCell>
+              <TableCell>{row.purity_grade || '-'}</TableCell>
+              <TableCell>{row.moisture_max ? `${row.moisture_max}%` : '-'}</TableCell>
               <TableCell>{formatDate(row.createdAt)}</TableCell>
               <TableCell>
                 <span
@@ -101,13 +103,13 @@ const RfqDataTable = ({ columns = [], rows = [] }: any) => {
                     className="text-blue-500 underline"
                     onClick={() => handleNavigateUpdates(row.rfqId)}
                   >
-                    <MdOutlineRemoveRedEye className="text-[24px] text-[#000]" />
+                    <MdOutlineRemoveRedEye className="text-[24px] text-black" />
                   </button>
                   <button
                     className="text-red-500 underline ml-2"
                     onClick={() => handleModalOpen('RfqDelete', row)}
                   >
-                    <RiDeleteBinLine className="text-[24px] text-[#000]" />
+                    <RiDeleteBinLine className="text-[24px] text-black" />
                   </button>
                 </div>
               </TableCell>

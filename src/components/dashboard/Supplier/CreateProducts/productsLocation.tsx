@@ -84,12 +84,12 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
       newErrors.streetNo = 'Street number is required';
     }
 
-    if (!productLocation?.longitude || !productLocation.longitude.trim() || isNaN(productLocation.longitude)) {
-      newErrors.longitude = 'Longitude is required and must be a number';
+    if (productLocation?.longitude && productLocation.longitude.trim() && isNaN(productLocation.longitude)) {
+      newErrors.longitude = 'Longitude must be a number';
     }
 
-    if (!productLocation?.latitude || !productLocation.latitude.trim() || isNaN(productLocation.latitude)) {
-      newErrors.latitude = 'Latitude is required and must be a number';
+    if (productLocation?.latitude && productLocation.latitude.trim() && isNaN(productLocation.latitude)) {
+      newErrors.latitude = 'Latitude must be a number';
     }
 
     if (!productLocation?.fullAddress || !productLocation.fullAddress.trim()) {
@@ -152,9 +152,9 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
         }
       } catch (error: any) {
         console.error('Error validating step 2:', error);
-        toast.error(`${error?.data?.error || 'Failed to submit product details. Please try again.'}`);
+        toast.error(`${error?.data?.error || error?.error || 'Failed to submit product details. Please try again.'}`);
         setErrors({
-          serverError: error.response?.data?.message || 'Error submitting product location',
+          serverError: error.response?.data?.message || error?.error || 'Error submitting product location',
         });
       }
     }

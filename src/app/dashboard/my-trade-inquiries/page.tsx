@@ -110,8 +110,8 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                             </p>
                         </div>
                         <div className="bg-transparent p-6 rounded-[24px] border border-gray-100 space-y-1 text-center group hover:border-green-100 transition-colors">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Mineral Type</p>
-                            <p className="text-xl font-bold text-gray-900 capitalize">{inquiry.mineral_tag}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Product</p>
+                            <p className="text-xl font-bold text-gray-900 capitalize">{inquiry.item_name || inquiry.mineral_tag?.replace(/_/g, ' ')}</p>
                         </div>
                     </div>
 
@@ -262,11 +262,25 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
 };
 
 export default function MyTradeInquiries() {
-    const { data, isLoading } = useGetMyTradeInquiriesQuery();
+    const { data, isLoading } = useGetMyTradeInquiriesQuery(undefined, {
+        refetchOnMountOrArgChange: true
+    });
     const [selectedInquiry, setSelectedInquiry] = React.useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState('');
 
-    const inquiries = data?.data || [];
+    const allInquiries = data?.data || [];
+    const inquiries = searchTerm.trim()
+        ? allInquiries.filter((inq: any) => {
+            const term = searchTerm.toLowerCase();
+            return (
+                inq.external_id?.toLowerCase().includes(term) ||
+                inq.mineral_tag?.toLowerCase().includes(term) ||
+                inq.item_name?.toLowerCase().includes(term) ||
+                inq.delivery_location?.toLowerCase().includes(term)
+            );
+        })
+        : allInquiries;
 
     const handleViewDetail = (inquiry: any) => {
         setSelectedInquiry(inquiry);
@@ -288,6 +302,8 @@ export default function MyTradeInquiries() {
                         <input
                             type="text"
                             placeholder="Filter by reference..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="bg-gray-100/50 border-none pl-12 pr-6 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-green-500 outline-none w-full md:w-72 transition-all font-medium"
                         />
                     </div>
@@ -302,6 +318,7 @@ export default function MyTradeInquiries() {
                             <TableRow className="hover:bg-transparent border-none">
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-8">Reference</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4">Product</TableHead>
+                                <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4">Grade/Specs</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4 hidden md:table-cell">Quantity</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4 hidden md:table-cell text-center">Date</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4">Status</TableHead>
@@ -335,15 +352,21 @@ export default function MyTradeInquiries() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                inquiries.map((inquiry: any) => (
-                                    <TableRow key={inquiry.id} className="group hover:bg-gray-50/50 transition-colors">
+                                inquiries.map((inquiry: any, index: number) => (
+                                    <TableRow key={inquiry.id || inquiry.external_id || index} className="group hover:bg-gray-50/50 transition-colors">
                                         <TableCell className="py-5 px-8">
                                             <CopyableId id={inquiry.external_id} />
                                         </TableCell>
                                         <TableCell className="py-5 px-4">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-gray-900 capitalize">{inquiry.mineral_tag}</span>
+                                                <span className="font-bold text-gray-900 capitalize">{inquiry.item_name || inquiry.mineral_tag?.replace(/_/g, ' ')}</span>
                                                 <span className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{inquiry.delivery_location}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-5 px-4 text-[11px]">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-bold text-gray-700">{inquiry.purity_grade || inquiry.preferred_grade || '-'}</span>
+                                                {inquiry.moisture_max && <span className="text-gray-400">Moisture: {inquiry.moisture_max}%</span>}
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-5 px-4 hidden md:table-cell">

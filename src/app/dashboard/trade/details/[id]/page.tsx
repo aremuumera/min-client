@@ -178,6 +178,7 @@ export default function TradeDetailPage() {
                         inquiry.user_id,
                         'buyer',
                         inquiry.buyer_name || 'Buyer',
+                        inquiry.buyer?.company_name || 'Independent',
                         `Initial Inquiry Requirements:\n\nQuantity: ${inquiry.quantity} ${inquiry.measure_type?.replace(/_/g, ' ')}\nLocation: ${inquiry.delivery_location}, ${inquiry.delivery_state}\nGrade: ${inquiry.preferred_grade || 'Standard'}\nNotes: ${inquiry.description || 'None'}`
                     );
                 } catch (fsErr) {
@@ -245,7 +246,7 @@ export default function TradeDetailPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                             <div className="space-y-1">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mineral</p>
-                                <p className="text-lg font-black text-gray-900 capitalize">{inquiry.mineral_tag}</p>
+                                <p className="text-lg font-black text-gray-900 capitalize">{inquiry.item_name || inquiry.mineral_tag?.replace(/_/g, ' ')}</p>
                             </div>
                             <div className="space-y-1">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</p>

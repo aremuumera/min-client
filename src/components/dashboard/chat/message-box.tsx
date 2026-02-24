@@ -123,6 +123,31 @@ export function MessageBox({ message }: { message: Message }) {
 
   // console.log('MessageBox', { message, position });
 
+  // Check for Cycle Start System Divider
+  if (message.meta?.type === 'cycle_start') {
+    return (
+      <Box
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          margin: '2rem 0',
+          position: 'relative'
+        }}
+      >
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-gray-50 px-4 py-1 text-xs font-bold text-gray-500 uppercase tracking-widest border border-gray-200 rounded-full shadow-sm">
+            {message.text}
+          </span>
+        </div>
+      </Box>
+    );
+  }
+
   // Check if there is an invoice message
   if (message.contentType === 'invoice' && message.invoiceData) {
     return (

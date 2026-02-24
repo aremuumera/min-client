@@ -9,7 +9,9 @@ import { CircularProgress } from '@/components/ui/progress';
 import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
+import { ActionPanel } from './action-panel';
 import { ChatContext } from '@/providers/chat-provider';
+import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 
 interface ThreadViewProps {
@@ -18,6 +20,7 @@ interface ThreadViewProps {
 
 export function ThreadView({ threadId }: ThreadViewProps) {
   const { messages, conversations, setActiveConversation, loading, sendMessage } = React.useContext(ChatContext);
+  const { user } = useSelector((state: any) => state.auth);
 
   const thread = conversations.find((t: any) => t.conversationId === threadId);
 
@@ -83,7 +86,13 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           <MessageBox key={message.id} message={message} />
         ))}
       </Stack>
-      <MessageAdd onSend={handleSendMessage} />
-    </Box>
+      {
+        thread.metadata?.status === 'pending' && user?.role !== 'buyer' ? (
+          <ActionPanel thread={thread} />
+        ) : (
+          <MessageAdd onSend={handleSendMessage} />
+        )
+      }
+    </Box >
   );
 }

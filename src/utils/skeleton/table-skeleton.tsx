@@ -21,7 +21,7 @@ export const EmptyState = ({ message }: { message: string }) => (
 
 const TableSkeleton = ({ columns }: { columns: any[] }) => {
   return (
-    <div className="rounded-md border bg-white">
+    <div className="rounded-md border-[#f5f5f5] border bg-white">
       <Table>
         <TableHeader>
           <TableRow>

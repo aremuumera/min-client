@@ -3,8 +3,7 @@
 
 import React from 'react';
 import { useGetDetailFfqQuery } from '@/redux/features/buyer-rfq/rfq-api';
-// import RfqDetailSkeleton from '@/utils/skeleton/rfq_detail_skeleton'; // Reuse product skeleton
-import ProductSkeleton from '@/utils/skeleton/product-skeleton';
+import RfqDetailSkeleton from '@/utils/skeleton/rfq_detail_skeleton';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -30,9 +29,7 @@ const RfqDetailsView = ({ id }: { id: string }) => {
     // Temporary skeleton approach
     return (
       <ViewModeProvider>
-        <div className="max-w-[1280px] mx-auto px-4 py-8 mt-[100px]">
-          <ProductSkeleton count={1} />
-        </div>
+        <RfqDetailSkeleton />
       </ViewModeProvider>
     );
   }

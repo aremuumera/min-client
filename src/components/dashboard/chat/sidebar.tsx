@@ -98,6 +98,16 @@ function SidebarContent({
   const [searchResults, setSearchResults] = React.useState([]);
   const [selectedType, setSelectedType] = React.useState('all');
 
+  // Auto-set filter based on current conversation
+  React.useEffect(() => {
+    if (currentConversationId) {
+      const activeConv = conversations.find(c => c.conversationId === currentConversationId);
+      if (activeConv?.itemType && activeConv.itemType !== selectedType) {
+        setSelectedType(activeConv.itemType);
+      }
+    }
+  }, [currentConversationId, conversations]);
+
   // Calculate UNREAD conversation counts by type
   const conversationCounts = React.useMemo(() => {
     const counts: Record<string, number> = {
@@ -127,6 +137,9 @@ function SidebarContent({
     if (selectedType !== 'all') {
       result = result.filter((conv: any) => conv.itemType === selectedType);
     }
+
+    // Hide rejected trades from active lists
+    result = result.filter((conv: any) => conv.metadata?.status !== 'rejected');
 
     // Apply search filter if active
     if (searchFocused && searchQuery) {

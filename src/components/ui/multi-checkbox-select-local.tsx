@@ -25,17 +25,34 @@ export const MultiCheckboxSelectLocal = ({ options, value = [], onChange, label,
     };
 
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
+        const handleOutsideInteraction = (e: Event) => {
+            if (!isOpen) return;
+            const target = e.target as Node;
+
+            if (e.type === 'scroll' && dropdownRef.current && dropdownRef.current.contains(target)) {
+                return;
+            }
+
             if (
-                containerRef.current && !containerRef.current.contains(e.target as Node) &&
-                (!dropdownRef.current || !dropdownRef.current.contains(e.target as Node))
+                containerRef.current && !containerRef.current.contains(target) &&
+                (!dropdownRef.current || !dropdownRef.current.contains(target))
             ) {
+                setIsOpen(false);
+            } else if (e.type === 'scroll') {
                 setIsOpen(false);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleOutsideInteraction);
+            document.addEventListener('scroll', handleOutsideInteraction, true);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideInteraction);
+            document.removeEventListener('scroll', handleOutsideInteraction, true);
+        };
+    }, [isOpen]);
 
     const getDisplayValue = () => {
         if (!safeValue || safeValue.length === 0) return placeholder || 'Select...';
@@ -43,8 +60,10 @@ export const MultiCheckboxSelectLocal = ({ options, value = [], onChange, label,
             const option = options.find((opt: any) => opt.value === v || opt.isoCode === v || opt === v);
             return option ? (option.label || option.name || option.value || option) : v;
         });
-        if (labels.length <= 3) return labels.join(', ');
-        return labels.slice(0, 3).join(', ') + '...';
+
+        if (labels.length === 1) return labels[0];
+        if (labels.length > 2) return `${labels.length} items selected`;
+        return labels.join(', ');
     };
 
     return (
@@ -52,12 +71,12 @@ export const MultiCheckboxSelectLocal = ({ options, value = [], onChange, label,
             {label && <label className="mb-1.5 block text-sm font-medium text-neutral-700">{label}</label>}
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex min-h-[42px] w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 transition-all hover:border-neutral-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="flex min-h-[42px] w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 transition-all hover:border-neutral-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 overflow-hidden"
             >
-                <span className={`truncate text-sm ${!safeValue?.length ? 'text-neutral-400' : 'text-neutral-900'}`}>
+                <span className={`truncate text-sm flex-1 ${!safeValue?.length ? 'text-neutral-400' : 'text-neutral-900'}`}>
                     {getDisplayValue()}
                 </span>
-                <ChevronDown size={18} className={`text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={18} className={`shrink-0 text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </div>
 
             <AnimatePresence>

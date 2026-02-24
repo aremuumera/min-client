@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { chatService, db, getUserName } from '@/components/dashboard/chat/chat_service';
 import { customerTradeChatService } from '@/components/dashboard/chat/trade_chat_service';
+import { useAcknowledgeInquiryMutation, useRejectInquiryMutation } from '@/redux/features/trade/trade_api';
 
 
 export interface Conversation {
@@ -43,6 +44,8 @@ interface ChatContextType {
   clearAllNotifications: () => Promise<boolean>;
   clearSingleNotification: (notificationId: string) => Promise<boolean>;
   markMessageAsDelivered: (conversationId: string, messageId: string) => Promise<boolean>;
+  acknowledgeTrade: (tradeId: string) => Promise<boolean>;
+  rejectTrade: (tradeId: string, reason: string) => Promise<boolean>;
 }
 
 export const ChatContext = createContext<ChatContextType>({
@@ -66,6 +69,8 @@ export const ChatContext = createContext<ChatContextType>({
   clearAllNotifications: async () => false,
   clearSingleNotification: async () => false,
   markMessageAsDelivered: async () => false,
+  acknowledgeTrade: async () => false,
+  rejectTrade: async () => false,
 });
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
@@ -80,6 +85,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [openDesktopSidebar, setOpenDesktopSidebar] = React.useState(true);
   const [openMobileSidebar, setOpenMobileSidebar] = React.useState(false);
+  const [acknowledgeInquiry] = useAcknowledgeInquiryMutation();
+  const [rejectInquiry] = useRejectInquiryMutation();
   const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
   const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
   const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`;
@@ -374,6 +381,26 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [messages, activeConversation, effectiveUserId]);
 
+  const acknowledgeTrade = useCallback(async (tradeId: string) => {
+    try {
+      await acknowledgeInquiry(tradeId).unwrap();
+      return true;
+    } catch (error) {
+      console.error('Failed to acknowledge trade:', error);
+      return false;
+    }
+  }, [acknowledgeInquiry]);
+
+  const rejectTrade = useCallback(async (tradeId: string, reason: string) => {
+    try {
+      await rejectInquiry({ id: tradeId, reason }).unwrap();
+      return true;
+    } catch (error) {
+      console.error('Failed to reject trade:', error);
+      return false;
+    }
+  }, [rejectInquiry]);
+
 
 
 
@@ -495,6 +522,8 @@ New Flow for for all roles to Admin
     clearAllNotifications,
     clearSingleNotification,
     markMessageAsDelivered,
+    acknowledgeTrade,
+    rejectTrade,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

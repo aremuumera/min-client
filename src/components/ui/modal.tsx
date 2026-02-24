@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/utils/helper';
 import { IconButton } from './icon-button';
+import { Portal } from './portal';
 
 /* ============================================
    MODAL CONTEXT
@@ -109,35 +110,37 @@ function Modal({
     <ModalContext.Provider value={{ open, onClose }}>
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-black/50"
-              onClick={closeOnBackdropClick ? onClose : undefined}
-            />
+          <Portal>
+            <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 bg-black/50"
+                onClick={closeOnBackdropClick ? onClose : undefined}
+              />
 
-            {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                'relative w-full bg-white rounded-xl shadow-xl',
-                actualFullWidth ? 'max-w-none mx-4' : sizeClasses[actualSize],
-                className,
-                PaperProps?.className
-              )}
-              style={{ ...(sx || {}), ...(PaperProps?.sx || {}) }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {children}
-            </motion.div>
-          </div>
+              {/* Modal Content */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.2 }}
+                className={cn(
+                  'relative w-full bg-white rounded-xl shadow-xl',
+                  actualFullWidth ? 'max-w-none' : sizeClasses[actualSize],
+                  className,
+                  PaperProps?.className
+                )}
+                style={{ ...(sx || {}), ...(PaperProps?.sx || {}) }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {children}
+              </motion.div>
+            </div>
+          </Portal>
         )}
       </AnimatePresence>
     </ModalContext.Provider>

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 const FilterTab = ({ active, children, onClick }: any) => (
     <Box
         onClick={onClick}
-        className={`cursor-pointer px-3 py-1 rounded text-xs ${active ? 'font-semibold bg-gray-200' : 'font-normal bg-transparent hover:bg-gray-100'}`}
+        className={`cursor-pointer px-3 py-1 rounded-lg text-xs transition-colors duration-200 ${active ? 'font-bold bg-emerald-500 text-white! shadow-sm' : 'font-medium bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
     >
         {children}
     </Box>
@@ -48,7 +48,7 @@ export function ConversationTypeFilter({ selectedType, onTypeChange, conversatio
                     onClick={() => onTypeChange(type.value)}
                 >
                     <Box className="flex items-center gap-2">
-                        <Typography variant="body2">{type.label}</Typography>
+                        <Typography variant="body2" className={`${selectedType === type.value ? 'text-white!' : ''}`}>{type.label}</Typography>
                         {type.count > 0 && (
                             <Badge variant="primary" pill className="text-[10px] px-1 h-4">
                                 {type.count}

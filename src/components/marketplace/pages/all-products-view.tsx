@@ -117,10 +117,6 @@ const AllProductsView = () => {
     },
     {
       refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-      // refetchOnError: true, // properties might differ in newer redux toolkit query versions or types
-      // pollingInterval: 30000,
     }
   );
 

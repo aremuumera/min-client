@@ -25,6 +25,7 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
 const baseQuery = fetchBaseQuery({
     baseUrl: config.api.baseUrl,
     credentials: 'include',
+    timeout: 60000,
     prepareHeaders: (headers, { getState }) => {
         // Skip adding the authorization header if 'x-skip-auth' is present
         // This is crucial for the refresh endpoint which relies on cookies

@@ -20,7 +20,7 @@ const ConfirmSupplierProductsInfo = () => {
     : `${WEB_URL}`;
 
   // Construct the product link
-  const productLink = `${baseUrl}/products/details/${productSuccessData?.productId || ''}/${formatCompanyNameForUrl(productSuccessData?.productName || '')}`;
+  const productLink = `${baseUrl}/dashboard/products/details/${productSuccessData?.productId || ''}/${formatCompanyNameForUrl(productSuccessData?.productName || '')}`;
 
   console.log('productSuccessData', productSuccessData);
 

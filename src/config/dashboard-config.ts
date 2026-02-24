@@ -68,6 +68,7 @@ export const dashboardConfig: DashboardConfig = {
                     items: [
                         { key: 'rfq:create', title: 'Create Rfq', href: paths.dashboard.rfqs.create, permission: 'rfq' },
                         { key: 'rfq', title: 'Listed RFQs', href: paths.dashboard.rfqs.list, permission: 'rfq' },
+                        { key: 'rfq-offers', title: 'Offer Board', href: '/dashboard/rfq/offers', permission: 'rfq' },
                         { key: 'buyer-trade-inquiries', title: 'Order Inquiries', href: '/dashboard/my-trade-inquiries', permission: 'rfq' },
                     ],
                 },

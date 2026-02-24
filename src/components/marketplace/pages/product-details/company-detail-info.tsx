@@ -8,6 +8,11 @@ import { useRouter } from 'next/navigation';
 import { paths } from '@/config/paths';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 
+interface MediaItem {
+  url: string;
+  type: 'image' | 'video' | 'document';
+}
+
 interface CompanyDetailInfoProps {
   products: any;
 }
@@ -21,7 +26,10 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
     images
   } = products || {};
 
-  const validImages = images?.length > 0 ? images : ['/assets/placeholder.png'];
+  // Normalize media items to {url, type} objects
+  const validMedia: MediaItem[] = images?.length > 0
+    ? images.map((img: any) => typeof img === 'string' ? { url: img, type: 'image' as const } : { url: img.url, type: img.type || 'image' })
+    : [{ url: '/assets/logo5.png', type: 'image' as const }];
 
   const handleOpenModal = () => {
     setShowModal(true);
@@ -30,12 +38,36 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % validImages.length);
+    setCurrentImageIndex((prev) => (prev + 1) % validMedia.length);
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+    setCurrentImageIndex((prev) => (prev - 1 + validMedia.length) % validMedia.length);
+  };
+
+  const renderMedia = (media: MediaItem, className: string) => {
+    if (media.type === 'video') {
+      return (
+        <video
+          key={media.url}
+          src={media.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className={className}
+        />
+      );
+    }
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={media.url}
+        alt="Product preview"
+        className={className}
+      />
+    );
   };
 
   return (
@@ -93,26 +125,21 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
           )}
         </div>
 
-        {/* Image preview */}
+        {/* Image/Video preview */}
         <div className="w-full sm:w-auto flex flex-col items-center sm:items-start mt-4 sm:mt-0">
           <button
             className="flex gap-1 text-gray-600 items-center cursor-pointer hover:text-green-600 transition-colors mb-2"
             onClick={handleOpenModal}
           >
             <Maximize2 className="w-4 h-4" />
-            <span className="font-medium text-xs sm:text-sm">View Larger Image</span>
+            <span className="font-medium text-xs sm:text-sm">View Larger Media</span>
           </button>
 
           <div
             className="w-28 h-28 sm:w-32 sm:h-32 cursor-pointer overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100"
             onClick={handleOpenModal}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={validImages[0]}
-              alt="Product preview"
-              className="w-full h-full object-cover hover:opacity-90 transition-opacity"
-            />
+            {renderMedia(validMedia[0], "w-full h-full object-cover hover:opacity-90 transition-opacity")}
           </div>
         </div>
       </div>
@@ -127,7 +154,7 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
         </Link>
       </div>
 
-      {/* Image Modal */}
+      {/* Media Modal */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black/90 z-11100 flex items-center justify-center backdrop-blur-sm"
@@ -155,30 +182,54 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
               <ChevronRight size={40} />
             </button>
 
-            <div className="max-h-[85vh] max-w-[90vw] relative flex flex-col items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={validImages[currentImageIndex]}
-                alt={`Full view ${currentImageIndex + 1}`}
-                className="max-h-[80vh] max-w-full object-contain rounded-md shadow-2xl"
-              />
+            <div className="max-h-[85vh] max-w-[90vw] relative flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              {validMedia[currentImageIndex].type === 'video' ? (
+                <video
+                  key={validMedia[currentImageIndex].url}
+                  src={validMedia[currentImageIndex].url}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  className="max-h-[80vh] max-w-full rounded-md shadow-2xl"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={validMedia[currentImageIndex].url}
+                  alt={`Full view ${currentImageIndex + 1}`}
+                  className="max-h-[80vh] max-w-full object-contain rounded-md shadow-2xl"
+                />
+              )}
 
               <div className="mt-4 px-4 py-1 bg-black/50 text-white rounded-full text-sm">
-                {currentImageIndex + 1} / {validImages.length}
+                {currentImageIndex + 1} / {validMedia.length}
               </div>
             </div>
 
             {/* Thumbnails */}
-            {validImages.length > 1 && (
+            {validMedia.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 overflow-x-auto">
-                {validImages.map((img: string, idx: number) => (
+                {validMedia.map((media: MediaItem, idx: number) => (
                   <div
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
                     className={`w-16 h-16 shrink-0 rounded-md overflow-hidden border-2 cursor-pointer transition-all ${currentImageIndex === idx ? 'border-green-500 scale-105' : 'border-transparent opacity-70 hover:opacity-100'}`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} className="w-full h-full object-cover" alt="thumb" />
+                    {media.type === 'video' ? (
+                      <div className="relative w-full h-full">
+                        <video src={media.url} className="w-full h-full object-cover" muted />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <div className="bg-white/80 p-1 rounded-full">
+                            <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-6 border-l-green-600 border-b-[4px] border-b-transparent ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={media.url} className="w-full h-full object-cover" alt="thumb" />
+                    )}
                   </div>
                 ))}
               </div>

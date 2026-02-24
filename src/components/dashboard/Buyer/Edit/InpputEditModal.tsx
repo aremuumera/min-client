@@ -228,12 +228,19 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
 
   const handleFileChange = (id: any, files: any) => {
     const isValidFile = (file: any) => {
-      if (file.size > 5 * 1024 * 1024) {
+      if (['image/png', 'image/jpeg', 'image/webp', 'application/pdf'].includes(file.type) && file.size > 5 * 1024 * 1024) {
         setErrors((prev: any) => ({ ...prev, productImages: 'File size must not exceed 5MB' }));
+        toast.error('File size must not exceed 5MB');
         return false;
       }
-      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-        setErrors((prev: any) => ({ ...prev, productImages: 'Supported formats: PNG, JPEG, WEBP' }));
+      if (file.type === 'video/mp4' && file.size > 10 * 1024 * 1024) {
+        setErrors((prev: any) => ({ ...prev, productImages: 'File size must not exceed 10MB' }));
+        toast.error('File size must not exceed 10MB');
+        return false;
+      }
+      if (!['image/png', 'image/jpeg', 'image/webp', 'video/mp4', 'application/pdf'].includes(file.type)) {
+        setErrors((prev: any) => ({ ...prev, productImages: 'Supported formats: PNG, JPEG, WEBP, MP4, PDF' }));
+        toast.error('Supported formats: PNG, JPEG, WEBP, MP4, PDF');
         return false;
       }
       return true;
@@ -261,7 +268,6 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
     }
   };
 
-  console.log('formData', formData);
 
   const handleUpdateProductMedia = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -368,7 +374,11 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
         paymentTermsDescribed: formData?.paymentTermsDescribed,
         status: formData?.status,
         rfqProductMainCategory: formData?.main,
-        category_tag: formData?.categoryTag
+        category_tag: formData?.categoryTag,
+        purity_grade: formData?.purity_grade,
+        moisture_max: formData?.moisture_max,
+        packaging: formData?.packaging,
+        sampling_method: formData?.sampling_method
       };
 
       if (formData?.sub && formData.sub.trim() !== '') {
@@ -537,16 +547,28 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
                         {attachments?.length > 0 && attachments?.map((img: any, i: number) => (
                           <Box
                             style={{ position: 'relative', width: '100px', height: '100px' }}
-                            className="w-40 h-40 rounded shrink-0 my-4"
+                            className="w-40 h-40 rounded shrink-0 my-4 overflow-hidden border"
                             key={i}>
-                            <img src={img.url} alt="" style={{ width: '100px', height: '100px' }} />
+                            {img.url.toLowerCase().endsWith('.pdf') ? (
+                              <div className="flex flex-col justify-center items-center h-full w-full bg-gray-100">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#FF0000" strokeWidth="2" />
+                                  <path d="M14 2V8H20" stroke="#FF0000" strokeWidth="2" />
+                                </svg>
+                                <span className="text-[10px] text-red-600 font-bold">PDF</span>
+                              </div>
+                            ) : img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm') ? (
+                              <video src={img.url} className='w-full h-full object-cover' muted />
+                            ) : (
+                              <img src={img.url} alt="" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                            )}
                             <IconButton
                               type="button"
                               aria-label="Delete attachment"
-                              className="absolute -top-2 -right-2 bg-black rounded-full shadow-md"
+                              className="absolute -top-1 -right-1 bg-white rounded-full shadow-md p-1"
                               onClick={() => openDeleteConfirmation(img?.publicId, 'attachment')}
                             >
-                              <MdOutlineCancel color="white" fontSize="20px" />
+                              <MdOutlineCancel color="red" fontSize="18px" />
                             </IconButton>
                           </Box>
                         ))}
@@ -566,31 +588,31 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
 
                     {/* productAttachment field  */}
                     {field.id === 'productAttachment' && selectedAttachmentFiles.length > 0 && (
-                      <Box className="mt-2">
+                      <Box className="mt-2 space-y-2">
                         {selectedAttachmentFiles.map((file: any, index: number) => (
                           <Box
                             key={index}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              border: '1px solid #ccc',
-                              borderRadius: '5px',
-                              padding: '8px',
-                              marginBottom: '5px',
-                              position: 'relative',
-                            }}
+                            className="flex items-center justify-between border rounded-lg p-2 relative bg-gray-50"
                           >
-                            <Typography variant="body2" color="text.secondary">
+                            <Box className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border bg-white flex items-center justify-center">
+                              {file.type === 'application/pdf' ? (
+                                <div className="text-[10px] font-bold text-red-600">PDF</div>
+                              ) : file.type.startsWith('video/') ? (
+                                <video src={URL.createObjectURL(file)} className="w-full h-full object-cover" muted />
+                              ) : (
+                                <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                              )}
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" className="ml-2 truncate flex-1 text-xs">
                               {file.name}
                             </Typography>
                             <IconButton
                               type="button"
                               aria-label="Delete file"
-                              className="absolute -top-2 -right-2 bg-white rounded-full shadow-md"
                               onClick={() => removeFile(field.id, index)}
+                              className="p-1"
                             >
-                              <MdOutlineCancel color="red" />
+                              <MdOutlineCancel color="red" size={18} />
                             </IconButton>
                           </Box>
                         ))}

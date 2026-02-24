@@ -3,8 +3,7 @@
 
 import React from 'react';
 import { useGetStoreProfileWebQuery } from '@/redux/features/supplier-profile/supplier_profile_api';
-// import { CompanyProfileHeroSkeleton, CompanyProfileTabSkeleton } from '@/utils/skeleton/company_profile_skeleton'; // Need migration
-import ProductSkeleton from '@/utils/skeleton/product-skeleton'; // Using generic skeleton
+import { CompanyProfileHeroSkeleton, CompanyProfileTabSkeleton } from '@/utils/skeleton/company_profile_skeleton';
 import { decodeCompanyNameFromUrl } from '@/utils/url-formatter';
 import { useRouter } from 'next/navigation';
 import CompanyProfileHero from './company-profile/company-profile-hero';
@@ -36,8 +35,8 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   if (isLoading) {
     return (
       <div className="max-w-[1400px] mx-auto pt-8 px-4">
-        <div className="h-64 bg-gray-200 rounded-lg w-full animate-pulse mb-8"></div>
-        <ProductSkeleton count={1} />
+        <CompanyProfileHeroSkeleton />
+        <CompanyProfileTabSkeleton />
       </div>
     );
   }

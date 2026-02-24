@@ -21,17 +21,34 @@ export const SearchableSelectLocal = ({ options, value, onChange, label, placeho
     };
 
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
+        const handleOutsideInteraction = (e: Event) => {
+            if (!isOpen) return;
+            const target = e.target as Node;
+
+            if (e.type === 'scroll' && dropdownRef.current && dropdownRef.current.contains(target)) {
+                return;
+            }
+
             if (
-                containerRef.current && !containerRef.current.contains(e.target as Node) &&
-                (!dropdownRef.current || !dropdownRef.current.contains(e.target as Node))
+                containerRef.current && !containerRef.current.contains(target) &&
+                (!dropdownRef.current || !dropdownRef.current.contains(target))
             ) {
+                setIsOpen(false);
+            } else if (e.type === 'scroll') {
                 setIsOpen(false);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleOutsideInteraction);
+            document.addEventListener('scroll', handleOutsideInteraction, true);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideInteraction);
+            document.removeEventListener('scroll', handleOutsideInteraction, true);
+        };
+    }, [isOpen]);
 
     const selectedOption = options.find((opt: any) => opt.value === value || opt.isoCode === value || opt === value);
     const displayValue = selectedOption ? (selectedOption.label || selectedOption.name || selectedOption.value || selectedOption) : value;

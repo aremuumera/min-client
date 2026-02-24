@@ -8,6 +8,7 @@ import { logout, setRequestedLocation } from '@/redux/features/AuthFeature/auth_
 import { paths, requiresVerification, isPublicRoute } from '@/config/paths';
 import { Modal, ModalHeader, ModalBody, Button, Box } from '@/components/ui';
 import { jwtDecode } from 'jwt-decode';
+import { firebaseAuthService } from '@/lib/firebase';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -16,6 +17,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { requestedLocation, isAuth, user, appData, isInitialized, token } = useAppSelector(
     (state) => state.auth
   );
+  const firebaseToken = useAppSelector((state) => state.auth.numb);
 
   // AppCheck (refresh token)
   const { isLoading, isError, refetch, isUninitialized } = useAppCheckQuery(undefined,
@@ -27,6 +29,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isBusinessVerified = appData?.businessVerification?.isVerified;
   const [showProfileModal, setShowProfileModal] = React.useState(false);
 
+  // Sign into Firebase Auth when custom token is available
+  const firebaseSignedIn = React.useRef(false);
+  React.useEffect(() => {
+    if (firebaseToken && !firebaseSignedIn.current) {
+      firebaseSignedIn.current = true;
+      firebaseAuthService.signInWithCustomToken(firebaseToken)
+        .then((user) => {
+          console.log('✅ Firebase Auth signed in:', user?.uid);
+        })
+        .catch((err) => {
+          console.error('❌ Firebase Auth sign-in failed:', err);
+          firebaseSignedIn.current = false; // Allow retry
+        });
+    }
+    if (!firebaseToken) {
+      firebaseSignedIn.current = false;
+    }
+  }, [firebaseToken]);
 
   const lastRefetchTime = React.useRef<number>(0);
 
@@ -123,6 +143,46 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // --- Role-Based Route Protection ---
+    const supplierOnlyRoutes = [
+      paths.dashboard.products.list, // /dashboard/supplier-list
+      '/dashboard/received-inquiries'
+    ];
+
+    const buyerOnlyRoutes = [
+      paths.dashboard.rfqs.list, // /dashboard/rfq-list
+      '/dashboard/my-trade-inquiries'
+    ];
+
+    const inspectorOnlyRoutes = [
+      '/dashboard/inspections'
+    ];
+
+    const isSupplierRoute = supplierOnlyRoutes.some(route => pathname.startsWith(route));
+    const isBuyerRoute = buyerOnlyRoutes.some(route => pathname.startsWith(route));
+    const isInspectorRoute = inspectorOnlyRoutes.some(route => pathname.startsWith(route));
+
+    // Buyers cannot access supplier or inspector tools
+    if (userRole === 'buyer' && (isInspectorRoute)) {
+      router.replace(paths.errors.notAuthorized);
+      return;
+    }
+
+    // Suppliers cannot access buyer or inspector tools
+    if (userRole === 'supplier' && (isInspectorRoute)) {
+      router.replace(paths.errors.notAuthorized);
+      return;
+    }
+
+    // Inspectors cannot access supplier tools, buyer tools, or the become-a-supplier flow
+    if (
+      userRole === 'inspector' &&
+      (isSupplierRoute || isBuyerRoute || pathname.startsWith(paths.dashboard.becomeASupplier))
+    ) {
+      router.replace(paths.errors.notAuthorized);
+      return;
+    }
+
     // Redirect to saved location after login
     if (requestedLocation) {
       const targetLocation = requestedLocation;
@@ -144,10 +204,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     isError,
   ]);
 
-  if (!isInitialized || (isLoading && !isAuth)) {
+  const shouldShowLoader = !isInitialized || (isLoading && !isAuth);
+
+  // If we don't have user data or app data yet AND we are authenticated, wait for it
+  const isWaitingForUserData = isAuth && (!user || !appData);
+
+  if (shouldShowLoader || isWaitingForUserData) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500" />
+      <div className="flex items-center justify-center h-screen bg-gray-50/50">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600" />
       </div>
     );
   }

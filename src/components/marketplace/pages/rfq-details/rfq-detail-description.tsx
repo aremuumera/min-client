@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { User, Send, MapPin, X } from 'lucide-react';
+import { User, Send, MapPin, X, Box, CheckCircle, Package } from 'lucide-react';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
@@ -12,8 +12,8 @@ import { useAlert } from '@/providers';
 import { paths } from '@/config/paths';
 import { useAppSelector } from '@/redux';
 
-// Image Modal Component
-const ImageModal = ({ isOpen, onClose, imageUrl }: { isOpen: boolean, onClose: () => void, imageUrl: string }) => {
+// Media Modal Component
+const MediaModal = ({ isOpen, onClose, url, type }: { isOpen: boolean, onClose: () => void, url: string, type: 'image' | 'video' | 'document' }) => {
   if (!isOpen) return null;
 
   return (
@@ -25,8 +25,17 @@ const ImageModal = ({ isOpen, onClose, imageUrl }: { isOpen: boolean, onClose: (
         >
           <X size={24} />
         </button>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt="Enlarged view" className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
+        {type === 'video' ? (
+          <video
+            src={url}
+            controls
+            autoPlay
+            className="max-w-full max-h-[85vh] rounded-lg shadow-2xl"
+          />
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={url} alt="Enlarged view" className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
+        )}
       </div>
     </div>
   );
@@ -35,9 +44,10 @@ const ImageModal = ({ isOpen, onClose, imageUrl }: { isOpen: boolean, onClose: (
 const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
   const [showLoginModalForSave, setShowLoginModalForSave] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [imageModal, setImageModal] = useState({
+  const [mediaModal, setMediaModal] = useState({
     isOpen: false,
-    imageUrl: '',
+    url: '',
+    type: 'image' as 'image' | 'video' | 'document',
   });
 
   const { showAlert } = useAlert();
@@ -61,6 +71,20 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
     productDestination,
     deadlineDate,
     attachments,
+    purity_grade,
+    moisture_max,
+    packaging,
+    sampling_method,
+    inquiry_type,
+    urgency_level,
+    rfqProductSubCategory,
+    rfqProductCategory,
+    deliveryPeriod,
+    durationOfSupply,
+    is_inspection_required,
+    is_shipment_included,
+    recurring_frequency,
+    recurring_duration,
   } = rfqProduct;
 
   // Handle potential id naming differences
@@ -81,8 +105,12 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
     }
   };
 
-  const openImageModal = (url: string) => {
-    setImageModal({ isOpen: true, imageUrl: url });
+  const openMediaModal = (url: string, type: 'image' | 'video' | 'document') => {
+    if (type === 'document') {
+      window.open(url, '_blank');
+      return;
+    }
+    setMediaModal({ isOpen: true, url, type });
   };
 
   return (
@@ -108,23 +136,46 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
           <>
             <div className="bg-gray-100 h-px my-8 w-full"></div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-4">Referenced Images</h3>
+              <h3 className="text-sm font-semibold text-gray-800 mb-4">Referenced Media</h3>
               <div className="overflow-x-auto pb-2 scrollbar-hide">
                 <div className="flex gap-4">
                   {attachments.map((attachment: any, index: number) => {
                     const url = typeof attachment === 'string' ? attachment : attachment.url;
+                    const type = typeof attachment === 'string' ? 'image' : attachment.type;
+
                     return (
                       <div
                         key={index}
-                        className="w-[100px] h-[100px] min-w-[100px] rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:ring-2 hover:ring-green-500 transition-all bg-gray-50 flex items-center justify-center"
-                        onClick={() => openImageModal(url)}
+                        className="w-[120px] h-[120px] min-w-[120px] rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:ring-2 hover:ring-green-500 transition-all bg-gray-50 flex items-center justify-center relative group"
+                        onClick={() => openMediaModal(url, type)}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={url}
-                          alt={`Ref ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        {type === 'video' ? (
+                          <div className="w-full h-full relative">
+                            <video
+                              src={url}
+                              className="w-full h-full object-cover"
+                              muted
+                              onMouseOver={(e) => (e.currentTarget as HTMLVideoElement).play()}
+                              onMouseOut={(e) => (e.currentTarget as HTMLVideoElement).pause()}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/0 transition-colors">
+                              <div className="bg-white/80 rounded-full p-2">
+                                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                              </div>
+                            </div>
+                          </div>
+                        ) : type === 'document' ? (
+                          <div className="flex flex-col items-center gap-1 p-2">
+                            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span className="text-[10px] text-gray-500 truncate w-full text-center">Document</span>
+                          </div>
+                        ) : (
+                          <img
+                            src={url}
+                            alt={`Ref ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -160,8 +211,23 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
             <div className="flex items-start gap-3">
               <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm text-gray-500 mb-1">Deadline for Quote:</p>
-                <p className="font-semibold text-gray-800">{deadlineDate || 'Unavailable'}</p>
+                <p className="text-sm text-gray-500 mb-1">Expected Delivery:</p>
+                <p className="font-semibold text-gray-800">{deliveryPeriod || 'Unavailable'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Duration of Supply:</p>
+                <p className="font-semibold text-gray-800">
+                  {durationOfSupply || 'One-off'}
+                  {inquiry_type === 'recurring' && recurring_frequency && (
+                    <span className="text-xs font-normal text-gray-500 ml-1">
+                      ({recurring_frequency} for {recurring_duration} cycles)
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
 
@@ -174,6 +240,27 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
                 </p>
               </div>
             </div>
+
+            {packaging && (
+              <div className="flex items-start gap-3">
+                <Package className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Packaging:</p>
+                  <p className="font-semibold text-gray-800">{packaging}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 text-green-600 font-bold mt-0.5 flex items-center justify-center">!</div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Urgency:</p>
+                <p className={`font-semibold ${urgency_level === 'urgent' ? 'text-red-600' : 'text-gray-800 uppercase'}`}>
+                  {urgency_level || 'Standard'}
+                </p>
+              </div>
+            </div>
+
           </div>
 
           {/* Column 2 */}
@@ -211,6 +298,60 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
                 </p>
               </div>
             </div>
+
+            {/* Additional RFQ Details */}
+            {purity_grade && (
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 text-green-600 font-bold mt-0.5 flex items-center justify-center">%</div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Purity / Grade:</p>
+                  <p className="font-semibold text-gray-800">{purity_grade}</p>
+                </div>
+              </div>
+            )}
+
+            {moisture_max && (
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 text-green-600 font-bold mt-0.5 flex items-center justify-center">H2O</div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Max Moisture:</p>
+                  <p className="font-semibold text-gray-800">{moisture_max}%</p>
+                </div>
+              </div>
+            )}
+
+
+            {/* {sampling_method && (
+              <div className="flex items-start gap-3">
+                <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Sampling Method:</p>
+                  <p className="font-semibold text-gray-800">{sampling_method}</p>
+                </div>
+              </div>
+            )} */}
+
+
+
+            {is_inspection_required && (
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Inspection:</p>
+                  <p className="font-semibold text-gray-800">Required</p>
+                </div>
+              </div>
+            )}
+
+            {is_shipment_included && (
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Shipping:</p>
+                  <p className="font-semibold text-gray-800">Included in RFQ</p>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
@@ -254,12 +395,17 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
         product={{
           id: effectiveRfqId.toString(),
           name: rfqProductName,
-          mineral_tag: rfqProduct.mineral_tag || 'mineral', // Assuming mineral_tag is in rfqProduct
+          mineral_tag: rfqProduct.mineral_tag || rfqProduct.category_tag || 'mineral', // Use category_tag as fallback
           supplier_id: userId?.toString()
         }}
         itemType="rfq"
       />
-      <ImageModal isOpen={imageModal.isOpen} onClose={() => setImageModal({ ...imageModal, isOpen: false })} imageUrl={imageModal.imageUrl} />
+      <MediaModal
+        isOpen={mediaModal.isOpen}
+        onClose={() => setMediaModal({ ...mediaModal, isOpen: false })}
+        url={mediaModal.url}
+        type={mediaModal.type}
+      />
     </div>
   );
 };

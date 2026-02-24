@@ -17,6 +17,9 @@ import LoginModal from '@/utils/login-modal';
 // import { Button } from '@/components/ui/button'; // Replacing with custom or tailwind
 import Image from 'next/image';
 import { FaStar } from 'react-icons/fa';
+import { useAppDispatch, useAppSelector } from '@/redux';
+import { toggleComparison } from '@/redux/features/comparison/comparison-slice';
+import { GitCompare } from 'lucide-react';
 
 // Temporary assets imports - standardizing assets
 // import CE from '/assets/CE_logo.png' // Need to make sure assets exist in public
@@ -31,6 +34,8 @@ interface ProductWidgetsProps {
 
 const ProductWidgets = ({ products }: ProductWidgetsProps) => {
     const { isGridView } = useViewMode();
+    const dispatch = useAppDispatch();
+    const { comparisonList } = useAppSelector((state) => state.comparison);
     // const navigate = useNavigate(); // Not needed in Next.js usually due to Link
     // const scrollRef = React.useRef(null);
     const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -46,22 +51,35 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
     // }
 
 
+
+    // Normalize images to {url, type} objects
+    const normalizedImages = products?.images?.map((img: any) =>
+        typeof img === 'string' ? { url: img, type: 'image' } : { url: img.url, type: img.type || 'image' }
+    ) || [];
+
     const handleNext = (e: React.MouseEvent) => {
-        e.preventDefault(); // Prevent Link navigation
-        setCurrentIndex((currentIndex + 1) % (products?.images?.length || 1));
+        e.preventDefault();
+        setCurrentIndex((currentIndex + 1) % (normalizedImages.length || 1));
     }
 
     const handlePrev = (e: React.MouseEvent) => {
-        e.preventDefault(); // Prevent Link navigation
-        setCurrentIndex((currentIndex - 1 + (products?.images?.length || 1)) % (products?.images.length || 1));
+        e.preventDefault();
+        setCurrentIndex((currentIndex - 1 + (normalizedImages.length || 1)) % (normalizedImages.length || 1));
     }
 
     const imageContainerStyle = {
-        width: `${products?.images?.length * 100}%`,
-        transform: `translateX(-${(currentIndex / (products?.images?.length || 1)) * 100}%)`,
+        width: `${normalizedImages.length * 100}%`,
+        transform: `translateX(-${(currentIndex / (normalizedImages.length || 1)) * 100}%)`,
         transition: "transform 0.5s ease-in-out",
     }
-    const { product_name, prev_price, real_price, country, sold, productRating, delivery_period, reviews, storeProfile, quantity, measure, images, id } = products || {};
+    const { product_name, prev_price, real_price, country, sold, productRating, delivery_period, reviews, storeProfile, quantity, measure, unitCurrency, images, id } = products || {};
+
+    const currencySymbol = unitCurrency === 'NGN' || !unitCurrency ? '₦' : (unitCurrency === 'USD' ? '$' : unitCurrency);
+
+    const formatPrice = (price: any) => {
+        if (!price) return '';
+        return Number(price).toLocaleString();
+    };
 
     // Safety check for products
     if (!products) return null;
@@ -82,19 +100,28 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                     <div className="absolute inset-0 z-0">
                                         {/* Image Carousel */}
                                         <Link href={productCardRoute} className="w-full h-full flex" style={imageContainerStyle}>
-                                            {products?.images?.map((j: string, i: number) => (
+                                            {normalizedImages.map((media: any, i: number) => (
                                                 <div
                                                     className={`relative h-full rounded-t-xl overflow-hidden shrink-0`}
-                                                    style={{ width: `${100 / (products?.images?.length || 1)}%` }}
+                                                    style={{ width: `${100 / (normalizedImages.length || 1)}%` }}
                                                     key={i}
                                                 >
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    {/* Using img tag for now because external images domain config might be missing */}
-                                                    <img
-                                                        src={j}
-                                                        alt={product_name || "Product Image"}
-                                                        className="w-full h-full object-cover rounded-[20px]"
-                                                    />
+                                                    {media.type === 'video' || media.url?.toLowerCase()?.endsWith('.mp4') || media.url?.toLowerCase()?.endsWith('.webm') ? (
+                                                        <video
+                                                            src={media.url}
+                                                            autoPlay
+                                                            muted
+                                                            loop
+                                                            playsInline
+                                                            className="w-full h-full object-cover rounded-[20px]"
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={media.url}
+                                                            alt={product_name || "Product Image"}
+                                                            className="w-full h-full object-cover rounded-[20px]"
+                                                        />
+                                                    )}
                                                 </div>
                                             ))}
                                         </Link>
@@ -140,11 +167,11 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                 </h2>
 
                                 <div className='pt-[10px] flex items-baseline gap-2'>
-                                    {prev_price && (
-                                        <span className='sm:text-[24px] text-[1.1rem] font-[700] text-gray-900'>${prev_price}</span>
-                                    )}
                                     {real_price && (
-                                        <span className='text-[14px] font-[400] text-[#666666] line-through decoration-gray-400'>${real_price}</span>
+                                        <span className='sm:text-[24px] text-[1.1rem] font-[700] text-gray-900'>{currencySymbol}{formatPrice(real_price)}</span>
+                                    )}
+                                    {prev_price && (
+                                        <span className='text-[14px] font-[400] text-[#666666] line-through decoration-gray-400'>{currencySymbol}{formatPrice(prev_price)}</span>
                                     )}
                                 </div>
 
@@ -173,6 +200,20 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                     </span>
 
                                     <div className='flex items-center gap-[10px]'>
+                                        <div
+                                            className='flex items-center gap-2 group/compare relative cursor-pointer'
+                                            onClick={() => dispatch(toggleComparison(products))}
+                                        >
+                                            <div className={`p-1 mt-1 rounded-full transition-colors ${comparisonList.some((p: any) => p.id === id) ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-100 hover:text-green-600'}`}>
+                                                <GitCompare size={18} className={comparisonList.some((p: any) => p.id === id) ? 'fill-green-600 stroke-green-600' : ''} />
+                                            </div>
+
+                                            {/* Tooltip */}
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 text-white text-[11px] rounded opacity-0 invisible group-hover/compare:opacity-100 group-hover/compare:visible transition-all whitespace-nowrap pointer-events-none z-10">
+                                                {comparisonList.some((p: any) => p.id === id) ? 'Remove Compare' : 'Compare'}
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800" />
+                                            </div>
+                                        </div>
                                         <span className='' >
                                             <ToggleSaveButton setShowLoginModal={setShowLoginModalForSave} products={products} />
                                         </span>

@@ -26,6 +26,10 @@ interface Products {
   quantity?: number | string;
   measure?: string;
   storeProfile?: any;
+  trade_scope?: string;
+  supply_type?: string;
+  frequency?: string;
+  duration?: string;
   [key: string]: any;
 }
 
@@ -57,6 +61,10 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
     quantity,
     measure,
     storeProfile,
+    trade_scope,
+    supply_type,
+    frequency,
+    duration,
   } = products;
 
   const isOwner = isAuth && effectiveUserId === supplierId;
@@ -120,19 +128,43 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
             </span>
           </div>
 
-          <div className="w-full my-4 bg-gray-200 h-px"></div>
-
-          {/* Reviews */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-yellow-50 rounded-md border border-yellow-100">
-              <Star className="text-yellow-400 fill-yellow-400 w-4 h-4" />
-              <span className="font-semibold text-gray-800">{Math.round((productRating?.average || 0) * 100) / 100}</span>
-              <span className="text-xs text-gray-400">/ 5</span>
-            </div>
-            <span className="text-green-600 font-medium text-sm sm:text-base hover:underline cursor-pointer">
-              ({productRating?.count || 0} {(productRating?.count || 0) > 1 ? 'reviews' : 'review'})
+          {/* Trade Scope */}
+          <div className="flex gap-2 items-center">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Trade Scope:</span>
+            <span className="text-gray-800 text-sm sm:text-base font-medium capitalize">
+              {trade_scope === 'both' ? 'Local & International' : (trade_scope || 'Local')}
             </span>
           </div>
+
+          {/* Supply Type */}
+          <div className="flex gap-2 items-center">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Supply Type:</span>
+            <span className="text-gray-800 text-sm sm:text-base font-medium capitalize">
+              {supply_type || 'Immediate'}
+              {supply_type === 'recurring' && frequency && ` (${frequency})`}
+            </span>
+          </div>
+
+          {supply_type === 'recurring' && duration && (
+            <div className="flex gap-2 items-center">
+              <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Duration:</span>
+              <span className="text-gray-800 text-sm sm:text-base font-medium">{duration}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="w-full my-4 bg-gray-200 h-px"></div>
+
+        {/* Reviews */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-yellow-50 rounded-md border border-yellow-100">
+            <Star className="text-yellow-400 fill-yellow-400 w-4 h-4" />
+            <span className="font-semibold text-gray-800">{Math.round((productRating?.average || 0) * 100) / 100}</span>
+            <span className="text-xs text-gray-400">/ 5</span>
+          </div>
+          <span className="text-green-600 font-medium text-sm sm:text-base hover:underline cursor-pointer">
+            ({productRating?.count || 0} {(productRating?.count || 0) > 1 ? 'reviews' : 'review'})
+          </span>
         </div>
 
         {/* Description Short */}
@@ -156,7 +188,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
             Request Quote
           </button>
         </div>
-      </div>
+      </div >
 
       <LoginModal
         isOpen={showLoginModal || showLoginModalForSave}
@@ -192,7 +224,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
           supplier_id: supplierId?.toString()
         }}
       />
-    </div>
+    </div >
   );
 };
 

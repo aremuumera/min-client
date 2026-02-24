@@ -164,20 +164,25 @@ export const chatService = {
 
       // Automatically mark as delivered after 1 second
       setTimeout(async () => {
-        await updateDoc(messageRef, {
-          status: 'delivered',
-          deliveredAt: serverTimestamp(),
-        });
-
-        // If recipient is currently viewing this conversation, mark as read immediately
-        const convRef = doc(db, 'conversations', conversationId);
-        const convSnap = await getDoc(convRef);
-        if (convSnap.exists() && convSnap.data().isActive) {
+        try {
           await updateDoc(messageRef, {
-            status: 'read',
-            isRead: true,
-            readAt: serverTimestamp(),
+            status: 'delivered',
+            deliveredAt: serverTimestamp(),
           });
+
+          // If recipient is currently viewing this conversation, mark as read immediately
+          const convRef = doc(db, 'conversations', conversationId);
+          const convSnap = await getDoc(convRef);
+          if (convSnap.exists() && convSnap.data().isActive) {
+            await updateDoc(messageRef, {
+              status: 'read',
+              isRead: true,
+              readAt: serverTimestamp(),
+            });
+          }
+        } catch (err) {
+          // Message may have been deleted — ignore gracefully
+          console.warn('Message delivery update skipped:', err);
         }
       }, 1000);
 

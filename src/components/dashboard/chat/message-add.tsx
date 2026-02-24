@@ -101,20 +101,25 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
   return (
     <Stack
       direction="row"
-      spacing={2}
-      className="items-end flex-none px-6 py-2 min-h-[72px]"
+      spacing={1.5}
+      className="items-end flex-none px-4 py-2 min-h-[72px] bg-white border-t border-gray-100"
     >
-      <Avatar
-        className="hidden sm:flex mb-1"
-        style={{
-          backgroundColor: avatarBgColor,
-          height: '36px',
-          width: '36px',
-          fontSize: 'var(--fontSize-sm)',
-        }}
-      >
-        {textAvatar}
-      </Avatar>
+      <Tooltip content="Attach file">
+        <span>
+          <IconButton
+            aria-label="Attach file"
+            disabled={disabled || isUploading || (loadingMessages && loadingAttachments)}
+            onClick={handleAttach}
+            className="mb-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"
+          >
+            {isUploading || (loadingMessages && loadingAttachments) ? (
+              <CircularProgress size={20} />
+            ) : (
+              <PaperclipIcon size={22} weight="bold" />
+            )}
+          </IconButton>
+        </span>
+      </Tooltip>
 
       <Input
         multiline
@@ -123,10 +128,10 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
         onChange={handleChange}
         onKeyUp={handleKeyUp}
         onKeyDown={handleKeyDown}
-        placeholder="Leave a message"
-        className="flex-auto text-[12px] py-2"
+        placeholder="Type your message here..."
+        className="flex-auto text-[13px] py-2.5 bg-gray-50 border-none focus:ring-1 focus:ring-emerald-500 rounded-xl"
         style={{
-          // Custom styles for the textarea if needed
+          // Custom styles for the textarea
           // @ts-ignore
           '& textarea': {
             resize: 'none',
@@ -145,25 +150,9 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
               variant="contained"
               disabled={!content.trim() || disabled}
               onClick={handleSend}
-              className="bg-primary-500 text-white hover:bg-primary-600"
+              className="bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all rounded-xl h-[38px] w-[38px]"
             >
-              <PaperPlaneTiltIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
-
-        <Tooltip content="Attach file">
-          <span>
-            <IconButton
-              aria-label="Attach file"
-              disabled={disabled || isUploading || (loadingMessages && loadingAttachments)}
-              onClick={handleAttach}
-            >
-              {isUploading || (loadingMessages && loadingAttachments) ? (
-                <CircularProgress size={20} />
-              ) : (
-                <PaperclipIcon />
-              )}
+              <PaperPlaneTiltIcon weight="fill" />
             </IconButton>
           </span>
         </Tooltip>

@@ -18,6 +18,10 @@ import {
 import { config } from '@/lib/config';
 const WEB_URL = config.site.url;
 import { formatCompanyNameForUrl } from '@/lib/url-formatter';
+import { TextEditor } from '@/components/core/text-editor/text-editor';
+import { paths } from '@/config/paths';
+import { MoqUnits as Moq } from '@/lib/marketplace-data';
+import { z } from 'zod';
 import {
   Box,
   Button,
@@ -58,10 +62,10 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Option } from '@/components/core/option';
-import { TextEditor } from '@/components/core/text-editor/text-editor';
-import { paths } from '@/config/paths';
-import { MoqUnits as Moq } from '@/lib/marketplace-data';
-import { z } from 'zod';
+import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
+import { useAppDispatch, useAppSelector } from '@/redux';
+import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
+import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 
 const rfqSchema = z.object({
   rfqProductName: z.string().min(1, 'Product name is required'),
@@ -71,18 +75,24 @@ const rfqSchema = z.object({
   deliveryPeriod: z.string().min(1, 'Delivery period is required'),
   rfqProductMainCategory: z.string().min(1, 'Main category is required'),
   rfqProductCategory: z.string().optional(),
-  rfqProductSubCategory: z.string().optional(),
+  rfqProductSubCategory: z.string().min(1, 'Sub category is required'),
   rfqDescription: z.string().min(1, 'RFQ description is required'),
   paymentTermsDescribed: z.string().min(1, 'Payment terms description is required'),
   shippingTermsDescribed: z.string().min(1, 'Shipping terms description is required'),
   selectedPayments: z.array(z.string()).min(1, 'Select at least one payment term'),
   selectedShippings: z.array(z.string()).min(1, 'Select at least one shipping term'),
+  purity_grade: z.string().optional(),
+  moisture_max: z.string().optional(),
+  packaging: z.string().optional(),
+  sampling_method: z.string().optional(),
+  inquiry_type: z.string().optional().default('immediate'),
+  recurring_frequency: z.string().optional(),
+  recurring_duration: z.string().optional(),
+  is_inspection_required: z.boolean().optional().default(false),
+  is_shipment_included: z.boolean().optional().default(false),
+  urgency_level: z.string().optional().default('standard'),
 });
 
-import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
-import { useAppDispatch, useAppSelector } from '@/redux';
-import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
-import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 
 interface CategoryItem {
   id: string;
@@ -119,6 +129,16 @@ interface RfqFormData {
   paymentTermsDescribed?: string;
   shippingTermsDescribed?: string;
   rfqDescription?: string;
+  purity_grade?: string;
+  moisture_max?: string;
+  packaging?: string;
+  sampling_method?: string;
+  inquiry_type?: string;
+  recurring_frequency?: string;
+  recurring_duration?: string;
+  is_inspection_required?: boolean;
+  is_shipment_included?: boolean;
+  urgency_level?: string;
   [key: string]: any;
 }
 
@@ -181,8 +201,15 @@ const RfqDetails = ({
     setSelectedCategories((prev) => {
       const newState = { ...prev };
 
+      // Update the selected category first
+      newState[level] = {
+        id: value,
+        name: name,
+        tag: tag,
+      };
+
       const selectedProductCategory = productCatData?.children?.find(
-        (cat: CategoryItem) => cat.original_id === newState.productCategory.id
+        (cat: CategoryItem) => (cat.original_id || cat.id) === newState.productCategory.id
       );
 
       // Reset downstream selections when upstream changes
@@ -192,13 +219,6 @@ const RfqDetails = ({
       } else if (level === 'productCategory' && selectedProductCategory?.submenu) {
         newState.subCategory = { id: '', name: '', tag: '' };
       }
-
-      // Update the selected category
-      newState[level] = {
-        id: value,
-        name: name,
-        tag: tag,
-      };
 
       let finalCategoryTag = '';
       if (newState.subCategory.tag) {
@@ -236,13 +256,11 @@ const RfqDetails = ({
     const { name, value } = e.target;
     dispatch(updateRfqProductDetailsFormData({ [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
-    validateForm();
   };
 
   const handleSelectChange = (name: string, value: any) => {
     dispatch(updateRfqProductDetailsFormData({ [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
-    validateForm();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,8 +269,8 @@ const RfqDetails = ({
       const fileArray = Array.from(files);
 
       const validFiles = fileArray.filter((file) => {
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} exceeds 5MB limit and won't be uploaded`, {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 10MB limit and won't be uploaded`, {
             position: 'top-right',
             style: {
               background: '#f44336',
@@ -262,7 +280,12 @@ const RfqDetails = ({
           });
           return false;
         }
-        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        const allowedTypes = [
+          'image/png', 'image/jpeg', 'image/webp',
+          'video/mp4',
+          'application/pdf'
+        ];
+        if (!allowedTypes.includes(file.type)) {
           toast.error(`${file.name} has unsupported format`, {
             position: 'top-right',
             style: {
@@ -273,6 +296,19 @@ const RfqDetails = ({
           });
           return false;
         }
+
+        // Video check - max 1 video
+        if (file.type.startsWith('video/')) {
+          const videoCount = uploadedFiles.filter(f => f.type.startsWith('video/')).length +
+            fileArray.filter((f, i) => f.type.startsWith('video/') && i < fileArray.indexOf(file)).length;
+          if (videoCount >= 1) {
+            toast.error('Only one video can be uploaded', {
+              position: 'top-right',
+            });
+            return false;
+          }
+        }
+
         return true;
       });
 
@@ -345,16 +381,31 @@ const RfqDetails = ({
 
   const validateForm = () => {
     try {
-      rfqSchema.parse({
-        ...rfqProductDetailsFormData,
-        rfqProductMainCategory: selectedCategories.mainCategory.name,
-        rfqProductCategory: selectedCategories.productCategory.name,
-        rfqProductSubCategory: selectedCategories.subCategory.name,
+      const dataToValidate = {
+        rfqProductName: rfqProductDetailsFormData?.rfqProductName || '',
+        durationOfSupply: rfqProductDetailsFormData?.durationOfSupply || '',
+        quantityMeasure: rfqProductDetailsFormData?.quantityMeasure || '',
+        quantityRequired: rfqProductDetailsFormData?.quantityRequired || '',
+        deliveryPeriod: rfqProductDetailsFormData?.deliveryPeriod || '',
+        rfqDescription: rfqProductDetailsFormData?.rfqDescription || '',
+        paymentTermsDescribed: rfqProductDetailsFormData?.paymentTermsDescribed || '',
+        shippingTermsDescribed: rfqProductDetailsFormData?.shippingTermsDescribed || '',
+        rfqProductMainCategory: typedFormData?.rfqProductMainCategory || selectedCategories.mainCategory.name || '',
+        rfqProductCategory: typedFormData?.rfqProductCategory || selectedCategories.productCategory.name || '',
+        rfqProductSubCategory: typedFormData?.rfqProductSubCategory || selectedCategories.subCategory.name || '',
         selectedPayments: rfqProductDetailsFormData?.selectedPayments || [],
         selectedShippings: rfqProductDetailsFormData?.selectedShippings || [],
-      });
+        purity_grade: rfqProductDetailsFormData?.purity_grade || '',
+        moisture_max: rfqProductDetailsFormData?.moisture_max || '',
+        packaging: rfqProductDetailsFormData?.packaging || '',
+        sampling_method: rfqProductDetailsFormData?.sampling_method || '',
+        inquiry_type: rfqProductDetailsFormData?.inquiry_type || 'immediate',
+        urgency_level: rfqProductDetailsFormData?.urgency_level || 'standard',
+      };
+
+      rfqSchema.parse(dataToValidate);
       setErrors({});
-      return true;
+      return { isValid: true, errors: {} };
     } catch (err) {
       if (err instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
@@ -362,10 +413,9 @@ const RfqDetails = ({
           newErrors[issue.path[0] as string] = issue.message;
         });
         setErrors(newErrors);
-        const firstError = Object.values(newErrors)[0] as string;
-        toast.error(firstError);
+        return { isValid: false, errors: newErrors };
       }
-      return false;
+      return { isValid: false, errors: {} };
     }
   };
 
@@ -375,8 +425,11 @@ const RfqDetails = ({
     e.preventDefault();
 
     try {
-      if (!validateForm()) {
-        toast.error('Please fill all required fields.', {
+      const { isValid, errors: validationErrors } = validateForm();
+      if (!isValid) {
+        const firstErrorMessage = Object.values(validationErrors)[0] || 'Please fill all required fields.';
+
+        toast.error(firstErrorMessage, {
           position: 'top-right',
           style: {
             background: '#f44336',
@@ -403,12 +456,19 @@ const RfqDetails = ({
 
       formData.append('rfqProductName', typedFormData.rfqProductName?.trim() || '');
       formData.append('rfqProductMainCategory', typedFormData.rfqProductMainCategory || '');
-      formData.append('rfqProductSubCategory', typedFormData.rfqProductSubCategory || '');
+      if (typedFormData.rfqProductSubCategory) {
+        formData.append('rfqProductSubCategory', typedFormData.rfqProductSubCategory);
+      }
       formData.append('category_tag', typedFormData.category_tag || '');
 
       // Fix the typo here - remove the extra 's'
       formData.append('paymentsTermsDescribed', (typedFormData.paymentTermsDescribed || '').trim());
       formData.append('shippingTermsDescribed', (typedFormData.shippingTermsDescribed || '').trim());
+
+      formData.append('purity_grade', typedFormData.purity_grade || '');
+      formData.append('moisture_max', typedFormData.moisture_max || '');
+      formData.append('packaging', typedFormData.packaging || '');
+      formData.append('sampling_method', typedFormData.sampling_method || '');
 
       const paymentsArray = Array.isArray(typedFormData.selectedPayments)
         ? typedFormData.selectedPayments
@@ -419,6 +479,13 @@ const RfqDetails = ({
           formData.append('selectedPayments', payment);
         });
       }
+
+      formData.append('inquiry_type', typedFormData.inquiry_type || 'immediate');
+      formData.append('recurring_frequency', typedFormData.recurring_frequency || '');
+      formData.append('recurring_duration', typedFormData.recurring_duration || '');
+      formData.append('is_inspection_required', String(typedFormData.is_inspection_required || false));
+      formData.append('is_shipment_included', String(typedFormData.is_shipment_included || false));
+      formData.append('urgency_level', typedFormData.urgency_level || 'standard');
 
       if (typedFormData.selectedShippings && typedFormData.selectedShippings.length > 0) {
         typedFormData.selectedShippings.forEach((shipping: string) => {
@@ -472,7 +539,7 @@ const RfqDetails = ({
       // handleNext();
     } catch (error: any) {
       console.error(`Error creating RFQ:`, error);
-      toast.error(`${error?.data?.message || 'Error creating RFQ'}`, {
+      toast.error(`${error?.data?.message || error?.error || 'Error creating RFQ'}`, {
         position: 'top-right',
         style: {
           background: '#f44336',
@@ -505,7 +572,7 @@ const RfqDetails = ({
 
   return (
     <div>
-      <div className="lg:px-6 py-2">
+      <div className="lg:px-6 ">
         <form onSubmit={handleSubmit}>
           <div>
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
@@ -533,7 +600,58 @@ const RfqDetails = ({
               />
             </div>
 
+            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center ">
+              <TextField
+                label="Purity / Grade"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. 95%+, Grade A"
+                name="purity_grade"
+                value={typedFormData?.purity_grade || ''}
+                onChange={handleInputChange}
+                error={!!errors.purity_grade}
+                helperText={errors.purity_grade}
+              />
+              <TextField
+                label="Max Moisture (%)"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. 5.1"
+                name="moisture_max"
+                type="number"
+                value={typedFormData?.moisture_max || ''}
+                onChange={handleInputChange}
+                error={!!errors.moisture_max}
+                helperText={errors.moisture_max}
+              />
+            </div>
+
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
+              <TextField
+                label="Packaging"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. 50kg Bags, Bulk"
+                name="packaging"
+                value={typedFormData?.packaging || ''}
+                onChange={handleInputChange}
+                error={!!errors.packaging}
+                helperText={errors.packaging}
+              />
+              <TextField
+                label="Sampling Method"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. SGS, Bureau Veritas"
+                name="sampling_method"
+                value={typedFormData?.sampling_method || ''}
+                onChange={handleInputChange}
+                error={!!errors.sampling_method}
+                helperText={errors.sampling_method}
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center ">
               <FormControl fullWidth error={!!errors.quantityMeasure}>
                 <SearchableSelectLocal
                   label="Quantity(measured)"
@@ -560,7 +678,7 @@ const RfqDetails = ({
               />
             </div>
 
-            <div className="flex flex-col md:flex-row gap-[15px] pt-4 items-center justify-center">
+            <div className="flex flex-col md:flex-row gap-[15px]  items-center justify-center">
               <div className="w-full">
                 <SearchableSelectLocal
                   label="Main Product Category"
@@ -603,7 +721,7 @@ const RfqDetails = ({
                 )}
             </div>
 
-            <div className="flex flex-col md:flex-row gap-[15px] pt-6 items-center justify-center">
+            <div className="flex flex-col md:flex-row gap-[15px]  items-center justify-center">
               {selectedCategories.productCategory.id &&
                 productCatData?.children?.find((cat: CategoryItem) => cat.original_id === selectedCategories.productCategory.id)
                   ?.submenu && (
@@ -665,7 +783,7 @@ const RfqDetails = ({
               </div>
             </div>
 
-            <div className="flex flex-col pt-[30px] md:flex-row gap-[15px] items-center justify-center">
+            <div className="flex flex-col pt-[10px] md:flex-row gap-[15px] items-center justify-center">
               <div className="w-full">
                 <MultiCheckboxSelectLocal
                   label="Shipping Terms"
@@ -691,7 +809,7 @@ const RfqDetails = ({
               </div>
             </div>
 
-            <div className="flex pt-[20px] flex-col md:flex-row gap-[15px] items-center justify-center">
+            <div className="flex pt-[10px] flex-col md:flex-row gap-[15px] items-center justify-center">
               <TextField
                 id="message"
                 label="Describe Payment Terms"
@@ -718,6 +836,75 @@ const RfqDetails = ({
                 error={!!errors.shippingTermsDescribed}
                 helperText={errors.shippingTermsDescribed}
               />
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-[15px] pt-4 items-center">
+              <FormControl fullWidth>
+                <InputLabel className='mb-1 '>Inquiry Type</InputLabel>
+                <Select
+                  name="inquiry_type"
+                  value={typedFormData?.inquiry_type || 'immediate'}
+                  onChange={(e: any) => handleInputChange(e as any)}
+                >
+                  <MenuItem value="immediate">Individual (One-time)</MenuItem>
+                  <MenuItem value="recurring">Recurring (Supply Chain)</MenuItem>
+                </Select>
+              </FormControl>
+
+              {typedFormData?.inquiry_type === 'recurring' && (
+                <div className="w-full flex gap-3">
+                  <FormControl fullWidth>
+                    <InputLabel className='mb-1'>Frequency</InputLabel>
+                    <Select
+                      name="recurring_frequency"
+                      value={typedFormData?.recurring_frequency || 'monthly'}
+                      onChange={(e: any) => handleInputChange(e as any)}
+                    >
+                      <MenuItem value="weekly">Weekly</MenuItem>
+                      <MenuItem value="monthly">Monthly</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    label="Duration (Months)"
+                    name="recurring_duration"
+                    type="number"
+                    value={typedFormData?.recurring_duration || ''}
+                    onChange={handleInputChange}
+                    fullWidth
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 pt-4 items-center">
+              <FormControl fullWidth>
+                <InputLabel className='mb-1'>Urgency Level</InputLabel>
+                <Select
+                  name="urgency_level"
+                  value={typedFormData?.urgency_level || 'standard'}
+                  onChange={(e: any) => handleInputChange(e as any)}
+                >
+                  <MenuItem value="standard">Standard</MenuItem>
+                  <MenuItem value="urgent">Urgent</MenuItem>
+                </Select>
+              </FormControl>
+
+              <div className="w-full flex flex-col gap-2">
+                <div
+                  onClick={() => dispatch(updateRfqProductDetailsFormData({ is_inspection_required: !typedFormData?.is_inspection_required }))}
+                  className={`flex items-center gap-2 p-2 rounded cursor-pointer border ${typedFormData?.is_inspection_required ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
+                >
+                  <Checkbox checked={!!typedFormData?.is_inspection_required} color="success" readOnly />
+                  <Typography variant="body2" className='font-semibold'>Request Inspection</Typography>
+                </div>
+                <div
+                  onClick={() => dispatch(updateRfqProductDetailsFormData({ is_shipment_included: !typedFormData?.is_shipment_included }))}
+                  className={`flex items-center gap-2 p-2 rounded cursor-pointer border ${typedFormData?.is_shipment_included ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
+                >
+                  <Checkbox checked={!!typedFormData?.is_shipment_included} color="success" readOnly />
+                  <Typography variant="body2" className='font-semibold'>Include Shipment</Typography>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -755,11 +942,11 @@ const RfqDetails = ({
                   placeholder="Click to Upload/browse file"
                   className="hidden"
                   multiple
-                  accept="image/png, image/jpeg, image/webp"
+                  accept="image/png, image/jpeg, image/webp, video/mp4, application/pdf"
                 />
                 <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
                 <p className="text-[#696969] text-[.75rem]">
-                  Image must not exceed 5mb | Supported format: *jpg, *png, *webp
+                  Images/Docs must not exceed 10mb | Videos (MP4) max 1 | Supported: *jpg, *png, *webp, *mp4, *pdf
                 </p>
               </Box>
               <div className="pt-[10px]">
@@ -810,6 +997,7 @@ const RfqDetails = ({
                 />
               </div>
             </div>
+
             <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
               <Button disabled={isCreatingRfq} variant="contained" color="primary" className="w-full" type="submit">
                 {isCreatingRfq ? (

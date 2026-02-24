@@ -27,6 +27,7 @@ import { teamApi } from './features/team/teamApi';
 import activityApi from './features/activity/activityApi';
 import definitionApi from './features/definitions/definition_api';
 import tradeApi from './features/trade/trade_api';
+import comparisonReducer from './features/comparison/comparison-slice';
 
 // Persist configuration for auth reducer only (1:1 with original)
 const authPersistConfig = {
@@ -74,6 +75,7 @@ const rootReducer = combineReducers({
     [activityApi.reducerPath]: activityApi.reducer,
     [definitionApi.reducerPath]: definitionApi.reducer,
     [tradeApi.reducerPath]: tradeApi.reducer,
+    comparison: comparisonReducer,
 
 });
 

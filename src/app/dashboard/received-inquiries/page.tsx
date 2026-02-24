@@ -98,7 +98,7 @@ const RejectModal = ({ isOpen, onClose, onConfirm, loading }: { isOpen: boolean;
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-[24px] w-full max-w-md p-8 shadow-2xl space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-gray-900">Reject Inquiry</h3>
@@ -133,15 +133,30 @@ const RejectModal = ({ isOpen, onClose, onConfirm, loading }: { isOpen: boolean;
 };
 
 export default function ReceivedTradeInquiries() {
-    const { data, isLoading, refetch } = useGetReceivedInquiriesQuery();
+    const { data, isLoading, refetch } = useGetReceivedInquiriesQuery(undefined, {
+        refetchOnMountOrArgChange: true
+    });
     const [acknowledge] = useAcknowledgeInquiryMutation();
     const [reject] = useRejectInquiryMutation();
 
     const [selectedInquiry, setSelectedInquiry] = React.useState<any>(null);
     const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
     const [actionLoading, setActionLoading] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState('');
 
-    const inquiries = data?.data || [];
+    const allInquiries = data?.data || [];
+    const inquiries = searchTerm.trim()
+        ? allInquiries.filter((inq: any) => {
+            const term = searchTerm.toLowerCase();
+            return (
+                inq.external_id?.toLowerCase().includes(term) ||
+                inq.mineral_tag?.toLowerCase().includes(term) ||
+                inq.buyer_name?.toLowerCase().includes(term) ||
+                inq.item_name?.toLowerCase().includes(term) ||
+                inq.delivery_location?.toLowerCase().includes(term)
+            );
+        })
+        : allInquiries;
 
     const handleAcknowledge = async (id: string) => {
         try {
@@ -186,6 +201,8 @@ export default function ReceivedTradeInquiries() {
                         <input
                             type="text"
                             placeholder="Search by reference..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="bg-gray-100/50 border-none pl-12 pr-6 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-green-500 outline-none w-full md:w-72 transition-all font-medium"
                         />
                     </div>
@@ -201,6 +218,7 @@ export default function ReceivedTradeInquiries() {
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-8">Reference</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4">Inquiry For</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4 hidden md:table-cell">Buyer Information</TableHead>
+                                <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4">Grade/Specs</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4 hidden md:table-cell">Quantity</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4">Status</TableHead>
                                 <TableHead className="font-bold text-gray-400 uppercase tracking-widest text-[10px] py-6 px-4 text-right sticky right-0 bg-gray-50/50 backdrop-blur-sm z-20">Actions</TableHead>
@@ -237,7 +255,7 @@ export default function ReceivedTradeInquiries() {
                                         </TableCell>
                                         <TableCell className="py-5 px-4">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-gray-900 capitalize">{inquiry.mineral_tag}</span>
+                                                <span className="font-bold text-gray-900 capitalize">{inquiry.item_name || inquiry.mineral_tag?.replace(/_/g, ' ')}</span>
                                                 <span className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{inquiry.delivery_location}</span>
                                             </div>
                                         </TableCell>
@@ -245,6 +263,12 @@ export default function ReceivedTradeInquiries() {
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-gray-700">{inquiry.buyer_name}</span>
                                                 <span className="text-[10px] text-gray-400 font-medium uppercase tracking-tighter">{inquiry.buyer_company || 'Independent Buyer'}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-5 px-4 text-[11px]">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-bold text-gray-700">{inquiry.purity_grade || inquiry.preferred_grade || '-'}</span>
+                                                {inquiry.moisture_max && <span className="text-gray-400">Moisture: {inquiry.moisture_max}%</span>}
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-5 px-4 hidden md:table-cell">

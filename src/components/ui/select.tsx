@@ -121,23 +121,36 @@ function Select({
   const selectedOption = derivedOptions.find((opt) => opt.value === value);
   const hasError = !!errorMessage || error;
 
-  // Close on click outside
+  // Close on click outside or scroll
   React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleOutsideInteraction = (e: Event) => {
+      if (!isOpen) return;
       const target = e.target as Node;
-      // Close if the click is outside both the container and the portal dropdown
+
+      // Allow scrolling inside the dropdown list itself
+      if (e.type === 'scroll' && listRef.current && listRef.current.contains(target)) {
+        return;
+      }
+
       if (
         containerRef.current && !containerRef.current.contains(target) &&
         listRef.current && !listRef.current.contains(target)
       ) {
         setIsOpen(false);
+      } else if (e.type === 'scroll') {
+        // If scrolling outside the list, close it to prevent floating detached menus
+        setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideInteraction);
+      document.addEventListener('scroll', handleOutsideInteraction, true); // true for capture phase to catch all scrolls
+    }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleOutsideInteraction);
+      document.removeEventListener('scroll', handleOutsideInteraction, true);
     };
   }, [isOpen]);
 

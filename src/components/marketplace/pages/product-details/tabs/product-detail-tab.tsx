@@ -2,13 +2,30 @@
 import React from 'react';
 
 const ProductDetailTab = ({ products }: { products: any }) => {
-  const { composition, density, hardness, selected_state, color, measure, quantity, selected_country_name } = products || {};
+  const {
+    composition,
+    density,
+    hardness,
+    selected_state,
+    color,
+    measure,
+    quantity,
+    selected_country_name,
+    purity_grade,
+    moisture_max,
+    packaging,
+    sampling_method,
+  } = products || {};
 
   const specifications = [
     { label: 'Composition', value: composition },
     { label: 'Density', value: density },
     { label: 'Hardness', value: hardness },
     { label: 'Color', value: color },
+    { label: 'Purity / Grade', value: purity_grade },
+    { label: 'Max Moisture (%)', value: moisture_max ? `${moisture_max}%` : null },
+    { label: 'Packaging', value: packaging },
+    { label: 'Sampling Method', value: sampling_method },
     { label: 'Location', value: selected_state && selected_country_name ? `${selected_state}, ${selected_country_name}` : 'N/A' },
     { label: 'Available Quantity', value: quantity ? `${quantity} ${measure || ''}` : 'N/A' }
   ];

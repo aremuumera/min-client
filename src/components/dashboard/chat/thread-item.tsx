@@ -59,6 +59,7 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
     unreadCount,
     lastMessageTime,
     itemTitle,
+    metadata
   } = thread;
   const { user } = useSelector((state: any) => state.auth);
   const pathname = usePathname();
@@ -78,9 +79,6 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
 
   // Determining background color based on unreadCount and active state
   const getBackgroundColor = () => {
-    if (active) {
-      return 'var(--mui-palette-action-selected)';
-    }
     if (unreadCount > 0) {
       return 'rgba(16, 185, 129, 0.08)'; // Light emerald-500 highlight for unread
     }
@@ -100,9 +98,9 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
           }
         }}
         role="button"
-        className={`flex items-center gap-2 p-2 cursor-pointer transition-colors duration-200 rounded-lg outline-none
-          ${isActive ? 'bg-[var(--mui-palette-action-selected)]' : getBackgroundColor()}
-          hover:bg-[var(--mui-palette-action-hover)]`}
+        className={`flex items-center gap-2 p-3 cursor-pointer transition-all duration-200 rounded-xl outline-none
+          ${isActive || active ? 'bg-emerald-50 border border-emerald-100 shadow-sm' : getBackgroundColor()}
+          hover:bg-emerald-50/50`}
         tabIndex={0}
       >
         {/* Text Avatar */}
@@ -139,18 +137,28 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
           </Stack>
         </Box>
 
-        {/* LAST MESSAGE TIME */}
-        <Typography color="text.secondary" className="whitespace-nowrap relative" variant="caption">
-          {formattedTime}
-          {unreadCount > 0 && (
-            <Box
-              className="bg-emerald-500 text-white text-[12px] rounded-full absolute -right-[2px] -top-[25px] flex items-center justify-center p-1 h-[18px] min-w-[18px]"
-              style={{ zIndex: 50 }}
-            >
-              {unreadCount}
+        {/* STATUS & TIME (right column) */}
+        <Box className="flex flex-col items-end gap-1 shrink-0">
+          {metadata?.status && (
+            <Box className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border leading-none
+              ${metadata.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                metadata.status === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+                  'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+              {metadata.status}
             </Box>
           )}
-        </Typography>
+          <Typography color="text.secondary" className="whitespace-nowrap relative" variant="caption">
+            {formattedTime}
+            {unreadCount > 0 && (
+              <Box
+                className="bg-emerald-500 text-white text-[12px] rounded-full absolute -right-[2px] -top-[25px] flex items-center justify-center p-1 h-[18px] min-w-[18px]"
+                style={{ zIndex: 50 }}
+              >
+                {unreadCount}
+              </Box>
+            )}
+          </Typography>
+        </Box>
       </Box>
 
       <Divider className="mt-2 border-[var(--mui-palette-divider)]" />

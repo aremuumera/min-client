@@ -4,7 +4,7 @@ import { baseQueryWithReauth } from '../../api/baseApi';
 export const tradeApi = createApi({
     reducerPath: 'tradeApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['TradeInquiry', 'TradeChat'],
+    tagTypes: ['TradeInquiry', 'TradeChat', 'RfqOffer'],
 
     endpoints: (builder) => ({
         getTradeInquiry: builder.query<any, string>({
@@ -50,6 +50,52 @@ export const tradeApi = createApi({
             }),
             invalidatesTags: ['TradeChat'],
         }),
+        getRoomTrades: builder.query<any, string>({
+            query: (roomId) => `/trade/room/${roomId}/trades`,
+            providesTags: ['TradeInquiry'],
+        }),
+        getOffersByRfq: builder.query<any, string>({
+            query: (rfqId) => `/trade/rfq/${rfqId}/offers`,
+            providesTags: ['TradeInquiry'],
+        }),
+        shortlistOffer: builder.mutation<any, { inquiryId: string; is_shortlisted: boolean }>({
+            query: ({ inquiryId, is_shortlisted }) => ({
+                url: `/trade/inquiry/${inquiryId}/shortlist`,
+                method: 'PUT',
+                body: { is_shortlisted },
+            }),
+            invalidatesTags: (result, error, { inquiryId }) => ['TradeInquiry', { type: 'TradeInquiry', id: inquiryId }],
+        }),
+
+        // ==================== RFQ OFFER ENDPOINTS ====================
+        submitRfqOffer: builder.mutation<any, { rfqId: string; body: any }>({
+            query: ({ rfqId, body }) => ({
+                url: `/rfq/${rfqId}/offers`,
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['RfqOffer', 'TradeInquiry'],
+        }),
+        getRfqOffers: builder.query<any, string>({
+            query: (rfqId) => `/rfq/${rfqId}/offers`,
+            providesTags: ['RfqOffer'],
+        }),
+        getOfferDetail: builder.query<any, string>({
+            query: (offerId) => `/rfq/offers/${offerId}`,
+            providesTags: (result, error, id) => [{ type: 'RfqOffer', id }],
+        }),
+        getMyRfqOffers: builder.query<any, void>({
+            query: () => '/rfq/offers/my-offers',
+            providesTags: ['RfqOffer'],
+        }),
+        shortlistRfqOffer: builder.mutation<any, { offerId: string; is_shortlisted: boolean }>({
+            query: ({ offerId, is_shortlisted }) => ({
+                url: `/rfq/offers/${offerId}/shortlist`,
+                method: 'PUT',
+                body: { is_shortlisted },
+            }),
+            invalidatesTags: ['RfqOffer'],
+        }),
     }),
 });
 
@@ -61,6 +107,15 @@ export const {
     useResolveTradeChatMutation,
     useAcknowledgeInquiryMutation,
     useRejectInquiryMutation,
+    useGetRoomTradesQuery,
+    useGetOffersByRfqQuery,
+    useShortlistOfferMutation,
+    // RFQ Offer hooks
+    useSubmitRfqOfferMutation,
+    useGetRfqOffersQuery,
+    useGetOfferDetailQuery,
+    useGetMyRfqOffersQuery,
+    useShortlistRfqOfferMutation,
 } = tradeApi;
 
 export default tradeApi;

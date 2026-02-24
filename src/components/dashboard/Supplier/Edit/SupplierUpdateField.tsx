@@ -485,16 +485,16 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
       }
 
       if (id === 'productImage') {
-        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-          toast.error('Supported formats: PNG, JPEG, WEBP', { position: 'top-right', duration: 3000 });
+        if (!['image/png', 'image/jpeg', 'image/webp', 'video/mp4'].includes(file.type)) {
+          toast.error('Supported formats: PNG, JPEG, WEBP, MP4', { position: 'top-right', duration: 3000 });
           return false;
         }
         return true;
       }
 
       if (id === 'productAttachment') {
-        if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
-          toast.error('Supported formats: PDF, DOC, DOCX', { position: 'top-right', duration: 3000 });
+        if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4'].includes(file.type)) {
+          toast.error('Supported formats: PDF, DOC, DOCX, MP4', { position: 'top-right', duration: 3000 });
           return false;
         }
         return true;
@@ -587,7 +587,7 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                   <>
                     {field.id === 'productImage' ? (
                       <>
-                        <Typography variant="body1" textAlign={'center'} gutterBottom>
+                        <Typography variant="body1" className="text-center" gutterBottom>
                           Update your images by removing the old ones or add new ones <br />
                         </Typography>
 
@@ -600,18 +600,26 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                             {images?.length > 0 && images?.map((img: any, i: any) => (
                               <Box
                                 key={i}
-                                className="relative w-28 h-28 rounded shrink-0 border border-neutral-200 p-1 mt-4">
-                                <img
-                                  src={img.url}
-                                  alt=""
-                                  className="w-full h-full object-cover rounded"
-                                />
+                                className="relative w-28 h-28 rounded shrink-0 border border-neutral-200 p-1 mt-4 overflow-hidden">
+                                {img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm') ? (
+                                  <video
+                                    src={img.url}
+                                    className="w-full h-full object-cover rounded"
+                                    muted
+                                  />
+                                ) : (
+                                  <img
+                                    src={img.url}
+                                    alt=""
+                                    className="w-full h-full object-cover rounded"
+                                  />
+                                )}
                                 <button
-                                  className="absolute -top-2 -right-2 bg-black rounded-full p-1 shadow-md flex items-center justify-center w-6 h-6 hover:bg-neutral-800 transition-colors"
+                                  className="absolute -top-1 -right-1 bg-white rounded-full p-1 shadow-md flex items-center justify-center w-6 h-6 hover:bg-neutral-100 transition-colors"
                                   onClick={() => openDeleteConfirmation(img?.publicId, 'image')}
                                   type="button"
                                 >
-                                  <MdOutlineCancel color="white" size={16} />
+                                  <MdOutlineCancel color="red" size={16} />
                                 </button>
                               </Box>
                             ))}
@@ -620,7 +628,7 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                       </>
                     ) : (
                       <>
-                        <Typography variant="body1" textAlign={'center'} gutterBottom>
+                        <Typography variant="body1" className="text-center" gutterBottom>
                           Update your attachment by removing the old ones or add new ones <br />
                         </Typography>
 
@@ -633,39 +641,20 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                             {attachments?.length > 0 && attachments?.map((img: any, i: any) => (
                               <Box
                                 key={i}
-                                className="relative w-28 h-28 rounded shrink-0 border border-neutral-200 p-1 flex items-center justify-center bg-neutral-50 mt-4">
+                                className="relative w-28 h-28 rounded shrink-0 border border-neutral-200 p-1 flex items-center justify-center bg-neutral-50 mt-4 overflow-hidden">
                                 {img.url.toLowerCase().endsWith('.pdf') ? (
                                   <div
                                     className="cursor-pointer flex flex-col items-center justify-center gap-1"
-                                    onClick={() => {
-                                      const pdfUrl = img.url.replace('/image/upload/', '/raw/upload/');
-                                      window.open(pdfUrl, '_blank', 'noopener,noreferrer');
-                                    }}
+                                    onClick={() => window.open(img.url, '_blank', 'noopener,noreferrer')}
                                   >
-                                    <svg
-                                      width="32"
-                                      height="32"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
-                                        stroke="#EF4444"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M14 2V8H20"
-                                        stroke="#EF4444"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#EF4444" strokeWidth="2" />
+                                      <path d="M14 2V8H20" stroke="#EF4444" strokeWidth="2" />
                                     </svg>
-                                    <span className="text-[10px] text-error-600 font-medium">PDF</span>
+                                    <span className="text-[10px] text-red-600 font-medium font-bold">PDF</span>
                                   </div>
+                                ) : img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm') ? (
+                                  <video src={img.url} className='w-full h-full object-cover rounded' muted />
                                 ) : (
                                   <img
                                     src={img.url}
@@ -675,11 +664,11 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                                 )}
 
                                 <button
-                                  className="absolute -top-2 -right-2 bg-black rounded-full p-1 shadow-md flex items-center justify-center w-6 h-6 hover:bg-neutral-800 transition-colors"
+                                  className="absolute -top-1 -right-1 bg-white rounded-full p-1 shadow-md flex items-center justify-center w-6 h-6 hover:bg-neutral-100 transition-colors"
                                   onClick={() => openDeleteConfirmation(img?.publicId, 'attachment')}
                                   type="button"
                                 >
-                                  <MdOutlineCancel color="white" size={16} />
+                                  <MdOutlineCancel color="red" size={16} />
                                 </button>
                               </Box>
                             ))}
@@ -704,38 +693,29 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
                     />
 
                     {field.id === 'productImage' && selectedProductImageFiles.length > 0 && (
-                      <Box className="mt-4">
+                      <Box className="mt-4 space-y-2">
                         {selectedProductImageFiles.map((file, index) => (
                           <Box
                             key={index}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              border: '1px solid #ccc',
-                              borderRadius: '5px',
-                              padding: '10px',
-                              marginBottom: '5px',
-                              position: 'relative',
-                            }}
+                            className="flex items-center justify-between border rounded-lg p-2 relative bg-gray-50"
                           >
-                            <Typography variant="body2" color="text.secondary">
+                            <Box className="w-10 h-10 rounded overflow-hidden shrink-0 border bg-white flex items-center justify-center">
+                              {file.type.startsWith('video/') ? (
+                                <video src={URL.createObjectURL(file)} className="w-full h-full object-cover" muted />
+                              ) : (
+                                <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                              )}
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" className="ml-2 truncate flex-1 text-xs">
                               {file.name}
                             </Typography>
-                            <IconButton
-                              style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                right: '-10px',
-                                background: 'white',
-                                borderRadius: '50%',
-                                boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
-                              }}
-                              aria-label="Remove file"
+                            <Button
                               onClick={() => removeFile(field.id, index)}
+                              className="p-1 "
                             >
-                              <MdOutlineCancel color="red" />
-                            </IconButton>
+                              <MdOutlineCancel color="red"
+                                size={18} />
+                            </Button>
                           </Box>
                         ))}
                       </Box>

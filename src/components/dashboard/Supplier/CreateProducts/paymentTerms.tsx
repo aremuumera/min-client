@@ -56,15 +56,16 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
       newErrors.selectedShippings = "Shipping terms selection is required";
     }
 
+    // Payment and shipping terms descriptions are optional
     // Check payment terms description
-    if (!pd?.paymentTermsDescribed || pd.paymentTermsDescribed.trim() === '') {
-      newErrors.paymentTermsDescribed = "Payment terms description is required";
-    }
+    // if (!pd?.paymentTermsDescribed || pd.paymentTermsDescribed.trim() === '') {
+    //   newErrors.paymentTermsDescribed = "Payment terms description is required";
+    // }
 
     // Check shipping terms description
-    if (!pd?.shippingTermsDescribed || pd.shippingTermsDescribed.trim() === '') {
-      newErrors.shippingTermsDescribed = "Shipping terms description is required";
-    }
+    // if (!pd?.shippingTermsDescribed || pd.shippingTermsDescribed.trim() === '') {
+    //   newErrors.shippingTermsDescribed = "Shipping terms description is required";
+    // }
 
     setFormErrors(newErrors);
 
@@ -133,9 +134,9 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
         }
       } catch (error: any) {
         console.error('Error validating step 3:', error);
-        toast.error(`${error?.data?.error || 'Failed to submit payment details. Please try again.'}`);
+        toast.error(`${error?.data?.error || error?.error || 'Failed to submit payment details. Please try again.'}`);
         setFormErrors({
-          serverError: error.response?.data?.message || 'Error submitting payment terms'
+          serverError: error.response?.data?.message || error?.error || 'Error submitting payment terms'
         });
       }
     }

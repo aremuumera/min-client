@@ -36,6 +36,8 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
   const [fields, setFields] = useState<any[]>([]);
   const [mediaImages, setMediaImages] = useState([]);
   const [mediaAttachments, setMediaAttachments] = useState([]);
+  const [selectedMedia, setSelectedMedia] = useState<any>(null);
+  const [showMediaModal, setShowMediaModal] = useState<boolean>(false);
 
   const { user, appData, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
 
@@ -521,17 +523,46 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
           {/* Image Section */}
           <h3 className="font-semibold !text-left">{'Product Images'}</h3>
           <div className="relative flex items-start space-x-2">
-            <div className="flex relative overflow-x-auto space-x-2">
+            <div className="flex relative overflow-x-auto space-x-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {images?.length > 0 && images?.map((img: any, i: number) => (
-                <div key={i} className="w-40 h-32 o rounded flex-shrink-0">
-                  <img src={img.url}
-                    alt=""
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                    className='' />
+                <div
+                  key={i}
+                  className="w-40 h-32 rounded shrink-0 overflow-hidden border cursor-pointer group relative"
+                  onClick={() => {
+                    setSelectedMedia(img);
+                    setShowMediaModal(true);
+                  }}
+                >
+                  {img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm') ? (
+                    <>
+                      <video
+                        src={img.url}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-white/90 p-2 rounded-full shadow-lg">
+                          <svg className="w-6 h-6 text-gray-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <img
+                        src={img.url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="bg-white/90 p-2 rounded-full shadow-lg">
+                          <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
               <div >
@@ -553,74 +584,54 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
           {/* Attachment Images */}
           <h3 className="font-semibold !text-left">{'Attachment'}</h3>
           <div className="relative flex items-start space-x-2">
-            <div className="flex relative overflow-x-auto space-x-2">
+            <div className="flex relative overflow-x-auto space-x-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {attachments?.length > 0 && attachments?.map((img: any, i: number) => (
-                <div key={i} className="w-40 h-32 o rounded flex-shrink-0">
-                  {img.url.endsWith('.pdf') ? (
+                <div
+                  key={i}
+                  className="w-40 h-32 rounded shrink-0 overflow-hidden border cursor-pointer group relative"
+                  onClick={() => {
+                    if (!img.url.toLowerCase().endsWith('.pdf')) {
+                      setSelectedMedia(img);
+                      setShowMediaModal(true);
+                    }
+                  }}
+                >
+                  {img.url.toLowerCase().endsWith('.pdf') ? (
                     <div
-                      onClick={() => {
-                        const pdfUrl = img.url.replace('/image/upload/', '/raw/upload/');
-                        window.open(img.url, '_blank', 'noopener,noreferrer');
-                      }}
+                      onClick={(e) => { e.stopPropagation(); window.open(img.url, '_blank', 'noopener,noreferrer'); }}
                       className="cursor-pointer flex flex-col justify-center items-center h-full w-full bg-[#f5f2f2] text-center"
                     >
-                      <svg
-                        width="40"
-                        height="40"
-                        viewBox="0 0 24 21"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
-                          stroke="#FF0000"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M14 2V8H20"
-                          stroke="#FF0000"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M16 13H8"
-                          stroke="#FF0000"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M16 17H8"
-                          stroke="#FF0000"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M10 9H9H8"
-                          stroke="#FF0000"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#FF0000" strokeWidth="2" />
+                        <path d="M14 2V8H20" stroke="#FF0000" strokeWidth="2" />
                       </svg>
-                      <span className="block text-[#FF0000] text-xs mt-1">
-                        PDF File
-                      </span>
+                      <span className="block text-[#FF0000] text-xs mt-1 font-bold">PDF</span>
                     </div>
+                  ) : img.url.toLowerCase().endsWith('.mp4') || img.url.toLowerCase().endsWith('.webm') ? (
+                    <>
+                      <video
+                        src={img.url}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-white/90 p-2 rounded-full shadow-lg">
+                          <svg className="w-6 h-6 text-gray-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        </div>
+                      </div>
+                    </>
                   ) : (
-                    <img
-                      src={img.url}
-                      alt=""
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
-                    />
+                    <>
+                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="bg-white/90 p-2 rounded-full shadow-lg">
+                          <svg className="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               ))}
@@ -723,6 +734,40 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
           fields={fields as any}
           onSave={handleSave}
         />
+
+        {/* Fullscreen Media Modal */}
+        {showMediaModal && selectedMedia && (
+          <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+            <button
+              onClick={() => {
+                setShowMediaModal(false);
+                setSelectedMedia(null);
+              }}
+              className="absolute top-6 right-6 text-white hover:bg-white/20 p-2 rounded-full transition-colors z-50"
+            >
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="w-full h-full max-w-[1200px] flex items-center justify-center relative">
+              {selectedMedia?.url?.toLowerCase()?.endsWith('.mp4') || selectedMedia?.url?.toLowerCase()?.endsWith('.webm') ? (
+                <video
+                  src={selectedMedia.url}
+                  className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                  autoPlay
+                  controls
+                  playsInline
+                />
+              ) : (
+                <img
+                  src={selectedMedia.url}
+                  alt="Full screen media"
+                  className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                />
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

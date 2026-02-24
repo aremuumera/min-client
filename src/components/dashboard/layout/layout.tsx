@@ -159,7 +159,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                 }
 
                 // Explicitly block Buyer/RFQ section for non-buyers/admin
-                if (section.key === 'rfq' && userRole !== 'buyer' && userRole !== 'admin') {
+                if (section.key === 'rfq' && userRole !== 'buyer' && userRole !== 'admin' && userRole !== 'supplier') {
                     return false;
                 }
 
@@ -167,6 +167,10 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
             });
 
     }, [userRole, filterNavItems]);
+
+    if (!isMounted) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50/50">

@@ -62,17 +62,27 @@ interface SupplierProductDetailsProps {
 const productSchema = z.object({
   productName: z.string().min(1, 'Product name is required'),
   deliveryPeriod: z.string().min(1, 'Delivery period is required'),
-  unitCurrency: z.string().min(1, 'Unit currency is required'),
+  unitCurrency: z.string().min(1, 'Unit currency is required').default('NGN'),
   realPrice: z.string().min(1, 'Real price is required').refine(val => !isNaN(Number(val)), 'Must be a valid number'),
   prevPrice: z.string().optional(),
-  composition: z.string().min(1, 'Composition is required'),
-  density: z.string().min(1, 'Density is required'),
+  composition: z.string().optional(),
+  density: z.string().optional(),
+  hardness: z.string().optional(),
+  color: z.string().optional(),
   measure: z.string().min(1, 'Measure unit is required'),
   quantity: z.string().min(1, 'Quantity is required'),
   productHeaderDescription: z.string().min(1, 'Header description is required').max(500, 'Maximum 500 characters'),
   productMainCategory: z.string().min(1, 'Main category is required'),
   productCategory: z.string().optional(),
   productSubCategory: z.string().optional(),
+  purity_grade: z.string().optional(),
+  moisture_max: z.string().optional(),
+  packaging: z.string().optional(),
+  sampling_method: z.string().optional(),
+  supply_type: z.string().min(1, 'Supply type is required').default('immediate'),
+  frequency: z.string().optional(),
+  duration: z.string().optional(),
+  trade_scope: z.string().min(1, 'Trade scope is required').default('local'),
 });
 
 const descriptionFieldSchema = z.object({
@@ -185,6 +195,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
     // 3. Perform side effects (dispatch and state update)
     setSelectedCategories(newState);
     dispatch(updateProductDetailsFormData(formDataUpdate));
+    validateForm(false, { ...productDetailsFormData, ...formDataUpdate });
   };
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
@@ -231,24 +242,39 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       const fileNames = fileArray.map((file) => file.name);
 
       const validFiles = fileArray.filter((file) => {
-        if (file.size > 5 * 1024 * 1024) {
+        if (file.size > 10 * 1024 * 1024) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            productImages: 'File size must not exceed 5MB',
+            productImages: 'File size must not exceed 10MB',
           }));
-          toast.error(`${file.name} exceeds 5MB limit`, {
+          toast.error(`${file.name} exceeds 10MB limit`, {
             style: { background: '#f44336', color: '#fff' },
           });
           return false;
         }
-        if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
+        const allowedTypes = [
+          'image/png', 'image/jpeg', 'image/jpg', 'image/webp',
+          'video/mp4'
+        ];
+        if (!allowedTypes.includes(file.type)) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            productImages: 'Supported formats: PNG, JPEG, WEBP',
+            productImages: 'Supported formats: PNG, JPEG, WEBP, MP4',
           }));
           toast.error(`${file.name} has unsupported format`);
           return false;
         }
+
+        // Video check - max 1 video
+        if (file.type.startsWith('video/')) {
+          const existingVideos = productImages.filter(f => f.type.startsWith('video/')).length;
+          const newVideosInArray = fileArray.filter((f, i) => f.type.startsWith('video/') && i < fileArray.indexOf(file)).length;
+          if (existingVideos + newVideosInArray >= 1) {
+            toast.error('Only one video can be uploaded');
+            return false;
+          }
+        }
+
         return true;
       });
 
@@ -294,10 +320,10 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       const fileNames = fileArray.map((file) => file.name);
 
       const validFiles = fileArray.filter((file) => {
-        if (file.size > 20 * 1024 * 1024) {
+        if (file.size > 15 * 1024 * 1024) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            attachment: 'File size must not exceed 20MB',
+            attachment: 'File size must not exceed 15MB',
           }));
           return false;
         }
@@ -356,14 +382,28 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       }
     }
     // setProductDetailsFormData((prev) => ({ ...prev, [name]: value }));
+    const updatedFormData = { ...productDetailsFormData, [name]: value };
     dispatch(updateProductDetailsFormData({ [name]: value }));
-
-    validateForm();
+    validateForm(false, updatedFormData);
   };
 
-  const validateForm = () => {
+  const validateForm = (shouldToast = false, dataOverride?: any) => {
     try {
-      productSchema.parse(productDetailsFormData);
+      const currentData = dataOverride || productDetailsFormData;
+      const dataToValidate = {
+        productName: '',
+        deliveryPeriod: '',
+        productHeaderDescription: '',
+        productMainCategory: '',
+        realPrice: '',
+        measure: '',
+        quantity: '',
+        ...currentData,
+        unitCurrency: currentData.unitCurrency || 'NGN',
+        supply_type: currentData.supply_type || 'immediate',
+        trade_scope: currentData.trade_scope || 'local',
+      };
+      productSchema.parse(dataToValidate);
 
       // Validate description fields
       const fieldErrors: Record<string, string> = {};
@@ -378,7 +418,9 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
       if (Object.keys(fieldErrors).length > 0) {
         setErrors(fieldErrors);
-        toast.error('Please fill in all description fields correctly');
+        if (shouldToast) {
+          toast.error('Please fill in all description fields correctly');
+        }
         return false;
       }
 
@@ -392,8 +434,10 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
         });
         setErrors(newErrors);
 
-        const firstError = Object.values(newErrors)[0] as string;
-        toast.error(firstError);
+        if (shouldToast) {
+          const firstError = Object.values(newErrors)[0] as string;
+          toast.error(firstError);
+        }
       }
       return false;
     }
@@ -410,13 +454,15 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       toast.error('Minimum of 5 product images is required');
     }
 
-    // Check individual image sizes
+    // Check individual file sizes (15MB for videos, 5MB for images)
     uploadedFiles.forEach((file: any) => {
-      if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
-        newErrors.productImages = 'One or more images exceed 5MB limit';
+      const isVideo = file.type?.startsWith('video/');
+      const maxSize = isVideo ? 15 * 1024 * 1024 : 5 * 1024 * 1024;
+      const label = isVideo ? '15MB' : '5MB';
+      if (file.size > maxSize) {
+        newErrors.productImages = `${isVideo ? 'Video' : 'Image'} must not exceed ${label}`;
         isValid = false;
-        toast.error(`${file.name} exceeds 5MB limit`);
+        toast.error(`${file.name} exceeds ${label} limit`);
       }
     });
 
@@ -441,7 +487,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
     try {
       // Validate form before submission
-      if (!validateForm()) {
+      if (!validateForm(true)) {
         console.error('Form validation failed');
         return;
       }
@@ -503,7 +549,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
       handleNext();
     } catch (error) {
       console.error('Error during form submission:', error);
-      toast.error(`${(error as any)?.data?.message || 'Failed to submit product details. Please try again.'}`, {
+      toast.error(`${(error as any)?.data?.message || (error as any)?.error || 'Failed to submit product details. Please try again.'}`, {
         duration: 3000,
         position: 'top-right',
         style: {
@@ -554,7 +600,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                   { value: 'NGN', label: 'NGN' },
                   { value: 'USD', label: 'USD' },
                 ]}
-                value={productDetailsFormData?.unitCurrency || ''}
+                value={productDetailsFormData?.unitCurrency || 'NGN'}
                 onChange={(e: any) => handleInputChange({ target: { name: 'unitCurrency', value: e.target.value } })}
                 placeholder="Select Currency"
                 errorMessage={errors.unitCurrency}
@@ -592,7 +638,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <TextField
                 name="composition"
-                label="Composition"
+                label="Composition (Optional)"
                 fullWidth
                 margin="normal"
                 placeholder="Enter composition"
@@ -601,10 +647,9 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 error={!!errors.composition}
                 helperText={errors.composition}
               />
-              {/* <div className="w-full"> */}
               <TextField
                 name="density"
-                label="Density"
+                label="Density (Optional)"
                 fullWidth
                 margin="normal"
                 placeholder="Enter density"
@@ -613,9 +658,115 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 error={!!errors.density}
                 helperText={errors.density}
               />
-              {/* <p className="text-[#696969] text-[.75rem]">(Optional)</p> */}
-              {/* </div> */}
             </div>
+
+            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center ">
+              <TextField
+                label="Purity / Grade (Optional)"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. 95%+, Grade A"
+                name="purity_grade"
+                value={productDetailsFormData?.purity_grade || ''}
+                onChange={handleInputChange}
+                error={!!errors.purity_grade}
+                helperText={errors.purity_grade}
+              />
+              <TextField
+                label="Max Moisture (%) (Optional)"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. 5.1"
+                name="moisture_max"
+                type="number"
+                value={productDetailsFormData?.moisture_max || ''}
+                onChange={handleInputChange}
+                error={!!errors.moisture_max}
+                helperText={errors.moisture_max}
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
+              <TextField
+                label="Packaging (Optional)"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. 50kg Bags, Bulk"
+                name="packaging"
+                value={productDetailsFormData?.packaging || ''}
+                onChange={handleInputChange}
+                error={!!errors.packaging}
+                helperText={errors.packaging}
+              />
+              <TextField
+                label="Sampling Method (Optional)"
+                fullWidth
+                margin="normal"
+                placeholder="e.g. SGS, Bureau Veritas"
+                name="sampling_method"
+                value={productDetailsFormData?.sampling_method || ''}
+                onChange={handleInputChange}
+                error={!!errors.sampling_method}
+                helperText={errors.sampling_method}
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center pt-4">
+              <SearchableSelect
+                label="Trade Scope"
+                options={[
+                  { value: 'local', label: 'Local' },
+                  { value: 'international', label: 'International' },
+                  { value: 'both', label: 'Local & International' },
+                ]}
+                value={productDetailsFormData?.trade_scope || 'local'}
+                onChange={(e: any) => handleInputChange({ target: { name: 'trade_scope', value: e.target.value } })}
+                placeholder="Select Trade Scope"
+                errorMessage={errors.trade_scope}
+                fullWidth
+              />
+
+              <SearchableSelect
+                label="Supply Type"
+                options={[
+                  { value: 'immediate', label: 'Immediate' },
+                  { value: 'recurring', label: 'Recurring' },
+                ]}
+                value={productDetailsFormData?.supply_type || 'immediate'}
+                onChange={(e: any) => handleInputChange({ target: { name: 'supply_type', value: e.target.value } })}
+                placeholder="Select Supply Type"
+                errorMessage={errors.supply_type}
+                fullWidth
+              />
+            </div>
+
+            {productDetailsFormData?.supply_type === 'recurring' && (
+              <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center pt-2">
+                <SearchableSelect
+                  label="Recurring Frequency"
+                  options={[
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'monthly', label: 'Monthly' },
+                  ]}
+                  value={productDetailsFormData?.frequency || ''}
+                  onChange={(e: any) => handleInputChange({ target: { name: 'frequency', value: e.target.value } })}
+                  placeholder="Select frequency"
+                  errorMessage={errors.frequency}
+                  fullWidth
+                />
+                <TextField
+                  label="Contract Duration"
+                  fullWidth
+                  margin="normal"
+                  placeholder="e.g. 1 Year, 6 Months"
+                  name="duration"
+                  value={productDetailsFormData?.duration || ''}
+                  onChange={handleInputChange}
+                  error={!!errors.duration}
+                  helperText={errors.duration || 'Total duration of the supply contract'}
+                />
+              </div>
+            )}
 
             {/* color and hardness section */}
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
@@ -885,8 +1036,8 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
           {/*  this is for Product Images */}
           <div>
             <div className="py-[20px]">
-              <h2 className="font-medium text-[1.4rem]">Upload Product Images</h2>
-              <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images is required to list products</p>
+              <h2 className="font-medium text-[1.4rem]">Upload Product Images / Video</h2>
+              <p className="text-[#838383] text-[.9rem] ">Minimum of 5 images and maximum of 1 video is allowed to list product</p>
             </div>
             <Box
               sx={{
@@ -915,11 +1066,11 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 placeholder="Click to Upload/browse file"
                 className="hidden"
                 multiple
-                accept="image/png, image/jpeg, image/webp"
+                accept="image/png, image/jpeg, image/webp, video/mp4"
               />
               <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
               <p className="text-[#696969] text-[.75rem]">
-                Image must not exceed 5mb | Supported format: *jpg, *png, *webp
+                Image/Video must not exceed 5mb | Supported format: *jpg, *png, *webp, *mp4
               </p>
             </Box>
             {/* Display Uploaded Files' Names */}
@@ -1034,15 +1185,8 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
               disabled={isLoading || activeStep === steps.length - 1}
               variant="contained"
               color="primary"
-              className="w-full min-h-[48px]"
+              className="w-full min-h-[48px] disabled:opacity-100 disabled:text-white"
               type="submit"
-              sx={{
-                '&.Mui-disabled': {
-                  background: (theme: any) => theme.palette.primary.main,
-                  opacity: 1,
-                  color: '#fff',
-                },
-              }}
             >
               {isLoading ? (
                 <CircularProgress

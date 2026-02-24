@@ -39,6 +39,7 @@ export interface TradeRoomMetadata {
     supplier_id?: string;
     inspector_id?: string;
     assigned_admin_id?: string;
+    item_name?: string;
     mineral_tag?: string;
     quantity?: string;
     measure_type?: string;
@@ -202,7 +203,7 @@ export const customerTradeChatService = {
                     {
                         itemType: roomData.entity_type || 'product',
                         itemId: roomData.inquiry_id || tradeId,
-                        title: roomData.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry'
+                        title: roomData.item_name || roomData.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry'
                     },
                     text || (attachments.length > 0 ? '📎 Attachment' : ''),
                     'new_message',
@@ -327,7 +328,7 @@ export const customerTradeChatService = {
                             conversationType: 'trade',
                             itemType: data.entity_type || 'product',
                             itemId: data.inquiry_id || tradeId,
-                            itemTitle: data.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
+                            itemTitle: data.item_name || data.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
                             otherUserId: 'admin',
                             otherUserName: 'Min-meg Trade Desk',
                             otherCompanyName: 'Platform Admin',
