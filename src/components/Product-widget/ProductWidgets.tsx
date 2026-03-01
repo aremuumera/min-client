@@ -144,10 +144,10 @@ const ProductWidgets = ({ products }: ProductProps) => {
                   {product_name}
                 </h2>
                 <div className="pt-[10px]">
-                  {prev_price && <span className="sm:text-[24px] text-[1.1rem] font-[700]">${prev_price}</span>}
-                  {real_price && (
+                  <span className="sm:text-[24px] text-[1.1rem] font-[700]">${products.display_price || products.real_price || '0.00'}</span>
+                  {products.prev_price && (
                     <span className="text-[14px] font-[400] pl-[10px] text-[#666666]">
-                      <del>${real_price}</del>
+                      <del>${products.prev_price}</del>
                     </span>
                   )}
                 </div>

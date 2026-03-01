@@ -320,7 +320,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
                       <p className="text-xs text-gray-400 mt-1">
                         {product.product_category} | {product.storeProfile?.company_name}
                       </p>
-                      <p className="text-sm font-semibold text-green-800 mt-1">${product.real_price}</p>
+                      <p className="text-sm font-semibold text-green-800 mt-1">${product.display_price || product.real_price}</p>
                     </div>
                   </a>
                 ))}

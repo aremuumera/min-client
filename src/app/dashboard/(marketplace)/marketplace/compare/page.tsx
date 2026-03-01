@@ -76,7 +76,7 @@ const ComparisonPage = () => {
                             <th className="sticky left-0 z-10 bg-gray-50/80 backdrop-blur-md p-6 text-left border-b border-gray-100 min-w-[200px] w-1/4">
                                 <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Product Info</span>
                             </th>
-                            {comparisonList.map((product) => (
+                            {comparisonList.map((product: any) => (
                                 <th key={product.id} className="p-6 border-b border-gray-100 min-w-[250px] relative group bg-white">
                                     <button
                                         onClick={() => dispatch(removeFromComparison(product.id))}
@@ -98,6 +98,9 @@ const ComparisonPage = () => {
                                                         src={imgUrl}
                                                         className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
                                                         muted
+                                                        autoPlay
+                                                        loop
+                                                        playsInline
                                                     />
                                                 );
                                             }
@@ -113,11 +116,18 @@ const ComparisonPage = () => {
                                     <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 min-h-[3.5rem]">
                                         {product.product_name}
                                     </h3>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className="text-2xl font-black text-green-700">
-                                            {getCurrencySymbol(product.unitCurrency)}{formatPrice(product.real_price)}
-                                        </span>
-                                        <span className="text-sm text-gray-400">/ {product.measure}</span>
+                                    <div className="flex flex-col mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl font-black text-green-700">
+                                                {getCurrencySymbol(product.unitCurrency)}{formatPrice(product.display_price || product.real_price)}
+                                            </span>
+                                            <span className="text-sm text-gray-400">/ {product.measure}</span>
+                                        </div>
+                                        {product.prev_price && Number(product.prev_price) > 0 && (
+                                            <span className="text-sm text-gray-400 line-through decoration-red-400">
+                                                {getCurrencySymbol(product.unitCurrency)}{formatPrice(product.prev_price)}
+                                            </span>
+                                        )}
                                     </div>
                                     <Link
                                         href={`/dashboard/products/details/${product.id}/${product.product_name.replace(/\s+/g, '-')}`}

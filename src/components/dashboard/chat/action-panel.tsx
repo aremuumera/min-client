@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Box, Button, Stack, Typography, Card, CardContent } from '@/components/ui';
+import { Box, Button, Stack, Typography, Card, CardContent, Spinner } from '@/components/ui';
 import { CheckCircle as CheckCircleIcon, XCircle as XCircleIcon, Info as InfoIcon } from '@phosphor-icons/react';
 import { ChatContext } from '@/providers/chat-provider';
 
@@ -10,7 +10,7 @@ interface ActionPanelProps {
 }
 
 export function ActionPanel({ thread }: ActionPanelProps) {
-    const { acknowledgeTrade, rejectTrade } = React.useContext(ChatContext);
+    const { acknowledgeTrade, rejectTrade, activeInquiryId } = React.useContext(ChatContext);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [rejectionReason, setRejectionReason] = React.useState('');
     const [showRejectForm, setShowRejectForm] = React.useState(false);
@@ -18,7 +18,7 @@ export function ActionPanel({ thread }: ActionPanelProps) {
     const handleAcknowledge = async () => {
         setIsSubmitting(true);
         try {
-            await acknowledgeTrade(thread.conversationId);
+            await acknowledgeTrade(activeInquiryId || thread.conversationId);
         } catch (error) {
             console.error('Failed to acknowledge:', error);
         } finally {
@@ -30,7 +30,7 @@ export function ActionPanel({ thread }: ActionPanelProps) {
         if (!rejectionReason.trim()) return;
         setIsSubmitting(true);
         try {
-            await rejectTrade(thread.conversationId, rejectionReason);
+            await rejectTrade(activeInquiryId || thread.conversationId, rejectionReason);
         } catch (error) {
             console.error('Failed to reject:', error);
         } finally {
@@ -38,13 +38,47 @@ export function ActionPanel({ thread }: ActionPanelProps) {
         }
     };
 
+    if (thread.metadata?.status === 'rejected') {
+        return (
+            <Box className="p-6 border-t border-red-100 bg-red-50/30">
+                <Card className="border-red-200 overflow-hidden shadow-sm">
+                    <CardContent className="p-0">
+                        <Box className="bg-red-600 p-4 text-white flex items-center gap-2">
+                            <XCircleIcon size={20} weight="fill" />
+                            <Typography variant="subtitle2" className="font-bold uppercase tracking-wider text-[11px] text-white!">
+                                Trade Inquiry Declined
+                            </Typography>
+                        </Box>
+                        <Box className="p-6 space-y-4 bg-white text-center">
+                            <Typography variant="h6" className="font-black text-gray-900">
+                                This inquiry has been declined
+                            </Typography>
+                            {thread.metadata?.rejection_reason && (
+                                <Box className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-left">
+                                    <Typography variant="caption" className="block text-gray-400 uppercase font-bold mb-1">Reason provided:</Typography>
+                                    <Typography variant="body2" className="text-gray-600 font-medium italic">
+                                        &quot;{thread.metadata.rejection_reason}&quot;
+                                    </Typography>
+                                </Box>
+                            )}
+                            <Typography variant="caption" className="block text-gray-400">
+                                No further messages can be sent for this specific trade cycle.
+                                <br />You can still view the chat history for your records.
+                            </Typography>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </Box>
+        );
+    }
+
     return (
         <Box className="p-6 border-t border-emerald-100 bg-emerald-50/30">
-            <Card className="border-emerald-200 shadow-sm overflow-hidden">
+            <Card className="border-emerald-200 overflow-hidden">
                 <CardContent className="p-0">
                     <Box className="bg-emerald-600 p-4 text-white flex items-center gap-2">
                         <InfoIcon size={20} weight="fill" />
-                        <Typography variant="subtitle2" className="font-bold uppercase tracking-wider text-[11px]">
+                        <Typography variant="subtitle2" className="font-bold uppercase tracking-wider text-[11px] text-white!">
                             New Multi-Mineral Trade Inquiry
                         </Typography>
                     </Box>
@@ -63,16 +97,16 @@ export function ActionPanel({ thread }: ActionPanelProps) {
                                 <Button
                                     onClick={handleAcknowledge}
                                     disabled={isSubmitting}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 py-6 rounded-xl font-bold flex items-center gap-2 shadow-md shadow-emerald-200 transition-all uppercase tracking-widest text-xs"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 py-3 rounded-xl font-bold flex items-center gap-2 justify-center transition-all uppercase tracking-widest text-xs"
                                 >
-                                    <CheckCircleIcon size={20} weight="bold" />
-                                    Acknowledge & Start Chat
+                                    {isSubmitting ? <Spinner size={20} color="text-white" /> : <CheckCircleIcon size={20} weight="bold" />}
+                                    {isSubmitting ? 'Processing...' : 'Acknowledge & Start Chat'}
                                 </Button>
                                 <Button
-                                    variant="outline"
+                                    variant="outlined"
                                     onClick={() => setShowRejectForm(true)}
                                     disabled={isSubmitting}
-                                    className="border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 py-6 rounded-xl font-bold flex items-center gap-2 transition-all uppercase tracking-widest text-xs"
+                                    className="border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 py-3 rounded-xl font-bold flex items-center gap-2 justify-center transition-all uppercase tracking-widest text-xs"
                                 >
                                     <XCircleIcon size={20} weight="bold" />
                                     Decline
@@ -94,16 +128,18 @@ export function ActionPanel({ thread }: ActionPanelProps) {
                                 <Stack direction="row" spacing={2}>
                                     <Button
                                         onClick={handleReject}
+                                        variant="outlined"
                                         disabled={isSubmitting || !rejectionReason.trim()}
-                                        className="bg-red-600 hover:bg-red-700 text-white flex-1 py-3 rounded-xl font-bold uppercase tracking-widest text-xs"
+                                        className="bg-red-600 hover:bg-red-700 text-white flex-1 py-3 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2"
                                     >
-                                        Confirm Decline
+                                        {isSubmitting ? <Spinner size={20} color="text-white" /> : <XCircleIcon size={20} weight="bold" />}
+                                        {isSubmitting ? 'Declining...' : 'Confirm Decline'}
                                     </Button>
                                     <Button
-                                        variant="ghost"
+                                        variant="outlined"
                                         onClick={() => setShowRejectForm(false)}
                                         disabled={isSubmitting}
-                                        className="text-gray-400 hover:bg-gray-50 py-3 rounded-xl font-bold uppercase tracking-widest text-xs"
+                                        className="border-gray-200 py-3 px-6 rounded-xl font-bold uppercase tracking-widest text-xs"
                                     >
                                         Back
                                     </Button>

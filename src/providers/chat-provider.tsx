@@ -36,6 +36,9 @@ interface ChatContextType {
   openMobileSidebar: boolean;
   setOpenMobileSidebar: Dispatch<SetStateAction<boolean>>;
   setActiveConversation: (conversation: Conversation | null) => void;
+  activeInquiryId: string | null;
+  setActiveInquiryId: (id: string | null) => void;
+  roomInquiries: any[];
   startConversation: (recipientId: string, itemData: any) => Promise<string | null>;
   sendMessage: (text: string, attachments: any[], type: string) => Promise<boolean>;
   uploadAttachment: (file: File) => Promise<any>;
@@ -61,6 +64,9 @@ export const ChatContext = createContext<ChatContextType>({
   openMobileSidebar: false,
   setOpenMobileSidebar: () => { },
   setActiveConversation: () => { },
+  activeInquiryId: null,
+  setActiveInquiryId: () => { },
+  roomInquiries: [],
   startConversation: async () => null,
   sendMessage: async () => false,
   uploadAttachment: async () => null,
@@ -78,6 +84,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [tradeConversations, setTradeConversations] = useState<Conversation[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [activeInquiryId, setActiveInquiryId] = useState<string | null>(null);
+  const [roomInquiries, setRoomInquiries] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -88,7 +96,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [acknowledgeInquiry] = useAcknowledgeInquiryMutation();
   const [rejectInquiry] = useRejectInquiryMutation();
   const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const effectiveUserId = String(ownerUserId || user?.id || '').replace(/-/g, '');
+  const userRole = user?.role || user?.team_role || user?.rtype || 'buyer';
   const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`;
 
   const router = useRouter();
@@ -97,7 +106,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const threadId = params?.threadId as string;
   const threadType = params?.threadType as string;
 
-  console.log('ChatProvider Debug:', { effectiveUserId, role: user?.role, loading });
+  // console.log('ChatProvider: Initializing with', { effectiveUserId, userRole });
 
   /*
     Previous Flow for buyer to supplier
@@ -135,6 +144,58 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [user]);
 
+  // Loading active room inquiries (tabs)
+  useEffect(() => {
+    let unsubscribe: any = null;
+
+    if (activeConversation) {
+      const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation.conversationType === 'trade';
+
+      if (isTradeType) {
+        const conversationId = activeConversation.conversationId;
+
+        // console.log('🟣 [ChatProvider] Room inquiries effect ENTERED. conversationId:', conversationId, 'effectiveUserId:', effectiveUserId, 'userRole:', userRole, 'firestorePath:', `trade_rooms/${conversationId}/trades`);
+
+        unsubscribe = customerTradeChatService.getRoomInquiries(
+          String(conversationId),
+          effectiveUserId,
+          userRole,
+          (inquiries: any[]) => {
+            // console.log('🔵 [ChatProvider] Room inquiries received:', inquiries.length, 'ids:', inquiries.map(i => i.id), 'for room:', conversationId);
+            setRoomInquiries(inquiries);
+
+            // Auto-select the inquiry from URL or the most recent one
+            const urlItemId = params?.itemId as string;
+            if (inquiries.length > 0) {
+              setActiveInquiryId(prev => {
+                // 1. If we have a URL param, prioritize it
+                if (urlItemId && inquiries.find(i => i.id === urlItemId)) {
+                  return urlItemId;
+                }
+                // 2. If we already had an active one that's still valid, keep it
+                if (prev && inquiries.find(i => i.id === prev)) {
+                  return prev;
+                }
+                // 3. Fallback to the first (newest) inquiry
+                return inquiries[0].id;
+              });
+            } else {
+              setActiveInquiryId(null);
+            }
+          }
+        );
+      } else {
+        setRoomInquiries([]);
+      }
+    } else {
+      setRoomInquiries([]);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [activeConversation, threadType]);
+
   // Loading  messages when active conversation changes
   useEffect(() => {
     let unsubscribe: any = null;
@@ -144,15 +205,40 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation.conversationType === 'trade';
 
       if (isTradeType) {
-        const spoke = customerTradeChatService.getUserSpoke(user?.role);
-        unsubscribe = customerTradeChatService.getSpokeMessages(activeConversation.conversationId, spoke, (messageList: any[]) => {
-          setMessages(messageList);
+        if (!activeInquiryId) {
+          // console.log('🔴 [ChatProvider] No activeInquiryId — messages cleared. threadType:', threadType, 'conversationId:', activeConversation.conversationId);
+          setMessages([]);
+          return;
+        }
 
-          // Mark conversation as read
-          if (effectiveUserId) {
-            customerTradeChatService.markSpokeAsRead(activeConversation.conversationId, spoke, effectiveUserId);
-          }
-        });
+        const effectiveUserId = String(user.ownerUserId || user.id);
+        const conversationId = activeConversation.conversationId;
+
+        // console.log('🟢 [ChatProvider] Subscribing to messages:', {
+        //   conversationId,
+        //   activeInquiryId,
+        //   userSpoke: activeConversation.userSpoke,
+        //   firestorePath: `trade_rooms/${conversationId}/trades/${activeInquiryId}/threads/${activeConversation.userSpoke}/messages`,
+        // });
+
+        setLoadingMessages(true);
+        unsubscribe = customerTradeChatService.getSpokeMessages(
+          String(conversationId),
+          activeInquiryId,
+          activeConversation.userSpoke,
+          (messageList: any[]) => {
+            // console.log('🟡 [ChatProvider] Messages received:', messageList.length, 'for spoke:', activeConversation.userSpoke);
+            setMessages(messageList);
+            setLoadingMessages(false);
+
+            // Mark as read when messages load or active conversation changes
+            customerTradeChatService.markSpokeAsRead(
+              String(conversationId),
+              activeInquiryId,
+              activeConversation.userSpoke,
+              String(user.id)
+            );
+          });
       } else {
         unsubscribe = chatService.getMessages(activeConversation.conversationId, (messageList: Message[]) => {
           setMessages(messageList);
@@ -170,7 +256,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [activeConversation, user, router, threadType, effectiveUserId]);
+  }, [activeConversation, user, router, threadType, effectiveUserId, activeInquiryId]);
 
   // In your conversation component
   useEffect(() => {
@@ -217,16 +303,26 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (isTradeType) {
           const spoke = customerTradeChatService.getUserSpoke(user?.role);
-          await customerTradeChatService.sendMessage(
-            activeConversation.conversationId,
-            spoke,
-            user.id,
-            user.role,
-            fullName,
-            user?.companyName || user?.company_name || 'Buyer',
-            text,
-            attachments
-          );
+          const effectiveUserId = String(user.ownerUserId || user.id);
+          const conversationId = activeConversation.conversationId;
+
+          try {
+            if (!activeInquiryId) return false;
+            const msgId = await customerTradeChatService.sendMessage(
+              String(conversationId),
+              activeInquiryId,
+              activeConversation.userSpoke,
+              String(user.id),
+              userRole,
+              fullName,
+              user.companyName || user.company_name || '',
+              text,
+              attachments
+            );
+          } catch (error) {
+            console.error('Error sending trade message:', error);
+            return false;
+          }
         } else {
           await chatService.sendMessage(
             activeConversation.conversationId,
@@ -248,7 +344,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setLoadingMessages(false);
       }
     },
-    [user, activeConversation, setLoadingMessages, setLoading, threadType, fullName]
+    [user, activeConversation, setLoadingMessages, setLoading, threadType, fullName, activeInquiryId]
   );
 
   // Function to upload attachment
@@ -267,16 +363,35 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (isTradeType) {
           const spoke = customerTradeChatService.getUserSpoke(user?.role);
-          attachment = await customerTradeChatService.uploadAttachment(file, activeConversation.conversationId, spoke);
+          const conversationId = activeConversation.conversationId;
+
+          try {
+            if (!activeInquiryId) return null;
+            attachment = await customerTradeChatService.uploadAttachment(file, String(conversationId), activeInquiryId, activeConversation.userSpoke);
+          } catch (error) {
+            console.error('Error uploading trade attachment:', error);
+            return null;
+          }
         } else {
           attachment = await chatService.uploadAttachment(file, activeConversation.conversationId);
+        }
+
+        // Robust type detection for attachments
+        let type = "file";
+        const mimeType = file.type.toLowerCase();
+        const fileName = file.name.toLowerCase();
+
+        if (mimeType.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|heic|jfif)$/i.test(fileName)) {
+          type = "image";
+        } else if (mimeType.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(fileName)) {
+          type = "video";
         }
 
         // Return complete attachment object with metadata
         return {
           name: file.name,
           size: file.size,
-          type: file.type.startsWith('image/') ? 'image' : 'file',
+          type,
           url: attachment.url,
           contentType: file.type,
         };
@@ -288,7 +403,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setLoadingAttachments(false); // Reset loading state for attachments
       }
     },
-    [activeConversation, threadType, user?.role]
+    [activeConversation, threadType, user?.role, activeInquiryId]
   );
 
 
@@ -347,9 +462,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // In ChatProvider component
   useEffect(() => {
     if (!activeConversation || !effectiveUserId) return;
+
+    // Skip for trade conversations as they have their own marking logic in another effect
+    const isTradeType = activeConversation.conversationType === 'trade' || ['trade', 'product', 'rfq', 'business'].includes(threadType);
+    if (isTradeType) return;
 
     const unreadMessages = messages.filter((msg) => msg.senderId !== user.id && !msg.isRead);
 
@@ -385,8 +503,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await acknowledgeInquiry(tradeId).unwrap();
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to acknowledge trade:', error);
+      // Log more details if available
+      if (error.data) {
+        console.error('Acknowledge error data:', error.data);
+      }
       return false;
     }
   }, [acknowledgeInquiry]);
@@ -415,22 +537,25 @@ New Flow for for all roles to Admin
   useEffect(() => {
     let unsubscribe: any = null;
 
-    if (effectiveUserId && user?.role) {
-      console.log('Fetching trade rooms for:', effectiveUserId, user.role);
+    if (effectiveUserId && userRole) {
+      console.log('Fetching trade rooms for:', effectiveUserId, userRole);
       setLoading(true);
-      unsubscribe = customerTradeChatService.getUserTradeRooms(effectiveUserId, user.role, (list: any[]) => {
-        console.log('Trade rooms received:', list.length);
-        setTradeConversations(list);
-        setLoading(false);
-      });
+      unsubscribe = customerTradeChatService.getUserTradeRooms(
+        effectiveUserId,
+        userRole,
+        (list: any[]) => {
+          // console.log('Trade rooms received:', list.length);
+          setTradeConversations(list);
+          setLoading(false);
+        });
     } else {
-      console.log('Skipping trade room fetch - missing:', { effectiveUserId, role: user?.role });
+      // console.log('Skipping trade room fetch - missing:', { effectiveUserId, role: userRole });
     }
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [effectiveUserId, user?.role]);
+  }, [effectiveUserId, userRole]);
 
 
 
@@ -457,15 +582,53 @@ New Flow for for all roles to Admin
     setConversations(merged);
   }, [tradeConversations]);
 
+  // Cleanup active conversation if it's no longer in the list (e.g. hidden/closed)
+  useEffect(() => {
+    if (activeConversation && conversations.length > 0) {
+      const stillExists = conversations.some(c => c.conversationId === activeConversation.conversationId);
+      if (!stillExists) {
+        // console.log('Active conversation no longer in list. Clearing state.');
+        setActiveConversation(null);
+        setActiveInquiryId(null);
+        // Optional: router.push('/dashboard/chat'); 
+        // But many components already handle null activeConversation by showing a placeholder.
+      }
+    }
+  }, [conversations, activeConversation]);
 
 
 
 
-  // Synthesize active conversation for trades
+
+  // Sync/Synthesize active conversation for trades
   useEffect(() => {
     const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType);
-    if (isTradeType && threadId && !activeConversation) {
-      // Create a temporary conversation object for the trade
+    if (!isTradeType || !threadId) return;
+
+    const existing = conversations.find((c) => c.conversationId === threadId);
+
+    if (existing) {
+      // Find the active cycle status from roomInquiries if possible
+      const activeCycle = roomInquiries.find(i => i.id === activeInquiryId);
+      const cycleStatus = activeCycle?.status;
+
+      const currentStatus = cycleStatus || existing.metadata?.status;
+
+      // Sync if status/metadata changed, or if switching to a new threadId
+      if (!activeConversation ||
+        activeConversation.conversationId !== existing.conversationId ||
+        activeConversation.metadata?.status !== currentStatus) {
+
+        setActiveConversation({
+          ...existing,
+          metadata: {
+            ...existing.metadata,
+            status: currentStatus // Sync with active cycle!
+          }
+        });
+      }
+    } else if (!activeConversation) {
+      // Build temporary conversation object until metadata loads
       const tempConversation: Conversation = {
         conversationId: threadId,
         conversationType: 'trade',
@@ -473,27 +636,25 @@ New Flow for for all roles to Admin
         otherUserName: 'Min-meg Trade Desk',
         otherCompanyName: 'Platform Admin',
         itemTitle: 'Trade Inquiry',
-        itemType: 'trade'
+        itemType: 'product', // Map to a visible category immediately
+        userSpoke: 'admin_buyer' as any
       };
 
-      const existing = conversations.find((c) => c.conversationId === threadId);
-      if (existing) {
-        setActiveConversation(existing);
-      } else {
-        setActiveConversation(tempConversation);
-        // Fetch actual metadata if needed
-        customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
-          if (metadata) {
-            setActiveConversation({
-              ...tempConversation,
-              itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
-              metadata: metadata
-            });
-          }
-        });
-      }
+      setActiveConversation(tempConversation);
+
+      // Fetch fallback metadata
+      customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
+        if (metadata) {
+          setActiveConversation({
+            ...tempConversation,
+            itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
+            userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
+            metadata: metadata
+          });
+        }
+      });
     }
-  }, [threadType, threadId, activeConversation, conversations]);
+  }, [threadType, threadId, activeConversation, conversations, effectiveUserId, activeInquiryId, roomInquiries]);
 
 
 
@@ -503,6 +664,9 @@ New Flow for for all roles to Admin
     conversations, // List of conversations for the current user
     activeConversation, // Currently active conversation of the current user
     setActiveConversation, // Function to set the active conversation
+    activeInquiryId,
+    setActiveInquiryId,
+    roomInquiries,
     messages, // List of messages for the active conversation
     loading,
     notifications, // List of notifications for the current user

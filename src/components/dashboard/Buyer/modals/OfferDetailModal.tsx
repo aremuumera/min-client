@@ -25,6 +25,19 @@ interface OfferDetailModalProps {
     offer: any;
 }
 
+const safelyParse = (value: any) => {
+    try {
+        if (!value) return [];
+        let parsed = value;
+        while (typeof parsed === 'string') {
+            parsed = JSON.parse(parsed);
+        }
+        return Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) {
+        return Array.isArray(value) ? value : [];
+    }
+};
+
 const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, offer }) => {
     const [shortlistOffer, { isLoading }] = useShortlistRfqOfferMutation();
     const { showAlert } = useAlert();
@@ -132,13 +145,30 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                         </div>
                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
                             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1">Unit Price</span>
-                            <span className="text-lg font-bold text-primary-600">{offer.currency === 'USD' ? '$' : '₦'}{Number(offer.unit_price).toLocaleString()}</span>
+                            <span className="text-lg font-bold text-primary-600">{offer.currency === 'USD' ? '$' : '₦'}{Number(offer.display_price).toLocaleString()}</span>
                         </div>
                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
                             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-1">Total Value</span>
-                            <span className="text-lg font-bold text-gray-900">{offer.currency === 'USD' ? '$' : '₦'}{(offer.quantity * offer.unit_price).toLocaleString()}</span>
+                            <span className="text-lg font-bold text-gray-900">{offer.currency === 'USD' ? '$' : '₦'}{(offer.quantity * offer.display_price).toLocaleString()}</span>
                         </div>
                     </div>
+
+                    {/* Fee Breakdown transparency for Buyer */}
+                    {safelyParse(offer.fee_breakdown).length > 0 && (
+                        <div className="bg-primary-50/30 p-4 rounded-2xl border border-primary-100 space-y-3">
+                            <h4 className="text-xs font-bold text-primary-900 flex items-center gap-2 uppercase tracking-tight">Admin Fee Transparency</h4>
+                            <div className="space-y-2">
+                                {safelyParse(offer.fee_breakdown).map((fee: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center text-xs">
+                                        <span className="text-primary-700/70 capitalize">{(fee.rule_name || fee.name || 'Service Fee').replace(/_/g, ' ')}</span>
+                                        <span className="font-mono font-medium text-primary-900">
+                                            {offer.currency === 'USD' ? '$' : '₦'}{Number(fee.fee_amount || fee.amount || fee.value || 0).toLocaleString()} <small className="text-[8px] opacity-70">Included</small>
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Specs Section */}
                     <div className="space-y-4">
@@ -174,11 +204,11 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                     )}
 
                     {/* Attachments Section */}
-                    {offer.attachments?.length > 0 && (
+                    {safelyParse(offer.attachments || offer.documents).length > 0 && (
                         <div className="space-y-4">
                             <h4 className="text-sm font-bold text-gray-900 border-l-4 border-primary-500 pl-3">Attachments & Media</h4>
                             <div className="grid grid-cols-4 gap-4">
-                                {offer.attachments.map((att: any, i: number) => renderAttachment(att, i))}
+                                {safelyParse(offer.attachments || offer.documents).map((att: any, i: number) => renderAttachment(att, i))}
                             </div>
                         </div>
                     )}

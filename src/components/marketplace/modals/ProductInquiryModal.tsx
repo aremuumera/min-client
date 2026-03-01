@@ -99,6 +99,32 @@ const ProductInquiryModal = ({
 
     if (!isOpen) return null;
 
+    // Prevent self-inquiry: user cannot inquire about their own product
+    const effectiveUserId = String(user?.ownerUserId || user?.id || '');
+    const isOwnProduct = product.supplier_id && String(product.supplier_id) === effectiveUserId;
+
+    if (isOwnProduct) {
+        return (
+            <div className="fixed inset-0 bg-black/60 z-11000 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-8 text-center">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertTriangle className="text-amber-600 w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">This is your product</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                        You cannot send an inquiry or offer for your own listing.
+                    </p>
+                    <button
+                        onClick={onClose}
+                        className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     const handleSubmit = async () => {
         try {
             if (isRfqOffer) {
@@ -666,10 +692,15 @@ const ProductInquiryModal = ({
                                     : 'Your competitive quote has been submitted to the Admin. Our team will review your offer against the requirements and relay it to the buyer shortly.'}
                             </p>
                             <button
-                                onClick={handleClose}
+                                onClick={() => {
+                                    handleClose();
+                                    if (isRfqOffer) {
+                                        router.push('/dashboard/chat');
+                                    }
+                                }}
                                 className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98]"
                             >
-                                Return to Marketplace
+                                {isRfqOffer ? 'View in Trade Desk' : 'Return to Marketplace'}
                             </button>
                         </div>
                     )}

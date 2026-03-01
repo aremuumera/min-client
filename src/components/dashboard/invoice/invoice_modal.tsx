@@ -355,7 +355,7 @@ export function InvoiceAgreementModal({
         productCategory: threadType === 'product' ? itemData.product_category : itemData.rfqProductCategory,
         quantity: threadType === 'rfq' ? itemData.quantityRequired : prev.quantity,
         unitType: threadType === 'rfq' ? itemData.quantityMeasure : prev.unitType,
-        unitPrice: threadType === 'product' ? itemData.real_price : prev.unitPrice,
+        unitPrice: threadType === 'product' ? (itemData.display_price || itemData.real_price) : prev.unitPrice,
         deliveryLocation: threadType === 'product' ? `` : itemData.productDestination || prev.deliveryLocation,
         samplingState: threadType === 'product' ? itemData.selected_state : itemData.rfqState || prev.samplingState,
         samplingLGA: threadType === 'product' ? itemData.selected_lga : itemData.rfqLga || prev.samplingLGA,

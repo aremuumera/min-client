@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useAppCheckQuery } from '@/redux/features/AuthFeature/auth_api_rtk';
-import { logoutAndCleanup, setRequestedLocation } from '@/redux/features/AuthFeature/auth_slice';
+import { logoutAndCleanup, setRequestedLocation, setInitialized } from '@/redux/features/AuthFeature/auth_slice';
 import { paths, requiresVerification, isPublicRoute } from '@/config/paths';
 import { Modal, ModalHeader, ModalBody, Button, Box } from '@/components/ui';
 import { jwtDecode } from 'jwt-decode';
@@ -14,12 +14,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const { requestedLocation, isAuth, user, appData, isInitialized, token } = useAppSelector(
+  const { isAuth, user, appData, isInitialized, token } = useAppSelector(
     (state) => state.auth
   );
+  const Token = localStorage.getItem('chimpstate') || token;
   const firebaseToken = useAppSelector((state) => state.auth.numb);
 
-  // AppCheck (refresh token)
+  // AppCheck (refresh Token)
   const { isLoading, isError, refetch, isUninitialized } = useAppCheckQuery(undefined,
     {
       skip: typeof window === 'undefined' || !localStorage.getItem('chimpstate'),
@@ -36,10 +37,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       firebaseSignedIn.current = true;
       firebaseAuthService.signInWithCustomToken(firebaseToken)
         .then((user) => {
-          console.log('✅ Firebase Auth signed in:', user?.uid);
+          console.log(' Firebase Auth signed in:', user?.uid);
         })
         .catch((err) => {
-          console.error('❌ Firebase Auth sign-in failed:', err);
+          console.error(' Firebase Auth sign-in failed:', err);
           firebaseSignedIn.current = false; // Allow retry
         });
     }
@@ -61,22 +62,29 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, isAuth, refetch, isUninitialized]);
 
+  // Handle initialization when auth check is skipped (no token)
+  React.useEffect(() => {
+    if (isUninitialized && !isInitialized && typeof window !== 'undefined' && !localStorage.getItem('chimpstate')) {
+      dispatch(setInitialized(true));
+    }
+  }, [isUninitialized, isInitialized, dispatch]);
+
   // Token expiration check
   React.useEffect(() => {
-    if (!token) return;
+    if (!Token) return;
 
     const checkExpiry = () => {
       try {
-        const decoded: any = jwtDecode(token);
-        // Check if token is expired
+        const decoded: any = jwtDecode(Token);
+        // Check if Token is expired
         if (decoded.exp < Date.now() / 1000) {
-          console.log('called-5')
+          // console.log('called-5')
 
           dispatch(logoutAndCleanup() as any);
           router.replace(paths.auth.signIn);
         }
       } catch (e) {
-        console.log('called-4')
+        // console.log('called-4')
         dispatch(logoutAndCleanup() as any);
         router.replace(paths.auth.signIn);
       }
@@ -88,7 +96,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // Check every minute
     const interval = setInterval(checkExpiry, 60000);
     return () => clearInterval(interval);
-  }, [token, dispatch, router]);
+  }, [Token, dispatch, router]);
 
   const handleCreateProfile = () => {
     setShowProfileModal(false);
@@ -98,14 +106,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     // Not authenticated or user data missing
     if (!isAuth || !user) {
-      if (isPublicRoute(pathname)) return; // Allow public routes for guests
 
       // Double check if we are still loading or initializing
       if (isLoading && !isAuth) return;
-
-      if (!requestedLocation) {
-        dispatch(setRequestedLocation(pathname));
-      }
 
       // Only logout if we genuinely failed auth check and aren't just waiting
       if (isInitialized && !isAuth && !isLoading) {
@@ -183,17 +186,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Redirect to saved location after login
-    if (requestedLocation) {
-      const targetLocation = requestedLocation;
-      dispatch(setRequestedLocation(null));
-      router.replace(targetLocation);
-      return;
-    }
   }, [
     isAuth,
     isInitialized,
-    requestedLocation,
     pathname,
     dispatch,
     router,
@@ -203,6 +198,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     isLoading,
     isError,
   ]);
+
+  // console.log('AuthGuard State:', { isAuth, user: !!user, isInitialized, isLoading, isUninitialized });
 
   const shouldShowLoader = !isInitialized || (isLoading && !isAuth);
 
@@ -255,5 +252,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Not authenticated and initialized -> return null as we are redirecting
-  return null;
+  // return;
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50/50">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600" />
+    </div>
+  );
 }

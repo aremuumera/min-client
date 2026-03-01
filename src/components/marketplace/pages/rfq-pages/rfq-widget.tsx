@@ -4,7 +4,8 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
-import { User, Calendar, MapPin, Loader2 } from 'lucide-react'; // Replaced icons
+import { User, Calendar, MapPin, Loader2, Timer, Clock, AlertCircle, Box } from 'lucide-react'; // Replaced icons
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import Link from 'next/link';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
@@ -13,6 +14,80 @@ import { useAlert } from '@/providers';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import { paths } from '@/config/paths';
+
+const CountdownTimer = ({ deadline }: { deadline: string }) => {
+  const [timeLeft, setTimeLeft] = useState<any>(null);
+
+  React.useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const target = new Date(deadline);
+      const diff = differenceInSeconds(target, now);
+
+      if (diff <= 0) return null;
+
+      const days = Math.floor(diff / (24 * 3600));
+      const hours = Math.floor((diff % (24 * 3600)) / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = diff % 60;
+
+      return { days, hours, minutes, seconds };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      const remaining = calculateTimeLeft();
+      setTimeLeft(remaining);
+      if (!remaining) clearInterval(timer);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [deadline]);
+
+  if (!timeLeft) return (
+    <div className="flex items-center gap-1.5 text-red-600 bg-red-50 px-2.5 py-1 rounded-full text-[10px] font-bold border border-red-100 uppercase tracking-wider">
+      <Clock size={12} /> Bidding Expired
+    </div>
+  );
+
+  const isUrgent = timeLeft.days === 0 && timeLeft.hours < 24;
+
+  return (
+    <div className={`flex items-center gap-2 ${isUrgent ? 'text-orange-600 bg-orange-50 border-orange-100' : 'text-emerald-700 bg-emerald-50 border-emerald-100'} px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider shadow-sm transition-all animate-pulse-slow`}>
+      <Timer size={12} className={isUrgent ? 'animate-bounce' : ''} />
+      <span>
+        {timeLeft.days > 0 && `${timeLeft.days}d `}
+        {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s Left
+      </span>
+    </div>
+  );
+};
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const isNegotiating = status === 'in_negotiation';
+  const isClosed = status === 'closed' || status === 'finalized';
+  const isExpired = status === 'expired';
+
+  if (isNegotiating) return (
+    <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full text-[10px] font-bold border border-blue-100 uppercase tracking-wider">
+      <AlertCircle size={12} /> In Negotiation
+    </div>
+  );
+
+  if (isClosed) return (
+    <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full text-[10px] font-bold border border-gray-100 uppercase tracking-wider">
+      <Box size={12} /> Bidding Closed
+    </div>
+  );
+
+  if (isExpired) return (
+    <div className="flex items-center gap-1.5 text-red-600 bg-red-50 px-2.5 py-1 rounded-full text-[10px] font-bold border border-red-100 uppercase tracking-wider">
+      <Clock size={12} /> Expired
+    </div>
+  );
+
+  return null;
+};
 
 const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
   const [showLoginModalForSave, setShowLoginModalForSave] = useState(false);
@@ -33,6 +108,8 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
     quantityMeasure,
     country,
     productDestination,
+    bidding_deadline,
+    status,
     // attachments,
   } = rfqProduct || {};
 
@@ -62,55 +139,60 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
     <>
       <div className="bg-white rounded-lg border border-[#efefef] flex flex-col h-full">
         <div className="p-4 grow h-full flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="grow">
-              <p className="text-sm font-semibold text-gray-900 leading-tight">
-                {buyer?.name || 'Buyer'}
-              </p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <p className="text-[11px] text-gray-500">
-                  {buyer?.company_name || 'Individual Buyer'}
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-black text-gray-900 leading-tight">
+                  {buyer?.name || 'Buyer'}
                 </p>
                 {buyer?.verified && (
-                  <span className="shrink-0 bg-blue-50 text-blue-600 px-1 rounded text-[9px] font-medium border border-blue-100 uppercase tracking-tighter">
+                  <span className="shrink-0 bg-blue-50 text-blue-600 px-1 rounded text-[9px] font-bold border border-blue-100 uppercase tracking-tighter">
                     Verified
                   </span>
                 )}
               </div>
+              <p className="text-[11px] text-gray-500 font-medium truncate max-w-[150px]">
+                {buyer?.company_name || 'Individual Buyer'}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-2 ml-auto">
+              {status && status !== 'pending' && status !== 'supplier_matched' ? (
+                <StatusBadge status={status} />
+              ) : (
+                bidding_deadline && <CountdownTimer deadline={bidding_deadline} />
+              )}
               <ToggleSaveButton setShowLoginModal={setShowLoginModalForSave} products={rfqProduct} />
-              <div className="flex items-center text-green-800 bg-green-50 px-2 py-1 rounded-md text-xs font-medium">
-                <Calendar className="mr-1.5 w-3 h-3" />
-                {updatedAt ? format(new Date(updatedAt), 'dd/MM/yyyy') : 'N/A'}
-              </div>
             </div>
           </div>
 
-          <p className="text-sm font-medium text-gray-800 mb-3 line-clamp-2 min-h-[40px]">
-            {description}
-          </p>
-
-          <div className="text-sm text-gray-600 space-y-2 mt-auto">
-            <p>
-              <span className="font-semibold text-gray-700">Product: </span>
-              {rfqProductName}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-700">Quantity: </span>
-              {quantityRequired} {quantityMeasure}
-            </p>
-            <div className="flex gap-2 items-center">
-              <span className="font-semibold text-gray-700 whitespace-nowrap">Buyer From: </span>
-              <div className="flex items-center gap-2 overflow-hidden">
+          <div className="flex items-center justify-between  bg-gray-50/50 p-2 rounded-lg border border-gray-100/50">
+            <div className="flex items-center text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+              <Calendar className="mr-1.5 w-3 h-3 text-emerald-600" />
+              Posted: {updatedAt ? format(new Date(updatedAt), 'dd MMM yyyy') : 'N/A'}
+            </div>
+            {productDestination && (
+              <div className="flex items-center gap-1.5">
                 {country?.flagImage && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <div className="w-6 h-4 shrink-0">
-                    <img src={country.flagImage} alt="Flag" className="w-full h-full object-cover rounded-[1px]" />
-                  </div>
+                  <img src={country.flagImage} alt="Flag" className="w-4 h-2.5 object-cover rounded shadow-xs" />
                 )}
-                <span className="text-sm truncate">{productDestination}</span>
+                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">{productDestination}</span>
               </div>
+            )}
+          </div>
+
+          {/* <p className="text-sm font-medium text-gray-800 mb-3 line-clamp-2 min-h-[40px]">
+            {description}
+          </p> */}
+
+          <div className="text-sm text-gray-600 space-y-2 mt-auto bg-emerald-50/20 p-3 rounded-xl border border-emerald-100/50">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Product</span>
+              <span className="font-black text-emerald-700">{rfqProductName}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Volume Required</span>
+              <span className="font-black text-gray-900">{quantityRequired} {quantityMeasure}</span>
             </div>
           </div>
         </div>

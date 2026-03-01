@@ -66,6 +66,7 @@ import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/payme
 import { useAppDispatch, useAppSelector } from '@/redux';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
+import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 const rfqSchema = z.object({
   rfqProductName: z.string().min(1, 'Product name is required'),
@@ -253,7 +254,15 @@ const RfqDetails = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // Apply formatting for specific numeric fields
+    if (['quantityRequired'].includes(name)) {
+      value = stripCommas(value);
+      // Ensure only numbers are entered
+      value = value.replace(/[^\d]/g, '');
+    }
+
     dispatch(updateRfqProductDetailsFormData({ [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
   };
@@ -675,7 +684,7 @@ const RfqDetails = ({
                 margin="normal"
                 placeholder="Enter quantity amount e.g 20, 2000, 100"
                 name="quantityRequired"
-                value={typedFormData?.quantityRequired || ''}
+                value={formatNumberWithCommas(typedFormData?.quantityRequired) || ''}
                 onChange={handleInputChange}
                 error={!!errors.quantityRequired}
                 helperText={errors.quantityRequired}

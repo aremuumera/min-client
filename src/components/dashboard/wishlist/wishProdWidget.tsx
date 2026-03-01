@@ -141,11 +141,9 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                     </h2>
 
                     <div className='mt-2 flex items-baseline gap-2'>
-                        {prev_price && (
-                            <span className='text-[20px] font-bold text-gray-900'>${prev_price}</span>
-                        )}
-                        {real_price && (
-                            <span className='text-[13px] text-gray-500 line-through decoration-gray-400'>${real_price}</span>
+                        <span className='text-[20px] font-bold text-gray-900'>${products.display_price || products.real_price || '0.00'}</span>
+                        {products.prev_price && (
+                            <span className='text-[13px] text-gray-500 line-through decoration-gray-400'>${products.prev_price}</span>
                         )}
                     </div>
 

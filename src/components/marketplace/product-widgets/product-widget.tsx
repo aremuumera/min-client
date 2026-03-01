@@ -73,7 +73,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
         transition: "transform 0.5s ease-in-out",
     }
 
-    const { product_name, prev_price, real_price, country, sold, productRating, delivery_period, reviews, storeProfile, quantity, measure, unitCurrency, images, id } = products || {};
+    const { product_name, prev_price, real_price, display_price, country, sold, productRating, delivery_period, reviews, storeProfile, quantity, measure, unitCurrency, images, id } = products || {};
 
     const currencySymbol = unitCurrency === 'NGN' || !unitCurrency ? '₦' : (unitCurrency === 'USD' ? '$' : unitCurrency);
 
@@ -87,6 +87,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
 
     const productCardRoute = `/dashboard/products/details/${id}/${formatCompanyNameForUrl(product_name)}`;
 
+    const finalPrice = display_price || real_price;
 
     return (
         <div>
@@ -164,18 +165,21 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                             </div>
 
                             {/* Products description */}
-                            <div className="flex-1 flex flex-col">
-                                <h2 className='pt-[5px] sm:text-[15px] text-[13px] flex flex-row w-full font-[500] line-clamp-2 min-h-[40px]'>
+                            <div className="flex-1 flex flex-col overflow-hidden">
+                                <h2
+                                    className='pt-[5px] sm:text-[15px] text-[16px] w-full font-semibold line-clamp-2 min-h-[40px] break-words'
+                                // title={product_name}
+                                >
                                     {product_name}
                                 </h2>
 
-                                <div className='pt-[10px] flex items-baseline gap-2'>
-                                    {real_price && (
-                                        <span className='sm:text-[24px] text-[1.1rem] font-[700] text-gray-900'>{currencySymbol}{formatPrice(real_price)}</span>
+                                <div className=' flex items-baseline gap-2'>
+                                    {finalPrice && (
+                                        <span className='sm:text-[24px] text-[1.1rem] font-[700] text-gray-900'>{currencySymbol}{formatPrice(finalPrice)}</span>
                                     )}
-                                    {prev_price && (
+                                    {/* {prev_price && (
                                         <span className='text-[14px] font-[400] text-[#666666] line-through decoration-gray-400'>{currencySymbol}{formatPrice(prev_price)}</span>
-                                    )}
+                                    )} */}
                                 </div>
 
                                 {quantity && (

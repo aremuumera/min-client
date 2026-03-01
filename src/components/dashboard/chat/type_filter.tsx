@@ -29,6 +29,7 @@ const FilterTab = ({ active, children, onClick }: any) => (
 
 export function ConversationTypeFilter({ selectedType, onTypeChange, conversationCounts }: any) {
     const types = [
+        { value: 'all', label: 'All', count: conversationCounts.all },
         { value: 'product', label: 'Product', count: conversationCounts.product },
         { value: 'rfq', label: 'RFQ', count: conversationCounts.rfq },
         { value: 'business', label: 'Business', count: conversationCounts.business },

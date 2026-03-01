@@ -6,30 +6,33 @@ import { Typography } from '@/components/ui/typography';
 import { usePopover } from '@/hooks/use-popover';
 import { Menu, MenuItem } from '@/components/ui/menu';
 import { DotsThreeCircleVertical } from '@phosphor-icons/react';
+import { useRouter, useParams } from 'next/navigation';
 
 import { InvoiceAgreementModal } from '../invoice/invoice_modal';
 import { InvoiceAgreementButton } from '../invoice/invoice-agreement-button';
 import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 import tradeApi from '@/redux/features/trade/trade_api';
 
+import { ChatContext } from '@/providers/chat-provider';
+
 export function ThreadToolbar({ thread }: any) {
+  const { activeInquiryId, setActiveInquiryId, roomInquiries } = React.useContext(ChatContext);
+  const router = useRouter();
+  const params = useParams();
+  const threadType = params?.threadType as string;
+  const threadId = params?.threadId as string;
+
   const popover = usePopover();
   const [openInvoiceModal, setOpenInvoiceModal] = React.useState(false);
 
   const avatarBgColor = stringToColor(thread.otherUserName || 'User');
 
-  const { data: cyclesData } = tradeApi.useGetRoomTradesQuery(thread.conversationId, {
-    skip: !thread.conversationId || thread.conversationType !== 'trade'
-  });
-
-  const [activeCycle, setActiveCycle] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    if (cyclesData?.success && cyclesData.data?.length > 0) {
-      // Default to the first one (most recent usually)
-      setActiveCycle(cyclesData.data[0]);
+  const activeCycle = React.useMemo(() => {
+    if (activeInquiryId && roomInquiries?.length > 0) {
+      return roomInquiries.find((inq: any) => inq.id === activeInquiryId) || roomInquiries[0];
     }
-  }, [cyclesData]);
+    return roomInquiries?.[0] || null;
+  }, [activeInquiryId, roomInquiries]);
 
   const displayItemName = activeCycle?.item_name || thread.itemTitle || 'Trade Room';
   const displayStatus = activeCycle?.status || thread.metadata?.status || 'Pending';
@@ -75,21 +78,27 @@ export function ThreadToolbar({ thread }: any) {
                   : thread.itemType !== 'business' ? thread.itemTitle : thread.otherUserName}
               </Typography>
 
-              {cyclesData?.data?.length > 1 && (
+              {roomInquiries?.length > 1 && (
                 <Menu
                   trigger={
                     <button className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded text-[10px] font-bold text-gray-600 border border-gray-200 transition-colors shrink-0">
-                      REF: #{activeCycle?.reference?.slice(-6).toUpperCase() || '...'}
+                      REF: #{String(activeCycle?.reference || activeCycle?.id || '...').slice(-6).toUpperCase()}
                       <DotsThreeCircleVertical size={14} />
                     </button>
                   }
                 >
                   <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-400 font-bold border-b border-gray-100">Switch Trade Cycle</p>
-                  {cyclesData.data.map((cycle: any) => (
-                    <MenuItem key={cycle.id} onClick={() => setActiveCycle(cycle)}>
+                  {roomInquiries.map((cycle: any) => (
+                    <MenuItem key={cycle.id} onClick={() => {
+                      setActiveInquiryId(cycle.id);
+                      router.push(`/dashboard/chat/${threadType}/${threadId}/${cycle.id}`);
+                    }}>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold">#{cycle.reference.toUpperCase()}</span>
-                        <span className="text-[10px] text-gray-500">{cycle.item_name} - {cycle.status}</span>
+                        <span className="text-xs font-bold">#{String(cycle.reference || cycle.id).slice(-8).toUpperCase()}</span>
+                        <span className="text-[10px] text-gray-500">
+                          {cycle.item_name || 'Trade Inquiry'} - {cycle.status}
+                          {cycle.display_price ? ` • ${cycle.currency === 'USD' ? '$' : '₦'}${Number(cycle.display_price).toLocaleString()}/unit` : ''}
+                        </span>
                       </div>
                     </MenuItem>
                   ))}
@@ -101,8 +110,8 @@ export function ThreadToolbar({ thread }: any) {
 
         <div className="hidden md:flex items-center gap-3">
           <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${displayStatus === 'completed' ? 'bg-green-100 text-green-700' :
-              displayStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
-                'bg-blue-100 text-blue-700'
+            displayStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+              'bg-blue-100 text-blue-700'
             }`}>
             {displayStatus}
           </span>

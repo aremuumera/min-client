@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { formatNumberWithCommas } from '@/lib/number-format';
 
 const ProductDetailTab = ({ products }: { products: any }) => {
   const {
@@ -27,7 +27,7 @@ const ProductDetailTab = ({ products }: { products: any }) => {
     { label: 'Packaging', value: packaging },
     { label: 'Sampling Method', value: sampling_method },
     { label: 'Location', value: selected_state && selected_country_name ? `${selected_state}, ${selected_country_name}` : 'N/A' },
-    { label: 'Available Quantity', value: quantity ? `${quantity} ${measure || ''}` : 'N/A' }
+    { label: 'Available Quantity', value: quantity ? `${formatNumberWithCommas(quantity)} ${measure || ''}` : 'N/A' }
   ];
 
   return (

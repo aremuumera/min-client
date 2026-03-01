@@ -11,6 +11,7 @@ import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-but
 import ShareButton from '@/components/marketplace/product-widgets/share-button';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
+import { formatNumberWithCommas } from '@/lib/number-format';
 
 interface Products {
   id: string | number;
@@ -18,6 +19,7 @@ interface Products {
   product_name: string;
   supplierId: string | number;
   real_price: number | string;
+  display_price?: number | string;
   selected_payments?: string[];
   supplier?: any;
   productHeaderDescription?: string;
@@ -53,6 +55,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
     product_name,
     supplierId,
     real_price,
+    display_price,
     selected_payments,
     supplier,
     productHeaderDescription,
@@ -65,7 +68,10 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
     supply_type,
     frequency,
     duration,
+    unitCurrency,
   } = products;
+
+  const currencySymbol = unitCurrency === 'NGN' || !unitCurrency ? '₦' : (unitCurrency === 'USD' ? '$' : unitCurrency);
 
   const isOwner = isAuth && effectiveUserId === supplierId;
 
@@ -100,17 +106,15 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
         <div className="w-full bg-gray-200 mt-4 mb-4 h-px"></div>
 
         <div className="space-y-3">
-          {/* Price */}
           <div className="w-full flex items-baseline gap-1">
-            <span className="text-2xl sm:text-3xl font-bold text-gray-900">${real_price || 'nil'}</span>
-            <span className="text-gray-500 text-sm sm:text-base font-medium">/ton</span>
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">{currencySymbol}{formatNumberWithCommas(display_price || real_price || '0')}</span>
+            <span className="text-gray-500 text-sm sm:text-base font-medium">/ {measure || 'unit'}</span>
           </div>
 
-          {/* MOQ */}
           <div className="flex gap-2 items-center">
-            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">M.O.Q:</span>
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Available Quantity:</span>
             <span className="text-gray-800 text-sm sm:text-base font-medium">
-              {quantity} {measure || ''}
+              {formatNumberWithCommas(quantity || 0)} {measure || ''}
             </span>
           </div>
 
@@ -219,6 +223,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
         onClose={closeQuoteModal}
         product={{
           id: id.toString(),
+          rfqId: id?.toString(),
           name: product_name,
           mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
           supplier_id: supplierId?.toString()

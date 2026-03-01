@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useShortlistOfferMutation } from '@/redux/features/trade/trade_api';
 import { toast } from '@/components/core/toaster';
+import { formatNumberWithCommas } from '@/lib/number-format';
 
 interface OfferComparisonModalProps {
     isOpen: boolean;
@@ -40,10 +41,12 @@ const OfferComparisonModal = ({ isOpen, onClose, offers, rfq }: OfferComparisonM
     const specs = [
         { label: 'Purity / Grade', key: 'purity_grade' },
         { label: 'Max Moisture', key: 'moisture_max', suffix: '%' },
-        { label: 'Quantity', key: 'quantity', secondaryKey: 'measure_type' },
+        { label: 'Quantity', key: 'quantity', secondaryKey: 'measure_type', isNumber: true },
         { label: 'Packaging', key: 'packaging' },
         { label: 'Sampling Protocol', key: 'sampling_method' },
-        { label: 'Target Price/Offer', key: 'price' },
+        { label: 'Offer Price', key: 'unit_price', isNumber: true, isPrice: true },
+        { label: 'Total Value', key: 'total_value', isNumber: true, isPrice: true },
+        { label: 'Attachments', key: 'attachments', isAttachments: true },
     ];
 
     return (
@@ -97,12 +100,33 @@ const OfferComparisonModal = ({ isOpen, onClose, offers, rfq }: OfferComparisonM
                                         {offers.map(offer => (
                                             <td key={offer.id} className="py-6 px-6">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-gray-900">
-                                                        {offer[spec.key] || '-'}
-                                                        {offer[spec.key] && spec.suffix}
-                                                        {spec.secondaryKey && ` ${offer[spec.secondaryKey]}`}
-                                                    </span>
-                                                    {/* Comparison Logic: Highlight best match? Currently just display */}
+                                                    {spec.isAttachments ? (
+                                                        <div className="flex flex-wrap gap-2 max-w-[200px]">
+                                                            {offer.attachments?.map((att: any, idx: number) => {
+                                                                const isVideo = att.url?.toLowerCase().endsWith('.mp4') || att.type?.startsWith('video/');
+                                                                return (
+                                                                    <div key={idx} className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden relative group/att">
+                                                                        {isVideo ? (
+                                                                            <video src={att.url} className="w-full h-full object-cover" muted />
+                                                                        ) : (
+                                                                            <img src={att.url} alt="" className="w-full h-full object-cover" />
+                                                                        )}
+                                                                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover/att:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <Zap size={10} className="text-white" />
+                                                                        </a>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                            {(!offer.attachments || offer.attachments.length === 0) && <span className="text-xs text-gray-400">None</span>}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-sm font-bold text-gray-900">
+                                                            {spec.isPrice && (offer.currency === 'USD' ? '$' : '₦')}
+                                                            {spec.isNumber ? formatNumberWithCommas(offer[spec.key]) : (offer[spec.key] || '-')}
+                                                            {offer[spec.key] && spec.suffix}
+                                                            {spec.secondaryKey && ` ${offer[spec.secondaryKey]}`}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
                                         ))}

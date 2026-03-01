@@ -36,18 +36,18 @@ export function MessageBox({ message }: { message: Message }) {
   const { deleteAttachment, markMessageAsDelivered, markMessageAsRead } = React.useContext(ChatContext);
 
   // State for modal
-  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = React.useState<{ url: string, type: 'image' | 'video' } | null>(null);
   const params = useParams();
   const threadId = params?.threadId as string;
 
-  const handleImageClick = (attachment: any) => {
-    if (attachment.type === 'image') {
-      setSelectedImage(attachment.url);
+  const handleMediaClick = (attachment: any) => {
+    if (attachment.type === 'image' || attachment.type === 'video') {
+      setSelectedMedia({ url: attachment.url, type: attachment.type });
     }
   };
 
   const handleCloseModal = () => {
-    setSelectedImage(null);
+    setSelectedMedia(null);
   };
 
   const handleDeleteAttachment = async (attachment: any) => {
@@ -289,20 +289,64 @@ export function MessageBox({ message }: { message: Message }) {
                       );
                     }
 
-                    if (attachment.type === 'image') {
+                    const isImage = attachment.type === 'image' ||
+                      (attachment.contentType && attachment.contentType.startsWith('image/')) ||
+                      /\.(jpg|jpeg|png|gif|webp|heic|jfif)$/i.test(attachment.name || '');
+
+                    if (isImage) {
                       return (
                         <div key={attachmentKey} className="relative">
                           <img
                             src={attachment.url}
                             alt={attachment.name || 'Image'}
-                            className="rounded h-auto max-h-[300px] w-full object-cover cursor-pointer"
-                            onClick={() => handleImageClick(attachment)}
+                            className="rounded h-auto max-h-[300px] w-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                            onClick={() => handleMediaClick(attachment)}
                           />
                           {position === 'right' && (
                             <div className="absolute top-1 right-1">
                               <Menu
                                 trigger={
-                                  <IconButton aria-label="Attachment options" size="sm" variant="default">
+                                  <IconButton aria-label="Attachment options" size="sm" variant="default" className="bg-white/80 hover:bg-white border-0 shadow-sm">
+                                    <DotsThreeCircleVertical weight="bold" />
+                                  </IconButton>
+                                }
+                              >
+                                <MenuItem onClick={() => handleDeleteAttachment(attachment)}>Delete</MenuItem>
+                              </Menu>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    if (attachment.type === 'video') {
+                      return (
+                        <div key={attachmentKey} className="relative group">
+                          <div
+                            className="relative rounded overflow-hidden cursor-pointer bg-black/5"
+                            onClick={() => handleMediaClick(attachment)}
+                          >
+                            <video
+                              src={attachment.url}
+                              className="w-full h-auto max-h-[300px] object-cover"
+                              preload="metadata"
+                            />
+                            {/* Overlay Play Icon */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                              <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center border border-white/50">
+                                <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
+                              </div>
+                            </div>
+                            {/* Label */}
+                            <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium backdrop-blur-sm">
+                              VIDEO
+                            </div>
+                          </div>
+                          {position === 'right' && (
+                            <div className="absolute top-1 right-1">
+                              <Menu
+                                trigger={
+                                  <IconButton aria-label="Attachment options" size="sm" variant="default" className="bg-white/80 hover:bg-white border-0 shadow-sm">
                                     <DotsThreeCircleVertical weight="bold" />
                                   </IconButton>
                                 }
@@ -362,11 +406,11 @@ export function MessageBox({ message }: { message: Message }) {
         </Stack>
       </Stack>
 
-      {/* Modal for image preview */}
+      {/* Modal for media preview */}
       <Modal
-        open={!!selectedImage}
+        open={!!selectedMedia}
         onClose={handleCloseModal}
-        className="flex items-center justify-center backdrop-blur-sm"
+        className="flex items-center justify-center backdrop-blur-md bg-black/60"
       >
         <Box
           style={{
@@ -379,21 +423,36 @@ export function MessageBox({ message }: { message: Message }) {
             position: 'relative'
           }}
         >
-          <img
-            src={selectedImage ?? undefined}
-            alt="Preview"
-            style={{
-              maxHeight: '80vh',
-              maxWidth: '100%',
-              objectFit: 'contain',
-            }}
-          />
+          {selectedMedia?.type === 'image' ? (
+            <img
+              src={selectedMedia.url}
+              alt="Preview"
+              style={{
+                maxHeight: '85vh',
+                maxWidth: '100%',
+                objectFit: 'contain',
+              }}
+            />
+          ) : (
+            <video
+              src={selectedMedia?.url}
+              controls
+              autoPlay
+              style={{
+                maxHeight: '85vh',
+                maxWidth: '100%',
+                borderRadius: '8px',
+                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+              }}
+            />
+          )}
+
           <IconButton
             onClick={handleCloseModal}
             aria-label="Close"
-            className="absolute top-4 right-4 text-white bg-black/50"
+            className="absolute -top-12 right-0 text-white hover:bg-white/20 transition-colors"
           >
-            ✕
+            ✕ Close
           </IconButton>
         </Box>
       </Modal>

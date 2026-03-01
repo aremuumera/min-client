@@ -3,7 +3,8 @@
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { User, Send, MapPin, X, Box, CheckCircle, Package } from 'lucide-react';
+import { User, Send, MapPin, X, Box, CheckCircle, Package, Timer, Clock, AlertCircle } from 'lucide-react';
+import { differenceInSeconds } from 'date-fns';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
@@ -39,6 +40,80 @@ const MediaModal = ({ isOpen, onClose, url, type }: { isOpen: boolean, onClose: 
       </div>
     </div>
   );
+};
+
+const CountdownTimer = ({ deadline }: { deadline: string }) => {
+  const [timeLeft, setTimeLeft] = useState<any>(null);
+
+  React.useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const target = new Date(deadline);
+      const diff = differenceInSeconds(target, now);
+
+      if (diff <= 0) return null;
+
+      const days = Math.floor(diff / (24 * 3600));
+      const hours = Math.floor((diff % (24 * 3600)) / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = diff % 60;
+
+      return { days, hours, minutes, seconds };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      const remaining = calculateTimeLeft();
+      setTimeLeft(remaining);
+      if (!remaining) clearInterval(timer);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [deadline]);
+
+  if (!timeLeft) return (
+    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg text-xs font-bold border border-red-100 uppercase tracking-widest shadow-sm">
+      <Clock size={16} className="animate-pulse" /> Bidding Expired
+    </div>
+  );
+
+  const isUrgent = timeLeft.days === 0 && timeLeft.hours < 24;
+
+  return (
+    <div className={`flex items-center gap-3 ${isUrgent ? 'text-orange-600 bg-orange-50 border-orange-100' : 'text-emerald-700 bg-emerald-50 border-emerald-100'} px-5 py-2.5 rounded-xl text-sm font-black border uppercase tracking-widest shadow-md transition-all`}>
+      <Timer size={18} className={isUrgent ? 'animate-bounce' : ''} />
+      <span>
+        {timeLeft.days > 0 && `${timeLeft.days}d `}
+        {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s Left
+      </span>
+    </div>
+  );
+};
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const isNegotiating = status === 'in_negotiation';
+  const isClosed = status === 'closed' || status === 'finalized';
+  const isExpired = status === 'expired';
+
+  if (isNegotiating) return (
+    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-xs font-bold border border-green-100 uppercase tracking-widest shadow-sm">
+      <AlertCircle size={16} /> In Negotiation
+    </div>
+  );
+
+  if (isClosed) return (
+    <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-4 py-2 rounded-lg text-xs font-bold border border-gray-100 uppercase tracking-widest shadow-sm">
+      <Box size={16} /> Bidding Closed
+    </div>
+  );
+
+  if (isExpired) return (
+    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg text-xs font-bold border border-red-100 uppercase tracking-widest shadow-sm">
+      <Clock size={16} /> Expired
+    </div>
+  );
+
+  return null;
 };
 
 const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
@@ -85,6 +160,8 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
     is_shipment_included,
     recurring_frequency,
     recurring_duration,
+    status,
+    bidding_deadline,
   } = rfqProduct;
 
   // Handle potential id naming differences - prioritize the UUID rfqId
@@ -118,15 +195,37 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
       <div className="p-4 md:p-0">
         {/* Header Section */}
         <div className="mt-2 md:mt-0">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 leading-tight">
-              Looking For - {rfqProductName}
-            </h2>
-            <div className="self-start md:self-auto">
-              <ToggleSaveButton setShowLoginModal={setShowLoginModalForSave} products={rfqProduct} />
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-gray-50">
+            <div className="space-y-3 max-w-2xl">
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
+                Looking For - {rfqProductName}
+              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-gray-400 font-bold uppercase tracking-wider">
+                  <User size={14} className="text-emerald-600" />
+                  {buyer?.name || 'Buyer'}
+                </div>
+                {buyer?.verified && (
+                  <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px] font-black border border-green-100 uppercase tracking-widest">
+                    Verified
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-3 shrink-0">
+              {status && status !== 'pending' && status !== 'supplier_matched' ? (
+                <StatusBadge status={status} />
+              ) : (
+                bidding_deadline && <CountdownTimer deadline={bidding_deadline} />
+              )}
+              <div className="flex items-center gap-3 mt-1">
+                <ToggleSaveButton setShowLoginModal={setShowLoginModalForSave} products={rfqProduct} />
+              </div>
             </div>
           </div>
-          <p className="text-gray-600 mt-4 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+
+          <p className="text-gray-600 mt-8 leading-relaxed whitespace-pre-line text-base sm:text-lg font-medium opacity-90">
             {rfqDescription}
           </p>
         </div>
@@ -357,13 +456,20 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
         </div>
 
         {/* Action Button */}
-        <div className="mt-10">
-          <button
-            onClick={handleRequestQuote}
-            className="w-full md:w-auto px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-sm text-base md:min-w-[200px]"
-          >
-            Submit Quote
-          </button>
+        <div className="mt-12 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-1">
+              <p className="text-lg font-black text-gray-900">Interested in this RFQ?</p>
+              <p className="text-sm text-gray-500 font-medium">Submit your best offer to the Min-meg Trade Desk.</p>
+            </div>
+            <button
+              onClick={handleRequestQuote}
+              disabled={status === 'closed' || status === 'finalized' || status === 'expired'}
+              className={`w-full md:w-auto px-10 py-4 ${status === 'closed' || status === 'finalized' || status === 'expired' ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 '} text-white rounded-xl transition-all font-black text-sm md:min-w-[240px] uppercase tracking-widest`}
+            >
+              {status === 'closed' || status === 'finalized' || status === 'expired' ? 'Submission Closed' : 'Submit Best Quote'}
+            </button>
+          </div>
         </div>
 
       </div>

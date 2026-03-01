@@ -47,6 +47,7 @@ import { toast } from '@/components/core/toaster';
 import { MoqUnits as Moq } from '@/lib/marketplace-data';
 import { z } from 'zod';
 import { MultiCheckboxSelect, SearchableSelect } from '@/components/ui';
+import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 interface SupplierProductDetailsProps {
   handleNext: () => void;
@@ -374,7 +375,21 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
   const maxCharacters = 500;
   const handleInputChange = (e: BaseChangeEvent) => {
-    const { name, value } = e.target as { name: string; value: string };
+    let { name, value } = e.target as { name: string; value: string };
+
+    // Apply formatting for specific numeric fields
+    if (['realPrice', 'prevPrice', 'quantity'].includes(name)) {
+      value = stripCommas(value);
+      // Ensure only numbers (and one dot for prices) are entered
+      if (name === 'quantity') {
+        value = value.replace(/[^\d]/g, '');
+      } else {
+        value = value.replace(/[^\d.]/g, '');
+        // Limit to one dot
+        const parts = value.split('.');
+        if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+      }
+    }
 
     // Apply character limit validation only for productHeaderDescription
     if (name === 'productHeaderDescription') {
@@ -617,7 +632,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 name="realPrice"
                 margin="normal"
                 placeholder="Enter amount"
-                value={productDetailsFormData?.realPrice || ''}
+                value={formatNumberWithCommas(productDetailsFormData?.realPrice) || ''}
                 onChange={handleInputChange}
                 error={!!errors.realPrice}
                 helperText={errors.realPrice}
@@ -629,7 +644,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                   name="prevPrice"
                   margin="normal"
                   placeholder="Enter amount"
-                  value={productDetailsFormData?.prevPrice || ''}
+                  value={formatNumberWithCommas(productDetailsFormData?.prevPrice) || ''}
                   onChange={handleInputChange}
                   error={!!errors.prevPrice}
                   helperText={errors.prevPrice}
@@ -918,7 +933,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
               margin="normal"
               name="quantity"
               placeholder="Enter your M.O.Q value and select the measure unit"
-              value={productDetailsFormData?.quantity || ''}
+              value={formatNumberWithCommas(productDetailsFormData?.quantity) || ''}
               onChange={handleInputChange}
               error={!!errors.quantity}
               helperText={errors.quantity}

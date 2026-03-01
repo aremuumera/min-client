@@ -99,14 +99,17 @@ function SidebarContent({
   const [selectedType, setSelectedType] = React.useState('all');
 
   // Auto-set filter based on current conversation
-  React.useEffect(() => {
-    if (currentConversationId) {
-      const activeConv = conversations.find(c => c.conversationId === currentConversationId);
-      if (activeConv?.itemType && activeConv.itemType !== selectedType) {
-        setSelectedType(activeConv.itemType);
-      }
-    }
-  }, [currentConversationId, conversations]);
+  // React.useEffect(() => {
+  //   if (currentConversationId) {
+  //     const activeConv = conversations.find(c => c.conversationId === currentConversationId);
+  //     // Fallback: treat 'trade' as 'product' since 'trade' isn't a tab
+  //     const effectiveType = activeConv?.itemType === 'trade' ? 'product' : activeConv?.itemType;
+
+  //     if (effectiveType && effectiveType !== selectedType && ['product', 'rfq', 'business', 'admin'].includes(effectiveType)) {
+  //       setSelectedType(effectiveType);
+  //     }
+  //   }
+  // }, [currentConversationId, conversations, selectedType]);
 
   // Calculate UNREAD conversation counts by type
   const conversationCounts = React.useMemo(() => {
@@ -135,11 +138,12 @@ function SidebarContent({
 
     // Apply type filter
     if (selectedType !== 'all') {
-      result = result.filter((conv: any) => conv.itemType === selectedType);
+      result = result.filter((conv: any) => {
+        // Fallback: treat 'trade' as 'product' since 'trade' isn't explicitly in the tabs
+        const effectiveType = conv.itemType === 'trade' ? 'product' : conv.itemType;
+        return effectiveType === selectedType;
+      });
     }
-
-    // Hide rejected trades from active lists
-    result = result.filter((conv: any) => conv.metadata?.status !== 'rejected');
 
     // Apply search filter if active
     if (searchFocused && searchQuery) {

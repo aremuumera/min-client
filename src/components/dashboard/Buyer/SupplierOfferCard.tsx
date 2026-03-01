@@ -16,6 +16,7 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
     const [shortlistOffer, { isLoading }] = useShortlistRfqOfferMutation();
     const { showAlert } = useAlert();
     const isShortlisted = offer.is_shortlisted;
+    console.log('offer', offer);
 
     const handleShortlist = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -77,19 +78,19 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
                 <div>
                     <span className="text-xs text-gray-500 block mb-1">Unit Price</span>
                     <span className="font-semibold text-primary-600">
-                        {offer.currency === 'USD' ? '$' : '₦'}{Number(offer.unit_price).toLocaleString()}
+                        {offer.currency === 'USD' ? '$' : '₦'}{Number(offer.display_price).toLocaleString()}
                     </span>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4 bg-gray-50 p-3 rounded-lg">
                 <div>
-                    <span className="text-xs text-gray-500 block mb-1">Purity</span>
-                    <span className="text-sm font-medium">{offer.purity_grade || '-'}</span>
+                    <span className="text-xs text-gray-500 block mb-1">Grade</span>
+                    <span className="text-sm font-medium">{offer.purity_grade || 'Nill'}</span>
                 </div>
                 <div>
                     <span className="text-xs text-gray-500 block mb-1">Moisture</span>
-                    <span className="text-sm font-medium">{offer.moisture_max ? `${offer.moisture_max}%` : '-'}</span>
+                    <span className="text-sm font-medium">{offer.moisture_max ? `${offer.moisture_max}%` : 'Nill'}</span>
                 </div>
             </div>
 

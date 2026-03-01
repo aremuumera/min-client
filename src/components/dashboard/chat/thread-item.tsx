@@ -15,6 +15,14 @@ import { usePathname } from '@/hooks/use-pathname';
 import { ChatContext } from '@/providers/chat-provider';
 import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
+const typeColorMap: Record<string, string> = {
+  product: 'bg-blue-50 text-blue-600 border-blue-100',
+  rfq: 'bg-purple-50 text-purple-600 border-purple-100',
+  business: 'bg-gray-50 text-gray-600 border-gray-100',
+  admin: 'bg-amber-50 text-amber-600 border-amber-100',
+  trade: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+};
+
 function getDisplayContent(lastMessage: any, userId: string): string {
   // If lastMessage is a string, just return it
   if (typeof lastMessage === 'string') {
@@ -43,6 +51,10 @@ interface ThreadItemProps {
     itemTitle?: string;
     itemId?: string;
     type: string;
+    metadata?: {
+      status?: string;
+      [key: string]: any;
+    };
   };
   onSelect?: () => void;
   messages: any[]; // Passed from sidebar
@@ -63,8 +75,13 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
   } = thread;
   const { user } = useSelector((state: any) => state.auth);
   const pathname = usePathname();
-  const { messages } = useContext(ChatContext);
+  const { messages, activeConversation, activeInquiryId, roomInquiries } = useContext(ChatContext);
   const otherUser = messages.find((message: any) => message.senderId === otherUserId);
+
+  // --- Dynamic Status Sync ---
+  const isSelected = activeConversation?.conversationId === conversationId;
+  const activeCycle = isSelected ? roomInquiries.find(i => i.id === activeInquiryId) : null;
+  const displayStatus = activeCycle?.status || metadata?.status;
 
   // Format timestamp from lastMessageTime
   const formattedTime = lastMessageTime
@@ -131,6 +148,9 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
             {itemType !== 'business' ? itemTitle : otherUserName}
           </Typography>
           <Stack direction="row" spacing={1} className="items-center">
+            <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${typeColorMap[itemType] || typeColorMap.product}`}>
+              {itemType}
+            </span>
             <Typography color="text.secondary" noWrap className="flex-auto" variant="subtitle2">
               {getDisplayContent(lastMessage, user?.id)}
             </Typography>
@@ -139,12 +159,12 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
 
         {/* STATUS & TIME (right column) */}
         <Box className="flex flex-col items-end gap-1 shrink-0">
-          {metadata?.status && (
+          {displayStatus && (
             <Box className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border leading-none
-              ${metadata.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                metadata.status === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+              ${displayStatus === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                displayStatus === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
                   'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-              {metadata.status}
+              {displayStatus}
             </Box>
           )}
           <Typography color="text.secondary" className="whitespace-nowrap relative" variant="caption">

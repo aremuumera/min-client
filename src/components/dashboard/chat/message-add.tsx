@@ -164,7 +164,7 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
         type="file"
         multiple
         onChange={handleFileChange}
-        accept="image/*,.pdf,.doc,.docx,.txt"
+        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
       />
     </Stack>
   );

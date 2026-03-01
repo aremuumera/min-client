@@ -25,13 +25,22 @@ import {
     ShieldCheck,
     FileCheck,
     Truck,
-    CreditCard
+    CreditCard,
+    FileText,
+    Image,
+    Paperclip,
+    ExternalLink,
+    Eye,
+    Calendar,
+    Package
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/core/toaster';
 import { cn } from '@/utils/helper';
+import { Divider } from '@/components/ui/divider';
+import { Typography } from '@/components/ui/typography';
 import { customerTradeChatService } from '@/components/dashboard/chat/trade_chat_service';
 
 // --- Components ---
@@ -173,10 +182,11 @@ export default function TradeDetailPage() {
 
                     // Copy the initial buyer inquiry message to the admin_buyer spoke thread
                     await customerTradeChatService.sendMessage(
-                        inquiry.id,
-                        'admin_buyer',
-                        inquiry.user_id,
-                        'buyer',
+                        tradeId,            // The main room ID (from params)
+                        inquiry.id,         // The specific inquiry ID
+                        'admin_buyer',      // The thread spoke
+                        inquiry.user_id,    // The sender
+                        'buyer',            // The role
                         inquiry.buyer_name || 'Buyer',
                         inquiry.buyer?.company_name || 'Independent',
                         `Initial Inquiry Requirements:\n\nQuantity: ${inquiry.quantity} ${inquiry.measure_type?.replace(/_/g, ' ')}\nLocation: ${inquiry.delivery_location}, ${inquiry.delivery_state}\nGrade: ${inquiry.preferred_grade || 'Standard'}\nNotes: ${inquiry.description || 'None'}`
@@ -278,6 +288,202 @@ export default function TradeDetailPage() {
                             <div className="pt-4">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Buyer's Requirements</p>
                                 <p className="text-sm text-gray-600 leading-loose italic font-medium">"{inquiry.description}"</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Supplier's Context / Notes (If Offer Context) */}
+                    {inquiry.entity_type === 'rfq' && inquiry.found_offer?.description && (
+                        <div className="bg-emerald-50/50 border border-emerald-100/50 p-10 rounded-[40px] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-6 opacity-5">
+                                <MessageSquare size={80} className="text-emerald-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                                <MessageSquare size={20} />
+                                Supplier Feedback
+                            </h3>
+                            <p className="text-sm text-emerald-800 leading-relaxed font-medium italic relative z-10 whitespace-pre-wrap">
+                                "{inquiry.found_offer.description}"
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Supplier Counter-Specs (If Offer Context) */}
+                    {inquiry.entity_type === 'rfq' && inquiry.found_offer && (
+                        <div className="bg-white rounded-[40px] border border-gray-100 p-10 shadow-sm space-y-8">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-bold text-gray-900">Supplier's Counter-Specs</h3>
+                                <div className="px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none">
+                                    Supplier Terms
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Offered Qty</p>
+                                    <p className="text-lg font-black text-gray-900">
+                                        {Number(inquiry.found_offer.quantity).toLocaleString()}
+                                        <span className="text-xs text-gray-400 font-bold ml-1 uppercase">{inquiry.found_offer.measure_type}</span>
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Purity/Grade</p>
+                                    <p className="text-lg font-black text-gray-900">{inquiry.found_offer.purity_grade || 'Standard'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Max Moisture</p>
+                                    <p className="text-lg font-black text-emerald-600">{inquiry.found_offer.moisture_max ? `${inquiry.found_offer.moisture_max}%` : 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Packaging</p>
+                                    <p className="text-sm font-bold text-gray-900">{inquiry.found_offer.packaging || 'Standard Bulk'}</p>
+                                </div>
+                            </div>
+
+                            <div className="p-8 bg-gray-50/50 rounded-[32px] border border-gray-100 space-y-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-red-500 shadow-sm flex-none">
+                                        <MapPin size={20} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Loading Point / Origin</p>
+                                        <p className="text-sm font-bold text-gray-900 leading-relaxed">
+                                            {inquiry.found_offer.delivery_address || inquiry.found_offer.delivery_location || 'TBD'}
+                                            <span className="text-gray-500 font-medium ml-2">({inquiry.found_offer.delivery_state || 'N/A'}, {inquiry.found_offer.delivery_country || 'N/A'})</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <Calendar size={18} className="text-blue-500" />
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase">Lead Time</p>
+                                            <p className="text-sm font-bold text-gray-900 capitalize">{inquiry.found_offer.timeline_type?.replace(/_/g, ' ') || 'Immediate'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Zap size={18} className="text-emerald-500" />
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase">Frequency</p>
+                                            <p className="text-sm font-bold text-gray-900">{inquiry.found_offer.recurring_frequency || 'Single Order'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Media & Documents (Unified Hub) */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="h-px bg-gray-100 flex-1" />
+                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex-none px-2">Media & Document Hub</h3>
+                            <div className="h-px bg-gray-100 flex-1" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Buyer RFQ Media */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 px-2">
+                                    <Paperclip size={14} className="text-gray-400" />
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Buyer RFQ Reference</p>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {(() => {
+                                        const rfqAttachments = inquiry.rfq?.attachments || inquiry.rfq?.documents || [];
+                                        const attachments = Array.isArray(rfqAttachments) ? rfqAttachments : (typeof rfqAttachments === 'string' ? JSON.parse(rfqAttachments) : []);
+                                        if (attachments.length === 0) return <p className="text-[11px] text-gray-400 font-medium px-2">No attachments provided with RFQ.</p>;
+
+                                        return attachments.map((file: any, idx: number) => (
+                                            <a
+                                                key={idx}
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="group p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-blue-200 hover:bg-blue-50/20 transition-all"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-blue-500 transition-colors">
+                                                        <FileText size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900 truncate max-w-[160px]">{file.name || `RFQ Doc ${idx + 1}`}</p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Buyer Reference</p>
+                                                    </div>
+                                                </div>
+                                                <Eye size={16} className="text-gray-300 group-hover:text-blue-500" />
+                                            </a>
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Supplier Offer Media */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 px-2">
+                                    <ShieldCheck size={14} className="text-emerald-400" />
+                                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Supplier Verifications</p>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {(() => {
+                                        const rawAttachments = inquiry.found_offer?.attachments || [];
+                                        const attachments = Array.isArray(rawAttachments) ? rawAttachments : (typeof rawAttachments === 'string' ? JSON.parse(rawAttachments) : []);
+                                        if (attachments.length === 0) return <p className="text-[11px] text-gray-400 font-medium px-2">No supporting documents uploaded by supplier.</p>;
+
+                                        return attachments.map((file: any, idx: number) => (
+                                            <a
+                                                key={idx}
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="group p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-emerald-200 hover:bg-emerald-50/20 transition-all"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-emerald-500 transition-colors">
+                                                        {file.type === 'image' || file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? <Image size={18} /> : <FileText size={18} />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900 truncate max-w-[160px]">{file.name || `Offer Media ${idx + 1}`}</p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Supplier Attachment</p>
+                                                    </div>
+                                                </div>
+                                                <Eye size={16} className="text-gray-300 group-hover:text-emerald-500" />
+                                            </a>
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Formal Trade Documents (Hub) */}
+                        {inquiry.documents && inquiry.documents.length > 0 && (
+                            <div className="pt-4 border-t border-gray-50">
+                                <div className="flex items-center gap-2 px-2 mb-4">
+                                    <FileCheck size={14} className="text-blue-500" />
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Formal Trade Document Hub</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {inquiry.documents.map((doc: any, idx: number) => (
+                                        <a
+                                            key={idx}
+                                            href={doc.document_url || doc.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="group p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-blue-200 hover:bg-blue-50/20 transition-all"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-blue-500 transition-colors">
+                                                    <ShieldCheck size={18} />
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="text-sm font-bold text-gray-900 truncate max-w-[180px]">{doc.document_name || doc.name || `Trade Doc ${idx + 1}`}</p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">{doc.document_type?.replace(/_/g, ' ') || 'Official Document'}</p>
+                                                </div>
+                                            </div>
+                                            <Eye size={16} className="text-gray-300 group-hover:text-blue-500" />
+                                        </a>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
