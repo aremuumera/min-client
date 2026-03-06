@@ -85,41 +85,41 @@ const TradeStepper = ({ currentStatus }: { currentStatus: string }) => {
             title: 'Inquiry',
             icon: Clock,
             desc: 'Under Review',
-            matches: ['pending', 'claimed']
+            matches: ['PENDING', 'CLAIMED']
         },
         {
             id: 'matching',
             title: 'Sourcing',
             icon: ShieldCheck,
             desc: 'Supplier Matched',
-            matches: ['supplier_matched', 'acknowledged']
+            matches: ['SUPPLIER_MATCHED', 'ACKNOWLEDGED']
         },
         {
             id: 'verification',
             title: 'Verification',
             icon: FileCheck,
             desc: 'Compliance & Docs',
-            matches: ['disclaimer_sent', 'disclaimer_signed', 'inspector_assigned', 'inspection_in_progress']
+            matches: ['DISCLAIMER_SENT', 'DISCLAIMER_SIGNED', 'INSPECTOR_ASSIGNED', 'INSPECTION_IN_PROGRESS']
         },
         {
             id: 'logistics',
             title: 'Logistics',
             icon: Truck,
             desc: 'Inspection & Load',
-            matches: ['inspection_complete', 'payment_pending']
+            matches: ['INSPECTION_COMPLETED', 'PAYMENT_PENDING']
         },
         {
             id: 'closing',
             title: 'Execution',
             icon: CreditCard,
             desc: 'Finalized',
-            matches: ['completed']
+            matches: ['COMPLETED']
         },
     ];
 
     const getStatus = (stepIndex: number) => {
         const currentStepIndex = steps.findIndex(s => s.matches.includes(currentStatus));
-        if (currentStatus === 'rejected') return 'error'; // Special case
+        if (currentStatus === 'REJECTED' || currentStatus === 'CANCELLED') return 'error'; // Special case
         if (stepIndex < currentStepIndex) return 'completed';
         if (stepIndex === currentStepIndex) return 'active';
         return 'pending';
@@ -533,7 +533,7 @@ export default function TradeDetailPage() {
                 {/* Right Column: Actions & Context */}
                 <div className="space-y-10">
                     {/* Contextual Action Card */}
-                    {isSupplier && inquiry.status === 'pending' && (
+                    {isSupplier && (inquiry.status === 'PENDING' || inquiry.status === 'CLAIMED') && (
                         <div className="bg-neutral-900 rounded-[40px] p-10 text-white space-y-8 shadow-2xl shadow-neutral-200">
                             <div className="space-y-2">
                                 <h3 className="text-xl font-bold">Action Required</h3>
@@ -574,7 +574,7 @@ export default function TradeDetailPage() {
                                         <p className="text-[10px] text-gray-400 font-medium">Inquiry submitted by Buyer</p>
                                     </div>
                                 </div>
-                                {inquiry.status !== 'pending' && (
+                                {inquiry.status !== 'PENDING' && (
                                     <div className="flex gap-4 items-start">
                                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-none" />
                                         <div>

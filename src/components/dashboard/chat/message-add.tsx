@@ -9,6 +9,7 @@ import {
   Tooltip,
   CircularProgress
 } from '@/components/ui';
+import { toast } from 'sonner';
 
 import { Paperclip as PaperclipIcon } from '@phosphor-icons/react/dist/ssr/Paperclip';
 import { PaperPlaneTilt as PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr/PaperPlaneTilt';
@@ -61,8 +62,9 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
             onSend?.('file', attachment);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading file:', error);
+        toast.error(error?.message || 'Failed to upload one or more files. Please check your connection or file size.');
       } finally {
         setIsUploading(false);
         if (fileInputRef.current) {

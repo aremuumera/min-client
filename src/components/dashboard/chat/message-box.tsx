@@ -248,14 +248,14 @@ export function MessageBox({ message }: { message: Message }) {
           >
             <Stack spacing={1}>
               <div>
-                <Typography variant="subtitle2" className={`cursor-pointer ${position === 'right' ? 'text-white!' : 'text-black'}`}>
+                <Typography variant="subtitle2" className={`text-sm! cursor-pointer ${position === 'right' ? 'text-white!' : 'text-black'}`}>
                   {/* {`${message?.senderName}  -  (${message?.senderCompanyName})`} */}
                   {`${message?.senderName || message?.sender_display || 'User'}  -  (${message?.senderCompanyName || message?.sender_company_name || 'Platform Admin'})`}
                 </Typography>
               </div>
 
               {/* Handle text messages */}
-              <Typography color="inherit" variant="body1" className={`${position === 'right' ? 'text-white!' : 'text-black'}`}>
+              <Typography color="inherit" variant="body1" className={`text-sm! ${position === 'right' ? 'text-white!' : 'text-black'}`}>
                 {message.text}
               </Typography>
               {/* Handle attachments if they exist */}

@@ -122,11 +122,11 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                     {/* Supplier Section */}
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 font-bold text-xl uppercase">
-                            {offer.supplier?.company_name?.charAt(0) || 'S'}
+                            {'VS'}
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                {offer.supplier?.company_name || 'Supplier'}
+                                {'Verified Supplier'}
                                 <CheckCircle2 className="text-green-500" size={18} />
                             </h3>
                             <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
@@ -154,7 +154,7 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                     </div>
 
                     {/* Fee Breakdown transparency for Buyer */}
-                    {safelyParse(offer.fee_breakdown).length > 0 && (
+                    {/* {safelyParse(offer.fee_breakdown).length > 0 && (
                         <div className="bg-primary-50/30 p-4 rounded-2xl border border-primary-100 space-y-3">
                             <h4 className="text-xs font-bold text-primary-900 flex items-center gap-2 uppercase tracking-tight">Admin Fee Transparency</h4>
                             <div className="space-y-2">
@@ -168,7 +168,7 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                                 ))}
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     {/* Specs Section */}
                     <div className="space-y-4">
@@ -220,7 +220,8 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                         onClick={handleShortlist}
                         variant={isShortlisted ? "contained" : "outlined"}
                         className={`flex-1 h-12 text-base font-bold rounded-xl transition-all border ${isShortlisted ? 'bg-yellow-500 hover:bg-yellow-600 active:scale-95 border-yellow-600' : 'hover:bg-primary-50 border-gray-300'}`}
-                        disabled={isLoading}
+                        disabled={isLoading || (isShortlisted && ['accepted', 'inspection_assigned', 'completed', 'paid'].includes(offer.status))}
+                        title={isShortlisted && ['accepted', 'inspection_assigned', 'completed', 'paid'].includes(offer.status) ? "This offer has been accepted and cannot be un-shortlisted" : ""}
                     >
                         {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
                         {isShortlisted ? 'Un-shortlist Offer' : 'Shortlist Offer'}

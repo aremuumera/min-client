@@ -3,47 +3,80 @@
 import React from 'react';
 import { Box } from '@/components/ui/box';
 import { Typography } from '@/components/ui/typography';
-import { Bell, Heart, MessageSquare, Briefcase, UserPlus, CreditCard, ShoppingBag, LogIn } from 'lucide-react';
+import { Bell, Heart, MessageSquare, Briefcase, UserPlus, CreditCard, ShoppingBag, LogIn, CheckCircle, XCircle, FileText, Send } from 'lucide-react';
 import { dayjs } from '@/lib/dayjs';
 import { useGetActivitiesQuery } from '@/redux/features/activity/activityApi';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 export const ActivityTimeline = () => {
     const { data, isLoading } = useGetActivitiesQuery({ limit: 5 });
     const activities = data?.data || [];
+    const router = useRouter();
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'USER_LOGGED_IN': return <LogIn className="w-3.5 h-3.5" />;
-            case 'TEAM_MEMBER_INVITED': return <UserPlus className="w-3.5 h-3.5" />;
+            case 'USER_LOGGED_IN':
+            case 'USER_SIGNED_UP': return <LogIn className="w-3.5 h-3.5" />;
+            case 'TEAM_MEMBER_INVITED':
+            case 'TEAM_MEMBER_UPDATED': return <UserPlus className="w-3.5 h-3.5" />;
             case 'INVOICE_CREATED':
             case 'INVOICE_APPROVED':
+            case 'INVOICE_REJECTED':
+            case 'INVOICE_CANCELLED':
             case 'INVOICE_SUBMITTED_FOR_APPROVAL':
                 return <CreditCard className="w-3.5 h-3.5" />;
             case 'PRODUCT_CREATED': return <ShoppingBag className="w-3.5 h-3.5" />;
+            case 'INQUIRY_CREATED':
+            case 'INQUIRY_UPDATED':
+            case 'INQUIRY_ACKNOWLEDGED':
+            case 'INQUIRY_REJECTED': return <MessageSquare className="w-3.5 h-3.5" />;
+            case 'OFFER_ACCEPTED_BY_ADMIN': return <CheckCircle className="w-3.5 h-3.5 text-green-600" />;
+            case 'OFFER_REJECTED_BY_ADMIN': return <XCircle className="w-3.5 h-3.5 text-red-600" />;
+            case 'DOCUMENT_UPLOADED': return <FileText className="w-3.5 h-3.5" />;
+            case 'INSPECTOR_ASSIGNED': return <Briefcase className="w-3.5 h-3.5" />;
+            case 'INSPECTION_STATUS_UPDATED': return <Send className="w-3.5 h-3.5" />;
             default: return <Bell className="w-3.5 h-3.5" />;
         }
     };
 
     const getDescription = (activity: any) => {
         const metadata = activity.metadata || {};
-        switch (activity.actionType) {
+        switch (activity.action_type) {
             case 'USER_SIGNED_UP': return 'joined the platform';
             case 'USER_LOGGED_IN': return 'logged in';
             case 'TEAM_MEMBER_INVITED': return `invited ${metadata.email || 'a new member'}`;
-            case 'TEAM_MEMBER_UPDATED': return 'updated a team member';
+            case 'TEAM_MEMBER_UPDATED': return `updated a team member (${metadata.email || 'details'})`;
             case 'INVOICE_CREATED': return `created invoice ${metadata.invoiceNumber || ''}`;
             case 'INVOICE_SUBMITTED_FOR_APPROVAL': return `submitted invoice ${metadata.invoiceNumber || ''} for approval`;
             case 'INVOICE_APPROVED': return `approved invoice ${metadata.invoiceNumber || ''}`;
             case 'INVOICE_REJECTED': return `rejected invoice ${metadata.invoiceNumber || ''}`;
             case 'INVOICE_CANCELLED': return `cancelled invoice ${metadata.invoiceNumber || ''}`;
             case 'PRODUCT_CREATED': return `published ${metadata.productName || 'a new product'}`;
+            case 'INQUIRY_CREATED': return `started a new inquiry`;
+            case 'INQUIRY_UPDATED': return `updated an inquiry (Status: ${metadata.newStatus || 'changed'})`;
+            case 'INQUIRY_ACKNOWLEDGED': return `acknowledged an inquiry`;
+            case 'INQUIRY_REJECTED': return `rejected an inquiry`;
+            case 'OFFER_ACCEPTED_BY_ADMIN': return `accepted an offer`;
+            case 'OFFER_REJECTED_BY_ADMIN': return `rejected an offer`;
+            case 'DOCUMENT_UPLOADED': return `uploaded document "${metadata.documentTitle || 'File'}"`;
+            case 'INSPECTOR_ASSIGNED': return `assigned an inspector`;
+            case 'INSPECTION_STATUS_UPDATED': return `updated inspection status to ${metadata.newStatus || 'a new status'}`;
             default: return 'performed an action';
         }
     };
 
+    const getActorName = (activity: any) => {
+        // Try to derive the actor from context or metadata if available. 
+        // In a real app we might lookup the user_id. For now we can use "You" or specific metadata labels.
+        if (activity.metadata?.email) {
+            return activity.metadata.email.split('@')[0];
+        }
+        return "You / Team Member";
+    }
+
     return (
-        <Box className="bg-white border border-[#e5e7eb] rounded-xl p-5 flex flex-col h-full">
+        <Box className="bg-white border border-[#e5e7eb] rounded-xl p-5 flex flex-col">
             <div className="flex items-center justify-between mb-5">
                 <Typography variant="h6" className="font-bold text-gray-900">
                     Business Activity
@@ -76,11 +109,11 @@ export const ActivityTimeline = () => {
                         {activities.map((item: any) => (
                             <div key={item.id} className="relative pl-8 group">
                                 <div className="absolute left-0 top-1 w-6 h-6 rounded-full border border-white bg-green-50 text-green-600 flex items-center justify-center z-10 transition-transform group-hover:scale-110">
-                                    {getIcon(item.actionType)}
+                                    {getIcon(item.action_type)}
                                 </div>
                                 <div className="flex flex-col">
                                     <p className="text-sm font-semibold text-gray-900 leading-snug">
-                                        System <span className="font-normal text-gray-600"> {getDescription(item)}</span>
+                                        {getActorName(item)} <span className="font-normal text-gray-600"> {getDescription(item)}</span>
                                     </p>
                                     <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider font-medium">
                                         {dayjs(item.created_at).fromNow()}
@@ -93,7 +126,10 @@ export const ActivityTimeline = () => {
             </div>
 
             {!isLoading && activities.length > 0 && (
-                <button className="mt-6 text-[11px] font-bold text-gray-400 hover:text-green-600 transition-colors uppercase tracking-widest text-center">
+                <button
+                    onClick={() => router.push('/dashboard/activity')}
+                    className="mt-6 text-[11px] font-bold text-gray-400 hover:text-green-600 transition-colors uppercase tracking-widest text-center w-full"
+                >
                     Full Audit Log
                 </button>
             )}

@@ -499,6 +499,7 @@ const RfqDetails = ({
       formData.append('is_inspection_required', String(typedFormData.is_inspection_required || false));
       formData.append('is_shipment_included', String(typedFormData.is_shipment_included || false));
       formData.append('urgency_level', typedFormData.urgency_level || 'standard');
+      formData.append('status', 'published');
 
       if (typedFormData.selectedShippings && typedFormData.selectedShippings.length > 0) {
         typedFormData.selectedShippings.forEach((shipping: string) => {

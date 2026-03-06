@@ -52,8 +52,8 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
 
 
 
-    // Normalize images to {url, type} objects
-    const normalizedImages = products?.images?.map((img: any) =>
+    // Normalize images to {url, type} objects, filtering out null entries
+    const normalizedImages = products?.images?.filter((img: any) => img != null)?.map((img: any) =>
         typeof img === 'string' ? { url: img, type: 'image' } : { url: img.url, type: img.type || 'image' }
     ) || [];
 

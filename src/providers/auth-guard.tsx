@@ -99,8 +99,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [Token, dispatch, router]);
 
   const handleCreateProfile = () => {
-    setShowProfileModal(false);
-    router.replace(paths.dashboard.products.companyProfile);
+    const userRole = user?.role;
+    if (userRole === 'inspector') {
+      router.replace(paths.dashboard.inspections.setup);
+    } else if (userRole === 'supplier') {
+      router.replace(paths.dashboard.products.companyProfile);
+    }
   };
 
   React.useEffect(() => {
@@ -124,26 +128,49 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Supplier is verified but hasn't created store profile yet — block all routes
-    // except overview and the profile creation page
+    // --- Profile Creation Guard ---
     const userRole = user?.role;
-    const isSupplierProfileCreated = appData?.isProfileCreated;
-    const allowedWithoutProfile = [
-      paths.dashboard.overview,
-      paths.dashboard.products.companyProfile,
-      paths.dashboard.settings.account,
-    ];
-    const isOnAllowedRoute = allowedWithoutProfile.some((route) => pathname.startsWith(route));
+    const isProfileCreated = appData?.isProfileCreated;
 
-    if (
-      isBusinessVerified &&
-      userRole === 'supplier' &&
-      !isSupplierProfileCreated &&
-      !isOnAllowedRoute
-    ) {
-      setShowProfileModal(true);
-      router.replace(paths.dashboard.overview);
-      return;
+    // Define allowed routes and target profile paths per role
+    const profileConfig: Record<string, { allowed: string[]; target: string; title: string }> = {
+      supplier: {
+        allowed: [paths.dashboard.overview, paths.dashboard.products.companyProfile, paths.dashboard.settings.account],
+        target: paths.dashboard.products.companyProfile,
+        title: 'Supplier Profile'
+      },
+      inspector: {
+        allowed: [paths.dashboard.overview, paths.dashboard.inspections.profile, paths.dashboard.inspections.setup, paths.dashboard.settings.account],
+        target: paths.dashboard.inspections.setup,
+        title: 'Inspector Profile'
+      }
+    };
+
+    const config = profileConfig[userRole || ''];
+
+    if (config && isBusinessVerified && !isProfileCreated) {
+      const isOnTargetPage = pathname === config.target;
+
+      if (!isOnTargetPage) {
+        setShowProfileModal(true);
+      } else {
+        setShowProfileModal(false);
+      }
+
+      const isOnAllowedRoute = config.allowed.some((route) => {
+        // Overview must be an exact match to prevent it from catching all /dashboard/* sub-routes
+        if (route === paths.dashboard.overview) {
+          return pathname === paths.dashboard.overview;
+        }
+        return pathname.startsWith(route);
+      });
+
+      if (!isOnAllowedRoute) {
+        router.replace(paths.dashboard.overview);
+        return;
+      }
+    } else {
+      setShowProfileModal(false);
     }
 
     // --- Role-Based Route Protection ---
@@ -219,29 +246,50 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       <>
         <Modal
           open={showProfileModal}
-          onClose={() => setShowProfileModal(false)}
+          onClose={() => { }} // Disable closing
+          closeOnBackdropClick={false}
+          closeOnEscape={false}
         >
-          <ModalHeader>Complete Your Supplier Profile</ModalHeader>
+          <ModalHeader showCloseButton={false}>Complete Your {user?.role === 'inspector' ? 'Inspector' : 'Supplier'} Profile</ModalHeader>
           <ModalBody>
             <Box className="py-2">
-              <div className="mb-4 text-base">
-                Welcome! To start using the platform as a supplier, you need to complete your profile first.
+              <div className="mb-4 text-base font-semibold">
+                Welcome! To start using the platform as {user?.role === 'inspector' ? 'an inspector' : 'a supplier'}, you need to complete your profile first.
               </div>
               <div className="text-sm text-neutral-600 mb-4">
-                Your profile helps buyers understand your business and the products or services you offer.
+                Your profile helps {user?.role === 'inspector' ? 'Min-meg and clients' : 'buyers'} understand your {user?.role === 'inspector' ? 'expertise and operational capacity' : 'business and the products or services you offer'}.
               </div>
               <div className="text-sm text-neutral-600">
                 This process will only take a few minutes and includes:
               </div>
               <ul className="mt-2 list-disc pl-5 text-sm text-neutral-600">
-                <li>Business information</li>
-                <li>Product/Service details</li>
-                <li>Contact information</li>
+                {user?.role === 'inspector' ? (
+                  <>
+                    <li>Company branding (Logo & Banner)</li>
+                    <li>Service Matrix & Pricing</li>
+                    <li>Workload & Operational Limits</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Business information</li>
+                    <li>Product/Service details</li>
+                    <li>Contact information</li>
+                  </>
+                )}
               </ul>
             </Box>
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
               <Button onClick={handleCreateProfile} variant="contained" color="primary" className="w-full py-3 text-lg">
-                Create Profile Now
+                Complete Setup Now
+              </Button>
+              <Button
+                onClick={() => refetch()}
+                variant="outlined"
+                color="primary"
+                className="w-full py-2 hover:bg-neutral-50 transition-colors"
+                loading={isLoading}
+              >
+                I've Completed Setup (Check Status)
               </Button>
             </div>
           </ModalBody>
@@ -252,7 +300,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Not authenticated and initialized -> return null as we are redirecting
-  // return;
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50/50">
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600" />

@@ -109,6 +109,7 @@ export const paths = {
       workbench: (id: string | number) =>
         `/dashboard/inspections/workbench/${id}`,
       profile: "/dashboard/inspections/profile",
+      setup: "/dashboard/inspections/profile/setup",
       analytics: "/dashboard/inspections/analytics",
       services: {
         matrix: "/dashboard/inspections/services/matrix",

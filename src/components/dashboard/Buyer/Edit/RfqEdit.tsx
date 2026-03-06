@@ -243,7 +243,7 @@ const EditRfQs = ({ open, rows, onClose }: any) => {
       value: status,
       multipleFields: false,
       selectCategoryName: 'status',
-      options: ['unavailable', 'pending', 'expired', 'confirmed', 'accepted'],
+      options: ['published', 'draft', 'unavailable', 'archived', 'expired', 'closed', 'confirmed', 'accepted'],
     },
     location: {
       id: 'location',

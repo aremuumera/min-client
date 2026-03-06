@@ -57,7 +57,7 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="text-lg font-bold flex items-center gap-2">
-                        {offer.supplier?.company_name || 'Verified Supplier'}
+                        {'Verified Supplier'}
                         <MdVerified className="text-green-500 text-lg" />
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
@@ -108,7 +108,8 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
                     variant={isShortlisted ? "contained" : "outlined"}
                     className={`flex-1 ${isShortlisted ? 'bg-yellow-500 hover:bg-yellow-600' : ''}`}
                     onClick={handleShortlist}
-                    disabled={isLoading}
+                    disabled={isLoading || (isShortlisted && ['accepted', 'inspection_assigned', 'completed', 'paid'].includes(offer.status))}
+                    title={isShortlisted && ['accepted', 'inspection_assigned', 'completed', 'paid'].includes(offer.status) ? "This offer has been accepted and cannot be un-shortlisted" : ""}
                 >
                     {isLoading ? <Loader2 size={16} className="animate-spin" /> : (isShortlisted ? 'Un-shortlist' : 'Shortlist')}
                 </Button>

@@ -25,6 +25,7 @@ import {
 } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { chatNotificationService } from "./chat_notif_service";
+import { logger } from "@/utils/logger";
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -69,19 +70,26 @@ export interface TradeMessage {
 
 export const customerTradeChatService = {
   /**
+   * Internal helper to ensure IDs are unhyphenated for consistent Firestore paths
+   */
+  _sanitizeId(id: string): string {
+    return String(id).replace(/-/g, "");
+  },
+
+  /**
    * Create a new trade room when an inquiry is created
    */
   async createTradeRoom(
     inquiryId: string,
     metadata: Omit<TradeRoomMetadata, "created_at" | "updated_at">,
   ): Promise<string> {
-    const id = String(inquiryId);
+    const id = this._sanitizeId(inquiryId);
     try {
       const roomRef = doc(db, "trade_rooms", id);
       const existing = await getDoc(roomRef);
 
       if (existing.exists()) {
-        return inquiryId;
+        return id;
       }
 
       await setDoc(roomRef, {
@@ -134,31 +142,53 @@ export const customerTradeChatService = {
    * role in a specific trade (Inquirer = admin_buyer, Owner = admin_supplier).
    * This is the correct method to use for trade chat operations.
    */
-  getSpokeByContext(userId: string, tradeMetadata: any): UserSpokeType {
-    const uId = String(userId).replace(/-/g, "");
+  getSpokeByContext(userId: string, tradeMetadata: any): UserSpokeType | null {
+    const uId = this._sanitizeId(userId);
 
-    // 1. If user is explicitly set as the room-level supplier (Single Product Inquiry)
-    if (uId === String(tradeMetadata?.supplier_id).replace(/-/g, "")) {
-      return "admin_supplier";
-    }
+    console.log("user id", uId);
+    console.log("trade metadata", tradeMetadata);
 
-    // 2. Multi-RFQ fallback: If user is in participants but NOT the buyer
-    const buyerId = String(tradeMetadata?.buyer_id || "").replace(/-/g, "");
-    const participants = tradeMetadata?.participant_ids || [];
-
-    if (
-      uId !== buyerId &&
-      (participants.includes(uId) || participants.includes(userId))
-    ) {
-      return "admin_supplier";
-    }
-
-    if (uId === String(tradeMetadata?.inspector_id).replace(/-/g, "")) {
+    // 1. Explicit ID matches (Highest Security)
+    if (uId === this._sanitizeId(tradeMetadata?.inspector_id)) {
       return "admin_inspector";
     }
 
-    // Default: if user is buyer_id or unknown, treat as buyer (inquirer)
-    return "admin_buyer";
+    if (uId === this._sanitizeId(tradeMetadata?.supplier_id)) {
+      return "admin_supplier";
+    }
+
+    if (uId === this._sanitizeId(tradeMetadata?.buyer_id)) {
+      return "admin_buyer";
+    }
+
+    // 2. Access Bridging for Team Members (Participants list check)
+    const participants = (tradeMetadata?.participant_ids || []).map(
+      (id: string) => this._sanitizeId(id),
+    );
+
+    if (participants.includes(uId) || participants.includes(userId)) {
+      /**
+       * If we are in the participants list but not the owner (not buyer_id/supplier_id),
+       * we must determine the spoke based on the intended side of the room.
+       * Since we don't have the user's login role here directly, we usually assume
+       * if they aren't the buyer, they are a supplier/inspector.
+       *
+       * NOTE: Return 'admin_buyer' ONLY if they are explicitly the buyer_id.
+       * Otherwise, if they are in participants, they are either a team member of the supplier
+       * or the inspector. We'll default to 'admin_supplier' here as a safe "non-managerial" spoke,
+       * but the IDEAL way is to pass the user's role from the auth context.
+       */
+      return "admin_supplier";
+    }
+
+    // Default: Deny access if not found in metadata or participants
+    console.warn(
+      "[TradeChat] Access denied for user",
+      uId,
+      "in room metadata",
+      tradeMetadata,
+    );
+    return null;
   },
 
   /**
@@ -175,9 +205,10 @@ export const customerTradeChatService = {
     userId: string,
     userRole: string,
     callback: (inquiries: any[]) => void,
+    errorCallback?: (error: any) => void,
   ) {
-    const id = String(tradeId);
-    const uId = String(userId).replace(/-/g, "");
+    const id = this._sanitizeId(tradeId);
+    const uId = this._sanitizeId(userId);
     const tradesRef = collection(db, "trade_rooms", id, "trades");
 
     // Always fetch ALL trades (no query-level filter)
@@ -192,25 +223,42 @@ export const customerTradeChatService = {
         ? roomDoc.data()?.entity_type || null
         : null;
 
-      unsubSnapshot = onSnapshot(q, (snapshot) => {
-        let inquiries = snapshot.docs
-          .map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }))
-          .filter((i: any) => i.isHiddenFromUsers !== true);
+      unsubSnapshot = onSnapshot(
+        q,
+        (snapshot) => {
+          let inquiries = snapshot.docs
+            .map((d) => ({
+              id: d.id,
+              ...d.data(),
+            }))
+            .filter((i: any) => i.isHiddenFromUsers !== true);
 
-        // Client-side filter: ONLY for RFQ rooms + supplier role
-        if (roomEntityType === "rfq" && userRole === "supplier") {
-          inquiries = inquiries.filter(
-            (trade: any) =>
-              String(trade.supplier_id || "").replace(/-/g, "") === uId,
-          );
-        }
-        // For product/business rooms OR buyer role → no filtering, show all
+          // Client-side filter: ONLY for RFQ rooms + supplier role
+          if (roomEntityType === "rfq" && userRole === "supplier") {
+            inquiries = inquiries.filter(
+              (trade: any) =>
+                String(trade.supplier_id || "").replace(/-/g, "") === uId,
+            );
+          }
 
-        callback(inquiries);
-      });
+          // Client-side filter: Inspector role (only show assigned cycles)
+          if (userRole === "inspector") {
+            inquiries = inquiries.filter(
+              (trade: any) =>
+                String(
+                  trade.inspector_id || trade.matched_inspector_id || "",
+                ).replace(/-/g, "") === uId,
+            );
+          }
+          // For product/business rooms OR buyer role → no filtering, show all
+
+          callback(inquiries);
+        },
+        (error) => {
+          console.error("[TradeChat] getRoomInquiries snapshot error:", error);
+          if (errorCallback) errorCallback(error);
+        },
+      );
     });
 
     // Return cleanup function
@@ -227,6 +275,7 @@ export const customerTradeChatService = {
     inquiryId: string,
     spoke: UserSpokeType,
     callback: (messages: TradeMessage[]) => void,
+    errorCallback?: (error: any) => void,
   ) {
     if (!tradeId || !inquiryId || !spoke) {
       console.warn("getSpokeMessages: Missing tradeId, inquiryId, or spoke", {
@@ -236,27 +285,34 @@ export const customerTradeChatService = {
       });
       return () => {};
     }
-    const id = String(tradeId);
+    const id = this._sanitizeId(tradeId);
     const messagesRef = collection(
       db,
       "trade_rooms",
       id,
       "trades",
-      String(inquiryId),
+      this._sanitizeId(inquiryId),
       "threads",
       spoke,
       "messages",
     );
     const q = query(messagesRef, orderBy("timestamp", "asc"));
 
-    return onSnapshot(q, (snapshot) => {
-      const messages: TradeMessage[] = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as TradeMessage[];
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const messages: TradeMessage[] = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as TradeMessage[];
 
-      callback(messages);
-    });
+        callback(messages);
+      },
+      (error) => {
+        console.error("[TradeChat] getSpokeMessages snapshot error:", error);
+        if (errorCallback) errorCallback(error);
+      },
+    );
   },
 
   /**
@@ -273,7 +329,9 @@ export const customerTradeChatService = {
     text: string,
     attachments: any[] = [],
   ): Promise<string> {
-    const id = String(tradeId);
+    const id = this._sanitizeId(tradeId);
+    const inqId = this._sanitizeId(inquiryId);
+    const sId = this._sanitizeId(senderId);
 
     if (!tradeId || !inquiryId || !spoke || !senderId) {
       console.error("sendMessage: Missing required parameters", {
@@ -291,14 +349,14 @@ export const customerTradeChatService = {
         "trade_rooms",
         id,
         "trades",
-        String(inquiryId),
+        inqId,
         "threads",
         spoke,
         "messages",
       );
 
       const messageData = {
-        sender_id: senderId,
+        sender_id: sId,
         sender_role: senderRole,
         sender_display: senderName,
         sender_name: senderName,
@@ -314,15 +372,7 @@ export const customerTradeChatService = {
 
       // Update thread metadata
       await updateDoc(
-        doc(
-          db,
-          "trade_rooms",
-          id,
-          "trades",
-          String(inquiryId),
-          "threads",
-          spoke,
-        ),
+        doc(db, "trade_rooms", id, "trades", inqId, "threads", spoke),
         {
           last_message: {
             text: text || (attachments.length > 0 ? "📎 Attachment" : ""),
@@ -345,7 +395,7 @@ export const customerTradeChatService = {
       });
 
       // Update specific trade's updated_at
-      await updateDoc(doc(db, "trade_rooms", id, "trades", String(inquiryId)), {
+      await updateDoc(doc(db, "trade_rooms", id, "trades", inqId), {
         updated_at: serverTimestamp(),
       });
 
@@ -404,15 +454,16 @@ export const customerTradeChatService = {
       });
       return;
     }
-    const id = String(tradeId);
-    const uId = String(userId);
+    const id = this._sanitizeId(tradeId);
+    const inqId = this._sanitizeId(inquiryId);
+    const uId = this._sanitizeId(userId);
     try {
       const messagesRef = collection(
         db,
         "trade_rooms",
         id,
         "trades",
-        String(inquiryId),
+        inqId,
         "threads",
         spoke,
         "messages",
@@ -449,9 +500,10 @@ export const customerTradeChatService = {
     if (!tradeId || !inquiryId || !spoke) {
       throw new Error("uploadAttachment: Missing tradeId, inquiryId, or spoke");
     }
-    const id = String(tradeId);
+    const id = this._sanitizeId(tradeId);
+    const inqId = this._sanitizeId(inquiryId);
     try {
-      const filePath = `trade_rooms/${id}/${inquiryId}/${spoke}/${Date.now()}_${file.name}`;
+      const filePath = `trade_rooms/${id}/${inqId}/${spoke}/${Date.now()}_${file.name}`;
       const storageRef = ref(storage, filePath);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -498,7 +550,7 @@ export const customerTradeChatService = {
    * Get trade room metadata
    */
   async getTradeRoomMetadata(tradeId: string): Promise<any | null> {
-    const id = String(tradeId);
+    const id = this._sanitizeId(tradeId);
     try {
       const roomDoc = await getDoc(doc(db, "trade_rooms", id));
       if (!roomDoc.exists()) return null;
@@ -517,6 +569,7 @@ export const customerTradeChatService = {
     userId: string,
     role: string,
     callback: (conversations: any[]) => void,
+    errorCallback?: (error: any) => void,
   ) {
     // Sanitize userId (remove hyphens) to ensure it matches Firestore unhyphenated IDs
     const uId = String(userId).replace(/-/g, "");
@@ -566,13 +619,13 @@ export const customerTradeChatService = {
     let participantDone = false;
 
     const processRooms = async (snapshot: any) => {
-      console.log(`[TradeChat] Processing ${snapshot.size} room documents...`);
+      logger.info(`[TradeChat] Processing ${snapshot.size} room documents...`);
       return await Promise.all(
         snapshot.docs.map(async (docSnap: any) => {
           try {
             const data = docSnap.data();
             if (data.isHiddenFromUsers === true) {
-              console.log(
+              logger.info(
                 `[TradeChat] Room ${docSnap.id} is hidden from users. Skipping.`,
               );
               return null;
@@ -580,12 +633,36 @@ export const customerTradeChatService = {
 
             const tradeId = docSnap.id;
             const spoke = this.getSpokeByContext(uId, data);
+            if (!spoke) {
+              logger.warn(
+                `[TradeChat] Access denied for room ${tradeId}. Skipping.`,
+              );
+              return null;
+            }
+
             const threadDoc = await getDoc(
-              doc(db, "trade_rooms", String(tradeId), "threads", spoke),
+              doc(db, "trade_rooms", tradeId, "threads", spoke),
             );
             const threadData = threadDoc.exists()
               ? threadDoc.data()
               : { last_message: null, message_count: 0 };
+
+            // 24-hour Auto-Hide logic for rejected threads
+            if (threadData.status === "rejected" && threadData.rejected_at) {
+              const rejectedAt =
+                threadData.rejected_at.toDate?.() ||
+                new Date(threadData.rejected_at);
+              const now = new Date();
+              const diffHours =
+                (now.getTime() - rejectedAt.getTime()) / (1000 * 60 * 60);
+
+              if (diffHours > 24) {
+                logger.info(
+                  `[TradeChat] Room ${tradeId} auto-hidden after 24h grace period.`,
+                );
+                return null;
+              }
+            }
 
             const lastMsgTime =
               threadData.last_message?.timestamp?.toDate?.() ||
@@ -663,6 +740,7 @@ export const customerTradeChatService = {
       },
       (error) => {
         console.error("[TradeChat] Buyer snapshot error:", error);
+        if (errorCallback) errorCallback(error);
         buyerDone = true;
         emitMergedResults();
       },
@@ -677,6 +755,7 @@ export const customerTradeChatService = {
       },
       (error) => {
         console.error("[TradeChat] Supplier snapshot error:", error);
+        if (errorCallback) errorCallback(error);
         supplierDone = true;
         emitMergedResults();
       },
@@ -691,6 +770,7 @@ export const customerTradeChatService = {
       },
       (error) => {
         console.error("[TradeChat] Inspector snapshot error:", error);
+        if (errorCallback) errorCallback(error);
         inspectorDone = true;
         emitMergedResults();
       },
@@ -705,6 +785,7 @@ export const customerTradeChatService = {
       },
       (error) => {
         console.error("[TradeChat] Manager snapshot error:", error);
+        if (errorCallback) errorCallback(error);
         managerDone = true;
         emitMergedResults();
       },
@@ -719,6 +800,7 @@ export const customerTradeChatService = {
       },
       (error) => {
         console.error("[TradeChat] Admin snapshot error:", error);
+        if (errorCallback) errorCallback(error);
         adminDone = true;
         emitMergedResults();
       },
@@ -733,6 +815,7 @@ export const customerTradeChatService = {
       },
       (error) => {
         console.error("[TradeChat] Participant snapshot error:", error);
+        if (errorCallback) errorCallback(error);
         participantDone = true;
         emitMergedResults();
       },
@@ -760,13 +843,13 @@ const createNotification = async (
   type: string,
   contentType?: string,
 ) => {
-  const uId = String(userId);
-  const sId = String(senderId);
+  const uId = String(userId).replace(/-/g, "");
+  const sId = String(senderId).replace(/-/g, "");
   try {
     await addDoc(collection(db, "notifications"), {
       userId: uId,
       type,
-      conversationId: String(conversationId),
+      conversationId: String(conversationId).replace(/-/g, ""),
       senderId: sId,
       senderName,
       senderCompanyName,

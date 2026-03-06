@@ -110,23 +110,28 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
 
         // 1b. Role-based isolation for Inspectors
         if (userRole === 'inspector') {
-            // Keep only: Dashboard Overview, Inspections, Services, and Settings:Account
+            // Keep only: Dashboard Overview, Analytics, Inspections, Services, Chat, and Settings:Account
             return items.filter(section => ['dashboards', 'inspections', 'services', 'general'].includes(section.key))
                 .map(section => {
                     if (section.key === 'dashboards') {
                         return {
                             ...section,
-                            items: section.items?.filter(item => item.key === 'overview')
+                            items: section.items?.filter(item => ['overview'].includes(item.key))
                         };
                     }
                     if (section.key === 'general') {
                         return {
                             ...section,
-                            items: section.items?.filter(item => item.key === 'settings')
-                                .map(settings => ({
-                                    ...settings,
-                                    items: settings.items?.filter(item => item.key === 'settings:account')
-                                }))
+                            items: section.items?.filter(item => ['chat', 'settings'].includes(item.key))
+                                .map(item => {
+                                    if (item.key === 'settings') {
+                                        return {
+                                            ...item,
+                                            items: item.items?.filter(subItem => subItem.key === 'settings:account')
+                                        };
+                                    }
+                                    return item;
+                                })
                         };
                     }
                     return section;

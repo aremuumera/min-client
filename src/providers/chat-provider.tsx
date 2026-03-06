@@ -4,6 +4,7 @@
 import React, { createContext, useCallback, useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { chatService, db, getUserName } from '@/components/dashboard/chat/chat_service';
 import { customerTradeChatService } from '@/components/dashboard/chat/trade_chat_service';
@@ -182,6 +183,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             } else {
               setActiveInquiryId(null);
             }
+          },
+          (error: any) => {
+            console.error('Error listening to room inquiries:', error);
+            toast.error('Failed to sync trade inquiries. Please check your connection.');
           }
         );
       } else {
@@ -238,7 +243,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
               activeConversation.userSpoke,
               String(user.id)
             );
-          });
+          },
+          (error: any) => {
+            console.error('Error listening to messages:', error);
+            toast.error('Failed to sync messages. Real-time updates may be delayed.');
+          }
+        );
       } else {
         unsubscribe = chatService.getMessages(activeConversation.conversationId, (messageList: Message[]) => {
           setMessages(messageList);
@@ -336,9 +346,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         return true;
-      } catch (error) {
+      } catch (error: any) {
         setLoadingMessages(false);
         console.error('Error sending message:', error);
+        toast.error(error?.message || 'Failed to send message');
         return false;
       } finally {
         setLoadingMessages(false);
@@ -368,9 +379,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           try {
             if (!activeInquiryId) return null;
             attachment = await customerTradeChatService.uploadAttachment(file, String(conversationId), activeInquiryId, activeConversation.userSpoke);
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error uploading trade attachment:', error);
-            return null;
+            toast.error(error?.message || 'Error uploading trade attachment');
+            throw error;
           }
         } else {
           attachment = await chatService.uploadAttachment(file, activeConversation.conversationId);
@@ -395,8 +407,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           url: attachment.url,
           contentType: file.type,
         };
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading attachment:', error);
+        toast.error(error?.message || 'Error uploading attachment');
         return null;
       } finally {
         setLoadingMessages(false);
@@ -546,6 +559,11 @@ New Flow for for all roles to Admin
         (list: any[]) => {
           // console.log('Trade rooms received:', list.length);
           setTradeConversations(list);
+          setLoading(false);
+        },
+        (error: any) => {
+          console.error('Error listening to trade rooms:', error);
+          toast.error('Failed to load trade rooms. Please refresh the page.');
           setLoading(false);
         });
     } else {

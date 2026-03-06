@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { paths } from '@/config/paths';
 import OfferComparisonModal from './OfferComparisonModal';
+import OfferDetailModal from './OfferDetailModal';
 
 export default function OfferBoardPage() {
     const { rfqId } = useParams();
@@ -27,6 +28,8 @@ export default function OfferBoardPage() {
     const [searchTerm, setSearchTerm] = React.useState('');
     const [selectedOffers, setSelectedOffers] = React.useState<string[]>([]);
     const [isCompareModalOpen, setIsCompareModalOpen] = React.useState(false);
+    const [quickLookOffer, setQuickLookOffer] = React.useState<any>(null);
+    const [hoveredOffer, setHoveredOffer] = React.useState<string | null>(null);
 
     const offers = offersData?.data || [];
     const rfq = offersData?.rfq;
@@ -89,8 +92,22 @@ export default function OfferBoardPage() {
                         <div
                             key={offer.id}
                             onClick={() => toggleOfferSelection(offer.id)}
+                            onMouseEnter={() => setHoveredOffer(offer.id)}
+                            onMouseLeave={() => setHoveredOffer(null)}
                             className={`group relative bg-white border-2 rounded-[32px] p-6 transition-all duration-300 cursor-pointer overflow-hidden ${selectedOffers.includes(offer.id) ? 'border-green-500 shadow-xl shadow-green-500/5 ring-4 ring-green-100' : 'border-gray-100 hover:border-gray-200 hover:shadow-lg'}`}
                         >
+                            {/* Hover Video Preview */}
+                            {hoveredOffer === offer.id && offer.attachments?.some((a: any) => a.url.endsWith('.mp4')) && (
+                                <div className="absolute inset-0 z-0 opacity-10 transition-opacity duration-500">
+                                    <video
+                                        src={offer.attachments.find((a: any) => a.url.endsWith('.mp4')).url}
+                                        autoPlay
+                                        muted
+                                        loop
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            )}
                             {/* Selection Badge */}
                             <div className={`absolute top-6 right-6 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedOffers.includes(offer.id) ? 'bg-green-600 border-green-600' : 'bg-gray-50 border-gray-200'}`}>
                                 {selectedOffers.includes(offer.id) && <CheckCircle2 size={16} className="text-white" />}
@@ -132,16 +149,21 @@ export default function OfferBoardPage() {
                                     </div>
                                 </div>
 
-                                <Link
-                                    href={`/dashboard/trade/details/${offer.id}`}
-                                    className="pt-2 flex items-center justify-between text-xs font-bold text-gray-900 group/link"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    View Full Specs
-                                    <span className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover/link:bg-green-600 group-hover/link:text-white transition-all">
+                                <div className="flex gap-2 pt-2">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setQuickLookOffer(offer); }}
+                                        className="flex-1 bg-gray-50 hover:bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500 py-3 rounded-xl transition-all border border-gray-100 hover:border-gray-200"
+                                    >
+                                        Quick Look
+                                    </button>
+                                    <Link
+                                        href={`/dashboard/trade/details/${offer.id}`}
+                                        className="w-12 h-10 rounded-xl bg-gray-50 flex items-center justify-center group/link hover:bg-green-600 hover:text-white transition-all border border-gray-100"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <ArrowUpRight size={14} />
-                                    </span>
-                                </Link>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     ))
@@ -152,6 +174,12 @@ export default function OfferBoardPage() {
                 isOpen={isCompareModalOpen}
                 onClose={() => setIsCompareModalOpen(false)}
                 offers={filteredComparingOffers}
+                rfq={rfq}
+            />
+            <OfferDetailModal
+                isOpen={!!quickLookOffer}
+                onClose={() => setQuickLookOffer(null)}
+                offer={quickLookOffer}
                 rfq={rfq}
             />
         </div>

@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
   // async rewrites() {
   //   // Development: proxy to local backend
 
-
   //   return [
   //     {
   //       source: '/api/:path*',

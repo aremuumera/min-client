@@ -8,6 +8,17 @@ import { useAlert } from '@/providers';
 import { useCreateProductInquiryMutation, useSubmitRfqOfferMutation } from '@/redux/features/trade/trade_api';
 import { Select } from '@/components/ui/select';
 import { MoqUnits } from '@/lib/marketplace-data';
+import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
+
+const PACKAGING_OPTIONS = [
+    { value: '50kg bags', label: '50kg Bags' },
+    { value: '1 ton bags', label: '1 Ton Bags' },
+    { value: 'Jumbo bags', label: 'Jumbo Bags (FIBC)' },
+    { value: 'Bulk', label: 'Bulk (Loose)' },
+    { value: 'Drums', label: 'Drums' },
+    { value: 'Containers', label: 'Containers' },
+    { value: 'Custom', label: 'Custom Packaging' },
+];
 
 interface ProductInquiryModalProps {
     isOpen: boolean;
@@ -83,6 +94,7 @@ const ProductInquiryModal = ({
     const isRfqOffer = itemType === 'rfq';
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<any>(isRfqOffer ? offerInitialState : initialState);
+    const [customPackaging, setCustomPackaging] = useState(false);
 
     const handleClose = () => {
         setStep(1);
@@ -257,8 +269,9 @@ const ProductInquiryModal = ({
                                                 <div className="absolute left-3 top-3 text-gray-400 text-sm font-bold">
                                                     {(formData as any).currency === 'NGN' ? '₦' : '$'}
                                                 </div>
-                                                <input type="number" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Price per unit"
-                                                    value={(formData as any).unit_price} onChange={e => setFormData({ ...formData, unit_price: e.target.value } as any)} />
+                                                <input type="text" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Price per unit"
+                                                    value={formatNumberWithCommas((formData as any).unit_price)}
+                                                    onChange={e => setFormData({ ...formData, unit_price: stripCommas(e.target.value) } as any)} />
                                             </div>
                                         </div>
                                         <div>
@@ -273,8 +286,9 @@ const ProductInquiryModal = ({
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Quantity Available *</label>
-                                            <input type="number" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Enter amount"
-                                                value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: e.target.value })} />
+                                            <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Enter amount"
+                                                value={formatNumberWithCommas(formData.quantity)}
+                                                onChange={e => setFormData({ ...formData, quantity: stripCommas(e.target.value) })} />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Measure Type</label>
@@ -300,14 +314,29 @@ const ProductInquiryModal = ({
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Packaging</label>
-                                            <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. 50kg bags, Bulk"
-                                                value={(formData as any).packaging} onChange={e => setFormData({ ...formData, packaging: e.target.value } as any)} />
+                                            <Select fullWidth value={customPackaging ? 'Custom' : ((formData as any).packaging || '')}
+                                                onChange={(val: any) => {
+                                                    const v = typeof val === 'string' ? val : val.target.value;
+                                                    if (v === 'Custom') {
+                                                        setCustomPackaging(true);
+                                                        setFormData({ ...formData, packaging: '' } as any);
+                                                    } else {
+                                                        setCustomPackaging(false);
+                                                        setFormData({ ...formData, packaging: v } as any);
+                                                    }
+                                                }}
+                                                options={PACKAGING_OPTIONS} />
+                                            {customPackaging && (
+                                                <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none mt-2" placeholder="Enter custom packaging"
+                                                    value={(formData as any).packaging} onChange={e => setFormData({ ...formData, packaging: e.target.value } as any)} />
+                                            )}
                                         </div>
-                                        <div>
+                                        {/* Sampling Protocol - not needed for supplier offers */}
+                                        {/* <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Sampling Protocol</label>
                                             <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. ASTM Standard"
                                                 value={(formData as any).sampling_method} onChange={e => setFormData({ ...formData, sampling_method: e.target.value } as any)} />
-                                        </div>
+                                        </div> */}
                                     </div>
 
                                     {/* Origin / Loading Point */}
@@ -387,9 +416,9 @@ const ProductInquiryModal = ({
                                             <input
                                                 type="number"
                                                 className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                                                placeholder="Enter amount"
-                                                value={formData.quantity}
-                                                onChange={e => setFormData({ ...formData, quantity: e.target.value })}
+                                                placeholder="Enter Quantity"
+                                                value={formatNumberWithCommas(formData.quantity)}
+                                                onChange={e => setFormData({ ...formData, quantity: stripCommas(e.target.value) })}
                                             />
                                         </div>
                                         <div>
@@ -412,11 +441,11 @@ const ProductInquiryModal = ({
                                     {/* Preferred Grade */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Purity / Grade</label>
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">Grade</label>
                                             <input
                                                 type="text"
                                                 className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                                placeholder="e.g. 95%+, Grade A"
+                                                placeholder="enter grade value"
                                                 value={formData.purity_grade}
                                                 onChange={e => setFormData({ ...formData, purity_grade: e.target.value })}
                                             />
@@ -436,13 +465,30 @@ const ProductInquiryModal = ({
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Packaging</label>
-                                            <input
-                                                type="text"
-                                                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                                placeholder="e.g. 50kg bags"
-                                                value={formData.packaging}
-                                                onChange={e => setFormData({ ...formData, packaging: e.target.value })}
+                                            <Select
+                                                fullWidth
+                                                value={customPackaging ? 'Custom' : (formData.packaging || '')}
+                                                onChange={(val: any) => {
+                                                    const v = typeof val === 'string' ? val : val.target.value;
+                                                    if (v === 'Custom') {
+                                                        setCustomPackaging(true);
+                                                        setFormData({ ...formData, packaging: '' });
+                                                    } else {
+                                                        setCustomPackaging(false);
+                                                        setFormData({ ...formData, packaging: v });
+                                                    }
+                                                }}
+                                                options={PACKAGING_OPTIONS}
                                             />
+                                            {customPackaging && (
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all mt-2"
+                                                    placeholder="Enter custom packaging"
+                                                    value={formData.packaging}
+                                                    onChange={e => setFormData({ ...formData, packaging: e.target.value })}
+                                                />
+                                            )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Sampling Protocol</label>
@@ -601,7 +647,7 @@ const ProductInquiryModal = ({
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Additional Requirements</label>
                                         <textarea
                                             className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm h-32 focus:ring-2 focus:ring-green-500 outline-none transition-all resize-none"
-                                            placeholder="Specify purity requirements, packaging preferences, or certification needs..."
+                                            placeholder="Specify other requirements, preferences, or certification needs..."
                                             value={formData.description}
                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         />
@@ -625,12 +671,12 @@ const ProductInquiryModal = ({
                                     </div>
                                     <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
                                         <span className="text-gray-500">Quantity:</span>
-                                        <span className="font-bold text-gray-900">{formData.quantity} {formData.measure_type?.replace(/_/g, ' ')}</span>
+                                        <span className="font-bold text-gray-900">{formatNumberWithCommas(formData.quantity)} {formData.measure_type?.replace(/_/g, ' ')}</span>
                                     </div>
                                     {isRfqOffer && (
                                         <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
                                             <span className="text-gray-500">Unit Price:</span>
-                                            <span className="font-bold text-gray-900">{formData.currency} {formData.unit_price}</span>
+                                            <span className="font-bold text-gray-900">{formData.currency} {formatNumberWithCommas(formData.unit_price)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">

@@ -206,9 +206,10 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
           </Link>
           <button
             onClick={handleRequestQuote}
-            className="flex-1 py-2 px-3 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+            disabled={status === 'closed' || status === 'finalized' || status === 'expired'}
+            className={`flex-1 py-2 px-3 text-sm font-medium text-white transition-colors rounded-md ${status === 'closed' || status === 'finalized' || status === 'expired' ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
           >
-            Contact Now
+            {status === 'closed' || status === 'finalized' || status === 'expired' ? 'Bidding Closed' : 'Contact Now'}
           </button>
         </div>
       </div>

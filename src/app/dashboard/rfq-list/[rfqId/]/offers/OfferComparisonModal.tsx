@@ -10,7 +10,9 @@ import {
     Zap,
     AlertCircle,
     Package,
-    ArrowRight
+    ArrowRight,
+    FileText,
+    Maximize2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useShortlistOfferMutation } from '@/redux/features/trade/trade_api';
@@ -27,7 +29,16 @@ interface OfferComparisonModalProps {
 const OfferComparisonModal = ({ isOpen, onClose, offers, rfq }: OfferComparisonModalProps) => {
     const [shortlist, { isLoading: isShortlisting }] = useShortlistOfferMutation();
 
+    const [activeMediaIndices, setActiveMediaIndices] = React.useState<Record<string, number>>({});
+
     if (!isOpen) return null;
+
+    const handleMediaClick = (offerId: string, idx: number) => {
+        setActiveMediaIndices(prev => ({ ...prev, [offerId]: idx }));
+    };
+
+    const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url);
+    const isPDF = (url: string) => /\.pdf$/i.test(url);
 
     const handleShortlist = async (inquiryId: string, company: string) => {
         try {
@@ -99,28 +110,55 @@ const OfferComparisonModal = ({ isOpen, onClose, offers, rfq }: OfferComparisonM
                                         <td className="py-6 px-4 text-xs font-bold text-gray-600 uppercase tracking-widest">{spec.label}</td>
                                         {offers.map(offer => (
                                             <td key={offer.id} className="py-6 px-6">
-                                                <div className="flex items-center gap-2">
+                                                <div className="space-y-4">
                                                     {spec.isAttachments ? (
-                                                        <div className="flex flex-wrap gap-2 max-w-[200px]">
-                                                            {offer.attachments?.map((att: any, idx: number) => {
-                                                                const isVideo = att.url?.toLowerCase().endsWith('.mp4') || att.type?.startsWith('video/');
-                                                                return (
-                                                                    <div key={idx} className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden relative group/att">
-                                                                        {isVideo ? (
-                                                                            <video src={att.url} className="w-full h-full object-cover" muted />
-                                                                        ) : (
-                                                                            <img src={att.url} alt="" className="w-full h-full object-cover" />
-                                                                        )}
-                                                                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover/att:opacity-100 transition-opacity flex items-center justify-center">
-                                                                            <Zap size={10} className="text-white" />
+                                                        <div className="space-y-3">
+                                                            {offer.attachments && offer.attachments.length > 0 ? (
+                                                                <>
+                                                                    {/* Column Hero */}
+                                                                    <div className="w-full aspect-video rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative group/hero shadow-sm">
+                                                                        {(() => {
+                                                                            const activeIdx = activeMediaIndices[offer.id] || 0;
+                                                                            const att = offer.attachments[activeIdx];
+                                                                            if (isVideo(att.url)) return <video src={att.url} className="w-full h-full object-cover" muted autoPlay loop />;
+                                                                            if (isPDF(att.url)) return (
+                                                                                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
+                                                                                    <FileText size={40} strokeWidth={1} />
+                                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">PDF Asset</span>
+                                                                                </div>
+                                                                            );
+                                                                            return <img src={att.url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover/hero:scale-110" />;
+                                                                        })()}
+                                                                        <a href={offer.attachments[activeMediaIndices[offer.id] || 0].url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover/hero:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <Maximize2 size={16} className="text-white" />
                                                                         </a>
                                                                     </div>
-                                                                );
-                                                            })}
-                                                            {(!offer.attachments || offer.attachments.length === 0) && <span className="text-xs text-gray-400">None</span>}
+
+                                                                    {/* Column Strip */}
+                                                                    {offer.attachments.length > 1 && (
+                                                                        <div className="flex gap-1.5 overflow-x-auto pb-1 custom-scrollbar-mini">
+                                                                            {offer.attachments.map((att: any, idx: number) => (
+                                                                                <button
+                                                                                    key={idx}
+                                                                                    onClick={() => handleMediaClick(offer.id, idx)}
+                                                                                    className={`w-10 h-8 rounded-lg border-2 transition-all shrink-0 overflow-hidden ${(activeMediaIndices[offer.id] || 0) === idx ? 'border-green-500' : 'border-gray-100 opacity-50'}`}
+                                                                                >
+                                                                                    {isPDF(att.url) ? (
+                                                                                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><FileText size={12} /></div>
+                                                                                    ) : (
+                                                                                        <img src={att.url} className="w-full h-full object-cover" />
+                                                                                    )}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 font-medium italic">No assets provided</span>
+                                                            )}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-sm font-bold text-gray-900">
+                                                        <span className="text-sm font-black text-gray-900 tracking-tight">
                                                             {spec.isPrice && (offer.currency === 'USD' ? '$' : '₦')}
                                                             {spec.isNumber ? formatNumberWithCommas(offer[spec.key]) : (offer[spec.key] || '-')}
                                                             {offer[spec.key] && spec.suffix}

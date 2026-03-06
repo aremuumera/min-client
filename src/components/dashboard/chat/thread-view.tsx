@@ -10,7 +10,9 @@ import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
 import { ActionPanel } from './action-panel';
+import { InspectorActionPanel } from './inspector-action-panel';
 import { ChatContext } from '@/providers/chat-provider';
+import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -34,6 +36,9 @@ export function ThreadView({ threadId }: ThreadViewProps) {
     }
   }, [threadId, conversations, setActiveConversation, thread]);
 
+  const isInspector = user?.id && thread?.metadata?.inspector_id && String(user.id) === String(thread.metadata.inspector_id);
+  const isSupplier = user?.id && thread?.metadata?.supplier_id && String(user.id) === String(thread.metadata.supplier_id);
+
   const messagesRef = React.useRef<HTMLDivElement>(null);
 
   const handleSendMessage = React.useCallback(
@@ -44,8 +49,9 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         } else if (type === 'file' && content) {
           await sendMessage?.('', [content], 'file');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to send message:', error);
+        toast.error(error?.message || 'Failed to send message. Please try again.');
       }
     },
     [sendMessage]
@@ -97,10 +103,18 @@ export function ThreadView({ threadId }: ThreadViewProps) {
                 }`}
             >
               Trade Cycle #{roomInquiries.length - index}
-              {inq.type === 'rfq_offer'
-                ? inq.display_price && <span className="ml-1 opacity-70">({inq.currency === 'USD' ? '$' : '₦'}{Number(inq.display_price).toLocaleString()}/unit)</span>
-                : inq.quantity && <span className="ml-1 opacity-70">({inq.quantity} {inq.measure_type})</span>
-              }
+              <span className="ml-1 opacity-70">
+                ({inq.quantity} {inq.measure_type || 'MT'}
+                {/* Hide price from inspectors */}
+                {inq.type === 'rfq_offer' && inq.display_price && !isInspector && (
+                  <> • {inq.currency === 'USD' ? '$' : '₦'}{Number(inq.display_price).toLocaleString()}/unit</>
+                )}
+                {/* Always show ref suffix for differentiation */}
+                {inq.id && (
+                  <> • Ref: ..{String(inq.id).slice(-4).toUpperCase()}</>
+                )}
+                )
+              </span>
             </button>
           ))}
         </div>
@@ -129,6 +143,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           <MessageAdd onSend={handleSendMessage} />
         )
       } */}
+
       {/* Transition to Message Input once acknowledged/started */}
       {(() => {
         const activeInq = roomInquiries.find((i: any) => i.id === activeInquiryId);
@@ -136,6 +151,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         const isRejected = currentStatus === 'rejected';
         const isPending = currentStatus === 'pending';
         const isSupplier = user?.id && (thread.metadata?.supplier_id && String(user.id) === String(thread.metadata.supplier_id));
+        const isInspector = user?.id && (thread.metadata?.inspector_id && String(user.id) === String(thread.metadata.inspector_id));
 
         // 1) If rejected, show the rejection card (ActionPanel handles this UI)
         if (isRejected) {
@@ -151,12 +167,24 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           return <ActionPanel thread={rejectedThread} />;
         }
 
-        // 2) If pending and user is the supplier, show action buttons
-        if (isPending && isSupplier) {
+        // 2) If pending and user is the supplier, show action buttons (Product Inquiry only, NOT RFQ offers)
+        if (isPending && isSupplier && thread.metadata?.entity_type !== 'rfq') {
           return <ActionPanel thread={thread} />;
         }
 
-        // 3) Otherwise show message input
+        // 3) If user is an inspector, check their specific assignment status
+        if (isInspector) {
+          const inspectorStatus = activeInq?.inspector_status || activeInq?.status || thread.metadata?.status;
+
+          // Transition to chat ONLY if they have officially ACCEPTED or progressed further
+          const isAccepted = ['ACCEPTED', 'SITE_VISIT', 'COMPLETED'].includes(inspectorStatus);
+
+          if (!isAccepted) {
+            return <InspectorActionPanel thread={thread} />;
+          }
+        }
+
+        // 4) Otherwise show message input
         return <MessageAdd onSend={handleSendMessage} />;
       })()}
     </Box >
