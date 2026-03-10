@@ -242,15 +242,18 @@ export function InvoiceAgreementModal({
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceAgreementMutation();
   const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceAgreementMutation();
 
+  // Extract the actual product/rfq ID from the thread context, NOT the URL cycle ID.
+  const actualSourceId = thread?.metadata?.itemId || thread?.sourceId || params?.threadId as string;
+
   // ... your existing data fetching code ...
   const { data: productData, isLoading: isLoadingProduct } = useGetAllProductDetailsQuery(
-    { productId: itemId },
-    { skip: !itemId || threadType !== 'product' || isEditMode }
+    { productId: actualSourceId },
+    { skip: !actualSourceId || threadType !== 'product' || isEditMode }
   );
 
   const { data: rfqData, isLoading: isLoadingRfq } = useGetDetailFfqQuery(
-    { rfqId: itemId },
-    { skip: !itemId || threadType !== 'rfq' || isEditMode }
+    { rfqId: actualSourceId },
+    { skip: !actualSourceId || threadType !== 'rfq' || isEditMode }
   );
 
   const isLoading = isLoadingProduct || isLoadingRfq;
@@ -567,7 +570,7 @@ export function InvoiceAgreementModal({
     if (!isEditMode) {
       setFormData({
         sourceType: threadType || 'product',
-        sourceId: itemId || '',
+        sourceId: actualSourceId || '',
         productName: '',
         productCategory: '',
         chatId: thread?.conversationId || '',

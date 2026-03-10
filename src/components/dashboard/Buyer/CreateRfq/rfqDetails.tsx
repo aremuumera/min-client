@@ -76,12 +76,12 @@ const rfqSchema = z.object({
   deliveryPeriod: z.string().min(1, 'Delivery period is required'),
   rfqProductMainCategory: z.string().min(1, 'Main category is required'),
   rfqProductCategory: z.string().optional(),
-  rfqProductSubCategory: z.string().min(1, 'Sub category is required'),
+  rfqProductSubCategory: z.string().optional(),
   rfqDescription: z.string().min(1, 'RFQ description is required'),
-  paymentTermsDescribed: z.string().min(1, 'Payment terms description is required'),
-  shippingTermsDescribed: z.string().min(1, 'Shipping terms description is required'),
-  selectedPayments: z.array(z.string()).min(1, 'Select at least one payment term'),
-  selectedShippings: z.array(z.string()).min(1, 'Select at least one shipping term'),
+  paymentTermsDescribed: z.string().optional(),
+  shippingTermsDescribed: z.string().optional(),
+  selectedPayments: z.array(z.string()).optional(),
+  selectedShippings: z.array(z.string()).optional(),
   purity_grade: z.string().optional(),
   moisture_max: z.string().optional(),
   packaging: z.string().optional(),
@@ -494,7 +494,7 @@ const RfqDetails = ({
       }
 
       formData.append('inquiry_type', typedFormData.inquiry_type || 'immediate');
-      formData.append('recurring_frequency', typedFormData.recurring_frequency || '');
+      formData.append('recurring_frequency', typedFormData.recurring_frequency || 'monthly');
       formData.append('recurring_duration', typedFormData.recurring_duration || '');
       formData.append('is_inspection_required', String(typedFormData.is_inspection_required || false));
       formData.append('is_shipment_included', String(typedFormData.is_shipment_included || false));

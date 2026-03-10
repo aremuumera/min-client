@@ -414,7 +414,7 @@ const ProductInquiryModal = ({
                                         <div>
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Quantity Required</label>
                                             <input
-                                                type="number"
+                                                type="text"
                                                 className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
                                                 placeholder="Enter Quantity"
                                                 value={formatNumberWithCommas(formData.quantity)}

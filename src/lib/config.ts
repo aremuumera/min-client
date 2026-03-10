@@ -20,7 +20,7 @@ export const config = {
   api: {
     baseUrl: isProduction
       ? process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-      : "http://172.20.10.2:8081/api",
+      : "http://localhost:8081/api",
     timeout: 30000,
   },
   firebase: {
@@ -42,3 +42,4 @@ export const config = {
 } as const;
 
 export type Config = typeof config;
+// http://172.20.10.2:8081/api

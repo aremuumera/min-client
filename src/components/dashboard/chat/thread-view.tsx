@@ -22,13 +22,15 @@ interface ThreadViewProps {
 }
 
 export function ThreadView({ threadId }: ThreadViewProps) {
-  const { messages, conversations, setActiveConversation, loading, loadingMessages, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries } = React.useContext(ChatContext);
+  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries } = React.useContext(ChatContext);
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const params = useParams();
   const threadType = params?.threadType as string;
 
   const thread = conversations.find((t: any) => t.conversationId === threadId);
+
+  // console.log('roomInquiries', roomInquiries)
 
   useEffect(() => {
     if (threadId && thread) {
@@ -148,10 +150,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       {(() => {
         const activeInq = roomInquiries.find((i: any) => i.id === activeInquiryId);
         const currentStatus = activeInq?.status || thread.metadata?.status;
-        const isRejected = currentStatus === 'rejected';
-        const isPending = currentStatus === 'pending';
-        const isSupplier = user?.id && (thread.metadata?.supplier_id && String(user.id) === String(thread.metadata.supplier_id));
-        const isInspector = user?.id && (thread.metadata?.inspector_id && String(user.id) === String(thread.metadata.inspector_id));
+        const isRejected = currentStatus === 'REJECTED' || currentStatus === 'rejected';
+        const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
+        const isSupplier = user?.id && (thread.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
+        const isInspector = user?.id && (thread.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
 
         // 1) If rejected, show the rejection card (ActionPanel handles this UI)
         if (isRejected) {
