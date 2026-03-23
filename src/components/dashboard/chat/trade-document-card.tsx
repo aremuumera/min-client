@@ -23,10 +23,13 @@ interface TradeDocumentData {
 interface TradeDocumentCardProps {
     document: TradeDocumentData;
     position: 'left' | 'right';
+    currentUserRole?: string;
     onSign?: (documentId: string) => void;
     onFlag?: (documentId: string) => void;
+    onReject?: (documentId: string) => void;
     onView?: (documentId: string) => void;
     onViewDetails?: (documentId: string) => void;
+    onOpenVault?: () => void;
 }
 
 const statusConfig: Record<string, { color: string; bg: string; border: string; icon: React.ReactNode; label: string }> = {
@@ -38,8 +41,19 @@ const statusConfig: Record<string, { color: string; bg: string; border: string; 
     pending_review: { color: '#8b5cf6', bg: '#f5f3ff', border: '#c4b5fd', icon: <Eye size={14} />, label: 'Pending Review' },
 };
 
-export function TradeDocumentCard({ document, position, onSign, onFlag, onView, onViewDetails }: TradeDocumentCardProps) {
+export function TradeDocumentCard({ document, position, currentUserRole, onSign, onFlag, onReject, onView, onViewDetails, onOpenVault }: TradeDocumentCardProps) {
     const config = statusConfig[document.status] || statusConfig.sent;
+
+    // Check if the current user is an intended recipient
+    const isTargetRecipient = React.useMemo(() => {
+        if (!currentUserRole || !document.target_roles) return true; // Fallback to showing if info missing
+        const roles = Array.isArray(document.target_roles) ? document.target_roles : [document.target_roles];
+        return roles.some(r => r.toLowerCase() === currentUserRole.toLowerCase());
+    }, [currentUserRole, document.target_roles]);
+
+    const canPerformAction = (document.status === 'sent' || document.status === 'pending_review') && isTargetRecipient;
+
+    console.log('document', document);
 
     return (
         <Card
@@ -190,12 +204,12 @@ export function TradeDocumentCard({ document, position, onSign, onFlag, onView, 
                     )}
 
                     {/* Sign / Accept Button */}
-                    {(document.status === 'sent' || document.status === 'pending_review') && (
+                    {canPerformAction && (
                         <Stack direction="row" spacing={1} style={{ flex: 1 }}>
                             <button
                                 onClick={() => onSign?.(document.id)}
                                 style={{
-                                    flex: 2,
+                                    flex: 1.5,
                                     padding: '0.5rem',
                                     borderRadius: '0.5rem',
                                     border: 'none',
@@ -232,14 +246,64 @@ export function TradeDocumentCard({ document, position, onSign, onFlag, onView, 
                                     gap: '4px',
                                     transition: 'all 0.15s',
                                 }}
-                                title="Flag an issue with this document"
+                                title="Flag for Review"
                             >
                                 <AlertTriangle size={14} />
+                                Flag
+                            </button>
+                            <button
+                                onClick={() => onReject?.(document.id)}
+                                style={{
+                                    flex: 1,
+                                    padding: '0.5rem',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid #fecaca',
+                                    background: '#fef2f2',
+                                    color: '#ef4444',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px',
+                                    transition: 'all 0.15s',
+                                }}
+                                title="Reject Document"
+                            >
+                                <XCircle size={14} />
+                                Reject
                             </button>
                         </Stack>
                     )}
                 </Box>
             )}
+
+            {/* Open Vault Button (Full Width) */}
+            <Box style={{ padding: '0 1rem 0.75rem' }}>
+                <button
+                    onClick={() => onOpenVault?.()}
+                    style={{
+                        width: '100%',
+                        padding: '0.6rem',
+                        borderRadius: '0.6rem',
+                        border: '1px solid #e2e8f0',
+                        background: '#f8fafc',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        transition: 'all 0.15s',
+                    }}
+                >
+                    <Clock size={16} /> {/* Or a Vault icon if available, but Clock is imported */}
+                    OPEN DOCUMENT VAULT
+                </button>
+            </Box>
 
             {/* Details Link */}
             <Box style={{ padding: '0 1rem 0.75rem' }}>

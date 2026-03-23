@@ -18,11 +18,18 @@ import { usePathname } from '@/hooks/use-pathname';
 
 import { InvoiceMessageCard } from '../invoice/message_card';
 import { TradeDocumentCard } from './trade-document-card';
-import { SignatureWidget } from './signature-widget';
-import { ChatContext, Message } from '@/providers/chat-provider';
+import {
+  useSignDocumentMutation,
+  useGetSignatureSettingsQuery,
+  useUpdateSignaturePreferenceMutation
+} from '@/redux/features/doc-hub/doc_hub_api';
+import { SignatureModal, ActionConfirmModal } from './document-action-modals';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateLocalPref } from '@/redux/features/doc-hub/signature_pref_slice';
+import { ChatContext, Message, useChat } from '@/providers/chat-provider';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/redux';
-import { useSignDocumentMutation } from '@/redux/features/doc-hub/doc_hub_api';
+import { useGetDocumentsByInquiryQuery } from '@/redux/features/doc-hub/doc_hub_api';
 
 // Import utilities from shared utils
 import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
@@ -36,16 +43,27 @@ export function MessageBox({ message }: { message: Message }) {
   // Use robust naming for avatar generation
   const displayName = message?.senderName || message?.sender_display || 'User';
   const avatarBgColor = stringToColor(displayName);
-  const { deleteAttachment, markMessageAsDelivered, markMessageAsRead, sendMessage, setActiveTab } = React.useContext(ChatContext) || {};
+  const { deleteAttachment, markMessageAsDelivered, markMessageAsRead, sendMessage, setActiveTab, activeInquiryId } = useChat();
 
-  // State for modal
+  // State for modals
   const [selectedMedia, setSelectedMedia] = React.useState<{ url: string, type: 'image' | 'video' } | null>(null);
-  const [showSignature, setShowSignature] = React.useState(false);
-  const [signingDocId, setSigningDocId] = React.useState<string | null>(null);
+  const [signModalDoc, setSignModalDoc] = React.useState<any>(null);
+  const [actionModalDoc, setActionModalDoc] = React.useState<{ doc: any; type: 'flag' | 'reject' } | null>(null);
+
   const params = useParams();
   const threadId = params?.threadId as string;
 
+  const dispatch = useDispatch();
+  const { data: sigSettings } = useGetSignatureSettingsQuery?.() || { data: null };
+  const [updateSignaturePreference] = useUpdateSignaturePreferenceMutation?.() || [() => { }];
+  const savePreference = useSelector((state: any) => state.signaturePref?.save_signature_enabled);
   const [signDocument, { isLoading: isSigning }] = useSignDocumentMutation?.() || [() => { }, { isLoading: false }];
+
+  // Fetch live documents to ensure status is up-to-date (hides buttons after signing)
+  const { data: documentVault } = useGetDocumentsByInquiryQuery(
+    { inquiryId: activeInquiryId as string },
+    { skip: !activeInquiryId }
+  );
 
   const handleMediaClick = (attachment: any) => {
     if (attachment.type === 'image' || attachment.type === 'video') {
@@ -241,29 +259,41 @@ export function MessageBox({ message }: { message: Message }) {
             </Avatar>
 
             <Stack spacing={1} style={{ flex: '1 1 auto' }}>
-              <TradeDocumentCard
-                document={message.documentData}
-                position={position}
-                onSign={(docId) => {
-                  setSigningDocId(docId);
-                  setShowSignature(true);
-                  // Ensure widget is in sign/accept mode
-                }}
-                onFlag={(docId) => {
-                  setSigningDocId(docId);
-                  setShowSignature(true);
-                  // Widget should handle 'flagged' action based on state or prop
-                }}
-                onViewDetails={(docId) => {
-                  setActiveTab('vault');
-                  // Optional: we could also auto-select/expand this doc in the vault
-                }}
-                onView={() => {
-                  if (message.documentData?.file_url) {
-                    window.open(message.documentData.file_url, '_blank');
-                  }
-                }}
-              />
+              {(() => {
+                // Use hyphen-insensitive comparison as some IDs may be sanitized in Firestore
+                const liveDoc = documentVault?.data?.find((d: any) =>
+                  d.id?.replace(/-/g, '') === message.documentData?.id?.replace(/-/g, '')
+                );
+                const displayDoc = liveDoc ? { ...message.documentData, ...liveDoc } : message.documentData;
+
+                return (
+                  <TradeDocumentCard
+                    document={displayDoc}
+                    position={position}
+                    currentUserRole={user?.role}
+                    onSign={(docId) => {
+                      setSignModalDoc(displayDoc);
+                    }}
+                    onFlag={(docId) => {
+                      setActionModalDoc({ doc: displayDoc, type: 'flag' });
+                    }}
+                    onReject={(docId) => {
+                      setActionModalDoc({ doc: displayDoc, type: 'reject' });
+                    }}
+                    onViewDetails={(docId) => {
+                      setActiveTab?.('vault');
+                    }}
+                    onOpenVault={() => {
+                      setActiveTab?.('vault');
+                    }}
+                    onView={() => {
+                      if (displayDoc?.file_url) {
+                        window.open(displayDoc.file_url, '_blank');
+                      }
+                    }}
+                  />
+                );
+              })()}
 
               <Box
                 style={{
@@ -283,37 +313,59 @@ export function MessageBox({ message }: { message: Message }) {
           </Stack>
         </Box>
 
-        <SignatureWidget
-          open={showSignature}
-          onClose={() => { setShowSignature(false); setSigningDocId(null); }}
-          documentTitle={message.documentData?.title}
-          documentDescription={message.documentData?.document_description}
-          isLoading={isSigning}
-          onSubmit={async (data) => {
-            if (!signingDocId) return;
-            try {
-              // Map frontend action to backend expectation
-              const actionMap = {
-                accept: 'accepted' as const,
-                flag: 'flagged' as const,
-                reject: 'rejected' as const
-              };
+        {signModalDoc && (
+          <SignatureModal
+            documentTitle={signModalDoc.title}
+            isLoading={isSigning}
+            initialSavePreference={savePreference}
+            savedSignatureData={sigSettings?.data?.signature_data}
+            onConfirm={async (type, data) => {
+              try {
+                await signDocument({
+                  documentId: signModalDoc.id,
+                  action: 'accepted',
+                  signature_type: type,
+                  signature_data: data,
+                }).unwrap();
+                setSignModalDoc(null);
+              } catch (err) {
+                console.error('Sign failed:', err);
+              }
+            }}
+            onToggleSavePreference={async (enabled) => {
+              try {
+                dispatch(updateLocalPref(enabled));
+                await updateSignaturePreference({ save_signature_enabled: enabled }).unwrap();
+              } catch (err) {
+                console.error('Failed to update preference:', err);
+                dispatch(updateLocalPref(!enabled));
+              }
+            }}
+            onClose={() => setSignModalDoc(null)}
+          />
+        )}
 
-              await signDocument({
-                documentId: signingDocId,
-                action: actionMap[data.action],
-                signature_type: data.signature_type,
-                signature_data: data.signature_data,
-                flag_reason: data.reason
-              }).unwrap();
-
-              setShowSignature(false);
-              setSigningDocId(null);
-            } catch (error) {
-              console.error('Signature submission failed:', error);
-            }
-          }}
-        />
+        {actionModalDoc && (
+          <ActionConfirmModal
+            actionType={actionModalDoc.type}
+            documentTitle={actionModalDoc.doc.title}
+            isLoading={isSigning}
+            onConfirm={async (reason) => {
+              const actionMap = { flag: 'flagged', reject: 'rejected' } as const;
+              try {
+                await signDocument({
+                  documentId: actionModalDoc.doc.id,
+                  action: actionMap[actionModalDoc.type],
+                  flag_reason: reason,
+                }).unwrap();
+                setActionModalDoc(null);
+              } catch (err) {
+                console.error('Action failed:', err);
+              }
+            }}
+            onClose={() => setActionModalDoc(null)}
+          />
+        )}
       </>
     );
   }
