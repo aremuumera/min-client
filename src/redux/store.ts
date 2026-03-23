@@ -29,6 +29,7 @@ import inspectorApi from "./features/inspector/inspector_api";
 import activityApi from "./features/activity/activityApi";
 import invoiceApi from "./features/invoice/invoice_api";
 import tradeApi from "./features/trade/trade_api";
+import docHubApi from "./features/doc-hub/doc_hub_api";
 import definitionApi from "./features/definitions/definition_api";
 
 const persistConfig = {
@@ -54,6 +55,7 @@ const persistConfig = {
     "inspectorApi",
     "invoiceApi",
     "tradeApi",
+    "docHubApi",
     "definitionApi",
   ],
 };
@@ -86,6 +88,7 @@ export const makeStore = () => {
         teamApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,
+        docHubApi.middleware,
         definitionApi.middleware,
       ) as any,
   });

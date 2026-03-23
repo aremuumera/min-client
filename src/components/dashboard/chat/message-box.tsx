@@ -17,9 +17,12 @@ import { useParams } from 'next/navigation';
 import { usePathname } from '@/hooks/use-pathname';
 
 import { InvoiceMessageCard } from '../invoice/message_card';
+import { TradeDocumentCard } from './trade-document-card';
+import { SignatureWidget } from './signature-widget';
 import { ChatContext, Message } from '@/providers/chat-provider';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/redux';
+import { useSignDocumentMutation } from '@/redux/features/doc-hub/doc_hub_api';
 
 // Import utilities from shared utils
 import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
@@ -33,12 +36,16 @@ export function MessageBox({ message }: { message: Message }) {
   // Use robust naming for avatar generation
   const displayName = message?.senderName || message?.sender_display || 'User';
   const avatarBgColor = stringToColor(displayName);
-  const { deleteAttachment, markMessageAsDelivered, markMessageAsRead } = React.useContext(ChatContext);
+  const { deleteAttachment, markMessageAsDelivered, markMessageAsRead, sendMessage, setActiveTab } = React.useContext(ChatContext) || {};
 
   // State for modal
   const [selectedMedia, setSelectedMedia] = React.useState<{ url: string, type: 'image' | 'video' } | null>(null);
+  const [showSignature, setShowSignature] = React.useState(false);
+  const [signingDocId, setSigningDocId] = React.useState<string | null>(null);
   const params = useParams();
   const threadId = params?.threadId as string;
+
+  const [signDocument, { isLoading: isSigning }] = useSignDocumentMutation?.() || [() => { }, { isLoading: false }];
 
   const handleMediaClick = (attachment: any) => {
     if (attachment.type === 'image' || attachment.type === 'video') {
@@ -121,7 +128,6 @@ export function MessageBox({ message }: { message: Message }) {
     );
   };
 
-  // console.log('MessageBox', { message, position });
 
   // Check for Cycle Start System Divider
   if (message.meta?.type === 'cycle_start') {
@@ -203,6 +209,115 @@ export function MessageBox({ message }: { message: Message }) {
     );
   }
 
+  // Check if there is a trade document message
+  if (message.contentType === 'trade_document' && message.documentData) {
+    return (
+      <>
+        <Box
+          style={{
+            alignItems: position === 'right' ? 'flex-end' : 'flex-start',
+            flex: '0 0 auto',
+            display: 'flex',
+            marginBottom: '0.5rem',
+            width: '100%',
+          }}
+        >
+          <Stack
+            direction={position === 'right' ? 'row-reverse' : 'row'}
+            spacing={2}
+            style={{
+              alignItems: 'flex-start',
+              maxWidth: '500px',
+              marginLeft: position === 'right' ? 'auto' : 0,
+              marginRight: position === 'left' ? 'auto' : 0,
+              width: '100%',
+            }}
+          >
+            <Avatar
+              className="w-8 h-8 text-white text-sm"
+              style={{ backgroundColor: avatarBgColor }}
+            >
+              {generateTextAvatar(displayName)}
+            </Avatar>
+
+            <Stack spacing={1} style={{ flex: '1 1 auto' }}>
+              <TradeDocumentCard
+                document={message.documentData}
+                position={position}
+                onSign={(docId) => {
+                  setSigningDocId(docId);
+                  setShowSignature(true);
+                  // Ensure widget is in sign/accept mode
+                }}
+                onFlag={(docId) => {
+                  setSigningDocId(docId);
+                  setShowSignature(true);
+                  // Widget should handle 'flagged' action based on state or prop
+                }}
+                onViewDetails={(docId) => {
+                  setActiveTab('vault');
+                  // Optional: we could also auto-select/expand this doc in the vault
+                }}
+                onView={() => {
+                  if (message.documentData?.file_url) {
+                    window.open(message.documentData.file_url, '_blank');
+                  }
+                }}
+              />
+
+              <Box
+                style={{
+                  display: 'flex',
+                  justifyContent: position === 'right' ? 'flex-end' : 'flex-start',
+                  paddingLeft: '0.25rem',
+                  paddingRight: '0.25rem',
+                }}
+              >
+                <Typography style={{ color: '#666' }} variant="caption">
+                  {message.timestamp
+                    ? dayjs(message.timestamp?.toDate ? message.timestamp.toDate() : message.timestamp).fromNow()
+                    : 'Just now'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Stack>
+        </Box>
+
+        <SignatureWidget
+          open={showSignature}
+          onClose={() => { setShowSignature(false); setSigningDocId(null); }}
+          documentTitle={message.documentData?.title}
+          documentDescription={message.documentData?.document_description}
+          isLoading={isSigning}
+          onSubmit={async (data) => {
+            if (!signingDocId) return;
+            try {
+              // Map frontend action to backend expectation
+              const actionMap = {
+                accept: 'accepted' as const,
+                flag: 'flagged' as const,
+                reject: 'rejected' as const
+              };
+
+              await signDocument({
+                documentId: signingDocId,
+                action: actionMap[data.action],
+                signature_type: data.signature_type,
+                signature_data: data.signature_data,
+                flag_reason: data.reason
+              }).unwrap();
+
+              setShowSignature(false);
+              setSigningDocId(null);
+            } catch (error) {
+              console.error('Signature submission failed:', error);
+            }
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <Box
       style={{
@@ -210,6 +325,7 @@ export function MessageBox({ message }: { message: Message }) {
         flex: '0 0 auto',
         display: 'flex',
         marginBottom: '0.5rem',
+        width: '100%',
       }}
     >
 
@@ -239,17 +355,12 @@ export function MessageBox({ message }: { message: Message }) {
               paddingTop: '0.75rem',
               paddingBottom: '0.75rem',
               borderRadius: '0.5rem',
-              // ...(position === 'right' && {
-              //   backgroundColor: '#10b981',
-              //   color: 'white',
-              // }),
             }}
             className={`  ${position === 'right' ? 'bg-primary-500!' : 'bg-white'}`}
           >
             <Stack spacing={1}>
               <div>
                 <Typography variant="subtitle2" className={`text-sm! cursor-pointer ${position === 'right' ? 'text-white!' : 'text-black'}`}>
-                  {/* {`${message?.senderName}  -  (${message?.senderCompanyName})`} */}
                   {`${message?.senderName || message?.sender_display || 'User'}  -  (${message?.senderCompanyName || message?.sender_company_name || 'Platform Admin'})`}
                 </Typography>
               </div>

@@ -218,6 +218,11 @@ const AuthSlice = createSlice({
     setInitialized: (state, action: PayloadAction<boolean>) => {
       state.isInitialized = action.payload;
     },
+    updateSignaturePreference: (state, action: PayloadAction<boolean>) => {
+      if (state.user) {
+        state.user.save_signature_enabled = action.payload;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -304,6 +309,7 @@ export const {
   clearRequestedLocation,
   setShowEntryModal,
   setInitialized,
+  updateSignaturePreference,
 } = AuthSlice.actions;
 
 // Thunk that dispatches logout AND resets all RTK Query API caches
@@ -330,6 +336,7 @@ export const logoutAndCleanup = () => (dispatch: any) => {
     require("../team/teamApi").teamApi,
     require("../activity/activityApi").default,
     require("../trade/trade_api").default,
+    require("../doc-hub/doc_hub_api").default,
     require("../definitions/definition_api").default,
   ];
 

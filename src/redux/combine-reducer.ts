@@ -27,7 +27,9 @@ import { teamApi } from "./features/team/teamApi";
 import activityApi from "./features/activity/activityApi";
 import definitionApi from "./features/definitions/definition_api";
 import tradeApi from "./features/trade/trade_api";
+import docHubApi from "./features/doc-hub/doc_hub_api";
 import comparisonReducer from "./features/comparison/comparison-slice";
+import signaturePrefReducer from "./features/doc-hub/signature_pref_slice";
 
 // Persist configuration for auth reducer only (1:1 with original)
 const authPersistConfig = {
@@ -75,7 +77,9 @@ const rootReducer = combineReducers({
   [activityApi.reducerPath]: activityApi.reducer,
   [definitionApi.reducerPath]: definitionApi.reducer,
   [tradeApi.reducerPath]: tradeApi.reducer,
+  [docHubApi.reducerPath]: docHubApi.reducer,
   comparison: comparisonReducer,
+  signaturePref: signaturePrefReducer,
 });
 
 export default rootReducer;

@@ -42,110 +42,9 @@ import { cn } from '@/utils/helper';
 import { Divider } from '@/components/ui/divider';
 import { Typography } from '@/components/ui/typography';
 import { customerTradeChatService } from '@/components/dashboard/chat/trade_chat_service';
+import { TradeStageTracker } from '@/components/dashboard/trade-stage-tracker';
 
 // --- Components ---
-
-const StepperItem = ({
-    icon: Icon,
-    title,
-    description,
-    status // 'active' | 'completed' | 'pending' | 'error'
-}: {
-    icon: any;
-    title: string;
-    description: string;
-    status: 'active' | 'completed' | 'pending' | 'error'
-}) => {
-    const configs = {
-        active: { circle: 'bg-green-600 ring-4 ring-green-100', icon: 'text-white', text: 'text-gray-900', sub: 'text-green-600 font-bold' },
-        completed: { circle: 'bg-green-100', icon: 'text-green-600', text: 'text-gray-500', sub: 'text-gray-400' },
-        pending: { circle: 'bg-gray-100', icon: 'text-gray-400', text: 'text-gray-400', sub: 'text-gray-300' },
-        error: { circle: 'bg-red-100', icon: 'text-red-600', text: 'text-red-900', sub: 'text-red-500' },
-    };
-
-    const config = configs[status];
-
-    return (
-        <div className="flex flex-col items-center text-center space-y-3 flex-1 relative min-w-[120px]">
-            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 z-10", config.circle)}>
-                <Icon size={20} className={config.icon} />
-            </div>
-            <div className="space-y-1">
-                <p className={cn("text-[11px] uppercase tracking-widest font-black", config.text)}>{title}</p>
-                <p className={cn("text-[9px] font-medium leading-tight", config.sub)}>{description}</p>
-            </div>
-        </div>
-    );
-};
-
-const TradeStepper = ({ currentStatus }: { currentStatus: string }) => {
-    const steps = [
-        {
-            id: 'inquiry',
-            title: 'Inquiry',
-            icon: Clock,
-            desc: 'Under Review',
-            matches: ['PENDING', 'CLAIMED']
-        },
-        {
-            id: 'matching',
-            title: 'Sourcing',
-            icon: ShieldCheck,
-            desc: 'Supplier Matched',
-            matches: ['SUPPLIER_MATCHED', 'ACKNOWLEDGED']
-        },
-        {
-            id: 'verification',
-            title: 'Verification',
-            icon: FileCheck,
-            desc: 'Compliance & Docs',
-            matches: ['DISCLAIMER_SENT', 'DISCLAIMER_SIGNED', 'INSPECTOR_ASSIGNED', 'INSPECTION_IN_PROGRESS']
-        },
-        {
-            id: 'logistics',
-            title: 'Logistics',
-            icon: Truck,
-            desc: 'Inspection & Load',
-            matches: ['INSPECTION_COMPLETED', 'PAYMENT_PENDING']
-        },
-        {
-            id: 'closing',
-            title: 'Execution',
-            icon: CreditCard,
-            desc: 'Finalized',
-            matches: ['COMPLETED']
-        },
-    ];
-
-    const getStatus = (stepIndex: number) => {
-        const currentStepIndex = steps.findIndex(s => s.matches.includes(currentStatus));
-        if (currentStatus === 'REJECTED' || currentStatus === 'CANCELLED') return 'error'; // Special case
-        if (stepIndex < currentStepIndex) return 'completed';
-        if (stepIndex === currentStepIndex) return 'active';
-        return 'pending';
-    };
-
-    return (
-        <div className="relative flex items-start justify-between py-10 px-4 bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden group">
-            {/* Connecting Lines */}
-            <div className="absolute top-[64px] left-[10%] right-[10%] h-[2px] bg-gray-50 -translate-y-1/2" />
-            <div
-                className="absolute top-[64px] left-[10%] h-[2px] bg-green-500 -translate-y-1/2 transition-all duration-1000 ease-in-out"
-                style={{ width: `${Math.max(0, steps.findIndex(s => s.matches.includes(currentStatus)) * 20)}%` }}
-            />
-
-            {steps.map((step, index) => (
-                <StepperItem
-                    key={step.id}
-                    icon={step.icon}
-                    title={step.title}
-                    description={index === steps.findIndex(s => s.matches.includes(currentStatus)) ? (currentStatus.replace(/_/g, ' ')) : step.desc}
-                    status={getStatus(index)}
-                />
-            ))}
-        </div>
-    );
-};
 
 export default function TradeDetailPage() {
     const params = useParams();
@@ -239,7 +138,7 @@ export default function TradeDetailPage() {
             </div>
 
             {/* Stepper */}
-            <TradeStepper currentStatus={inquiry.status} />
+            <TradeStageTracker inquiryId={inquiry.id} currentStatus={inquiry.status} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Left Column: Key Information */}

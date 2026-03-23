@@ -11,6 +11,7 @@ import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
 import { ActionPanel } from './action-panel';
 import { InspectorActionPanel } from './inspector-action-panel';
+import { DocumentVault } from './document-vault';
 import { ChatContext } from '@/providers/chat-provider';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
@@ -22,7 +23,7 @@ interface ThreadViewProps {
 }
 
 export function ThreadView({ threadId }: ThreadViewProps) {
-  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries } = React.useContext(ChatContext);
+  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab } = React.useContext(ChatContext);
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const params = useParams();
@@ -30,7 +31,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
   const thread = conversations.find((t: any) => t.conversationId === threadId);
 
-  // console.log('roomInquiries', roomInquiries)
+  console.log('roomInquiries', roomInquiries)
 
   useEffect(() => {
     if (threadId && thread) {
@@ -122,73 +123,104 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         </div>
       )}
 
-      <Stack
-        ref={messagesRef}
-        spacing={2}
-        className="flex-auto overflow-y-auto p-6 relative"
-        style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {loadingMessages && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <CircularProgress />
-          </div>
-        ) : (
-          messages.map((message: any) => (
-            <MessageBox key={message.id} message={message} />
-          ))
-        )}
-      </Stack>
-      {/* {
-        thread.metadata?.status === 'pending' && user?.id && thread.metadata?.supplier_id && String(user.id) === String(thread.metadata.supplier_id) ? (
-          <ActionPanel thread={thread} />
-        ) : (
-          <MessageAdd onSend={handleSendMessage} />
-        )
-      } */}
+      {/* Main Mode Tabs */}
+      <div className="flex bg-white border-b border-gray-100 flex-none px-6 pt-2 select-none shadow-sm z-10 relative">
+        <button
+          onClick={() => setActiveTab('chat')}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'chat'
+            ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+            : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          Team Chat
+        </button>
+        <button
+          onClick={() => setActiveTab('vault')}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'vault'
+            ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+            : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          Document Vault
+        </button>
+      </div>
 
-      {/* Transition to Message Input once acknowledged/started */}
-      {(() => {
-        const activeInq = roomInquiries.find((i: any) => i.id === activeInquiryId);
-        const currentStatus = activeInq?.status || thread.metadata?.status;
-        const isRejected = currentStatus === 'REJECTED' || currentStatus === 'rejected';
-        const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
-        const isSupplier = user?.id && (thread.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
-        const isInspector = user?.id && (thread.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
+      {activeTab === 'vault' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-6">
+          <DocumentVault
+            inquiryId={activeInquiryId || ''}
+            itemType={(() => {
+              const inq = roomInquiries.find((i: any) => i.id === activeInquiryId);
+              if (!inq) return undefined;
+              // Handle both new 'type' and legacy 'type' formats
+              return (inq.type === 'rfq' || inq.type === 'rfq_offer') ? 'rfq' : 'product';
+            })()}
+          />
+        </div>
+      ) : (
+        <>
+          <Stack
+            ref={messagesRef}
+            spacing={2}
+            className="flex-auto overflow-y-auto p-6 relative bg-gray-50/30"
+            style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {loadingMessages && messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <CircularProgress />
+              </div>
+            ) : (
+              messages.map((message: any) => (
+                <MessageBox key={message.id} message={message} />
+              ))
+            )}
+          </Stack>
 
-        // 1) If rejected, show the rejection card (ActionPanel handles this UI)
-        if (isRejected) {
-          // Merge metadata so ActionPanel gets the correct status and reason
-          const rejectedThread = {
-            ...thread,
-            metadata: {
-              ...thread.metadata,
-              status: 'rejected',
-              rejection_reason: activeInq?.rejection_reason || thread.metadata?.rejection_reason
+          {/* Transition to Message Input once acknowledged/started */}
+          {(() => {
+            const activeInq = roomInquiries.find((i: any) => i.id === activeInquiryId);
+            const currentStatus = activeInq?.status || thread.metadata?.status;
+            const isRejected = currentStatus === 'REJECTED' || currentStatus === 'rejected';
+            const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
+            const _isSupplier = user?.id && (thread.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
+            const _isInspector = user?.id && (thread.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
+
+            // 1) If rejected, show the rejection card (ActionPanel handles this UI)
+            if (isRejected) {
+              // Merge metadata so ActionPanel gets the correct status and reason
+              const rejectedThread = {
+                ...thread,
+                metadata: {
+                  ...thread.metadata,
+                  status: 'rejected',
+                  rejection_reason: activeInq?.rejection_reason || thread.metadata?.rejection_reason
+                }
+              };
+              return <ActionPanel thread={rejectedThread} />;
             }
-          };
-          return <ActionPanel thread={rejectedThread} />;
-        }
 
-        // 2) If pending and user is the supplier, show action buttons (Product Inquiry only, NOT RFQ offers)
-        if (isPending && isSupplier && thread.metadata?.entity_type !== 'rfq') {
-          return <ActionPanel thread={thread} />;
-        }
+            // 2) If pending and user is the supplier, show action buttons (Product Inquiry only, NOT RFQ offers)
+            if (isPending && _isSupplier && thread.metadata?.entity_type !== 'rfq') {
+              return <ActionPanel thread={thread} />;
+            }
 
-        // 3) If user is an inspector, check their specific assignment status
-        if (isInspector) {
-          const inspectorStatus = activeInq?.inspector_status || activeInq?.status || thread.metadata?.status;
+            // 3) If user is an inspector, check their specific assignment status
+            if (_isInspector) {
+              const inspectorStatus = activeInq?.inspector_status || activeInq?.status || thread.metadata?.status;
 
-          // Transition to chat ONLY if they have officially ACCEPTED or progressed further
-          const isAccepted = ['ACCEPTED', 'SITE_VISIT', 'COMPLETED'].includes(inspectorStatus);
+              // Transition to chat ONLY if they have officially ACCEPTED or progressed further
+              const isAccepted = ['ACCEPTED', 'SITE_VISIT', 'COMPLETED'].includes(inspectorStatus);
 
-          if (!isAccepted) {
-            return <InspectorActionPanel thread={thread} />;
-          }
-        }
+              if (!isAccepted) {
+                return <InspectorActionPanel thread={thread} />;
+              }
+            }
 
-        // 4) Otherwise show message input
-        return <MessageAdd onSend={handleSendMessage} />;
-      })()}
+            // 4) Otherwise show message input
+            return <MessageAdd onSend={handleSendMessage} />;
+          })()}
+        </>
+      )}
     </Box >
   );
 }

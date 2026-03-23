@@ -28,6 +28,8 @@ interface ChatContextType {
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
+  activeTab: 'chat' | 'vault';
+  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault'>>;
   loading: boolean;
   loadingMessages: boolean;
   loadingAttachments: boolean;
@@ -76,6 +78,8 @@ export const ChatContext = createContext<ChatContextType>({
   clearAllNotifications: async () => false,
   clearSingleNotification: async () => false,
   markMessageAsDelivered: async () => false,
+  activeTab: 'chat',
+  setActiveTab: () => { },
   acknowledgeTrade: async () => false,
   rejectTrade: async () => false,
 });
@@ -88,6 +92,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeInquiryId, setActiveInquiryId] = useState<string | null>(null);
   const [roomInquiries, setRoomInquiries] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [activeTab, setActiveTab] = useState<'chat' | 'vault'>('chat');
   const [loading, setLoading] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -215,6 +220,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           setMessages([]);
           return;
         }
+
+        if (!user) return;
 
         const effectiveUserId = String(user.ownerUserId || user.id);
         const conversationId = activeConversation.conversationId;
@@ -684,6 +691,8 @@ New Flow for for all roles to Admin
     setActiveConversation, // Function to set the active conversation
     activeInquiryId,
     setActiveInquiryId,
+    activeTab,
+    setActiveTab,
     roomInquiries,
     messages, // List of messages for the active conversation
     loading,

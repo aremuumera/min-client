@@ -248,13 +248,14 @@ export function InvoiceAgreementModal({
   // ... your existing data fetching code ...
   const { data: productData, isLoading: isLoadingProduct } = useGetAllProductDetailsQuery(
     { productId: actualSourceId },
-    { skip: !actualSourceId || threadType !== 'product' || isEditMode }
+    { skip: !open || !actualSourceId || threadType !== 'product' || isEditMode }
   );
 
   const { data: rfqData, isLoading: isLoadingRfq } = useGetDetailFfqQuery(
     { rfqId: actualSourceId },
-    { skip: !actualSourceId || threadType !== 'rfq' || isEditMode }
+    { skip: !open || !actualSourceId || threadType !== 'rfq' || isEditMode }
   );
+
 
   const isLoading = isLoadingProduct || isLoadingRfq;
   const itemData = threadType === 'product' ? productData?.product : rfqData?.data;
@@ -266,7 +267,7 @@ export function InvoiceAgreementModal({
         supplierId: existingInvoice.supplierId,
       };
     }
-    const currentUserId = isTeamMember ? ownerUserId : user.id;
+    const currentUserId = isTeamMember ? ownerUserId : user?.id;
 
     if (threadType === 'product') {
       const supplierId = itemData?.supplierId || thread?.supplierId;
@@ -278,8 +279,8 @@ export function InvoiceAgreementModal({
       return { buyerId, supplierId };
     }
     return {
-      buyerId: user.role === 'buyer' ? currentUserId : thread?.otherUserId,
-      supplierId: user.role === 'supplier' ? currentUserId : thread?.otherUserId,
+      buyerId: user?.role === 'buyer' ? currentUserId : thread?.otherUserId,
+      supplierId: user?.role === 'supplier' ? currentUserId : thread?.otherUserId,
     };
   };
 
