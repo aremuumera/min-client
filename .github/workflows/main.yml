@@ -50,7 +50,7 @@ jobs:
           # local-dir: dist/  # The directory containing your build files
           server-dir: / # Target directory on the server
           # timeout: 300000  # Increase timeout to 5 minutes
-          protocol: ftp # Use SFTP if supported
+          protocol: ftps # Use SFTP if supported
           port: 21 # Default SFTP port
           # log-level: verbose  # Enable verbose logging for debugging
           # exclude: |
