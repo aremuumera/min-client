@@ -1,0 +1,59 @@
+name: customer-frontend-next
+
+on:
+  push:
+    branches:
+      - main # Trigger deployment on pushes to the main branch
+  pull_request:
+    branches:
+      - main # Trigger deployment on pull requests to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # The environment where the workflow runs
+
+    steps:
+      # 1. Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 2. Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20" # Adjust if you're using a different Node version
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Build the project (Next.js example)
+      - name: Build project
+        run: npm run build
+
+      - name: Remove src folder
+        run: rm -rf src/
+
+      # 5. Debug DNS resolution and connectivity
+      # - name: Debug DNS resolution
+      #   run: |
+      #     nslookup business122.web-hosting.com
+      #     ping -c 4 business122.web-hosting.com
+
+      # 6. Deploy to FTP server (using FTP credentials from secrets)
+      - name: Deploy to FTP server
+        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+        with:
+          server: business122.web-hosting.com # Replace with your domain or IP address
+          username: nectpoint@nectpoint.com # Replace with your FTP username
+          password: ${{ secrets.FTP_PASSWORD }} # Use GitHub Secrets for security
+          # local-dir: dist/  # The directory containing your build files
+          server-dir: / # Target directory on the server
+          # timeout: 300000  # Increase timeout to 5 minutes
+          protocol: ftps # Use SFTP if supported
+          port: 21 # Default SFTP port
+          # log-level: verbose  # Enable verbose logging for debugging
+          # exclude: |
+          #   .git*
+          #   node_modules/**
+          #   *.log
