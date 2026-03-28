@@ -44,7 +44,7 @@ jobs:
       - name: Deploy to FTP server
         uses: SamKirkland/FTP-Deploy-Action@4.0.0
         with:
-          server: ${{ secrets.FTP_SERVER }} # Replace with your domain or IP address
+          server: business122.web-hosting.com # Replace with your domain or IP address
           username: ${{ secrets.FTP_USERNAME }} # Replace with your FTP username
           password: ${{ secrets.FTP_PASSWORD }} # Use GitHub Secrets for security
           # local-dir: dist/  # The directory containing your build files
