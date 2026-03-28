@@ -1,7 +1,6 @@
-
-
+// @ts-nocheck
 // models/Category.js
-module.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize: any, DataTypes: any) => {
     const Category = sequelize.define('Category', {
       id: {
         type: DataTypes.INTEGER,

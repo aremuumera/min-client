@@ -4,7 +4,7 @@ import * as React from 'react';
 import { GTMProvider, useGTMDispatch } from '@elgorditosalsero/react-gtm-hook';
 import { useSearchParams } from 'next/navigation';
 
-import { config } from '@/config/dashboard-config';
+import { config } from '@/lib/legacy-config';
 import { usePathname } from '@/hooks/use-pathname';
 
 function PageViewTracker({ children }: React.PropsWithChildren) {

@@ -6,12 +6,12 @@ import { applyDefaultSettings } from '@/lib/settings/apply-default-settings';
 
 export const SettingsContext = React.createContext({
   settings: applyDefaultSettings({}),
-  setSettings: () => {
+  setSettings: (_newSettings: any) => {
     // noop
   },
 });
 
-export function SettingsProvider({ children, settings: initialSettings }) {
+export function SettingsProvider({ children, settings: initialSettings }: any) {
   const [state, setState] = React.useState(initialSettings);
 
   React.useEffect(() => {
@@ -22,7 +22,7 @@ export function SettingsProvider({ children, settings: initialSettings }) {
     <SettingsContext.Provider
       value={{
         settings: state,
-        setSettings: (newSettings) => {
+        setSettings: (newSettings: any) => {
           setState(newSettings);
         },
       }}

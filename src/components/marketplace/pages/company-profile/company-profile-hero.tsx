@@ -188,6 +188,7 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
         onClose={() => setShowQuoteModal(false)}
         product={{
           id: supplierProfileId?.toString() || '',
+          rfqId: supplierProfileId?.toString() || '',
           name: company_name || 'Business',
           mineral_tag: 'general', // Generic for business contact
           supplier_id: userId?.toString()

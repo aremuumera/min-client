@@ -3,7 +3,7 @@ import { Popover } from '@/components/ui/popover';
 
 import { DropdownContext } from './dropdown-context';
 
-export function DropdownPopover({ children, PaperProps, ...props }) {
+export function DropdownPopover({ children, PaperProps, ...props }: any) {
   const { anchorEl, onPopoverMouseEnter, onPopoverMouseLeave, onPopoverEscapePressed, open } =
     React.useContext(DropdownContext);
 
@@ -11,7 +11,7 @@ export function DropdownPopover({ children, PaperProps, ...props }) {
     <Popover
       anchorEl={anchorEl}
       anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
-      onClose={(_, reason) => {
+      onClose={(_: any, reason: any) => {
         if (reason === 'escapeKeyDown') {
           onPopoverEscapePressed?.();
         }

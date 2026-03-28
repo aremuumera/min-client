@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-function noop(..._) {
+function noop(..._: any[]) {
   // Do nothing
 }
 

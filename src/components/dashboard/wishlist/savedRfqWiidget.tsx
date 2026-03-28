@@ -182,6 +182,7 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
         onClose={closeQuoteModal}
         product={{
           id: rfqIdentifier.toString(),
+          rfqId: rfqIdentifier.toString(),
           name: productName,
           mineral_tag: 'mineral', // Assuming mineral_tag is not available in wishlist
           supplier_id: rfqProduct.userId?.toString()

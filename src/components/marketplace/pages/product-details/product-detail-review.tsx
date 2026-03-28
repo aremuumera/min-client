@@ -298,6 +298,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
         onClose={() => setShowQuoteModal(false)}
         product={{
           id: productId.toString(),
+          rfqId: productId.toString(),
           name: product_name,
           mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
           supplier_id: supplierId?.toString()

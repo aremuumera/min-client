@@ -97,6 +97,7 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
         onClose={() => setShowQuoteModal(false)}
         product={{
           id: id.toString(),
+          rfqId: id.toString(),
           name: product_name,
           mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
           supplier_id: supplierId?.toString()
