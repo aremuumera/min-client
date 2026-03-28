@@ -44,13 +44,13 @@ jobs:
       - name: Deploy to FTP server
         uses: SamKirkland/FTP-Deploy-Action@4.0.0
         with:
-          server: business122.web-hosting.com # Replace with your domain or IP address
+          server: ${{ secrets.FTP_SERVER }} # Replace with your domain or IP address
           username: ${{ secrets.FTP_USERNAME }} # Replace with your FTP username
           password: ${{ secrets.FTP_PASSWORD }} # Use GitHub Secrets for security
           # local-dir: dist/  # The directory containing your build files
           server-dir: / # Target directory on the server
           # timeout: 300000  # Increase timeout to 5 minutes
-          protocol: ftps # Use SFTP if supported
+          protocol: ftp # Use SFTP if supported
           port: 21 # Default SFTP port
           # log-level: verbose  # Enable verbose logging for debugging
           # exclude: |
