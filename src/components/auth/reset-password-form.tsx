@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import PhoneNumberInput from '@/utils/phone-number-input';
 import { countryOptions } from '@/utils/countries-state';
 import { AppDispatch } from '@/redux/store';
+import { getErrorMessage } from '@/utils/helper';
 // import { cn } from '@/lib/utils'; // Unused in this file given the code, but imported in original
 
 const schema = zod.object({
@@ -65,7 +66,7 @@ export function ResetPasswordForm() {
       router.push(paths.auth.verifyCode);
 
     } catch (err: any) {
-      showAlert(err?.message || err?.data?.message || 'Failed to send reset code.', 'error');
+      showAlert(getErrorMessage(err, 'Failed to send reset code.'), 'error');
     }
   };
 
@@ -102,7 +103,7 @@ export function ResetPasswordForm() {
       router.push(paths.auth.verifyCode);
 
     } catch (err: any) {
-      showAlert(err?.message || err?.data?.message || 'Failed to send reset code.', 'error');
+      showAlert(getErrorMessage(err, 'Failed to send reset code.'), 'error');
     }
   };
 
@@ -161,7 +162,7 @@ export function ResetPasswordForm() {
               <label className="text-sm font-medium text-gray-700">Phone Number</label>
               <PhoneNumberInput
                 name="phoneNumber"
-                country="NGA"
+                country="NG"
                 options={countryOptions}
                 _number={phoneData.phoneNumber}
                 onChange={(val, code, name) => {

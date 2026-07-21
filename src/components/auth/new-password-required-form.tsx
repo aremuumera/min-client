@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AppDispatch, RootState } from '@/redux/store';
 import { useAppDispatch, useAppSelector } from '@/redux';
+import { getErrorMessage } from '@/utils/helper';
 
 const schema = zod.object({
   password: zod
@@ -71,7 +72,7 @@ export function NewPasswordRequiredForm() {
       router.push(paths.auth.signIn);
 
     } catch (err: any) {
-      showAlert(err?.message || err?.data?.message || 'Password reset failed.', 'error');
+      showAlert(getErrorMessage(err, 'Password reset failed.'), 'error');
     }
   };
 

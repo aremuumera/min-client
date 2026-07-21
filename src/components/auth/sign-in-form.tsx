@@ -17,6 +17,7 @@ import { paths } from '@/config/paths';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AppDispatch } from '@/redux/store';
+import { getErrorMessage } from '@/utils/helper';
 
 const schema = zod.object({
   email: zod.string().min(1, { message: 'Email is required' }).email(),
@@ -64,7 +65,7 @@ export function SignInForm() {
 
     } catch (err: any) {
       const status = err?.status;
-      const message = err?.data?.message || err?.data?.error || err?.message || 'Login failed, Please try again later';
+      const message = getErrorMessage(err, 'Login failed, Please try again later');
 
       if (status === 411) {
         dispatch(setUserEmail(values.email));

@@ -21,7 +21,7 @@ import { Modal, ModalHeader, ModalBody } from '@/components/ui/modal';
 import PhoneNumberInput from '@/utils/phone-number-input';
 import { countryOptions } from '@/utils/countries-state';
 import { AppDispatch } from '@/redux/store';
-import { cn } from '@/utils/helper';
+import { cn, getErrorMessage } from '@/utils/helper';
 
 const schema = zod.object({
   firstName: zod.string().min(1, { message: 'First name is required' }),
@@ -149,7 +149,7 @@ export function SignUpForm() {
       showAlert(response?.message || 'Kindly check your email for an OTP', 'success');
       router.push(paths.auth.verifyCode);
     } catch (err: any) {
-      showAlert(err?.message || err?.data?.message || 'An error occurred during signup. Please try again.', 'error');
+      showAlert(getErrorMessage(err, 'An error occurred during signup. Please try again.'), 'error');
     }
   };
 
@@ -314,7 +314,7 @@ export function SignUpForm() {
             <label className="text-sm font-medium text-gray-700">Phone Number</label>
             <PhoneNumberInput
               name="phoneNumber"
-              country="NGA"
+              country="NG"
               options={countryOptions}
               _number={phoneData.phoneNumber}
               onChange={(val, code, name) => {

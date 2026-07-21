@@ -12,7 +12,7 @@ import { useAlert } from '@/providers/alert-provider';
 import { paths } from '@/config/paths';
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/redux/store';
-import { cn } from '@/utils/helper';
+import { cn, getErrorMessage } from '@/utils/helper';
 import { useAppSelector } from '@/redux';
 
 export function VerifyCodeForm() {
@@ -81,7 +81,7 @@ export function VerifyCodeForm() {
       }
 
     } catch (err: any) {
-      showAlert(err?.message || err?.data?.message || 'Invalid OTP. Please try again.', 'error');
+      showAlert(getErrorMessage(err, 'Invalid OTP. Please try again.'), 'error');
     }
   };
 
@@ -95,7 +95,7 @@ export function VerifyCodeForm() {
       setCounter(30);
 
     } catch (err: any) {
-      showAlert(err?.message || err?.data?.message || 'Failed to resend OTP.', 'error');
+      showAlert(getErrorMessage(err, 'Failed to resend OTP.'), 'error');
     }
   };
 

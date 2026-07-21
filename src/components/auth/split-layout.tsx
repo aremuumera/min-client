@@ -91,7 +91,7 @@ export function SplitLayout({ children }: SplitLayoutProps) {
       </div>
 
       {/* Form Section (Right) */}
-      <div className="lg:flex-[0.55] flex flex-col items-center h-full overflow-y-auto hide-scrollbar bg-white">
+      <div className="flex-1 w-full lg:flex-[0.55] flex flex-col items-center h-full overflow-y-auto hide-scrollbar bg-white">
         <div className="w-full max-w-[540px] px-6 py-12 md:px-12 md:py-20 lg:px-16 lg:py-24">
           {children}
         </div>
