@@ -570,7 +570,7 @@ const FileUploadField = ({
   );
 };
 
-const BusinessProfileStep = ({ userId, onNext, onBack, verificationData }: any) => {
+const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusData }: any) => {
   const [formData, setFormData] = useState({
     company_name: '',
     business_email: '',
@@ -1092,7 +1092,7 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData }: any) 
 };
 
 // Step 2: Business Registration
-const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData }: any) => {
+const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, statusData }: any) => {
   const [formData, setFormData] = useState({
     business_type: '',
     registration_number: '',
@@ -1400,7 +1400,7 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData }: 
 };
 
 // Step 3: Tax Compliance
-const TaxComplianceStep = ({ userId, onNext, onBack, verificationData }: any) => {
+const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusData }: any) => {
   const [formData, setFormData] = useState({
     tin_number: '',
     vat_number: '',
@@ -1649,7 +1649,7 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData }: any) =>
 };
 
 // Step 4: Business Authorization
-const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }: any) => {
+const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, statusData }: any) => {
   const [formData, setFormData] = useState({
     address_proof_type: '',
     other_address_proof_type: '',
@@ -3109,6 +3109,7 @@ const BusinessVerification = () => {
             onNext={handleNext}
             onBack={handleBack}
             verificationData={verificationData}
+            statusData={statusData}
           />
         );
       case 1:
@@ -3118,6 +3119,7 @@ const BusinessVerification = () => {
             onNext={handleNext}
             onBack={handleBack}
             verificationData={verificationData}
+            statusData={statusData}
           />
         );
       case 2:
@@ -3127,6 +3129,7 @@ const BusinessVerification = () => {
             onNext={handleNext}
             onBack={handleBack}
             verificationData={verificationData}
+            statusData={statusData}
           />
         );
       case 3:
@@ -3136,6 +3139,7 @@ const BusinessVerification = () => {
             onNext={handleNext}
             onBack={handleBack}
             verificationData={verificationData}
+            statusData={statusData}
           />
         );
       case 4:
