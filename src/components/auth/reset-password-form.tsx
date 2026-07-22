@@ -162,7 +162,7 @@ export function ResetPasswordForm() {
               <label className="text-sm font-medium text-gray-700">Phone Number</label>
               <PhoneNumberInput
                 name="phoneNumber"
-                country="NG"
+                country="NGA"
                 options={countryOptions}
                 _number={phoneData.phoneNumber}
                 onChange={(val, code, name) => {
