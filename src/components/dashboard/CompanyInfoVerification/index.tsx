@@ -867,7 +867,8 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 1));
-  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
+  const isRejected = overallStatus === 'rejected';
+  const isCompleted = stepStatus === 'completed' && !isRejected;
   const needsCorrection = stepStatus === 'needs_correction';
 
   return (
@@ -878,7 +879,10 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
         </Typography>
         {isCompleted && <Chip label="Completed" color="success" size="sm" icon={<CheckCircle />} />}
         {needsCorrection && <Chip label="Needs Correction" color="error" size="sm" />}
-        {!stepStatus && <Chip label="Not Submitted" color="default" size="sm" />}
+        {isRejected && <Chip label="Rejected" color="error" size="sm" />}
+        {(!stepStatus || stepStatus === 'pending') && !isCompleted && !needsCorrection && !isRejected && (
+          <Chip label="Not Submitted" color="default" size="sm" />
+        )}
       </Box>
 
       <Typography variant="body2" color="text.secondary" className="mb-3">
@@ -1224,7 +1228,8 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 2));
-  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
+  const isRejected = overallStatus === 'rejected';
+  const isCompleted = stepStatus === 'completed' && !isRejected;
   const needsCorrection = stepStatus === 'needs_correction';
 
   return (
@@ -1235,7 +1240,10 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
         </Typography>
         {isCompleted && <Chip label="Completed" color="success" size="sm" icon={<CheckCircle />} />}
         {needsCorrection && <Chip label="Needs Correction" color="error" size="sm" />}
-        {!stepStatus && <Chip label="Not Submitted" color="default" size="sm" />}
+        {isRejected && <Chip label="Rejected" color="error" size="sm" />}
+        {(!stepStatus || stepStatus === 'pending') && !isCompleted && !needsCorrection && !isRejected && (
+          <Chip label="Not Submitted" color="default" size="sm" />
+        )}
       </Box>
 
       <Typography variant="body2" color="text.secondary" className="mb-3">
@@ -1528,7 +1536,8 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 3));
-  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
+  const isRejected = overallStatus === 'rejected';
+  const isCompleted = stepStatus === 'completed' && !isRejected;
   const isPending = stepStatus === 'pending';
   const needsCorrection = stepStatus === 'needs_correction';
 
@@ -1540,8 +1549,10 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
         </Typography>
         {isCompleted && <Chip label="Completed" color="success" size="sm" icon={<CheckCircle />} />}
         {needsCorrection && <Chip label="Needs Correction" color="error" size="sm" />}
-        {isPending && <Chip label="Under Review" color="error" size="sm" />}
-        {/* {stepStatus && <Chip label="Not Submitted" color="default" size="sm" />} */}
+        {isRejected && <Chip label="Rejected" color="error" size="sm" />}
+        {(!stepStatus || stepStatus === 'pending') && !isCompleted && !needsCorrection && !isRejected && (
+          <Chip label="Not Submitted" color="default" size="sm" />
+        )}
       </Box>
 
       <Typography variant="body2" color="text.secondary" className="mb-3">
@@ -1837,7 +1848,8 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 4));
-  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
+  const isRejected = overallStatus === 'rejected';
+  const isCompleted = stepStatus === 'completed' && !isRejected;
   const needsCorrection = stepStatus === 'needs_correction';
 
   return (
@@ -1848,7 +1860,10 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
         </Typography>
         {isCompleted && <Chip label="Completed" color="success" size="sm" icon={<CheckCircle />} />}
         {needsCorrection && <Chip label="Needs Correction" color="error" size="sm" />}
-        {!stepStatus && <Chip label="Not Submitted" color="default" size="sm" />}
+        {isRejected && <Chip label="Rejected" color="error" size="sm" />}
+        {(!stepStatus || stepStatus === 'pending') && !isCompleted && !needsCorrection && !isRejected && (
+          <Chip label="Not Submitted" color="default" size="sm" />
+        )}
       </Box>
 
       <Typography variant="body2" color="text.secondary" className="mb-3">
