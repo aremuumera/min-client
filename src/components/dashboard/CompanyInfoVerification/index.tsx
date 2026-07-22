@@ -2443,9 +2443,14 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
         Add directors and their identification documents
       </Typography>
 
-      {directorsData?.data?.directors?.length > 0 ? (
-        <List>
-          {directorsData.data.directors.map((director: any) => (
+      {(() => {
+        const directorsList = Array.isArray(directorsData?.data)
+          ? directorsData.data
+          : directorsData?.data?.directors || [];
+        
+        return directorsList.length > 0 ? (
+          <List>
+            {directorsList.map((director: any) => (
             <Card key={director.id} className="mb-2">
               <CardContent>
                 <Box className="flex items-center justify-between">
@@ -2491,11 +2496,12 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
             </Card>
           ))}
         </List>
-      ) : (
-        <Alert severity="info" className="mb-3">
-          No directors added yet. Click the button below to add a director.
-        </Alert>
-      )}
+        ) : (
+          <Alert severity="info" className="mb-3">
+            No directors added yet. Click the button below to add a director.
+          </Alert>
+        );
+      })()}
 
       <Button variant="outlined" startIcon={<Plus size={20} />} onClick={() => setShowAddDialog(true)} fullWidth>
         Add Director

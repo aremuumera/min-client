@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV !== "development" ? { exclude: ["error"] } : false,
-    // removeConsole: process.env.NODE_ENV === "production",
+    // removeConsole: process.env.NODE_ENV !== "development" ? { exclude: ["error"] } : false,
+    removeConsole: process.env.NODE_ENV === "production",
   },
   // async rewrites() {
   //   // Development: proxy to local backend
