@@ -156,7 +156,7 @@ const step2Schema = z.object({
 });
 
 const step2FilesSchema = z.object({
-  cac_certificate: z.instanceof(File, { message: 'CAC certificate is required' }).nullable(),
+  cac_certificate: z.custom((val) => val instanceof File, { message: 'CAC certificate is required' }),
   certificate_of_incorporation: z.instanceof(File).nullable().optional(),
   memorandum_and_articles: z.instanceof(File).nullable().optional(),
   form_2_co7: z.instanceof(File).nullable().optional(),
@@ -179,10 +179,10 @@ const step4Schema = z.object({
 });
 
 const step4FilesSchema = z.object({
-  business_address_proof: z.instanceof(File, { message: 'Business address proof is required' }).nullable(),
+  business_address_proof: z.custom((val) => val instanceof File, { message: 'Business address proof is required' }),
   board_resolution: z.instanceof(File).nullable().optional(),
   authorized_signatories: z.instanceof(File).nullable().optional(),
-  trade_license: z.instanceof(File, { message: 'Trade license is required' }).nullable(),
+  trade_license: z.custom((val) => val instanceof File, { message: 'Trade license is required' }),
   other_regulatory_permits: z.array(z.instanceof(File)).optional(),
   accreditation_docs: z.instanceof(File).nullable().optional(),
   insurance_info: z.instanceof(File).nullable().optional(),
@@ -3129,7 +3129,6 @@ const BusinessVerification = () => {
   };
 
   const allSteps = steps.map((_, index) => getStepStatus(index)).some((status) => status === 'completed');
-  console.log('All Steps Status:', allSteps);
 
   // Also add this helper to determine if step is completed
   const isStepCompleted = (stepIndex: number) => {
