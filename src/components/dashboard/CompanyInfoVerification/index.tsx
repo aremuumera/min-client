@@ -2224,7 +2224,7 @@ const CompletionStep = () => {
                 transition={{ delay: 0.6 + index * 0.1 }}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
                 elevation={0}
-                className="p-8 h-full rounded-[24px] bg-primary-50/50 border-0 relative overflow-hidden group hover:bg-primary-50 transition-colors duration-300 shadow-none"
+                className="p-4 sm:p-6 h-full rounded-[24px] bg-primary-50/50 border border-gray-200 relative overflow-hidden group hover:bg-primary-50 transition-colors duration-300 shadow-none"
               >
                 {/* Icon */}
                 <Box
@@ -3194,8 +3194,8 @@ const BusinessVerification = () => {
 
           {/* Next Step Card */}
           {!isSupplierProfileCreated && ['supplier', 'buyer_supplier', 'inspector'].includes(userRole) ? (
-            <Card className="m-3 rounded-[12px] shadow-lg overflow-hidden">
-              <CardContent className="p-8">
+            <Card className="m-1 sm:m-3 rounded-[12px] border border-gray-200 shadow-none overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
                 <Box className="flex items-center mb-6">
                   {userRole === 'inspector' ? (
                     <People className="text-[40px] text-primary-main mr-4" />
@@ -3276,7 +3276,7 @@ const BusinessVerification = () => {
             </Card>
           ) : (
             <>
-              <Card className="p-8 m-3 text-center bg-white">
+              <Card className="p-4 sm:p-6 m-1 sm:m-3 text-center bg-white border border-gray-200 shadow-none">
                 <Typography variant="h5" className="opacity-95 mt-2">
                   You have completed all the necessary steps. You can now explore the platform.
                 </Typography>
@@ -3306,8 +3306,8 @@ const BusinessVerification = () => {
         onComplete={handleCategoryComplete}
       />
 
-      <Container maxWidth="lg" className="py-4">
-        <Paper elevation={2} className="p-4 sm:p-8">
+      <Container maxWidth="lg" className="py-2 px-1 sm:px-4">
+        <Paper elevation={0} className="p-3 sm:p-5 md:p-6 border border-gray-200 rounded-2xl shadow-none">
           <Box className="mb-4">
             <Typography variant="h4" gutterBottom fontWeight={600}>
               Business Verification

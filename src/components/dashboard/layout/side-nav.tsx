@@ -118,7 +118,7 @@ function NavItem({
             className={cn(
                 "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group relative",
                 active
-                    ? "bg-green-600 text-white font-semibold shadow-lg shadow-green-600/10"
+                    ? "bg-green-600 text-white font-semibold"
                     : "text-neutral-500 hover:text-white hover:bg-white/3",
                 item.disabled && "opacity-50 cursor-not-allowed",
                 isCollapsed && "justify-center px-0"
@@ -141,7 +141,7 @@ function NavItem({
 
             {/* Tooltip for collapsed mode */}
             {isCollapsed && (
-                <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-neutral-900 text-white text-[10px] py-1 px-2 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[200] whitespace-nowrap font-bold border border-white/10 shadow-xl">
+                <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-neutral-900 text-white text-[10px] py-1 px-2 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[200] whitespace-nowrap font-bold border border-white/10">
                     {item.title}
                 </div>
             )}
