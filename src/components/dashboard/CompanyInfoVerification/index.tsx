@@ -3035,15 +3035,18 @@ const BusinessVerification = () => {
   const [modalTriggered, setModalTriggered] = useState(false);
 
   useEffect(() => {
-    // Show category modal only if no business category is set and we haven't triggered it in this session
-    const isNotStarted = statusData?.data?.overall_status === 'not_started' && statusData?.data?.verification === null;
+    // Show category modal if no business category is set and modal hasn't been triggered yet
+    const hasCategory = detailsData?.data?.business_category || statusData?.data?.verification?.business_category || statusData?.data?.business_category;
 
-    if (isNotStarted && !modalTriggered) {
+    if (!hasCategory && !modalTriggered && (statusData?.data || detailsData?.data)) {
       setShowCategoryModal(true);
       setCategorySelected(true);
       setModalTriggered(true);
+    } else if (hasCategory) {
+      setShowCategoryModal(false);
+      setCategorySelected(true);
     }
-  }, [statusData, modalTriggered]);
+  }, [statusData, detailsData, modalTriggered]);
 
   const steps = [
     { label: 'Profile', icon: <Description /> },
