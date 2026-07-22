@@ -859,7 +859,12 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData }: any) 
 
   // Check if step is editable
   const overallStatus = verificationData?.overall_status || statusData?.data?.overall_status;
-  const isEditable = !overallStatus || ['draft', 'not_started', 'rejected', 'needs_correction'].includes(overallStatus);
+  const stepStatus = verificationData?.step_1_status;
+  const requiredCorrectionStep = verificationData?.required_corrections?.step || statusData?.data?.required_corrections?.step;
+  const isEditable =
+    !overallStatus ||
+    ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
+    (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 1));
   const isCompleted = stepStatus === 'completed';
   const needsCorrection = stepStatus === 'needs_correction';
 
@@ -1211,7 +1216,12 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData }: 
   };
 
   const overallStatus = verificationData?.overall_status || statusData?.data?.overall_status;
-  const isEditable = !overallStatus || ['draft', 'not_started', 'rejected', 'needs_correction'].includes(overallStatus);
+  const stepStatus = verificationData?.step_2_status;
+  const requiredCorrectionStep = verificationData?.required_corrections?.step || statusData?.data?.required_corrections?.step;
+  const isEditable =
+    !overallStatus ||
+    ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
+    (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 2));
   const isCompleted = stepStatus === 'completed';
   const needsCorrection = stepStatus === 'needs_correction';
 
@@ -1510,7 +1520,12 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData }: any) =>
   };
 
   const overallStatus = verificationData?.overall_status || statusData?.data?.overall_status;
-  const isEditable = !overallStatus || ['draft', 'not_started', 'rejected', 'needs_correction'].includes(overallStatus);
+  const stepStatus = verificationData?.step_3_status;
+  const requiredCorrectionStep = verificationData?.required_corrections?.step || statusData?.data?.required_corrections?.step;
+  const isEditable =
+    !overallStatus ||
+    ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
+    (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 3));
   const isCompleted = stepStatus === 'completed';
   const isPending = stepStatus === 'pending';
   const needsCorrection = stepStatus === 'needs_correction';
@@ -1814,7 +1829,12 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData }:
   };
 
   const overallStatus = verificationData?.overall_status || statusData?.data?.overall_status;
-  const isEditable = !overallStatus || ['draft', 'not_started', 'rejected', 'needs_correction'].includes(overallStatus);
+  const stepStatus = verificationData?.step_4_status;
+  const requiredCorrectionStep = verificationData?.required_corrections?.step || statusData?.data?.required_corrections?.step;
+  const isEditable =
+    !overallStatus ||
+    ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
+    (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 4));
   const isCompleted = stepStatus === 'completed';
   const needsCorrection = stepStatus === 'needs_correction';
 
