@@ -865,7 +865,7 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 1));
-  const isCompleted = stepStatus === 'completed';
+  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
   const needsCorrection = stepStatus === 'needs_correction';
 
   return (
@@ -1222,7 +1222,7 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 2));
-  const isCompleted = stepStatus === 'completed';
+  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
   const needsCorrection = stepStatus === 'needs_correction';
 
   return (
@@ -1526,7 +1526,7 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 3));
-  const isCompleted = stepStatus === 'completed';
+  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
   const isPending = stepStatus === 'pending';
   const needsCorrection = stepStatus === 'needs_correction';
 
@@ -1835,7 +1835,7 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
     !overallStatus ||
     ['draft', 'not_started', 'rejected'].includes(overallStatus) ||
     (overallStatus === 'needs_correction' && (stepStatus === 'needs_correction' || Number(requiredCorrectionStep) === 4));
-  const isCompleted = stepStatus === 'completed';
+  const isCompleted = stepStatus === 'completed' && overallStatus !== 'rejected';
   const needsCorrection = stepStatus === 'needs_correction';
 
   return (
@@ -3153,6 +3153,8 @@ const BusinessVerification = () => {
   // Explicit step status mapping
   const getStepStatus = (stepIndex: number) => {
     if (!detailsData?.data) return 'pending';
+    const overall = detailsData?.data?.overall_status || statusData?.data?.overall_status;
+    if (overall === 'rejected') return 'pending';
 
     const stepField = `step_${stepIndex + 1}_status`;
     return (detailsData.data as any)[stepField] || 'pending';
