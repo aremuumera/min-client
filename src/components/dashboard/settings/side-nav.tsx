@@ -36,10 +36,11 @@ export function SettingsSideNav() {
     });
 
     return (
-        <div className="w-full md:w-[280px] shrink-0 space-y-8">
-            <div className="space-y-4">
-                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-6">Settings</h3>
-                <nav className="space-y-1">
+        <>
+            {/* Mobile Horizontal Tab Navigation */}
+            <div className="md:hidden w-full border-b border-gray-200 pb-3 mb-2">
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Settings</h3>
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
                     {filteredItems.map((item) => {
                         const active = isNavItemActive({
                             href: item.href,
@@ -52,50 +53,80 @@ export function SettingsSideNav() {
                                 key={item.key}
                                 href={item.href}
                                 className={cn(
-                                    "flex items-center gap-4 px-6 py-3 rounded-xl transition-all duration-200",
+                                    "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0",
                                     active
-                                        ? "bg-green-50 text-green-700 font-semibold border border-green-100"
-                                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-green-600 text-white shadow-sm font-semibold"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
                                 )}
                             >
-                                <item.icon size={18} strokeWidth={active ? 2.5 : 2} />
-                                <span className="text-sm">{item.title}</span>
+                                <item.icon size={16} strokeWidth={active ? 2.5 : 2} />
+                                <span>{item.title}</span>
                             </Link>
                         );
                     })}
-                </nav>
+                </div>
             </div>
 
-            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hidden md:block">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-green-600 border border-[#EFEFEF] ">
-                        <CreditCard size={18} />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-gray-900">Subscription</h4>
-                        {/* Placeholder for Subscription Status */}
-                        <div className="flex items-center gap-1 mt-0.5">
-                            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                            <p className="text-[10px] font-semibold text-gray-500 uppercase">Pending / Free</p>
+            {/* Desktop Vertical Sidebar */}
+            <div className="hidden md:block w-[280px] shrink-0 space-y-8">
+                <div className="space-y-4">
+                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-6">Settings</h3>
+                    <nav className="space-y-1">
+                        {filteredItems.map((item) => {
+                            const active = isNavItemActive({
+                                href: item.href,
+                                pathname,
+                                matcher: { type: 'startsWith', href: item.href }
+                            });
+
+                            return (
+                                <Link
+                                    key={item.key}
+                                    href={item.href}
+                                    className={cn(
+                                        "flex items-center gap-4 px-6 py-3 rounded-xl transition-all duration-200",
+                                        active
+                                            ? "bg-green-50 text-green-700 font-semibold border border-green-100"
+                                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                    )}
+                                >
+                                    <item.icon size={18} strokeWidth={active ? 2.5 : 2} />
+                                    <span className="text-sm">{item.title}</span>
+                                </Link>
+                            );
+                        })}
+                    </nav>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-green-600 border border-[#EFEFEF]">
+                            <CreditCard size={18} />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-bold text-gray-900">Subscription</h4>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                                <p className="text-[10px] font-semibold text-gray-500 uppercase">Pending / Free</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Status</span>
-                        <span className="font-medium text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">Pending</span>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>Status</span>
+                            <span className="font-medium text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">Pending</span>
+                        </div>
+                        <Button
+                            onClick={() => router.push('/pricing')}
+                            className="w-full text-xs font-bold rounded-xl py-3 h-auto bg-green-600 hover:text-white border border-gray-200 shadow-sm transition-all"
+                        >
+                            Upgrade Plan
+                        </Button>
                     </div>
-                    <Button
-                        // variant="outlined" 
-                        onClick={() => router.push('/pricing')}
-                        className="w-full text-xs font-bold rounded-xl py-3 h-auto bg-green-600 hover:text-white border border-gray-200 shadow-sm transition-all"
-                    >
-                        Upgrade Plan
-                    </Button>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
 

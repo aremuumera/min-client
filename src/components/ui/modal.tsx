@@ -111,7 +111,7 @@ function Modal({
       <AnimatePresence>
         {open && (
           <Portal>
-            <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 py-8 sm:p-6 overflow-y-auto">
               {/* Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
@@ -129,7 +129,7 @@ function Modal({
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.2 }}
                 className={cn(
-                  'relative w-full bg-white rounded-xl shadow-xl',
+                  'relative w-full bg-white rounded-xl shadow-xl max-h-[85vh] flex flex-col overflow-hidden my-auto',
                   actualFullWidth ? 'max-w-none' : sizeClasses[actualSize],
                   className,
                   PaperProps?.className
@@ -200,7 +200,7 @@ function ModalBody({ className, dividers = false, ...props }: ModalBodyProps) {
   return (
     <div
       className={cn(
-        'p-4 overflow-y-auto max-h-[90vh]',
+        'p-4 sm:p-6 overflow-y-auto flex-1 min-h-0',
         dividers && 'border-y border-neutral-200',
         className
       )}

@@ -21,7 +21,7 @@ import { Stack } from '@/components/ui/stack';
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
         <div className="max-w-7xl mx-auto p-4 lg:p-10 w-full animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row gap-12">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-12">
                 <SettingsSideNav />
                 <div className="flex-1 min-w-0">
                     {children}

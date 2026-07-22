@@ -2585,7 +2585,8 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
           setShowViewDialog(false);
           setViewingDirector(null);
         }}
-        maxWidth="md"
+        maxWidth="sm"
+        className="max-w-xl mx-auto"
         fullWidth
       >
         <DialogTitle>
@@ -2865,7 +2866,8 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
           setShowAddDialog(false);
           resetForm();
         }}
-        maxWidth="md"
+        maxWidth="sm"
+        className="max-w-xl mx-auto"
         fullWidth
       >
         <DialogTitle>{editingDirector ? 'Edit Director' : 'Add Director'}</DialogTitle>
@@ -3227,21 +3229,12 @@ const BusinessVerification = () => {
     );
   }
 
-  const overallStatus = statusData?.data?.overall_status;
-  const isVerificationFinal =
-    submittedSuccessfully || (overallStatus && ['submitted', 'pending'].includes(overallStatus));
-  const isVerificationSuccessful = overallStatus === 'approved' && finalRelease;
+  const overallStatus = statusData?.data?.overall_status || detailsData?.data?.overall_status;
+  const isApproved = overallStatus === 'approved' || isBusinessVerified;
+  const isSubmitted = submittedSuccessfully || (overallStatus && ['submitted', 'pending', 'under_review'].includes(overallStatus));
 
-  // If verification is final, ALWAYS show completion screen
-  if (isVerificationFinal && !showCategoryModal) {
-    return (
-      <Container maxWidth="lg" className="py-4">
-        <CompletionStep />
-      </Container>
-    );
-  }
-  // now after verification is successful, show success screen which includes next steps eb.. button for supplier profile creation
-  if (finalRelease) {
+  // 1. If verification is APPROVED, show the Approved Success Screen
+  if (isApproved && !showCategoryModal) {
     return (
       <Container maxWidth="md" className="py-4">
         <Box className="mb-4 flex items-center justify-center">
@@ -3379,6 +3372,15 @@ const BusinessVerification = () => {
             </>
           )}
         </MotionPaper>
+      </Container>
+    );
+  }
+
+  // 2. If verification is SUBMITTED and under review, show the Submitted Completion Screen
+  if (isSubmitted && !showCategoryModal) {
+    return (
+      <Container maxWidth="lg" className="py-4">
+        <CompletionStep />
       </Container>
     );
   }
