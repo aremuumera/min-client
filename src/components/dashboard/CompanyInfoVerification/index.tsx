@@ -194,10 +194,7 @@ const directorSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone_number: z.string().min(1, 'Phone number is required'),
   nationality: z.string().min(1, 'Nationality is required'),
-  date_of_birth: z.preprocess((arg) => {
-    if (typeof arg === "string" || arg instanceof Date) return new Date(arg);
-    return arg;
-  }, z.date({ message: "Date of birth is required" })),
+  date_of_birth: z.string().min(1, 'Date of birth is required'),
   gender: z.string().min(1, 'Gender is required'),
   identity_type: z.string().min(1, 'Identity type is required'),
   identity_number: z.string().min(1, 'Identity number is required'),
@@ -205,8 +202,13 @@ const directorSchema = z.object({
 });
 
 const directorFilesSchema = z.object({
-  identity_document: z.instanceof(File, { message: 'Identity document is required' }).nullable(),
-  address_proof_document: z.instanceof(File, { message: 'Address proof document is required' }).nullable(),
+  identity_document: z.custom((val) => val instanceof File, { message: 'Identity document is required' }),
+  address_proof_document: z.custom((val) => val instanceof File, { message: 'Address proof document is required' }),
+});
+
+const optionalDirectorFilesSchema = z.object({
+  identity_document: z.custom((val) => !val || val instanceof File, { message: 'Invalid identity document' }).optional(),
+  address_proof_document: z.custom((val) => !val || val instanceof File, { message: 'Invalid address proof document' }).optional(),
 });
 
 import { useUserLocation } from '@/utils/locateUser';
@@ -2348,14 +2350,42 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
     setFileErrors({});
   };
 
+  const handleEditClick = (director: any) => {
+    setEditingDirector(director);
+    setFormData({
+      first_name: director.first_name || '',
+      last_name: director.last_name || '',
+      email: director.email || '',
+      phone_number: director.phone_number || '',
+      nationality: director.nationality || 'Nigeria',
+      date_of_birth: director.date_of_birth
+        ? new Date(director.date_of_birth).toISOString().split('T')[0]
+        : '',
+      gender: director.gender || '',
+      identity_type: director.identity_type || '',
+      identity_number: director.identity_number || '',
+      address_proof_type: director.address_proof_type || '',
+    });
+    setErrors({});
+    setFileErrors({});
+    setShowAddDialog(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const validated = directorSchema.parse(formData);
-      const validatedFiles = directorFilesSchema.parse({
-        identity_document: identityDocument,
-        address_proof_document: addressProofDocument,
-      });
+      if (editingDirector) {
+        optionalDirectorFilesSchema.parse({
+          identity_document: identityDocument,
+          address_proof_document: addressProofDocument,
+        });
+      } else {
+        directorFilesSchema.parse({
+          identity_document: identityDocument,
+          address_proof_document: addressProofDocument,
+        });
+      }
       setErrors({});
       setFileErrors({});
 
@@ -2378,8 +2408,10 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
           directorId: editingDirector.id,
           formData: formDataToSend,
         }).unwrap();
+        showAlert('Director updated successfully', 'success');
       } else {
         await addDirector({ userId, formData: formDataToSend }).unwrap();
+        showAlert('Director added successfully', 'success');
       }
       setShowAddDialog(false);
       resetForm();
@@ -2394,6 +2426,7 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
           } else {
             fieldErrors[fieldName] = error.message;
           }
+          showAlert(`${error.message}`, 'error');
         });
         setErrors(fieldErrors);
         setFileErrors(fieldFileErrors);
@@ -2506,6 +2539,9 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
                   <Box className="flex gap-1">
                     <IconButton aria-label="View Director Details" onClick={() => handleViewClick(director)} title="View Details" className="text-blue-600 hover:bg-blue-50">
                       <Eye size={20} />
+                    </IconButton>
+                    <IconButton aria-label="Edit Director" onClick={() => handleEditClick(director)} title="Edit Director" className="text-green-600 hover:bg-green-50">
+                      <Plus size={20} />
                     </IconButton>
                     <IconButton aria-label="Delete Director" onClick={() => handleDeleteClick(director)} title="Delete Director" className="text-red-600 hover:bg-red-50">
                       <Trash2 size={20} />
