@@ -3351,9 +3351,9 @@ const BusinessVerification = () => {
                       {statusData.data.overall_status === 'pending' &&
                         'Your verification is under review. We will notify you once it is complete.'}
                       {statusData.data.overall_status === 'rejected' &&
-                        `Reason: ${statusData.data.verification.rejected_reason}`}
+                        `Reason: ${statusData.data?.rejected_reason || statusData.data?.verification?.rejected_reason || detailsData?.data?.rejected_reason || 'Verification was rejected.'}`}
                       {statusData.data.overall_status === 'needs_correction' &&
-                        ` Reason: ${statusData.data.verification.required_corrections?.message}`}
+                        ` Reason: ${statusData.data?.required_corrections?.message || statusData.data?.verification?.required_corrections?.message || detailsData?.data?.required_corrections?.message || 'Corrections required.'}`}
                     </Typography>
                   </>
                 }
