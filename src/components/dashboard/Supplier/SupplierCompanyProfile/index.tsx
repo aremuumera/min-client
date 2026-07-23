@@ -146,23 +146,23 @@ const CompanyStoreProfile = () => {
 
   return (
     <div>
-      <div className="">
+      <div className="px-1 sm:px-4">
         <div>
           <div>
             <div className="flex justify-start">
               {activeStep !== 0 &&
                 activeStep !== 3 && ( // Don't show back button in edit mode
-                  <button onClick={handleBacks} className="flex gap-[5px] justify-center items-center">
+                  <button onClick={handleBacks} className="flex gap-[5px] justify-center items-center text-sm font-medium text-gray-700 hover:text-green-600">
                     <IoIosArrowBack className="text-[15px]" /> Back
                   </button>
                 )}
             </div>
 
-            <div className="bg-bgSecondary w-full h-full p-[15px] rounded-[20px] mt-[16px]">
+            <div className="bg-white sm:bg-bgSecondary w-full h-full p-2 sm:p-6 rounded-2xl mt-3">
               <div>
-                <Box sx={{ p: 1 }}>
-                  <h1 className="text-[25px] font-[500] pb-[8px]">{getProgressLabel().header}</h1>
-                  <p className="text-[#969696c7] pb-[20px] text-[.85rem]">{getProgressLabel().paragraph}</p>
+                <Box sx={{ p: 0.5 }}>
+                  <h1 className="text-xl sm:text-[25px] font-[500] pb-[4px]">{getProgressLabel().header}</h1>
+                  <p className="text-[#969696c7] pb-[16px] text-[.85rem]">{getProgressLabel().paragraph}</p>
                   <ProgressBar steps={steps} progress={progress} activeStep={activeStep} />
                 </Box>
               </div>

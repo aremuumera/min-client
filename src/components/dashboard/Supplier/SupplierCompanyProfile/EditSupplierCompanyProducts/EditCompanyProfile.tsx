@@ -304,9 +304,8 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
 
   return (
     <div>
-      <div className="w-full !relative ">
-        <div className="flex px-[12px] pb-[30px] justify-between items-center"></div>
-        <div className="p-4 space-y-4 !relative   bg-white shadow rounded-lg">
+      <div className="w-full relative">
+        <div className="p-2 sm:p-5 space-y-4 relative bg-white border border-gray-100 rounded-xl">
           <div className="flex lg:h-[10vh] h-full  justify-between items-center py-[6px]">
             <div>
               <h2 className="text-[2rem]  font-[700]">{company_name || 'Aremu Mining Limited'}</h2>

@@ -306,7 +306,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
 
   return (
     <div>
-      <div className="lg:px-6 py-2">
+      <div className="py-1">
         <form onSubmit={handleSubmit}>
           <div>
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
