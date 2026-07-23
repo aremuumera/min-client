@@ -18,6 +18,7 @@ const bannerImages = [
 
 const BannerInfo = [
   {
+    key: 'products',
     title: 'Create Products',
     description:
       'Create your products on your company website and increase your visibility to potential buyers.',
@@ -26,6 +27,7 @@ const BannerInfo = [
     buttonLink: `${paths.dashboard.products.create}`,
   },
   {
+    key: 'rfqs',
     title: 'Create RFQs',
     description:
       'Create your buy requirement for free on your company website and find suitable suppliers.',
@@ -77,9 +79,9 @@ const Banner = () => {
   const filteredBannerInfo = isInspector
     ? []
     : BannerInfo.filter((info) => {
-        if (isSupplier) return info.buttonLink.includes('products');
-        if (isBuyer) return info.buttonLink.includes('rfqs');
-        return true; // Dual roles or admin see both
+        if (isSupplier) return info.key === 'products';
+        if (isBuyer) return info.key === 'rfqs';
+        return true; // Dual roles (buyer_supplier / both / admin) see both cards
       });
 
   const filteredPlans = isInspector ? [] : MinMegPlans;
