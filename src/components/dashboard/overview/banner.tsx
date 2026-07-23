@@ -8,7 +8,7 @@ import { AiOutlineShoppingCart } from "react-icons/ai";
 import { CgShoppingBag } from "react-icons/cg";
 import { GoPeople } from "react-icons/go";
 import { paths } from '@/config/paths';
-import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 
 const bannerImages = [
   '/assets/dashboard-images/overview-banner.png',
@@ -57,7 +57,7 @@ const MinMegPlans = [
 ];
 
 const Banner = () => {
-  const { user } = useSelector((state: any) => state.auth);
+  const { isBuyer, isSupplier, isInspector } = useAuthIdentity();
   const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
@@ -70,11 +70,6 @@ const Banner = () => {
   const goToSlide = (index: number) => setCurrentBanner(index);
   const nextSlide = () => setCurrentBanner((prev) => (prev + 1) % bannerImages.length);
   const prevSlide = () => setCurrentBanner((prev) => (prev - 1 + bannerImages.length) % bannerImages.length);
-
-  const normalizedRole = (user?.role || '').toLowerCase();
-  const isInspector = normalizedRole === 'inspector';
-  const isSupplier = normalizedRole === 'supplier';
-  const isBuyer = normalizedRole === 'buyer';
 
   const filteredBannerInfo = isInspector
     ? []

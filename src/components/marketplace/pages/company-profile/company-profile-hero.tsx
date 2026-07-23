@@ -39,7 +39,10 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
     company_instagram,
   } = products || {};
 
-  const isOwner = isAuth && user?.id === userId;
+  // const isOwner = isAuth && user?.id === userId;
+
+  const targetUserId = userId || products?.supplierId || products?.user_id || products?.supplier_id;
+  const isOwner = isAuth && user?.id && targetUserId && String(user.id).toLowerCase() === String(targetUserId).toLowerCase();
 
   const handleRequestQuote = () => {
     if (isOwner) {
@@ -116,11 +119,11 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
               </div>
             )}
 
-            {heroDescription && (
+            {/* {heroDescription && (
               <p className="text-gray-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-4">
                 {heroDescription}
               </p>
-            )}
+            )} */}
 
             <button
               onClick={handleRequestQuote}
@@ -227,9 +230,9 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
         product={{
           id: supplierProfileId?.toString() || '',
           rfqId: supplierProfileId?.toString() || '',
-          name: company_name || 'Business',
-          mineral_tag: 'general', // Generic for business contact
-          supplier_id: userId?.toString()
+          name: company_name || 'Business Inquiry',
+          mineral_tag: 'general',
+          supplier_id: targetUserId?.toString() || ''
         }}
         itemType="business"
       />

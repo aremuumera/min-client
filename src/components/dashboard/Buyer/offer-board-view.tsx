@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useGetAllRfqByBuyerIdQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useGetRfqOffersQuery } from '@/redux/features/trade/trade_api';
 import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { MdCompareArrows } from 'react-icons/md';
 import SupplierOfferCard from './SupplierOfferCard';
 // import OfferComparisonModal from './modals/OfferComparisonModal';
@@ -18,8 +19,8 @@ import RfqDetailModal from './modals/RfqDetailModal';
 import { format } from 'date-fns';
 
 const OfferBoardView = () => {
-    const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-    const buyerId = isTeamMember ? ownerUserId : user?.id;
+    const { user, effectiveUserId } = useAuthIdentity();
+    const buyerId = effectiveUserId;
 
     const [selectedRfqId, setSelectedRfqId] = useState<string>('');
     const [selectedOffersForProps, setSelectedOffersForProps] = useState<string[]>([]);

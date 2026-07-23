@@ -14,6 +14,7 @@ import { TablePagination } from "@/components/ui/pagination";
 import { SupplierProductsTable } from "./productsTable";
 import { useGetAllProductBySupplierIdQuery } from "@/redux/features/supplier-products/products_api";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useAuthIdentity } from "@/hooks/use-auth-identity";
 import Link from "next/link";
 
 export const mockData = [
@@ -435,13 +436,13 @@ export const mockData = [
 const ListedProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch = useAppDispatch();
 
   const params = {
-    supplierId: isTeamMember ? ownerUserId : user?.id,
+    supplierId: effectiveUserId,
     page: page + 1,
     limit: rowsPerPage,
     q: searchTerm,

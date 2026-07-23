@@ -21,6 +21,7 @@ import { MdEdit, MdOutlineContentCopy, MdShare } from 'react-icons/md';
 import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { paymentTerms, shippingTerms as shippingTermsFields } from '../CreateProducts/paymentTerms';
 import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useGetAllProductDetailsForSupQuery, useGetAllProductDetailsQuery } from '@/redux/features/supplier-products/products_api';
 import { formatDate } from '@/utils/helper';
 import Loader from '@/lib/Loader';
@@ -39,10 +40,10 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
   const [showMediaModal, setShowMediaModal] = useState<boolean>(false);
 
-  const { user, appData, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+  const { user, appData, effectiveUserId } = useAuthIdentity();
 
   const { data, isLoading, isError } = useGetAllProductDetailsForSupQuery({
-    supplierId: isTeamMember ? ownerUserId : user?.id,
+    supplierId: effectiveUserId,
     productId: listedSupplierProductId
   },
     {

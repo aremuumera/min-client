@@ -120,8 +120,8 @@ const AllProductsView = () => {
     }
   );
 
-  const productData = data?.products;
-  const productsToShow = productData?.length > 0 ? productData : [];
+  const productData = data?.products || (Array.isArray(data?.data) ? data?.data : data?.data?.products);
+  const productsToShow = Array.isArray(productData) && productData.length > 0 ? productData : [];
 
   return (
     <div ref={scrollRef} className="">

@@ -7,20 +7,21 @@ import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import { useAppSelector } from '@/redux';
 
 const ConfirmSupplierProductsInfo = () => {
-  const { productSuccessData } = useAppSelector((state) => state.product);
+  const { productSuccessData } = useAppSelector((state: any) => state.product || {});
 
+  const productId = productSuccessData?.productId || productSuccessData?.id || '';
+  const productName = productSuccessData?.productName || productSuccessData?.product_name || 'Product';
 
-  // This would typically come from your router or state management
-  const productId = "1e21c382d5f642a2b7cf7dc5fe3b5b8c";
-  const productName = productSuccessData?.productName ? productSuccessData?.productName : '';
-  // Determine base URL based on environment
+  const baseUrl = typeof window !== 'undefined'
+    ? window.location.origin
+    : (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `${WEB_URL}`);
+
+  const slug = formatCompanyNameForUrl(productName) || 'product-details';
+  const productLink = productId
+    ? `${baseUrl}/dashboard/products/details/${productId}/${slug}`
+    : `${baseUrl}/dashboard/marketplace`;
+
   const isLocal = process.env.NODE_ENV === 'development';
-  const baseUrl = isLocal
-    ? 'http://localhost:3000'
-    : `${WEB_URL}`;
-
-  // Construct the product link
-  const productLink = `${baseUrl}/dashboard/products/details/${productSuccessData?.productId || ''}/${formatCompanyNameForUrl(productSuccessData?.productName || '')}`;
 
   console.log('productSuccessData', productSuccessData);
 

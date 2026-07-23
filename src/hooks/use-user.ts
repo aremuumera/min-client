@@ -1,19 +1,18 @@
 'use client';
 
-import { useAppSelector } from '@/redux/hooks';
+import { useAuthIdentity } from './use-auth-identity';
 
 /**
- * Hook to access the current user and auth state from Redux store
- * Replaces the original src/hooks/use-user.js
+ * @deprecated Use `useAuthIdentity()` instead for comprehensive auth/role/team access.
+ * This hook is kept for backward compatibility only.
  */
 export function useUser() {
-    const { user, token, isAuth, isInitialized } = useAppSelector((state) => state.auth);
+    const { user, token, isAuth, isInitialized, normalizedRole } = useAuthIdentity();
     return {
         user,
         token,
         isAuthenticated: isAuth,
         authLoading: !isInitialized,
-        // Helper to check role if needed, matching common patterns
-        role: user?.role
+        role: normalizedRole,
     };
 }

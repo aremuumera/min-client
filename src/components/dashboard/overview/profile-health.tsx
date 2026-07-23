@@ -4,6 +4,7 @@ import React from 'react';
 import { Box } from '@/components/ui/box';
 import { Typography } from '@/components/ui/typography';
 import { CheckCircle, Circle, ArrowRight, ShieldCheck, Store, PackagePlus, FilePlus2, Search, Sparkles, ShieldAlert, Clock } from 'lucide-react';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useAppSelector } from '@/redux/hooks';
 import Link from 'next/link';
 import { paths } from '@/config/paths';
@@ -11,16 +12,12 @@ import { useGetAllProductBySupplierIdQuery } from '@/redux/features/supplier-pro
 import { useGetAllRfqByBuyerIdQuery } from '@/redux/features/buyer-rfq/rfq-api';
 
 export const ProfileHealth = () => {
-    const { appData, user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+    const { appData, user, effectiveUserId, isBuyer, isDualRole, isBusinessVerified, isProfileCreated, roleUpgradeStatus, roleUpgradeReason } = useAuthIdentity();
     const { limit, page } = useAppSelector((state) => state.marketplace);
 
-    const userRole = (user?.role || '').toLowerCase();
-    const isBuyerOnly = userRole === 'buyer';
-    const isDualRole = userRole === 'buyer_supplier' || userRole === 'both';
+    const isBuyerOnly = isBuyer;
 
     // Role upgrade status tracking
-    const roleUpgradeStatus = appData?.roleUpgrade?.status || user?.role_upgrade_status || 'none';
-    const roleUpgradeReason = appData?.roleUpgrade?.reason || user?.role_upgrade_reason || null;
     const isRoleUpgradeRejected = roleUpgradeStatus === 'rejected';
     const isRoleUpgradePending = roleUpgradeStatus === 'requested';
 
@@ -28,20 +25,17 @@ export const ProfileHealth = () => {
     const { data: prodData } = useGetAllProductBySupplierIdQuery({
         limit,
         page,
-        supplierId: isTeamMember ? ownerUserId : user?.id,
+        supplierId: effectiveUserId,
     }, { skip: !user?.id || isBuyerOnly });
 
     // Fetch RFQs to check buyer activity
     const { data: rfqData } = useGetAllRfqByBuyerIdQuery({
         limit,
         page,
-        buyerId: isTeamMember ? ownerUserId : user?.id,
+        buyerId: effectiveUserId,
     }, { skip: !user?.id });
-
-    const isBusinessVerified = !!appData?.businessVerification?.isVerified;
-    const isProfileCreated = !!appData?.isProfileCreated;
-    const hasProducts = (prodData?.total_items || 0) > 0;
-    const hasRfqs = (rfqData?.total_items || 0) > 0;
+    const hasProducts = (prodData?.total_items || 0) > 0 || (prodData?.total || 0) > 0 || (Array.isArray(prodData?.data) && prodData.data.length > 0) || (Array.isArray(prodData?.products) && prodData.products.length > 0);
+    const hasRfqs = (rfqData?.total_items || 0) > 0 || (rfqData?.total || 0) > 0 || (Array.isArray(rfqData?.data) && rfqData.data.length > 0) || (Array.isArray(rfqData?.rfqs) && rfqData.rfqs.length > 0);
 
     // Tailored checklist steps based on user role (buyer, supplier, or buyer_supplier)
     const steps = isBuyerOnly ? [

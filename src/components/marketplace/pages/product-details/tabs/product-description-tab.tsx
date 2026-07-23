@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
@@ -15,8 +15,7 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { showAlert } = useAlert();
 
-  const { isAuth, user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { isAuth, user, effectiveUserId } = useAuthIdentity();
 
   const isOwner = isAuth && effectiveUserId === supplierId;
 

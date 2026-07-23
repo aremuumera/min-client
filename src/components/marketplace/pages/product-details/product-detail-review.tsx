@@ -8,7 +8,7 @@ import { paths } from '@/config/paths';
 import { format } from 'date-fns';
 import { Star, MessageSquare, Plus, Loader2, ShieldCheck, User as UserIcon, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useAlert } from '@/providers';
 import ReviewModal from '@/components/marketplace/modals/review-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
@@ -28,8 +28,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
     productRating,
   } = products || {};
 
-  const { isAuth, user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { isAuth, user, effectiveUserId } = useAuthIdentity();
 
   const [submitReview, { isLoading }] = useSubmitReviewMutation() as any;
 

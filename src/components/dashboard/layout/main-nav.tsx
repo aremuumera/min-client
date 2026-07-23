@@ -11,7 +11,7 @@ import { NotificationsPopover } from './notifications-popover';
 import { UserPopover } from './user-popover';
 import { NavItemConfig } from '@/config/dashboard-config';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { useAppSelector } from '@/redux/hooks';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { cn } from '@/utils/helper';
 import { Chip } from '@/components/ui/chip';
 
@@ -22,20 +22,15 @@ interface MainNavProps {
 
 export function MainNav({ items, isCollapsed }: MainNavProps) {
     const [openNav, setOpenNav] = useState(false);
-    const { user, appData } = useAppSelector((state) => state.auth);
+    const { user, isBuyer, isSupplier, isBusinessVerified, isProfileCreated, roleLabel } = useAuthIdentity();
     const { notifications } = useChat();
 
     const notificationPopover = usePopover<HTMLButtonElement>();
     const userPopover = usePopover<HTMLButtonElement>();
     // const searchDialog = useDialog();
 
-    const isBusinessVerified = appData?.businessVerification?.isVerified;
-    const isSupplierProfileCreated = appData?.isProfileCreated;
-    const userRole = user?.role;
-    const isBuyer = userRole === 'buyer';
-
     // Check if nav should be hidden/rendered based on verification
-    const finalRelease = isBusinessVerified && (userRole !== 'supplier' || isSupplierProfileCreated);
+    const finalRelease = isBusinessVerified && (!isSupplier || isProfileCreated);
 
     const unreadNotificationsCount = notifications.filter((n) => !n.isRead).length;
 
@@ -115,7 +110,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                             )}
                                         </div>
                                         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">
-                                            {user?.companyName} {user?.role ? `• ${user.role === 'buyer_supplier' ? 'Buyer & Supplier' : user.role}` : ''}
+                                            {user?.companyName} {user?.role ? `• ${roleLabel}` : ''}
                                         </p>
                                     </div>
                                 </button>

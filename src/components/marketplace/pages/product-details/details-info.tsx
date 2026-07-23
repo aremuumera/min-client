@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import LoginModal from '@/utils/login-modal';
 import { paths } from '@/config/paths';
 import { Star } from 'lucide-react'; // Using Lucide Star
-import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useAlert } from '@/providers';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import ShareButton from '@/components/marketplace/product-widgets/share-button';
@@ -45,8 +45,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
   const [showLoginModalForSave, setShowLoginModalForSave] = useState(false);
   const { showAlert } = useAlert();
 
-  const { isAuth, user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { isAuth, user, effectiveUserId } = useAuthIdentity();
 
   if (!products) return null;
 
@@ -96,6 +95,21 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
     setShowQuoteModal(false);
   };
 
+  const formatList = (val: any) => {
+    if (!val) return 'Contact for details';
+    if (Array.isArray(val)) return val.length > 0 ? val.join(', ') : 'Contact for details';
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed.length > 0 ? parsed.join(', ') : 'Contact for details';
+      } catch {
+        return val || 'Contact for details';
+      }
+      return val || 'Contact for details';
+    }
+    return 'Contact for details';
+  };
+
   return (
     <div className="w-full">
       <div className="w-full px-3 sm:px-0 bg-white sm:bg-transparent rounded-lg p-4 sm:p-0 shadow-sm sm:shadow-none">
@@ -111,38 +125,38 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
             <span className="text-gray-500 text-sm sm:text-base font-medium">/ {measure || 'unit'}</span>
           </div>
 
-          <div className="flex gap-2 items-center">
-            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Available Quantity:</span>
+          <div className="flex gap-3 items-center">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Available Quantity:</span>
             <span className="text-gray-800 text-sm sm:text-base font-medium">
               {formatNumberWithCommas(quantity || 0)} {measure || ''}
             </span>
           </div>
 
           {/* Delivery */}
-          <div className="flex gap-2 items-center">
-            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Delivery Period:</span>
+          <div className="flex gap-3 items-center">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Delivery Period:</span>
             <span className="text-gray-800 text-sm sm:text-base font-medium">{delivery_period || 'N/A'}</span>
           </div>
 
           {/* Payment */}
-          <div className="flex gap-2 items-start">
-            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px] pt-0.5">Payment Method:</span>
+          <div className="flex gap-3 items-start">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0 pt-0.5">Payment Method:</span>
             <span className="text-gray-800 text-sm sm:text-base font-medium leading-relaxed">
-              {selected_payments?.join(', ') || 'Contact for details'}
+              {formatList(selected_payments)}
             </span>
           </div>
 
           {/* Trade Scope */}
-          <div className="flex gap-2 items-center">
-            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Trade Scope:</span>
+          <div className="flex gap-3 items-center">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Trade Scope:</span>
             <span className="text-gray-800 text-sm sm:text-base font-medium capitalize">
               {trade_scope === 'both' ? 'Local & International' : (trade_scope || 'Local')}
             </span>
           </div>
 
           {/* Supply Type */}
-          <div className="flex gap-2 items-center">
-            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Supply Type:</span>
+          <div className="flex gap-3 items-center">
+            <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Supply Type:</span>
             <span className="text-gray-800 text-sm sm:text-base font-medium capitalize">
               {supply_type || 'Immediate'}
               {supply_type === 'recurring' && frequency && ` (${frequency})`}
@@ -150,8 +164,8 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
           </div>
 
           {supply_type === 'recurring' && duration && (
-            <div className="flex gap-2 items-center">
-              <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[120px]">Duration:</span>
+            <div className="flex gap-3 items-center">
+              <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Duration:</span>
               <span className="text-gray-800 text-sm sm:text-base font-medium">{duration}</span>
             </div>
           )}

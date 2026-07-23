@@ -12,6 +12,7 @@ import NoSavedItems from './nowish';
 import SavedRfqWidget from './savedRfqWiidget';
 import SavedProductWidget from './wishProdWidget';
 import { useAppSelector } from '@/redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useTheme } from '@/providers';
 import { CircularProgress } from '@/components/ui';
 
@@ -41,8 +42,7 @@ const itemVariants: Variants = {
 const SavedItemsDashboard = () => {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState('products');
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { user, effectiveUserId } = useAuthIdentity();
 
   const { data, isLoading, error, refetch } = useGetSavedItemsQuery(
     { userId: effectiveUserId },

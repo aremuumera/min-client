@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { toast } from 'sonner';
 import { useDeleteProductMutation } from '@/redux/features/supplier-products/products_api';
 import { CircularProgress } from '@/components/ui/progress';
@@ -12,7 +13,7 @@ import { CircularProgress } from '@/components/ui/progress';
 const DeleteSupProducts = ({ open, rows, onClose }: any) => {
 
   const [deleteProduct, { data, isLoading, isError }] = useDeleteProductMutation();
-  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state?.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -21,7 +22,7 @@ const DeleteSupProducts = ({ open, rows, onClose }: any) => {
     try {
       const response = await deleteProduct({
         productId: rows?.id,
-        supplierId: isTeamMember ? ownerUserId : user?.id
+        supplierId: effectiveUserId
       }).unwrap();
       toast.success(`${response?.data?.message || ` ${rows?.product_name} 'deleted successfully'`} `,
         {

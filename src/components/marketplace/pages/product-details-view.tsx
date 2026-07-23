@@ -32,15 +32,15 @@ const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
     return <ProductDetailsSkeleton />;
   }
 
-  if (isError || !data?.product) {
+  const prodData = data?.product || data?.data || data;
+
+  if (isError || !prodData || (!prodData.id && !prodData.product_name)) {
     return (
       <div className="py-20 px-4">
         <NoProducts />
       </div>
     );
   }
-
-  const prodData = data.product;
 
   return (
     <div className="w-full max-w-[1600px] mx-auto pb-10 ">

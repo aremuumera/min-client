@@ -19,6 +19,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { useGetCategoryQuery, useGetMainCategoryQuery, useGetSubCategoryQuery } from '@/redux/features/categories/cat_api';
 import { useAppSelector } from '@/redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 
@@ -31,7 +32,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
 
   const { data: mainCategoryData } = useGetMainCategoryQuery();
 
@@ -322,7 +323,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
       if (isAttachmentField) mediaType = 'attachments';
       // if (itemToDelete?.type) mediaType = itemToDelete.type === 'image' ? 'images' : 'attachments';
 
-      const currentUserId = isTeamMember ? ownerUserId : user?.id;
+      const currentUserId = effectiveUserId;
 
       if (selectedAttachmentFiles.length > 0) {
         await updateRfqMedia({
@@ -364,7 +365,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
     e.preventDefault();
 
     try {
-      const buyerId = isTeamMember ? ownerUserId : user?.id;
+      const buyerId = effectiveUserId;
       const rfqId = data?.rfqId;
 
       if (!buyerId || !rfqId) {
@@ -469,7 +470,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
       if (!itemToDelete) return;
       // Call your deleteRfqMedia API with the item ID
       await deleteRfqMedia({
-        buyerId: isTeamMember ? ownerUserId : user?.id,
+        buyerId: effectiveUserId,
         rfqId: data?.rfqId,
         publicId: itemToDelete?.id,
       }).unwrap();

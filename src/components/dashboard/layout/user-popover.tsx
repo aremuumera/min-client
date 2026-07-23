@@ -18,13 +18,14 @@ import { IdentificationBadge as RoleIcon } from '@phosphor-icons/react/dist/ssr/
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { User as UserIcon } from '@phosphor-icons/react/dist/ssr/User';
 import { IoIosLogOut } from 'react-icons/io';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
 import { RouterLink } from '@/components/core/link';
 import { cn } from '@/utils/helper';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Chip } from '@/components/ui/chip';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 
 interface UserPopoverProps {
     trigger: React.ReactNode;
@@ -34,13 +35,9 @@ interface UserPopoverProps {
 }
 
 export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
-    const { appData, user } = useSelector((state: any) => state?.auth);
+    const { user, isSupplier, isBusinessVerified, isProfileCreated, roleLabel } = useAuthIdentity();
 
-    const isBusinessVerified = appData?.businessVerification?.isVerified;
-    const isSupplierProfileCreated = appData?.isProfileCreated;
-    const userRole = user?.role;
-
-    const finalRelease = isBusinessVerified && (userRole !== 'supplier' || isSupplierProfileCreated);
+    const finalRelease = isBusinessVerified && (!isSupplier || isProfileCreated);
 
     const dispatch = useDispatch();
     const router = useRouter();
@@ -124,7 +121,7 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                             color="text.secondary"
                             className="ml-1 font-medium text-neutral-500"
                         >
-                            {user?.role === 'buyer_supplier' ? 'Buyer & Supplier' : (user?.role || 'User')}
+                            {roleLabel}
                         </Typography>
                     </Box>
 

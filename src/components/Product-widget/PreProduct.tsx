@@ -31,8 +31,8 @@ const PreProduct = () => {
   );
 
   // Use actual API data when available, fallback to mock data
-  const productData = data?.products;
-  const productsToShow = productData?.length > 0 ? productData : [];
+  const productData = data?.products || (Array.isArray(data?.data) ? data?.data : data?.data?.products);
+  const productsToShow = Array.isArray(productData) && productData.length > 0 ? productData : [];
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);

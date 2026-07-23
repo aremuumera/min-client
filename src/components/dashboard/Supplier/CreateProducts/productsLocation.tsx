@@ -4,6 +4,7 @@ import { setServerReadyData, updateProductLocation } from '@/redux/features/supp
 import { Button, TextField, SearchableSelect } from '@/components/ui';
 import { Country, State } from 'country-state-city';
 import { useDispatch, useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { toast } from '@/components/core/toaster';
 
 const steps = ['Create Product', 'Product Location', 'Payment Terms', 'Confirm Product Information'];
@@ -12,7 +13,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
   const [states, setStates] = useState<any[]>([]);
   const [errors, setErrors] = useState<any>({});
   const { productLocation } = useSelector((state: any) => state?.product);
-  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state?.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
   const dispatch = useDispatch();
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
@@ -128,7 +129,7 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
 
         // Send the FormData to the API
         const response = await validateProductStep({
-          supplierId: isTeamMember ? ownerUserId : user?.id,
+          supplierId: effectiveUserId,
           body: formDataToSend,
         }).unwrap();
 

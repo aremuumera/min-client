@@ -5,7 +5,7 @@ import React from 'react';
 import { MainNav } from './main-nav';
 import { SideNav } from './side-nav';
 import { dashboardConfig } from '@/config/dashboard-config';
-import { useAppSelector } from '@/redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { cn } from '@/utils/helper';
 import { usePathname } from '@/hooks/use-pathname';
 
@@ -14,7 +14,7 @@ interface VerticalLayoutProps {
 }
 
 export function DynamicLayout({ children }: VerticalLayoutProps) {
-    const { user, appData, isTeamMember, permissions } = useAppSelector((state) => state.auth);
+    const { user, appData, isTeamMember, permissions, isBusinessVerified, isProfileCreated, isBuyer, isSupplier, isDualRole, isInspector, isAdmin, hasInspectorAccess, normalizedRole } = useAuthIdentity();
     const [isCollapsed, setIsCollapsed] = React.useState(false);
     const [isMounted, setIsMounted] = React.useState(false);
     const pathname = usePathname()
@@ -33,12 +33,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
         localStorage.setItem('dashboard-sidebar-collapsed', String(newState));
     };
 
-    const isBusinessVerified = appData?.businessVerification?.isVerified;
-    const userRole = user?.role;
-    const isSupplierProfileCreated = appData?.isProfileCreated;
-
     // Sidebar navigation release state: ensure desktop and mobile share identical release logic
-    const finalRelease = isBusinessVerified && (userRole !== 'supplier' || isSupplierProfileCreated);
+    const finalRelease = isBusinessVerified && (!isSupplier || isProfileCreated);
 
     // Helper to check if a user has permission
     const hasPermission = React.useCallback((permission?: string) => {
@@ -91,11 +87,9 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const finalItems = React.useMemo(() => {
         let items = dashboardConfig.navItems;
 
-        const normalizedRole = (userRole || '').toLowerCase();
-        const isSupplierOnly = normalizedRole === 'supplier';
-        const isBuyerOnly = normalizedRole === 'buyer';
-        const isDualRole = normalizedRole === 'buyer_supplier' || normalizedRole === 'both' || normalizedRole === 'admin';
-        const isInspectorRole = normalizedRole === 'inspector' || normalizedRole === 'admin';
+        const isSupplierOnly = isSupplier;
+        const isBuyerOnly = isBuyer;
+        const isInspectorRole = hasInspectorAccess;
 
         // 1. Role-based sub-item filtering
         items = items.map((section) => {
@@ -202,7 +196,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                 return true;
             });
 
-    }, [userRole, filterNavItems]);
+    }, [normalizedRole, isBuyer, isSupplier, isDualRole, hasInspectorAccess, filterNavItems]);
 
     if (!isMounted) {
         return null;

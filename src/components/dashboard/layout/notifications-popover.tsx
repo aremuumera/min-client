@@ -13,7 +13,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { Typography } from '@/components/ui/typography';
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { EnvelopeSimple as EnvelopeSimpleIcon } from '@phosphor-icons/react/dist/ssr/EnvelopeSimple';
-import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useRouter } from 'next/navigation';
 
 import { dayjs } from '@/lib/dayjs';
@@ -44,8 +44,7 @@ interface NotificationsPopoverProps {
 
 export function NotificationsPopover({ trigger, onClose, open }: NotificationsPopoverProps) {
     const router = useRouter();
-    const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-    const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+    const { user, effectiveUserId } = useAuthIdentity();
     const chatContext = useContext(ChatContext);
     const notifications: Notification[] = chatContext?.notifications || [];
     const clearSingleNotification = chatContext?.clearSingleNotification;

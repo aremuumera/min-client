@@ -4,6 +4,7 @@
 import React, { createContext, useCallback, useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { toast } from 'sonner';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { chatService, db, getUserName } from '@/components/dashboard/chat/chat_service';
@@ -101,10 +102,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [openMobileSidebar, setOpenMobileSidebar] = React.useState(false);
   const [acknowledgeInquiry] = useAcknowledgeInquiryMutation();
   const [rejectInquiry] = useRejectInquiryMutation();
-  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-  const effectiveUserId = String(ownerUserId || user?.id || '').replace(/-/g, '');
+  const { user, effectiveUserId: rawEffectiveUserId, fullName: authFullName } = useAuthIdentity();
+  const effectiveUserId = String(rawEffectiveUserId || '').replace(/-/g, '');
   const userRole = user?.role || user?.team_role || user?.rtype || 'buyer';
-  const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`;
+  const fullName = authFullName || `${user?.firstName || ''} ${user?.lastName || ''}`;
 
   const router = useRouter();
   const pathname = usePathname();

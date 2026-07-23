@@ -10,9 +10,8 @@ import {
 // import LoginModal from "@/components/common/login-modal";
 import { useState, useRef } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { usePathname } from "next/navigation";
-import { RootState } from "@/redux/store"; // Assuming RootState is exported from store
 import { Loader2 } from "lucide-react";
 
 interface Product {
@@ -31,8 +30,7 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
   const { showAlert } = useAlert();
   // Use 'any' for now if RootState is not fully typed or migration is partial, 
   // but ideally we should use RootState.
-  const { user, isAuth, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { user, isAuth, effectiveUserId } = useAuthIdentity();
   const pathname = usePathname();
   const { id, rfqId } = products;
   const effectiveId = id || rfqId || products?._id;

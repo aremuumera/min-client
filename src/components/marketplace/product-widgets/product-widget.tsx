@@ -224,7 +224,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                         <span className='' >
                                             <ToggleSaveButton setShowLoginModal={setShowLoginModalForSave} products={products} />
                                         </span>
-                                        <span className='hidden sm:inline'><ShareButton productName={product_name} /></span>
+                                        <span className='inline-flex items-center'><ShareButton productName={product_name} /></span>
                                     </div>
 
                                 </div>

@@ -9,17 +9,18 @@ import { useSelector } from 'react-redux';
 import { useGetAllRfqByBuyerIdQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useGetAllProductBySupplierIdQuery } from '@/redux/features/supplier-products/products_api';
 import { useAppSelector } from '@/redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 
 const AnalyticsCards = () => {
 
     const { limit, page } = useAppSelector((state) => state.marketplace);
-    const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+    const { user, effectiveUserId } = useAuthIdentity();
 
 
     const { data, isLoading: isRfqLoaing, isError } = useGetAllRfqByBuyerIdQuery({
         limit,
         page,
-        buyerId: isTeamMember ? ownerUserId : user?.id,
+        buyerId: effectiveUserId,
     }, {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,
@@ -31,7 +32,7 @@ const AnalyticsCards = () => {
     const { data: prodData, isLoading: isProdLoading, isError: isProdError } = useGetAllProductBySupplierIdQuery({
         limit,
         page,
-        supplierId: isTeamMember ? ownerUserId : user?.id,
+        supplierId: effectiveUserId,
     }, {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,

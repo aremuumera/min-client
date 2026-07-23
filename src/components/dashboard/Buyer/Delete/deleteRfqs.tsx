@@ -10,13 +10,14 @@ import { RiDeleteBin6Line } from 'react-icons/ri';
 
 import { Option } from '@/components/core/option';
 import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { toast } from 'sonner';
 import { useDeleteRFQMutation } from '@/redux/features/buyer-rfq/rfq-api';
 import { CircularProgress } from '@/components/ui';
 
 const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose: () => void }) => {
 
-  const { user, isTeamMember, ownerUserId } = useSelector((state: any) => state?.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
 
   const [deleteRFQ, { data, isLoading, isError }] = useDeleteRFQMutation();
 
@@ -28,7 +29,7 @@ const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose
     try {
       const response = await deleteRFQ({
         rfqId: rows?.rfqId,
-        buyerId: isTeamMember ? ownerUserId : user?.id
+        buyerId: effectiveUserId
       }).unwrap();
       toast.success(`${response?.data?.message || ` ${rows?.rfqProductName} 'deleted successfully'`} `,
         {

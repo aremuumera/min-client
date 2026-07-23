@@ -3,7 +3,7 @@
 import React from 'react';
 import { paths } from '@/config/paths';
 import { motion } from 'framer-motion';
-import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import Link from 'next/link';
 import {
     Sparkles,
@@ -17,9 +17,9 @@ import {
 } from 'lucide-react';
 
 const UnverifiedBanner = () => {
-    const { appData, user } = useSelector((state: any) => state.auth);
+    const { appData, user, normalizedRole } = useAuthIdentity();
     const IsBusinessStatus = appData?.businessVerification?.status;
-    const role = user?.role;
+    const role = normalizedRole;
 
     const contentMap = {
         supplier: {

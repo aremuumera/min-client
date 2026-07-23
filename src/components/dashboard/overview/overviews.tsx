@@ -1,8 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useGetInspectorStatsQuery, useGetInspectorAssignmentsQuery } from '@/redux/features/inspector/inspector_api';
 import Banner from '@/components/dashboard/overview/banner';
 import BusinessVerificationOverview from '@/components/dashboard/overview/not-verified-view';
@@ -16,18 +15,14 @@ import { MiniCalendar } from './mini-calendar';
 import { WorkImprovementTable } from './work-improvement-table';
 
 export function Overviews() {
-    const { user, appData } = useSelector((state: RootState) => state.auth);
-    const isInspector = user?.role === 'inspector';
+    const { user, isInspector, isSupplier, isBusinessVerified, isProfileCreated } = useAuthIdentity();
 
     // Data fetching for Inspector Dashboard
     const { data: statsRes, isLoading: statsLoading } = useGetInspectorStatsQuery(undefined, { skip: !isInspector });
     const { data: assignmentsRes, isLoading: assignmentsLoading } = useGetInspectorAssignmentsQuery(undefined, { skip: !isInspector });
 
-    const isBusinessVerified = appData?.businessVerification?.isVerified;
-    const isSupplierProfileCreated = appData?.isProfileCreated;
-
     // Logic for showing verification or dashboard
-    const finalRelease = isBusinessVerified && (user?.role !== 'supplier' || isSupplierProfileCreated);
+    const finalRelease = isBusinessVerified && (!isSupplier || isProfileCreated);
 
     if (!finalRelease) {
         return <BusinessVerificationOverview />;

@@ -64,6 +64,7 @@ import { toast } from 'sonner';
 import { Option } from '@/components/core/option';
 import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
 import { useAppDispatch, useAppSelector } from '@/redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
@@ -163,7 +164,7 @@ const RfqDetails = ({
   const { rfqProductDetailsFormData, rfqSuccessData, states } = useAppSelector((state) => state?.rfqProduct);
   const typedFormData = rfqProductDetailsFormData as RfqFormData;
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state?.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [createdRfqId, setCreatedRfqId] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -515,7 +516,7 @@ const RfqDetails = ({
       }
       console.log('you', formData);
       const res = await createRFQ({
-        buyerId: isTeamMember ? ownerUserId : user?.id,
+        buyerId: effectiveUserId,
         rfqData: formData,
       }).unwrap();
       console.log('res', res);

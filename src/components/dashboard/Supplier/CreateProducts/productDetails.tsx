@@ -22,6 +22,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from '@/redux/hooks';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import {
   Box,
   Button,
@@ -132,7 +133,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
     serverReadyData,
     uploadedAttachment,
   }: any = useAppSelector((state: any) => state.product || {});
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state: any) => state.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
 
   const [selectedCategories, setSelectedCategories] = useState({
     mainCategory: { id: '', name: '', tag: '' },
@@ -557,7 +558,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
       // Send the data to API
       const response = await validateProductStep({
-        supplierId: isTeamMember ? ownerUserId : user?.id,
+        supplierId: effectiveUserId,
         body: formData,
       }).unwrap();
       console.log('API Response:', response);

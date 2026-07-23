@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useValidateProductStepMutation } from "@/redux/features/supplier-products/products_api";
 import { toast } from '@/components/core/toaster';
 import { useAppSelector } from '@/redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { MultiCheckboxSelect } from '@/components/ui';
 
 const steps = [
@@ -28,7 +29,7 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
   handleBack: () => void;
 }) => {
   const { productPaymentData, serverReadyData, serverReadyImagesData, serverReadyAttachmentData } = useAppSelector((state) => state?.product);
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state?.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
   const dispatch = useDispatch();
 
   const [validateProductStep, { isLoading }] = useValidateProductStepMutation();
@@ -109,7 +110,7 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
 
         // Send the FormData to the API
         const response = await validateProductStep({
-          supplierId: isTeamMember ? ownerUserId : user?.id,
+          supplierId: effectiveUserId,
           body: formDataToSend,
         }).unwrap();
 

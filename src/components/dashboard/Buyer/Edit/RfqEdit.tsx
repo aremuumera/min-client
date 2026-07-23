@@ -38,6 +38,7 @@ import { MoqUnits as Moq } from '@/lib/marketplace-data';
 import { paymentTerms, shippingTerms as shippingTermsFields } from '@/components/dashboard/Supplier/CreateProducts/paymentTerms';
 import { useGetRfqDetailsForbuyQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useSelector } from 'react-redux';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { formatDate } from '@/utils/helper';
 import Loader from '@/lib/Loader';
 import { useGetCategoryQuery, useGetMainCategoryQuery, useGetSubCategoryQuery } from '@/redux/features/categories/cat_api';
@@ -54,11 +55,11 @@ const EditRfQs = ({ open, rows, onClose }: any) => {
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
   const [showMediaModal, setShowMediaModal] = useState<boolean>(false);
 
-  const { user, appData, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
+  const { user, appData, effectiveUserId } = useAuthIdentity();
   // const exampleRoute = 'http://localhost:3000/products/details/2/High-Purity-Limestone-for-Industrial-Use'
 
   const { data, isLoading, isError } = useGetRfqDetailsForbuyQuery({
-    buyerId: isTeamMember ? ownerUserId : user?.id,
+    buyerId: effectiveUserId,
     rfqId: listedRfqId
   },
     {

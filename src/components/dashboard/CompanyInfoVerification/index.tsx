@@ -61,6 +61,7 @@ import { cn } from '@/utils/helper';
 import { Country, State } from 'country-state-city';
 import { motion } from 'framer-motion';
 import { useAppSelector } from '@/redux/hooks';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useRouter } from 'next/navigation';
 import { paths } from '@/config/paths';
 import { CheckCircle, AlertTriangle, Building2 } from 'lucide-react';
@@ -331,8 +332,7 @@ const SearchableSelect = ({
 const BusinessCategoryModal = ({ open, setShowCategoryModal, onComplete }: any) => {
   const [category, setCategory] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { user, effectiveUserId } = useAuthIdentity();
   const userId = effectiveUserId;
   const [updateCategory, { isLoading, error }] = useUpdateBusinessCategoryMutation();
   const { data: statusData, refetch } = useGetVerificationStatusQuery(userId, { skip: !userId });
@@ -1679,8 +1679,7 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
     accreditation_docs: null,
     insurance_info: null,
   });
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { user, effectiveUserId } = useAuthIdentity();
   const userRole = user?.role;
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -3088,12 +3087,10 @@ const BusinessVerification = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categorySelected, setCategorySelected] = useState(false);
   const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
-  const { user, appData, isTeamMember, ownerUserId } = useAppSelector((state: any) => state.auth);
-  const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
+  const { user, appData, effectiveUserId, isBusinessVerified, isProfileCreated } = useAuthIdentity();
   const userId = effectiveUserId;
   const userRole = user?.role;
-  const isBusinessVerified = appData?.businessVerification?.isVerified;
-  const isSupplierProfileCreated = appData?.isProfileCreated;
+  const isSupplierProfileCreated = isProfileCreated;
   const router = useRouter();
   const allRoles = ['buyer', 'supplier', 'buyer_supplier', 'inspector'];
   const finalRelease = isBusinessVerified && allRoles.includes(userRole);

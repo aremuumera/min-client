@@ -22,9 +22,14 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const {
-    storeProfile,
+    storeProfile: directStoreProfile,
+    supplier,
     images
   } = products || {};
+
+  const storeProfile = directStoreProfile || supplier?.supplierProfile || {};
+  const companyName = storeProfile?.company_name || supplier?.business_name || supplier?.company_name || '';
+  const companySlug = formatCompanyNameForUrl(companyName) || 'company';
 
   // Normalize media items to {url, type} objects
   const validMedia: MediaItem[] = images?.length > 0
@@ -70,26 +75,26 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
     );
   };
 
+  const companyLogo = storeProfile?.logo || supplier?.profile_picture || supplier?.logo || '/assets/logo5.png';
+
   return (
     <div className="w-full px-2 sm:px-0">
       {/* Main content container */}
       <div className="mt-5 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-6 md:gap-8 items-start">
         {/* Company logo */}
-        <div className="w-full sm:w-auto flex flex-col items-center sm:items-start">
-          {storeProfile?.logo && (
-            <div className="w-24 sm:w-32 h-auto flex justify-center sm:justify-start">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={storeProfile?.logo}
-                alt="Company logo"
-                className="max-w-full object-contain max-h-24"
-              />
-            </div>
-          )}
-          {storeProfile?.company_name && (
-            <div className="flex gap-1 pt-2 items-center">
-              <p className="font-medium text-sm sm:text-base">{storeProfile?.company_name}</p>
-              <Verified className="text-green-600 w-4 h-4" />
+        <div className="w-full sm:w-auto flex flex-col items-center sm:items-start shrink-0">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm flex items-center justify-center bg-gray-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={companyLogo}
+              alt={companyName || 'Company logo'}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {companyName && (
+            <div className="flex gap-1.5 pt-2.5 items-center">
+              <p className="font-semibold text-sm sm:text-base text-gray-900">{companyName}</p>
+              <Verified className="text-green-600 w-4 h-4 shrink-0" />
             </div>
           )}
         </div>
@@ -147,8 +152,8 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
       {/* Company Profile button */}
       <div className="w-full sm:w-1/2 md:w-2/5 mt-6 px-2 sm:px-0">
         <Link
-          href={paths.marketplace.companyProfile(formatCompanyNameForUrl(storeProfile?.company_name))}
-          className="block w-full text-center py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium shadow-sm"
+          href={paths.marketplace.companyProfile(companySlug)}
+          className="block w-full text-center py-2.5 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm"
         >
           Company Profile
         </Link>

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useCreateProductMutation } from '@/redux/features/supplier-products/products_api';
 import { resetProductState, setProductSuccessData } from '@/redux/features/supplier-products/products_slice';
 import { useAppSelector } from '@/redux/hooks';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import Link from 'next/link';
 import { CircularProgress, Typography } from '@/components/ui';
 import { useState } from 'react';
@@ -60,7 +61,7 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
   } = productLocation;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { user, isTeamMember, ownerUserId } = useAppSelector((state) => state?.auth);
+  const { user, effectiveUserId } = useAuthIdentity();
   const dispatch = useDispatch();
 
   const [createProduct, { isLoading }] = useCreateProductMutation();
@@ -180,24 +181,27 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
 
 
       const response = await createProduct({
-        supplierId: isTeamMember ? ownerUserId : user?.id,
+        supplierId: effectiveUserId,
         body: formData
       }).unwrap();
       //   console.log('API
-      if (response && response.message) {
-        toast.success(`${response?.message || 'Product listed successfully!'}`);
-        handleNext();
-      }
-      // submitted', response);
+      const createdProduct = response?.data || response?.product || response;
+      const createdId = createdProduct?.id || response?.id || '';
+      const createdName = createdProduct?.product_name || createdProduct?.productName || '';
+
       dispatch(setProductSuccessData({
-        productName: response?.product?.product_name || '',
-        productId: response?.product?.id || '',
+        productName: createdName,
+        productId: createdId,
       }));
 
       dispatch(resetProductState());
       setProductImages([]);
       setProductAttachments([]);
-      // handleNext(); // This was moved inside the if block above
+
+      if (response && (response.message || response.success)) {
+        toast.success(`${response?.message || 'Product listed successfully!'}`);
+        handleNext();
+      }
 
     } catch (error: any) {
       console.error('Error during form')

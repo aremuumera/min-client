@@ -16,6 +16,7 @@ import { TablePagination } from "@/components/ui/pagination";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetAllRfqByBuyerIdQuery } from "@/redux/features/buyer-rfq/rfq-api";
 import { useAppSelector } from "@/redux";
+import { useAuthIdentity } from "@/hooks/use-auth-identity";
 import { useRouter } from "next/navigation";
 
 export const mockData = [
@@ -234,14 +235,14 @@ const ListedRfQs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [filteredData, setFilteredData] = useState(mockData);
-  const { user, appData, isTeamMember, ownerUserId } = useAppSelector((state) => state.auth);
+  const { user, appData, effectiveUserId } = useAuthIdentity();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch = useDispatch();
   const router = useRouter();
 
   const params = {
-    buyerId: isTeamMember ? ownerUserId : user?.id,
+    buyerId: effectiveUserId,
     page: page + 1,
     limit: rowsPerPage,
     q: searchTerm,
