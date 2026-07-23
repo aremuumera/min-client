@@ -47,6 +47,7 @@ import { toast } from '@/components/core/toaster';
 import { MoqUnits as Moq } from '@/lib/marketplace-data';
 import { z } from 'zod';
 import { MultiCheckboxSelect, SearchableSelect } from '@/components/ui';
+import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 interface SupplierProductDetailsProps {
@@ -926,30 +927,35 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
           </div>
 
           {/* Measure */}
-          <div className="flex flex-col pt-[10px] md:flex-row gap-[15px] items-center justify-center">
-            <SearchableSelect
-              label="Measure"
-              options={Moq.map((unit: any) => ({
-                value: unit,
-                label: unit,
-              }))}
-              value={productDetailsFormData?.measure || ''}
-              onChange={(e: any) => handleInputChange({ target: { name: 'measure', value: e.target.value } })}
-              placeholder="Select a measure unit"
-              errorMessage={errors.measure}
-              fullWidth
-            />
-            <TextField
-              label="M.O.Q / Available Quantity"
-              fullWidth
-              margin="normal"
-              name="quantity"
-              placeholder="Enter your M.O.Q value and select the measure unit"
-              value={formatNumberWithCommas(productDetailsFormData?.quantity) || ''}
-              onChange={handleInputChange}
-              error={!!errors.quantity}
-              helperText={errors.quantity}
-            />
+          <div className="flex flex-col pt-[10px] md:flex-row gap-[15px] items-start justify-center w-full">
+            <div className="w-full md:w-1/2">
+              <SearchableSelectLocal
+                label="Measure"
+                options={Moq.map((unit: any) => ({
+                  value: unit,
+                  label: unit,
+                }))}
+                value={productDetailsFormData?.measure || ''}
+                onChange={(val: any) => handleInputChange({ target: { name: 'measure', value: val } })}
+                placeholder="Select a measure unit"
+              />
+              {errors.measure && (
+                <p className="mt-1.5 text-xs text-error-500">{errors.measure}</p>
+              )}
+            </div>
+            <div className="w-full md:w-1/2">
+              <TextField
+                label="M.O.Q / Available Quantity"
+                fullWidth
+                margin="normal"
+                name="quantity"
+                placeholder="Enter your M.O.Q value and select the measure unit"
+                value={formatNumberWithCommas(productDetailsFormData?.quantity) || ''}
+                onChange={handleInputChange}
+                error={!!errors.quantity}
+                helperText={errors.quantity}
+              />
+            </div>
           </div>
 
           <div className="pt-8">
