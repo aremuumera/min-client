@@ -25,7 +25,7 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   // The slug is likely URL encoded. Original code used decodeCompanyNameFromUrl.
   const decodedName = decodeCompanyNameFromUrl(slug);
 
-  const { data, isLoading, isError } = useGetStoreProfileWebQuery({
+  const { data, isLoading, isError, error } = useGetStoreProfileWebQuery({
     supplierName: decodedName, // Pass decoded name for API matching
   }, {
     skip: !slug,
@@ -42,6 +42,7 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
   }
 
   if (isError || !data) {
+    console.error('CompanyProfileView load error:', error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center border border-gray-100">

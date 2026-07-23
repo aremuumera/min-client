@@ -856,15 +856,16 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             {/* all category selection */}
             <div className="flex flex-col md:flex-row gap-[15px] pt-4 items-center justify-center">
               <SearchableSelect
-                label="Main Product Category"
-                options={mainCatData?.map((category: any) => ({
-                  value: category.original_id,
+                label="Main Product Category *"
+                options={(Array.isArray(mainCatData) ? mainCatData : mainCatData?.data || [])?.map((category: any) => ({
+                  value: String(category.original_id || category.id),
                   label: category.name,
                 })) || []}
-                value={selectedCategories.mainCategory.id}
+                value={String(selectedCategories.mainCategory.id || '')}
                 onChange={(e: any) => {
-                  const selectedId = e.target.value;
-                  const selected = (mainCatData as any[]).find((cat: any) => cat.original_id === selectedId);
+                  const selectedId = String(e.target.value);
+                  const rawList = Array.isArray(mainCatData) ? mainCatData : mainCatData?.data || [];
+                  const selected = rawList.find((cat: any) => String(cat.original_id || cat.id) === selectedId);
                   handleCategoryChanges('mainCategory', selectedId, selected?.name, selected?.tag);
                 }}
                 placeholder="Select a main category"
@@ -875,17 +876,17 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
 
               {/* Only show Product Category select if the selected main category has submenu: true */}
               {selectedCategories.mainCategory.id &&
-                mainCatData?.find((cat: any) => cat.original_id === selectedCategories.mainCategory.id)?.submenu && (
+                (Array.isArray(mainCatData) ? mainCatData : mainCatData?.data || [])?.find((cat: any) => String(cat.original_id || cat.id) === String(selectedCategories.mainCategory.id))?.submenu && (
                   <SearchableSelect
                     label="Product Category"
                     options={productCatData?.children?.map((category: any) => ({
-                      value: category.original_id,
+                      value: String(category.original_id || category.id),
                       label: category.name,
                     })) || []}
-                    value={selectedCategories.productCategory.id}
+                    value={String(selectedCategories.productCategory.id || '')}
                     onChange={(e: any) => {
-                      const selectedId = e.target.value;
-                      const selected = (productCatData as any)?.children?.find((cat: any) => cat.original_id === selectedId);
+                      const selectedId = String(e.target.value);
+                      const selected = (productCatData as any)?.children?.find((cat: any) => String(cat.original_id || cat.id) === selectedId);
                       handleCategoryChanges('productCategory', selectedId, selected?.name, selected?.tag);
                     }}
                     placeholder="Select a category"
@@ -900,18 +901,18 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
             <div className="flex flex-col md:flex-row gap-[15px] pt-6 items-center justify-center">
               {/* Only show Sub Category select if the selected product category has submenu: true */}
               {selectedCategories.productCategory.id &&
-                productCatData?.children?.find((cat: any) => cat.original_id === selectedCategories.productCategory.id)
+                productCatData?.children?.find((cat: any) => String(cat.original_id || cat.id) === String(selectedCategories.productCategory.id))
                   ?.submenu && (
                   <SearchableSelect
                     label="Product Sub Category"
                     options={subCatData?.children?.map((category: any) => ({
-                      value: category.original_id,
+                      value: String(category.original_id || category.id),
                       label: category.name,
                     })) || []}
-                    value={selectedCategories.subCategory.id}
+                    value={String(selectedCategories.subCategory.id || '')}
                     onChange={(e: any) => {
-                      const selectedId = e.target.value;
-                      const selected = (subCatData as any)?.children?.find((cat: any) => cat.original_id === selectedId);
+                      const selectedId = String(e.target.value);
+                      const selected = (subCatData as any)?.children?.find((cat: any) => String(cat.original_id || cat.id) === selectedId);
                       handleCategoryChanges('subCategory', selectedId, selected?.name, selected?.tag);
                     }}
                     placeholder="Select a sub-category"

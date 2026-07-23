@@ -2,12 +2,14 @@
 import React from 'react';
 import CompanyProfileView from '@/components/marketplace/pages/company-profile-view';
 
-// This is a Server Component
-export default function CompanyProfilePage({ params }: { params: { slug: string } }) {
-  // params.slug corresponds to /business/[slug]
+// This is an Async Server Component in Next.js 15/16
+export default async function CompanyProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
+
   return (
     <div className="w-full">
-      <CompanyProfileView slug={params.slug} />
+      <CompanyProfileView slug={slug} />
     </div>
   );
 }

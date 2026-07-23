@@ -47,9 +47,9 @@ export const supplierProfileApi = createApi({
             },
         }),
 
-        // Get Store Profile by name for web
+        // Get Store Profile by name for web (Public)
         getStoreProfileWeb: builder.query({
-            query: ({ supplierName }) => `/suppliers/detail/${supplierName}`,
+            query: ({ supplierName }) => `/suppliers/detail/${encodeURIComponent(supplierName)}`,
             providesTags: () => [{ type: 'StoreProfile' }],
             transformResponse: (response: any) => {
                 return response?.data || response;
