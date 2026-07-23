@@ -163,7 +163,7 @@ const CompanyStoreProfile = () => {
                 <Box sx={{ p: 1 }}>
                   <h1 className="text-[25px] font-[500] pb-[8px]">{getProgressLabel().header}</h1>
                   <p className="text-[#969696c7] pb-[20px] text-[.85rem]">{getProgressLabel().paragraph}</p>
-                  <ProgressBar steps={steps} progress={progress} />
+                  <ProgressBar steps={steps} progress={progress} activeStep={activeStep} />
                 </Box>
               </div>
               <div>{renderStepContent()}</div>
