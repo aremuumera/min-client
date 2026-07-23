@@ -189,8 +189,9 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
       setShowSuccessModal(true);
     } catch (error: any) {
-      toast.error(error?.data?.message || error?.data?.error || 'Profile creation failed');
-      console.error('Submission failed:', error);
+      const errMsg = error?.data?.message || error?.data?.error || error?.message || 'Profile creation failed';
+      toast.error(errMsg);
+      console.error('Submission failed details:', { status: error?.status, data: error?.data, error });
     }
   };
 
