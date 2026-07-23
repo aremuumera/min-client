@@ -99,11 +99,26 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
 
         // 1. Role-based sub-item filtering
         items = items.map((section) => {
-            // Hide 'becomeasupplier' CTA for users with supplier capabilities
-            if (section.key === 'general' && (isSupplierOnly || isDualRole)) {
+            // Role upgrade CTA customization in 'general' section
+            if (section.key === 'general') {
+                if (isDualRole) {
+                    // Hide role upgrade CTA for dual-role users who already have both capabilities
+                    return {
+                        ...section,
+                        items: section.items?.filter((subItem) => subItem.key !== 'becomeasupplier'),
+                    };
+                }
                 return {
                     ...section,
-                    items: section.items?.filter((subItem) => subItem.key !== 'becomeasupplier'),
+                    items: section.items?.map((subItem) => {
+                        if (subItem.key === 'becomeasupplier') {
+                            return {
+                                ...subItem,
+                                title: isSupplierOnly ? 'Become a Buyer' : 'Become a Supplier',
+                            };
+                        }
+                        return subItem;
+                    }),
                 };
             }
 
