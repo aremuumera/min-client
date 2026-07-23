@@ -51,6 +51,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                         <button
                             onClick={() => setOpenNav(true)}
                             className="lg:hidden p-2.5 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                            aria-label="Open Mobile Menu"
                         >
                             <Menu size={20} />
                         </button>

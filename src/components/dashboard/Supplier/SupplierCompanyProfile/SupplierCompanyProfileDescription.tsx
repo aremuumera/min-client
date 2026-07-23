@@ -60,12 +60,12 @@ const stepSchema = z.object({
   companyDescription: z.string().min(1, 'Company description is required'),
   businessCategory: z.string().min(1, 'Business category is required'),
   totalEmployees: z.string().min(1, 'Total employees is required'),
-  yearEstablished: z.string().min(1, 'Year of established is required').refine(val => !isNaN(Number(val)), 'Must be a valid year'),
+  yearEstablished: z.string().min(1, 'Year of established is required'),
   yearExperience: z.string().min(1, 'Year of experience is required'),
   businessType: z.string().min(1, 'Business type is required'),
-  totalRevenue: z.string().min(1, 'Total revenue is required'),
-  selectedPayments: z.array(z.string()).min(1, 'Terms of payment is required'),
-  selectedShippings: z.array(z.string()).min(1, 'Shipping options is required'),
+  totalRevenue: z.string().optional().nullable().or(z.literal('')),
+  selectedPayments: z.array(z.string()).optional(),
+  selectedShippings: z.array(z.string()).optional(),
 });
 
 const descriptionFieldSchema = z.object({
@@ -312,7 +312,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <div className="w-full">
                 <TextField
-                  label="Company Name"
+                  label="Company Name *"
                   fullWidth
                   margin="normal"
                   placeholder="eg...  Mineral ltd."
@@ -325,7 +325,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
               </div>
               <div className="w-full">
                 <TextField
-                  label="Total Employees"
+                  label="Total Employees *"
                   fullWidth
                   margin="normal"
                   placeholder="e.g. 12, 15 - 200"
@@ -342,7 +342,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <div className="w-full">
                 <TextField
-                  label="Year of established"
+                  label="Year of established *"
                   fullWidth
                   margin="normal"
                   placeholder="eg... 2025"
@@ -355,7 +355,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
               </div>
               <div className="w-full">
                 <TextField
-                  label="Year of experience"
+                  label="Year of experience *"
                   fullWidth
                   margin="normal"
                   placeholder="eg... 15+ "
@@ -373,7 +373,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
               {/* business category section */}
               <div className="w-full">
                 <SearchableSelect
-                  label="Business Category"
+                  label="Business Category *"
                   name="businessCategory"
                   options={businessData.businessCategory.map(c => ({ value: c, label: c }))}
                   value={profileDetailsFormData.businessCategory || ''}
@@ -387,7 +387,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
               {/* business type section */}
               <div className="w-full">
                 <SearchableSelect
-                  label="Business Type"
+                  label="Business Type *"
                   name="businessType"
                   options={businessData.businessType.map(t => ({ value: t, label: t }))}
                   value={profileDetailsFormData.businessType || ''}
@@ -447,7 +447,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <div className="w-full">
                 <TextField
-                  label="Company Description"
+                  label="Company Description *"
                   fullWidth
                   rows={4}
                   multiline
@@ -508,18 +508,18 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
             </div>
 
             {/* Preview Modal Button */}
-            <div className="py-[20px] flex gap-4 w-full">
+            <div className="py-[20px] flex flex-col sm:flex-row gap-3 w-full">
               <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type="button">
                 Preview
               </Button>
-              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" className="mt-4" color="primary" type="button">
+              <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" color="primary" type="button">
                 Add More Description Field
               </Button>
             </div>
 
             <Modal open={openPreview} onClose={handlePreviewClose}>
               <Box className="mx-auto max-w-[500px] p-8 bg-white rounded-lg">
-                <Typography variant="body1" className="pt-4">
+                <Typography variant="body1" className="pt-4 font-semibold">
                   Preview Description
                 </Typography>
                 <div>
@@ -539,43 +539,40 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
             </Modal>
 
             <div>
-              <div className="w-full flex justify-between items-center gap-5">
+              <div className="w-full flex flex-col md:flex-row justify-between items-stretch gap-6">
                 {/* First Image Upload */}
                 <div className="w-full">
-                  <div className="py-[20px]">
-                    <h2 className="font-[500] text-[1rem]">Company logo</h2>
-                    <p className="text-[#b6b6b6] text-[.9rem]">File should maintain minimum of 40 * 40</p>
+                  <div className="py-2">
+                    <h2 className="font-medium text-base text-gray-900">Company Logo</h2>
+                    <p className="text-gray-400 text-xs mt-0.5">File should maintain minimum of 40 × 40 px</p>
                   </div>
                   <Box
-                    className="flex flex-col gap-[8px] justify-center items-center w-full h-[150px] border-[1.5px] border-dashed border-[#d9d9d9] rounded-[8px] cursor-pointer bg-white hover:bg-[#f7f7f7]"
-                    onClick={() => (document.getElementById('logo-upload') as HTMLInputElement).click()} // Trigger input on box click
+                    className="flex flex-col gap-2 justify-center items-center w-full min-h-[130px] p-4 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                    onClick={() => (document.getElementById('logo-upload') as HTMLInputElement).click()}
                   >
-                    <FaUpload size={20} color="#888" />
+                    <FaUpload size={22} className="text-gray-400" />
                     <Input
                       id="logo-upload"
                       type="file"
                       onChange={handleLogoFileChange}
-                      placeholder="Click to Upload/browse fill"
                       className="hidden"
                       accept="image/png, image/jpeg, image/webp"
                     />
-                    <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
+                    <h2 className="text-gray-500 text-sm font-medium text-center">Click to upload/browse logo</h2>
                   </Box>
                   {/* Display Uploaded File Name */}
-                  <div className="pt-[10px]">
+                  <div className="pt-2">
                     {supplierProfileLogo && !Array.isArray(supplierProfileLogo) && (
-                      <div className="flex flex-wrap gap-[10px] ">
-                        <Box
-                          className="relative p-1 bg-[#f7f7f7] rounded-[5px]"
-                        >
+                      <div className="flex flex-wrap gap-2">
+                        <Box className="relative px-3 py-1.5 bg-gray-100 rounded-md flex items-center">
                           <IconButton
-                            className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
+                            className="flex absolute -right-2 -top-2 justify-center text-center"
                             onClick={() => handleLogoDeleteFile()}
                             aria-label="delete logo"
                           >
-                            <MdOutlineCancel className="z-20 text-red-500" />
+                            <MdOutlineCancel className="z-20 text-red-500 text-base" />
                           </IconButton>
-                          <Typography variant="body2" className="px-2">
+                          <Typography variant="body2" className="pr-4 text-xs font-medium text-gray-700">
                             {(supplierProfileLogo as any)?.name}
                           </Typography>
                         </Box>
@@ -586,40 +583,37 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
 
                 {/* 2nd Image Upload */}
                 <div className="w-full">
-                  <div className="py-[20px]">
-                    <h2 className="font-[500] text-[1rem]">Company banner logo</h2>
-                    <p className="text-[#b6b6b6] text-[.9rem] ">File should maintain minimum of 300 * 400 size</p>
+                  <div className="py-2">
+                    <h2 className="font-medium text-base text-gray-900">Company Banner Logo</h2>
+                    <p className="text-gray-400 text-xs mt-0.5">File should maintain minimum of 300 × 400 px size</p>
                   </div>
                   <Box
-                    className="flex flex-col gap-[8px] justify-center items-center w-full h-[150px] border-[1.5px] border-dashed border-[#d9d9d9] rounded-[8px] cursor-pointer bg-white hover:bg-[#f7f7f7]"
-                    onClick={() => (document.getElementById('banner-upload') as HTMLInputElement).click()} // Trigger input on box click
+                    className="flex flex-col gap-2 justify-center items-center w-full min-h-[130px] p-4 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                    onClick={() => (document.getElementById('banner-upload') as HTMLInputElement).click()}
                   >
-                    <FaUpload size={20} color="#888" />
+                    <FaUpload size={22} className="text-gray-400" />
                     <Input
                       id="banner-upload"
                       type="file"
                       onChange={handleBannerFileChange}
-                      placeholder="Click to Upload/browse fill"
                       className="hidden"
-                      accept="image/png, image/jpeg, image/webp, "
-                      sx={{ display: 'none' }}
-                    // multiple
+                      accept="image/png, image/jpeg, image/webp"
                     />
-                    <h2 className="text-[#b6b6b6] pt-[10px] text-[.95rem]">Click to upload/browse file</h2>
+                    <h2 className="text-gray-500 text-sm font-medium text-center">Click to upload/browse banner</h2>
                   </Box>
 
-                  <div className="pt-[10px]">
+                  <div className="pt-2">
                     {supplierProfileBanner && !Array.isArray(supplierProfileBanner) && (
-                      <div className="flex flex-wrap gap-[10px]">
-                        <Box className="relative p-1 bg-[#f7f7f7] rounded-[5px]">
+                      <div className="flex flex-wrap gap-2">
+                        <Box className="relative px-3 py-1.5 bg-gray-100 rounded-md flex items-center">
                           <IconButton
-                            className="flex absolute -right-[18px] -top-[20px] justify-center text-center text-[.8rem]"
+                            className="flex absolute -right-2 -top-2 justify-center text-center"
                             onClick={() => handleDeleteBannerFile()}
                             aria-label="delete banner"
                           >
-                            <MdOutlineCancel className="z-20 text-red-500" />
+                            <MdOutlineCancel className="z-20 text-red-500 text-base" />
                           </IconButton>
-                          <Typography variant="body2" className="px-2">
+                          <Typography variant="body2" className="pr-4 text-xs font-medium text-gray-700">
                             {supplierProfileBanner && !Array.isArray(supplierProfileBanner)
                               ? (supplierProfileBanner as any).name
                               : ''}

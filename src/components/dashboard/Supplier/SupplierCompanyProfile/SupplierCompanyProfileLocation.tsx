@@ -30,8 +30,8 @@ const locationSchema = z.object({
   selectedCountry: z.string().min(1, 'Country is required'),
   selectedState: z.string().min(1, 'State is required'),
   fullAddress: z.string().min(1, 'Full address is required'),
-  longitude: z.string().min(1, 'Longitude is required'),
-  latitude: z.string().min(1, 'Latitude is required'),
+  longitude: z.union([z.string(), z.number()]).optional().nullable().or(z.literal('')),
+  latitude: z.union([z.string(), z.number()]).optional().nullable().or(z.literal('')),
 });
 
 const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep, handleBack }: any) => {
@@ -82,18 +82,19 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
     dispatch(
       updateSupplierLocationInfo({
         selectedCountry: countryCode,
-        selectedCountryName: countryName,
+        selectedCountryName: countryName || '',
+        selectedState: '', // Reset state when country changes
       })
     );
 
     setStates(State.getStatesOfCountry(countryCode));
-    dispatch(updateSupplierLocationInfo({ selectedState: '' }));
-    setErrors((prevErrors) => ({ ...prevErrors, selectedCountry: '' }));
+    setErrors((prevErrors) => ({ ...prevErrors, selectedCountry: '', selectedState: '' }));
   };
 
   // Handle state change
   const handleStateChange = (event: any) => {
-    dispatch(updateSupplierLocationInfo({ selectedState: event.target.value }));
+    const stateName = event.target.value;
+    dispatch(updateSupplierLocationInfo({ selectedState: stateName }));
     setErrors((prevErrors) => ({ ...prevErrors, selectedState: '' }));
   };
 
@@ -118,7 +119,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -133,35 +134,35 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
       ]);
 
       const formData = new FormData();
-      const locationInfo = supplierLocationInfo as SupplierLocationInfo;
+      formData.append('selectedCountry', supplierLocationInfo.selectedCountry || '');
+      formData.append('selectedCountryName', supplierLocationInfo.selectedCountryName || '');
+      formData.append('selectedState', supplierLocationInfo.selectedState || '');
+      formData.append('fullAddress', supplierLocationInfo.fullAddress || '');
+      formData.append('longitude', supplierLocationInfo.longitude ? String(supplierLocationInfo.longitude) : '0');
+      formData.append('latitude', supplierLocationInfo.latitude ? String(supplierLocationInfo.latitude) : '0');
+      formData.append('streetNo', supplierMediaInfo.streetNo || '');
+      formData.append('zipCode', supplierMediaInfo.zipCode || '');
 
-      // Append all required data
-      formData.append('longitude', locationInfo.longitude || '');
-      formData.append('latitude', locationInfo.latitude || '');
-      formData.append('selectedCountry', locationInfo.selectedCountry || '');
-      formData.append('selectedCountryName', locationInfo.selectedCountryName || '');
-      formData.append('selectedState', locationInfo.selectedState || '');
-      formData.append('fullAddress', locationInfo.fullAddress || '');
-      formData.append('streetNo', locationInfo.streetNo || '');
-      formData.append('zipCode', locationInfo.zipCode || '');
+      formData.append('companyName', profileDetailsFormData.companyName || '');
+      formData.append('companyEmail', supplierMediaInfo.companyEmail || '');
+      formData.append('companyPhone', supplierMediaInfo.companyPhone || '');
+      formData.append('yearEstablished', profileDetailsFormData.yearEstablished || '');
+      formData.append('yearExperience', profileDetailsFormData.yearExperience || '');
+      formData.append('totalEmployees', profileDetailsFormData.totalEmployees || '');
+      formData.append('totalRevenue', profileDetailsFormData.totalRevenue || '');
+      formData.append('businessType', profileDetailsFormData.businessType || '');
+      formData.append('businessCategory', profileDetailsFormData.businessCategory || '');
+      formData.append('companyDescription', profileDetailsFormData.companyDescription || '');
 
-      formData.append('companyName', profileDetailsFormData.companyName);
-      formData.append('companyEmail', supplierMediaInfo.companyEmail);
-      formData.append('companyPhone', supplierMediaInfo.companyPhone);
-      formData.append('yearEstablished', profileDetailsFormData.yearEstablished);
-      formData.append('yearExperience', profileDetailsFormData.yearExperience);
-      formData.append('totalEmployees', profileDetailsFormData.totalEmployees);
-      formData.append('totalRevenue', profileDetailsFormData.totalRevenue);
-      formData.append('businessType', profileDetailsFormData.businessType);
-      formData.append('businessCategory', profileDetailsFormData.businessCategory);
-      formData.append('companyDescription', profileDetailsFormData.companyDescription);
+      formData.append('facebook', supplierMediaInfo.facebook || '');
+      formData.append('instagram', supplierMediaInfo.instagram || '');
+      formData.append('linkedIn', supplierMediaInfo.linkedIn || '');
+      formData.append('xSocial', supplierMediaInfo.xSocial || '');
 
-      formData.append('facebook', supplierMediaInfo.facebook);
-      formData.append('instagram', supplierMediaInfo.instagram);
-      formData.append('linkedIn', supplierMediaInfo.linkedIn);
-      formData.append('xSocial', supplierMediaInfo.xSocial);
+      formData.append('selectedPayments', JSON.stringify(profileDetailsFormData.selectedPayments || []));
+      formData.append('selectedShippings', JSON.stringify(profileDetailsFormData.selectedShippings || []));
 
-      formData.append('productDetailDescription', JSON.stringify(profileDescriptionFields));
+      formData.append('productDetailDescription', JSON.stringify(profileDescriptionFields || []));
 
       if (logoFiles && logoFiles.length > 0) {
         formData.append('logo', logoFiles[0]);
@@ -200,7 +201,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
             <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
               <div className="w-full">
                 <SearchableSelect
-                  label="Country"
+                  label="Country *"
                   options={countryOptions}
                   value={supplierLocationInfo?.selectedCountry || ''}
                   onChange={handleCountryChange}
@@ -212,7 +213,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
               <div className="w-full">
                 <SearchableSelect
-                  label="State"
+                  label="State *"
                   options={stateOptions}
                   value={supplierLocationInfo?.selectedState || ''}
                   onChange={handleStateChange}
@@ -255,7 +256,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
             <div className="pt-[20px]">
               <TextField
                 name="fullAddress"
-                label="Full Address"
+                label="Full Address *"
                 fullWidth
                 multiline
                 placeholder="Enter your Company Full Address"

@@ -10,13 +10,13 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 
 const contactSchema = z.object({
-  companyEmail: z.string().min(1, 'Company email is required').email('Invalid email address'),
-  companyPhone: z.string().min(1, 'Company phone number is required').regex(/^\d{10,15}$/, 'Invalid phone number'),
-  linkedIn: z.string().min(1, 'LinkedIn URL is required').refine(val => validateSocialURL(val, 'linkedin'), 'Invalid LinkedIn URL'),
-  facebook: z.string().min(1, 'Facebook URL is required').refine(val => validateSocialURL(val, 'facebook'), 'Invalid Facebook URL'),
-  instagram: z.string().min(1, 'Instagram URL is required').refine(val => validateSocialURL(val, 'instagram'), 'Invalid Instagram URL'),
-  xSocial: z.string().min(1, 'X (Twitter) URL is required').refine(val => validateSocialURL(val, 'x'), 'Invalid X URL'),
-  zipCode: z.string().optional(),
+  companyEmail: z.string().min(1, 'Company email address is required'),
+  companyPhone: z.string().min(1, 'Company phone number is required'),
+  linkedIn: z.string().optional().nullable().or(z.literal('')),
+  facebook: z.string().optional().nullable().or(z.literal('')),
+  instagram: z.string().optional().nullable().or(z.literal('')),
+  xSocial: z.string().optional().nullable().or(z.literal('')),
+  zipCode: z.string().optional().nullable().or(z.literal('')),
   streetNo: z.string().min(1, 'Street number is required'),
   fullAddress: z.string().min(1, 'Full address is required'),
 });
@@ -75,7 +75,7 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
           <div className="flex flex-col md:flex-row gap-[15px] items-center justify-center">
             <div className="w-full">
               <TextField
-                label="Company email address"
+                label="Company email address *"
                 name="companyEmail"
                 fullWidth
                 margin="normal"
@@ -88,7 +88,7 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
             </div>
             <div className="w-full">
               <TextField
-                label="Company phone number"
+                label="Company phone number *"
                 name="companyPhone"
                 fullWidth
                 margin="normal"
@@ -177,7 +177,7 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
             </div>
             <div className="w-full">
               <TextField
-                label="Street No"
+                label="Street No *"
                 name="streetNo"
                 fullWidth
                 margin="normal"
@@ -193,7 +193,7 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
           {/* Full Address */}
           <div className="pt-[20px]">
             <TextField
-              label="Full Address"
+              label="Full Address *"
               name="fullAddress"
               fullWidth
               multiline

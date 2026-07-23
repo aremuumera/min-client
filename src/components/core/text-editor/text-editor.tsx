@@ -63,7 +63,8 @@ export function TextEditor({
           color: var(--mui-palette-text-primary);
           flex: 1 1 auto;
           overflow: auto;
-          padding: 8px 16px;
+          padding: 14px 16px;
+          min-height: 260px;
         }
         .tiptap-root .tiptap:focus-visible {
           outline: none;
@@ -79,7 +80,7 @@ export function TextEditor({
           content: attr(data-placeholder);
           float: left;
           height: 0;
-          pointerEvents: none;
+          pointer-events: none;
         }
       `}</style>
       <Box

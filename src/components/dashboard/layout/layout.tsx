@@ -37,8 +37,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const userRole = user?.role;
     const isSupplierProfileCreated = appData?.isProfileCreated;
 
-    // Sidebar navigation release state: ensure sidebar is rendered for authenticated users
-    const totalFinalRelease = true;
+    // Sidebar navigation release state: ensure desktop and mobile share identical release logic
+    const finalRelease = isBusinessVerified && (userRole !== 'supplier' || isSupplierProfileCreated);
 
     // Helper to check if a user has permission
     const hasPermission = React.useCallback((permission?: string) => {
@@ -195,7 +195,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
 
     return (
         <div className="min-h-screen bg-gray-50/50">
-            {totalFinalRelease && (
+            {finalRelease && (
                 <SideNav
                     items={finalItems}
                     isCollapsed={isCollapsed}
@@ -206,7 +206,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
             <div
                 className={cn(
                     "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-                    totalFinalRelease && (isCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")
+                    finalRelease && (isCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")
                 )}
             >
                 <MainNav items={finalItems} isCollapsed={isCollapsed} />
