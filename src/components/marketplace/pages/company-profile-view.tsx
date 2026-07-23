@@ -43,14 +43,27 @@ const CompanyProfileView = ({ slug }: CompanyProfileViewProps) => {
 
   if (isError || !data) {
     return (
-      // Simple error state
-      <div className="fixed inset-0 z-11100 flex items-center justify-center bg-black bg-opacity-75">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Company Not Found</h2>
-        <button onClick={() => router.back()} className="text-green-600 hover:underline">
-          Go Back
-        </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center border border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Company Profile Not Found</h2>
+          <p className="text-sm text-gray-500 mb-6">The requested supplier store profile could not be loaded.</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   return (

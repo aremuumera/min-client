@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { RootState } from '@/redux/store';
 import { clearAllFilesFromIndexedDB, getAllFilesFromIndexedDBForServer } from '@/utils/indexDb';
+import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import { z } from 'zod';
 
 interface SupplierLocationInfo {
@@ -345,9 +346,14 @@ const SuccessModal = ({ onEdit, onClose, responseData }: any) => {
             <Button
               variant="contained"
               onClick={() => {
-                const slug = responseData?.slug || responseData?.company_name || '';
-                router.push(`/business/${slug}`);
+                const rawName = responseData?.company_name || responseData?.companyName || '';
+                const slug = formatCompanyNameForUrl(rawName);
                 onClose();
+                if (slug) {
+                  router.push(`/business/${slug}`);
+                } else {
+                  router.push('/dashboard');
+                }
               }}
               className="w-full sm:w-auto"
             >
