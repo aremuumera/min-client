@@ -102,7 +102,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const userRole = user?.role;
     if (userRole === 'inspector') {
       router.replace(paths.dashboard.inspections.setup);
-    } else if (userRole === 'supplier') {
+    } else if (userRole === 'supplier' || userRole === 'buyer_supplier') {
       router.replace(paths.dashboard.products.companyProfile);
     }
   };
@@ -135,6 +135,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // Define allowed routes and target profile paths per role
     const profileConfig: Record<string, { allowed: string[]; target: string; title: string }> = {
       supplier: {
+        allowed: [paths.dashboard.overview, paths.dashboard.products.companyProfile, paths.dashboard.settings.account],
+        target: paths.dashboard.products.companyProfile,
+        title: 'Supplier Profile'
+      },
+      buyer_supplier: {
         allowed: [paths.dashboard.overview, paths.dashboard.products.companyProfile, paths.dashboard.settings.account],
         target: paths.dashboard.products.companyProfile,
         title: 'Supplier Profile'
@@ -176,11 +181,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // --- Role-Based Route Protection ---
     const supplierOnlyRoutes = [
       paths.dashboard.products.list, // /dashboard/supplier-list
-      '/dashboard/received-inquiries'
+      paths.dashboard.products.create, // /dashboard/supplier-list/create
+      paths.dashboard.products.companyProfile, // /dashboard/supplier-list/company-profile/create
+      '/dashboard/received-inquiries',
+      '/dashboard/company-profile',
+      '/dashboard/my-submitted-offers',
     ];
 
     const buyerOnlyRoutes = [
       paths.dashboard.rfqs.list, // /dashboard/rfq-list
+      paths.dashboard.rfqs.create, // /dashboard/rfq-list/create
       '/dashboard/my-trade-inquiries'
     ];
 
@@ -192,14 +202,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const isBuyerRoute = buyerOnlyRoutes.some(route => pathname.startsWith(route));
     const isInspectorRoute = inspectorOnlyRoutes.some(route => pathname.startsWith(route));
 
-    // Buyers cannot access supplier or inspector tools
-    if (userRole === 'buyer' && (isInspectorRoute)) {
+    // Buyers cannot access supplier tools or inspector tools
+    if (userRole === 'buyer' && (isSupplierRoute || isInspectorRoute)) {
       router.replace(paths.errors.notAuthorized);
       return;
     }
 
-    // Suppliers cannot access buyer or inspector tools
-    if (userRole === 'supplier' && (isInspectorRoute)) {
+    // Suppliers cannot access inspector tools
+    if (userRole === 'supplier' && isInspectorRoute) {
       router.replace(paths.errors.notAuthorized);
       return;
     }

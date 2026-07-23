@@ -136,6 +136,15 @@ export const authApi = createApi({
       }),
     }),
 
+    // Request Role Upgrade
+    requestRoleUpgrade: builder.mutation({
+      query: (data?: { targetRole?: string }) => ({
+        url: "/auth/current/request-role-upgrade",
+        method: "POST",
+        body: data || { targetRole: "buyer_supplier" },
+      }),
+    }),
+
     // Blind Validate Invite Token
     validateInvite: builder.query({
       query: (token: string) => ({
@@ -160,4 +169,5 @@ export const {
   useUpdateProfileMutation,
   useTeamSetupMutation,
   useValidateInviteQuery,
+  useRequestRoleUpgradeMutation,
 } = authApi;

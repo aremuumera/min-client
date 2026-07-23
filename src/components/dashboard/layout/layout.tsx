@@ -37,13 +37,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const userRole = user?.role;
     const isSupplierProfileCreated = appData?.isProfileCreated;
 
-    // for supplier: sidebar is blocked until store profile is created
-    const finalRelease = isBusinessVerified && (userRole !== 'supplier' || isSupplierProfileCreated);
-
-    // for buyer and other roles
-    const finalReleaseBuyer = isBusinessVerified && userRole === 'buyer';
-
-    const totalFinalRelease = userRole === 'buyer' ? finalReleaseBuyer : finalRelease;
+    // Sidebar navigation release state: ensure sidebar is rendered for authenticated users
+    const totalFinalRelease = true;
 
     // Helper to check if a user has permission
     const hasPermission = React.useCallback((permission?: string) => {
@@ -96,21 +91,43 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const finalItems = React.useMemo(() => {
         let items = dashboardConfig.navItems;
 
-        // 1. Existing role-based filtering
-        if (userRole === 'admin' || userRole === 'supplier') {
-            items = items.map((item) => {
-                if (item.key !== 'general') return item;
-                // Filter specifically 'becomeasupplier' for suppliers
+        const normalizedRole = (userRole || '').toLowerCase();
+        const isSupplierOnly = normalizedRole === 'supplier';
+        const isBuyerOnly = normalizedRole === 'buyer';
+        const isDualRole = normalizedRole === 'buyer_supplier' || normalizedRole === 'both' || normalizedRole === 'admin';
+        const isInspectorRole = normalizedRole === 'inspector' || normalizedRole === 'admin';
+
+        // 1. Role-based sub-item filtering
+        items = items.map((section) => {
+            // Hide 'becomeasupplier' CTA for users with supplier capabilities
+            if (section.key === 'general' && (isSupplierOnly || isDualRole)) {
                 return {
-                    ...item,
-                    items: item.items?.filter((subItem) => subItem.key !== 'becomeasupplier'),
+                    ...section,
+                    items: section.items?.filter((subItem) => subItem.key !== 'becomeasupplier'),
                 };
-            });
-        }
+            }
+
+            // For pure buyers: Hide the 'supplier' sub-group (Create product, Listed products, Order inquiries, Store profile)
+            if (section.key === 'product' && isBuyerOnly) {
+                return {
+                    ...section,
+                    items: section.items?.filter((subItem) => subItem.key !== 'supplier'),
+                };
+            }
+
+            // For pure suppliers: Hide the 'buyer' sub-group (Create RFQ, Listed RFQs, Offer Board)
+            if (section.key === 'rfq' && isSupplierOnly) {
+                return {
+                    ...section,
+                    items: section.items?.filter((subItem) => subItem.key !== 'buyer'),
+                };
+            }
+
+            return section;
+        });
 
         // 1b. Role-based isolation for Inspectors
-        if (userRole === 'inspector') {
-            // Keep only: Dashboard Overview, Analytics, Inspections, Services, Chat, and Settings:Account
+        if (normalizedRole === 'inspector') {
             return items.filter(section => ['dashboards', 'inspections', 'services', 'general'].includes(section.key))
                 .map(section => {
                     if (section.key === 'dashboards') {
@@ -138,33 +155,23 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                 });
         }
 
-        // 2. Filter sections based on items and role isolation
+        // 2. Filter sections based on items and role permissions
         return items
             .map(section => ({
                 ...section,
                 items: filterNavItems(section.items || [])
             }))
             .filter(section => {
-                // Remove the section if it has no items
+                // Remove section if it has no items
                 if (section.items.length === 0) return false;
 
                 // Explicitly block Inspections for non-inspectors/admin
-                if (section.key === 'inspections' && userRole !== 'inspector' && userRole !== 'admin') {
+                if (section.key === 'inspections' && !isInspectorRole) {
                     return false;
                 }
 
                 // Explicitly block Services for non-inspectors/admin
-                if (section.key === 'services' && userRole !== 'inspector' && userRole !== 'admin') {
-                    return false;
-                }
-
-                // Explicitly block Supplier/Product section for non-suppliers/admin
-                if (section.key === 'product' && userRole !== 'supplier' && userRole !== 'admin' && userRole !== 'buyer') {
-                    return false;
-                }
-
-                // Explicitly block Buyer/RFQ section for non-buyers/admin
-                if (section.key === 'rfq' && userRole !== 'buyer' && userRole !== 'admin' && userRole !== 'supplier') {
+                if (section.key === 'services' && !isInspectorRole) {
                     return false;
                 }
 

@@ -12,7 +12,9 @@ export const activityApi = createApi({
         page?: number;
         limit?: number;
         type?: string;
+        actionType?: string;
         entityType?: string;
+        search?: string;
         orderBy?: string;
         order?: string;
       }

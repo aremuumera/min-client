@@ -114,7 +114,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                             )}
                                         </div>
                                         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">
-                                            {user?.companyName} {user?.role ? `• ${user.role}` : ''}
+                                            {user?.companyName} {user?.role ? `• ${user.role === 'buyer_supplier' ? 'Buyer & Supplier' : user.role}` : ''}
                                         </p>
                                     </div>
                                 </button>

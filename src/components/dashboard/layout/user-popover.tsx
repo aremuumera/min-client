@@ -122,9 +122,9 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                         <Typography
                             variant="body2"
                             color="text.secondary"
-                            className="ml-1 font-medium capitalize text-neutral-500"
+                            className="ml-1 font-medium text-neutral-500"
                         >
-                            {user?.role || 'User'}
+                            {user?.role === 'buyer_supplier' ? 'Buyer & Supplier' : (user?.role || 'User')}
                         </Typography>
                     </Box>
 
