@@ -72,9 +72,10 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             className="peer sr-only"
             {...props}
           />
-          <div
+          <label
+            htmlFor={props.id || id}
             className={cn(
-              'h-5 w-5 rounded border-2 transition-colors',
+              'h-5 w-5 rounded border-2 transition-colors cursor-pointer flex items-center justify-center shrink-0 select-none',
               'peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500 peer-focus-visible:ring-offset-2',
               checked || indeterminate
                 ? colorClasses[color]
@@ -91,7 +92,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 )}
               </div>
             )}
-          </div>
+          </label>
         </div>
 
         {(label || description) && (

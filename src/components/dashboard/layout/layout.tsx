@@ -175,6 +175,15 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                     return false;
                 }
 
+                //  if (section.key === 'product' && !isSupplierRole && !isBuyerRole) {
+                //     return false;
+                // }
+
+                // // Explicitly block Buyer/RFQ section for non-buyers/non-suppliers/admin
+                // if (section.key === 'rfq' && !isBuyerRole && !isSupplierRole) {
+                //     return false;
+                // }
+
                 return true;
             });
 
