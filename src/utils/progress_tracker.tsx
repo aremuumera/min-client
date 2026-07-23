@@ -19,22 +19,34 @@ const ProgressBar = ({ progress, steps, onStepClick, activeStep = 0 }: ProgressB
     <div className="w-full mb-6">
       {/* Mobile Stepper Header (< sm screen) */}
       <div className="sm:hidden mb-4">
-        <div className="flex items-center justify-between mb-2.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200/80">
             Step {currentStep + 1} of {displaySteps.length}
           </span>
-          <span className="text-xs font-semibold text-gray-700 truncate max-w-[200px]">
+          <span className="text-xs font-bold text-gray-900 truncate max-w-[200px]">
             {displaySteps[currentStep] || ''}
           </span>
         </div>
 
         {/* Mobile Segmented Progress Bar */}
-        <div className="grid grid-cols-4 gap-1.5 w-full">
+        <div
+          className="grid gap-1.5 w-full"
+          style={{ gridTemplateColumns: `repeat(${displaySteps.length}, minmax(0, 1fr))` }}
+        >
           {displaySteps.map((stepTitle, index) => {
             const isCompleted = index < currentStep;
             const isActive = index === currentStep;
+            const isClickable = onStepClick && index <= currentStep;
+
             return (
-              <div key={index} className="flex flex-col gap-1">
+              <div
+                key={index}
+                onClick={() => isClickable && onStepClick(index)}
+                className={cn(
+                  "flex flex-col gap-1.5 transition-all",
+                  isClickable ? "cursor-pointer" : "cursor-default"
+                )}
+              >
                 <div
                   className={cn(
                     "h-2 rounded-full transition-all duration-300",
@@ -45,14 +57,14 @@ const ProgressBar = ({ progress, steps, onStepClick, activeStep = 0 }: ProgressB
                 />
                 <span
                   className={cn(
-                    "text-[9px] text-center font-medium truncate px-0.5",
+                    "text-[10px] text-center transition-colors",
                     isActive && "text-green-700 font-bold",
-                    isCompleted && "text-gray-600",
-                    !isCompleted && !isActive && "text-gray-400"
+                    isCompleted && "text-gray-700 font-semibold",
+                    !isCompleted && !isActive && "text-gray-400 font-medium"
                   )}
                   title={stepTitle}
                 >
-                  {stepTitle}
+                  Step {index + 1}
                 </span>
               </div>
             );

@@ -30,8 +30,7 @@ const CompanyProfileProductsTab = ({ products }: { products: any }) => {
     sort,
     supplierId: userId,
   }, {
-    refetchOnMountOrArgChange: true,
-    pollingInterval: 30000,
+    skip: !userId,
   });
 
   const productList = supIdData?.products || [];

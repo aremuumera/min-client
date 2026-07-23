@@ -2,55 +2,46 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useSubmitReviewMutation } from '@/redux/features/reviewFeature/review_api'; // Check path
+import { useSubmitReviewMutation, useGetEntityReviewsQuery } from '@/redux/features/reviewFeature/review_api';
 import LoginModal from '@/utils/login-modal';
 import { paths } from '@/config/paths';
-import { Button } from '@/components/ui/button'; // Assuming Button if available, otherwise HTML button
 import { format } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Star, Loader2 } from 'lucide-react';
+import { Star, MessageSquare, Plus, Loader2, ShieldCheck, User as UserIcon, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useAlert } from '@/providers';
-// import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
-import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import ReviewModal from '@/components/marketplace/modals/review-modal';
-import { useRouter } from 'next/navigation';
+import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 
 const ProductDetailReview = ({ products }: { products: any }) => {
-  const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
   const { showAlert } = useAlert();
   const [error, setError] = useState<string | null>(null);
 
   const {
-    reviews = [],
     id: productId,
     product_name,
-    supplierProfile,
     supplierId,
-    supplier,
     productRating,
   } = products || {};
 
   const { isAuth, user, isTeamMember, ownerUserId } = useSelector((state: any) => state.auth);
   const effectiveUserId = isTeamMember ? ownerUserId : user?.id;
-  // Need to verify if review_api exists and useSubmitReviewMutation is exported
-  // If not, I'll need to create a dummy hook or fix imports.
-  // Assuming it exists based on task.md
 
-  // Safe mock if hook fails to import in real runtime (but for code generation I assume it works)
-  // I will use 'any' for the hook result to avoid TS issues if types aren't perfect yet.
   const [submitReview, { isLoading }] = useSubmitReviewMutation() as any;
 
-  const formatReviewDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy');
-    } catch (error) {
-      return dateString?.substring(0, 10) || '';
-    }
-  };
+  const { data: reviewsData, isLoading: isReviewsLoading } = useGetEntityReviewsQuery(
+    {
+      entityId: productId,
+      entityType: 'product',
+    },
+    { skip: !productId }
+  );
+
+  const reviews = reviewsData?.reviews || products?.reviews || [];
 
   const handleReviewSubmit = async (reviewPayload: any) => {
     try {
@@ -63,20 +54,19 @@ const ProductDetailReview = ({ products }: { products: any }) => {
       }).unwrap();
 
       if (response.success === true) {
-        showAlert(`${response?.message || 'You have successfully submitted your review'}`, 'success');
+        showAlert(response?.message || 'You have successfully submitted your review', 'success');
       }
 
-      // Reload page to show new review (or ideally invalidate cache)
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 1200);
 
       setError(null);
       setShowReviewModal(false);
-    } catch (error: any) {
-      setError(error.data?.message);
-      showAlert(`${error?.data?.message || 'Failed to submit review'}`, 'error');
-      console.error('Failed to submit review:', error);
+    } catch (err: any) {
+      const msg = err?.data?.message || 'Failed to submit review';
+      setError(msg);
+      showAlert(msg, 'error');
     }
   };
 
@@ -91,6 +81,15 @@ const ProductDetailReview = ({ products }: { products: any }) => {
 
   const limitedReviews = reviews?.slice(0, 3) || [];
   const hasMoreReviews = reviews?.length > 3;
+
+  const formatReviewDate = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (e) {
+      return 'Recently';
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -297,10 +296,10 @@ const ProductDetailReview = ({ products }: { products: any }) => {
         isOpen={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
         product={{
-          id: productId.toString(),
-          rfqId: productId.toString(),
+          id: productId?.toString() || '',
+          rfqId: productId?.toString() || '',
           name: product_name,
-          mineral_tag: products.mineral_tag || 'mineral', // Assuming mineral_tag is in products
+          mineral_tag: products?.mineral_tag || 'mineral',
           supplier_id: supplierId?.toString()
         }}
       />

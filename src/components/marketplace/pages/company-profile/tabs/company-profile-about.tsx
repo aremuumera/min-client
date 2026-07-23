@@ -2,148 +2,117 @@
 "use client";
 
 import React from 'react';
-import { Send, CheckCircle2 } from 'lucide-react';
+import { Store, ShieldCheck, Globe2, Users, Calendar, Award, CreditCard, Truck, FileText } from 'lucide-react';
 
-const BusinessInfo = ({ data }: { data: any }) => {
+const BusinessInfoCard = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 p-4 md:p-8 hover:border-gray-200 transition-all duration-200">
+    <div className="flex items-center gap-3 pb-5 border-b border-gray-100 mb-6">
+      <div className="p-2.5 bg-green-50 rounded-xl text-green-700">
+        <Icon className="w-5 h-5" />
+      </div>
+      <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+    </div>
+    <div className="space-y-5">{children}</div>
+  </div>
+);
+
+const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1">
+    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</span>
+    <span className="text-sm font-semibold text-gray-800 text-right">{value || 'N/A'}</span>
+  </div>
+);
+
+const CompanyProfileAboutUsTab = ({ products }: { products: any }) => {
   const {
-    // company_description,
+    company_description,
+    profileDetailDescription,
     business_type,
-    // year_experience,
     total_employees,
     selected_payments,
     selected_shippings,
     exportMarket,
-    // businessCategory,
     selected_countryName,
-    // selected_state,
     year_established,
     certifications,
     CoreValues,
     AnnualRevenue,
-    MainProducts
-  } = data || {};
+    MainProducts,
+    businessCategory
+  } = products || {};
+
+  const formatList = (val: any) => {
+    if (!val) return 'N/A';
+    if (Array.isArray(val)) return val.length > 0 ? val.join(', ') : 'N/A';
+    return String(val);
+  };
+
+  const hasDetailDescriptions = Array.isArray(profileDetailDescription) && profileDetailDescription.length > 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 p-0 md:p-6 bg-white rounded-lg">
-      {/* Column 1 */}
-      <div>
-        <div className="mt-8 md:mt-4 text-lg md:text-xl pb-4 flex items-center gap-2 border-b border-gray-100 mb-4">
-            <CheckCircle2 className="text-green-600 w-5 h-5" />
-            <h2 className="font-semibold text-gray-800">Company Profile</h2>
+    <div className="space-y-8 max-w-6xl mx-auto py-2 sm:px-6 md:px-0">
+      {/* Primary Company Description Card */}
+      {company_description && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2.5 bg-green-50 rounded-xl text-green-700">
+              <FileText className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900">About the Company</h2>
+          </div>
+          <p className="text-gray-600 text-sm md:text-base leading-relaxed whitespace-pre-line">
+            {company_description}
+          </p>
         </div>
-        
-        <div className="space-y-4">
-            <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Year Established</span>
-                 <span className="font-semibold text-gray-800 text-base">{year_established || 'N/A'}</span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-            <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Business Type</span>
-                 <span className="font-semibold text-gray-800 text-base">{business_type || 'N/A'}</span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-             <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Location</span>
-                 <span className="font-semibold text-gray-800 text-base">
-                     {Array.isArray(selected_countryName) ? selected_countryName.join(', ') : (selected_countryName || 'Unavailable')}
-                  </span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-            <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Certifications</span>
-                 <span className="font-semibold text-gray-800 text-base">{certifications || "Unavailable"}</span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-            <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Core Values</span>
-                 <span className="font-semibold text-gray-800 text-base">{CoreValues || 'N/A'}</span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-             <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Total Employees</span>
-                 <span className="font-semibold text-gray-800 text-base">{total_employees || 'N/A'}</span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-             <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Main Products</span>
-                 <span className="font-semibold text-gray-800 text-base">
-                     {Array.isArray(MainProducts) ? MainProducts.join(', ') :  (MainProducts || 'Unavailable')}
-                 </span>
-            </div>
-        </div>
+      )}
+
+
+      {/* 2-Column Business Overview & Trade Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        {/* Company Overview */}
+        <BusinessInfoCard title="Company Overview" icon={Store}>
+          <DetailRow label="Year Established" value={year_established} />
+          <DetailRow label="Business Category" value={businessCategory || 'Mineral & Industrial'} />
+          <DetailRow label="Business Type" value={business_type} />
+          <DetailRow label="Total Employees" value={total_employees} />
+          <DetailRow
+            label="Location"
+            value={Array.isArray(selected_countryName) ? selected_countryName.join(', ') : selected_countryName}
+          />
+          <DetailRow label="Certifications" value={certifications || 'Verified Supplier'} />
+        </BusinessInfoCard>
+
+        {/* Trade & Supply Capacity */}
+        <BusinessInfoCard title="Trade & Supply Capacity" icon={ShieldCheck}>
+          <DetailRow label="Export Markets" value={formatList(exportMarket)} />
+          <DetailRow label="Shipping Terms" value={formatList(selected_shippings)} />
+          <DetailRow label="Payment Terms" value={formatList(selected_payments)} />
+          {AnnualRevenue && <DetailRow label="Annual Revenue" value={AnnualRevenue} />}
+          {MainProducts && <DetailRow label="Main Products" value={formatList(MainProducts)} />}
+          {CoreValues && <DetailRow label="Core Values" value={CoreValues} />}
+        </BusinessInfoCard>
       </div>
 
-      {/* Column 2 */}
-      <div>
-         <div className="mt-8 md:mt-4 text-lg md:text-xl pb-4 flex items-center gap-2 border-b border-gray-100 mb-4">
-             <CheckCircle2 className="text-green-600 w-5 h-5" />
-            <h2 className="font-semibold text-gray-800">Trade Capacity</h2>
-        </div>
 
-        <div className="space-y-4">
-             <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Export Market</span>
-                 <span className="font-semibold text-gray-800 text-base">
-                     {Array.isArray(exportMarket) ? exportMarket.join(', ') : (exportMarket || 'Unavailable')}
-                </span>
-            </div>
-             <div className="h-px bg-gray-100 w-full" />
-            
-            {AnnualRevenue && (
-                <>
-                <div>
-                    <span className='text-sm text-gray-500 block mb-1'>Annual Revenue</span>
-                    <span className="font-semibold text-gray-800 text-base">{AnnualRevenue}</span>
+      {/* Custom Detail Description Sections */}
+      {hasDetailDescriptions && (
+        <div className="space-y-6">
+          {profileDetailDescription.map((item: any, idx: number) => (
+            <div key={idx} className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2.5 bg-green-50 rounded-xl text-green-700">
+                  <FileText className="w-5 h-5" />
                 </div>
-                 <div className="h-px bg-gray-100 w-full" />
-                </>
-            )}
-
-            <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Location</span>
-                 <span className="font-semibold text-gray-800 text-base">
-                     {Array.isArray(selected_countryName) ? selected_countryName.join(', ') : (selected_countryName || 'Unavailable')}
-                 </span>
+                <h3 className="text-lg font-bold text-gray-900">{item.header || 'Company Details'}</h3>
+              </div>
+              <p className="text-gray-600 text-sm md:text-base leading-relaxed whitespace-pre-line">
+                {item.description}
+              </p>
             </div>
-            <div className="h-px bg-gray-100 w-full" />
-             <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Shipping Option</span>
-                 <span className="font-semibold text-gray-800 text-base">
-                     {Array.isArray(selected_shippings) ? selected_shippings.join(', ') : (selected_shippings || 'Unavailable')}
-                </span>
-            </div>
-            <div className="h-px bg-gray-100 w-full" />
-             <div>
-                 <span className='text-sm text-gray-500 block mb-1'>Terms of Payment</span>
-                 <span className="font-semibold text-gray-800 text-base">
-                     {Array.isArray(selected_payments) ? selected_payments.join(', ') : (selected_payments || 'Unavailable')}
-                 </span>
-            </div>
+          ))}
         </div>
-      </div>
-    </div>
-  );
-};
+      )}
 
-const CompanyProfileAboutUsTab = ({ products }: { products: any }) => {
-  const { company_description } = products || {};
-
-  return (
-    <div className="py-6 px-4 md:px-0">
-      <div className="mb-10">
-        <div className="text-xl font-semibold flex items-center gap-2 mb-4 text-gray-800">
-           <Send className="w-5 h-5 text-green-600 rotate-[-45deg]" />
-           <h2>Company Description</h2>
-        </div>
-        <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-           {company_description}
-        </p>
-      </div>
-      
-      <BusinessInfo data={products} />
-      
-      {/* Certifications could be visually enhanced here separate from the list if there are images */}
     </div>
   );
 };

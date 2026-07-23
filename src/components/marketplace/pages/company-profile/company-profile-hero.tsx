@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Facebook, Linkedin, Instagram, Phone, Mail, CheckCircle2 } from 'lucide-react';
+import { Facebook, Linkedin, Instagram, Phone, Mail, CheckCircle2, MapPin } from 'lucide-react';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
@@ -20,9 +20,13 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
 
   const {
     company_name,
+    company_description,
+    profileDetailDescription,
+    business_type,
+    selected_countryName,
+    year_established,
     revenue,
     userId,
-    // companyExperience,
     banner,
     logo,
     supplierProfileId,
@@ -33,7 +37,6 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
     company_facebook,
     company_linkedIn,
     company_instagram,
-    // companySocialMediaLinks,
   } = products || {};
 
   const isOwner = isAuth && user?.id === userId;
@@ -51,42 +54,77 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
     }
   };
 
+  const countryDisplay = Array.isArray(selected_countryName) ? selected_countryName.join(', ') : selected_countryName;
+  const heroDescription =
+    company_description ||
+    (Array.isArray(profileDetailDescription) && profileDetailDescription.length > 0
+      ? `${profileDetailDescription[0]?.header ? `${profileDetailDescription[0].header}: ` : ''}${profileDetailDescription[0]?.description}`
+      : null);
+
   return (
     <div className="w-full">
       {/* Banner Image */}
-      <div className="relative w-full max-w-[1280px] mx-auto bg-gray-900 md:mt-4 rounded-lg">
-        <div className="w-full h-32 sm:h-40 md:h-52 lg:h-64 xl:h-72 rounded-b-lg overflow-hidden md:rounded-lg">
+      <div className="relative w-full max-w-[1280px] mx-auto md:mt-4">
+        <div className="w-full h-36 sm:h-48 md:h-60 lg:h-72 rounded-xl overflow-hidden bg-gray-900">
           {banner ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={banner} alt={`${company_name} banner`} className="w-full h-full object-cover opacity-80" />
+            <img src={banner} alt={`${company_name} banner`} className="w-full h-full object-cover opacity-85" />
           ) : (
-            <div className="w-full h-full bg-linear-to-r from-green-900 to-gray-900" />
+            <div className="w-full h-full bg-gradient-to-r from-emerald-900 via-green-800 to-gray-900" />
           )}
         </div>
 
         {/* Company Logo */}
-        <div className="absolute left-4 sm:left-8 md:left-12 bottom-0 transform translate-y-1/2 p-1.5 bg-white rounded-2xl shadow-lg">
+        <div className="absolute left-4 sm:left-8 md:left-12 bottom-0 transform translate-y-1/2 p-1.5 bg-white rounded-2xl border border-gray-200 z-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logo || '/placeholder-logo.png'}
             alt={`${company_name} logo`}
-            className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-xl object-cover border border-gray-100 bg-white"
+            className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl object-cover bg-white"
           />
         </div>
       </div>
 
       {/* Company Information Container */}
       <div className="w-full mt-12 sm:mt-14 md:mt-16 lg:mt-20 px-4 sm:px-8 md:px-12 max-w-[1350px] mx-auto">
-        <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-10 border-b border-gray-100 pb-8">
-          {/* Company Name and Contact Button */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 my-4 sm:my-3">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{company_name}</h1>
-              <CheckCircle2 className="text-green-600 w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-10 border-b border-gray-100 pb-8">
+          {/* Company Name, Tagline & Description */}
+          <div className="flex flex-col max-w-2xl">
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900">{company_name}</h1>
+              <CheckCircle2 className="text-green-600 w-6 h-6 shrink-0" />
             </div>
+
+            {(business_type || countryDisplay) && (
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-500 mb-3">
+                {business_type && (
+                  <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded-md border border-green-200/60">
+                    {business_type}
+                  </span>
+                )}
+                {countryDisplay && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">
+                    <MapPin className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{countryDisplay}</span>
+                  </span>
+                )}
+                {year_established && (
+                  <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">
+                    Est. {year_established}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {heroDescription && (
+              <p className="text-gray-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-4">
+                {heroDescription}
+              </p>
+            )}
+
             <button
               onClick={handleRequestQuote}
-              className="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-sm text-sm sm:text-base w-[160px] md:w-[180px]"
+              className="bg-green-600 text-white px-6 py-2.5 rounded-xl hover:bg-green-700 transition-colors font-semibold text-sm sm:text-base w-[160px] md:w-[180px] cursor-pointer"
             >
               Contact Sales
             </button>

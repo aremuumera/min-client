@@ -75,7 +75,7 @@ const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
 
       <div className="pt-8">
         <ProductTabs products={prodData} />
-        <ProductDetailReview products={prodData} />
+        {/* <ProductDetailReview products={prodData} /> */}
       </div>
 
       <div className="pt-4 border-t border-gray-100 mt-8">
