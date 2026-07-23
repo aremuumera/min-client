@@ -44,7 +44,7 @@ const MinMegPlans = [
       'For more flexibility, upgrade to premium plan.',
     userIcon: <GoPeople className='text-primary text-[24px]' />,
     buttonText: 'Upgrade now',
-    buttonLink: '/rfq',
+    buttonLink: paths.pricing,
   },
   {
     title: 'Check our premium plan',
@@ -52,7 +52,7 @@ const MinMegPlans = [
       'We have simple and affordable plan for you',
     userIcon: <GoPeople className='text-primary text-[24px]' />,
     buttonText: 'Check plan',
-    buttonLink: '/rfq',
+    buttonLink: paths.pricing,
   },
 ];
 
