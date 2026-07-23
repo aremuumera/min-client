@@ -183,6 +183,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       paths.dashboard.products.list, // /dashboard/supplier-list
       paths.dashboard.products.create, // /dashboard/supplier-list/create
       paths.dashboard.products.companyProfile, // /dashboard/supplier-list/company-profile/create
+      '/dashboard/supplier-list/update',
       '/dashboard/received-inquiries',
       '/dashboard/company-profile',
       '/dashboard/my-submitted-offers',
@@ -191,6 +192,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const buyerOnlyRoutes = [
       paths.dashboard.rfqs.list, // /dashboard/rfq-list
       paths.dashboard.rfqs.create, // /dashboard/rfq-list/create
+      '/dashboard/rfq-list/update',
+      '/dashboard/rfq',
       '/dashboard/my-trade-inquiries'
     ];
 
@@ -208,8 +211,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Suppliers cannot access inspector tools
-    if (userRole === 'supplier' && isInspectorRoute) {
+    // Suppliers cannot access buyer-only tools (like creating RFQs) or inspector tools
+    if (userRole === 'supplier' && (isBuyerRoute || isInspectorRoute)) {
       router.replace(paths.errors.notAuthorized);
       return;
     }

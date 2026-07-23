@@ -69,8 +69,19 @@ const Banner = () => {
   const nextSlide = () => setCurrentBanner((prev) => (prev + 1) % bannerImages.length);
   const prevSlide = () => setCurrentBanner((prev) => (prev - 1 + bannerImages.length) % bannerImages.length);
 
-  const isInspector = user?.role === 'inspector';
-  const filteredBannerInfo = isInspector ? [] : BannerInfo;
+  const normalizedRole = (user?.role || '').toLowerCase();
+  const isInspector = normalizedRole === 'inspector';
+  const isSupplier = normalizedRole === 'supplier';
+  const isBuyer = normalizedRole === 'buyer';
+
+  const filteredBannerInfo = isInspector
+    ? []
+    : BannerInfo.filter((info) => {
+        if (isSupplier) return info.buttonLink.includes('products');
+        if (isBuyer) return info.buttonLink.includes('rfqs');
+        return true; // Dual roles or admin see both
+      });
+
   const filteredPlans = isInspector ? [] : MinMegPlans;
 
   if (isInspector) return null;
