@@ -45,13 +45,14 @@ const ProgressBar = ({ progress, steps, onStepClick, activeStep = 0 }: ProgressB
                 />
                 <span
                   className={cn(
-                    "text-[9px] text-center font-medium truncate",
+                    "text-[9px] text-center font-medium truncate px-0.5",
                     isActive && "text-green-700 font-bold",
                     isCompleted && "text-gray-600",
                     !isCompleted && !isActive && "text-gray-400"
                   )}
+                  title={stepTitle}
                 >
-                  {stepTitle.split(' ')[0]}
+                  {stepTitle}
                 </span>
               </div>
             );
