@@ -218,6 +218,9 @@ const AuthSlice = createSlice({
     setInitialized: (state, action: PayloadAction<boolean>) => {
       state.isInitialized = action.payload;
     },
+    setAnnouncementsEnabled: (state, action: PayloadAction<boolean>) => {
+      state.announcements_enabled = action.payload;
+    },
     updateSignaturePreference: (state, action: PayloadAction<boolean>) => {
       if (state.user) {
         state.user.save_signature_enabled = action.payload;
@@ -259,33 +262,19 @@ const AuthSlice = createSlice({
         state.numb = null;
         state.user = null;
         state.error = action.error?.message || "Failed to initialize user.";
-      });
-
-    // --- Signup (Mutation) ---
-    // .addMatcher(authApi.endpoints.signup.matchPending, (state) => {
-    //     state.loading = true;
-    //     state.error = null;
-    // })
-    // .addMatcher(authApi.endpoints.signup.matchFulfilled, (state, action) => {
-    //     state.loading = false;
-    //     state.user = action.payload?.user;
-    //     state.token = action.payload?.ac;
-    //     state.numb = action.payload?.fc;
-    //     state.error = null;
-    //     state.isAuth = false; // Waiting for OTP
-    //     state.awaitingOTPVerification = true;
-    //     state.isInitialized = true;
-    //     state.vType = 'email_verification';
-    // })
-    // .addMatcher(authApi.endpoints.signup.matchRejected, (state, action) => {
-    //     state.loading = false;
-    //     // @ts-ignore
-    //     state.error = action.payload?.message || action.error?.message || 'Signup failed.';
-    //     state.success = false;
-    //     state.isAuth = false;
-    //     state.isInitialized = true;
-    //     state.awaitingOTPVerification = false;
-    // })
+      })
+      .addMatcher(
+        authApi.endpoints.updateProfile.matchFulfilled,
+        (state, action) => {
+          if (action.payload?.user) {
+            state.user = {
+              ...state.user,
+              ...action.payload.user,
+              profilePicture: action.payload.user.profilePicture || state.user?.profilePicture,
+            };
+          }
+        }
+      );
   },
 });
 
@@ -309,6 +298,7 @@ export const {
   clearRequestedLocation,
   setShowEntryModal,
   setInitialized,
+  setAnnouncementsEnabled,
   updateSignaturePreference,
 } = AuthSlice.actions;
 

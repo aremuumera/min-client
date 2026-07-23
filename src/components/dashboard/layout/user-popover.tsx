@@ -85,7 +85,7 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
                         fontWeight: 'bold',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     }}
-                    src={user?.avatar || '/profile.svg'}
+                    src={user?.profilePicture || user?.avatar || '/profile.svg'}
                 >
                     {getInitials()}
                 </Avatar>

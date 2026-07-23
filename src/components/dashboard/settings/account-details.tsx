@@ -27,46 +27,56 @@ import { useTheme } from '@/providers';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { paths } from '@/config/paths';
 
+import { useUpdateProfileMutation } from '@/redux/features/AuthFeature/auth_api_rtk';
+import { toast } from 'sonner';
+
 export function AccountDetails() {
     const { user } = useAppSelector((state) => state.auth);
-    // const theme = useTheme();
-    // const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isMobile = false; // Simplified for now to avoid break type errors
+    const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
     // For file input reference
-    const fileInputRef = React.useRef(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-    // State for profile image preview
-    const [profileImage, setProfileImage] = React.useState(user?.profilePicture);
+    const currentPic = user?.profilePicture || user?.avatar || '/profile.svg';
+    const [profileImage, setProfileImage] = React.useState<string>(currentPic);
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+
+    React.useEffect(() => {
+        if (currentPic) {
+            setProfileImage(currentPic);
+        }
+    }, [currentPic]);
 
     // Handle file selection
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files && event.target.files[0];
         if (file) {
             setSelectedFile(file);
-            // Create a preview URL for the selected image
-            const fileReader = new FileReader();
-            fileReader.onload = (e: any) => {
-                setProfileImage(e.target.result);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (e.target?.result) {
+                    setProfileImage(e.target.result as string);
+                }
             };
-            fileReader.readAsDataURL(file);
+            reader.readAsDataURL(file);
         }
     };
 
     // Handle click on profile picture
     const handleProfilePictureClick = () => {
         if (fileInputRef.current) {
-            (fileInputRef.current as any).click();
+            fileInputRef.current.click();
         }
     };
 
-    // Handle remove button click
-    const handleRemoveClick = () => {
-        setProfileImage(pp);
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-            (fileInputRef.current as any).value = '';
+    const handleSave = async () => {
+        try {
+            await updateProfile({
+                profilePicture: profileImage,
+            }).unwrap();
+            toast.success('Profile updated successfully!');
+        } catch (err: any) {
+            toast.error(err?.data?.message || 'Failed to update profile');
         }
     };
 
@@ -156,14 +166,17 @@ export function AccountDetails() {
             <CardActions className="justify-end p-6 border-t border-gray-50 bg-gray-50/30">
                 <Button
                     variant="outlined"
+                    onClick={() => setProfileImage(user?.profilePicture || '/profile.svg')}
                     className="border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg px-6 font-bold text-xs"
                 >
                     Cancel
                 </Button>
                 <Button
+                    onClick={handleSave}
+                    disabled={isUpdating}
                     className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 font-bold text-xs shadow-sm"
                 >
-                    Save Changes
+                    {isUpdating ? 'Saving...' : 'Save Changes'}
                 </Button>
             </CardActions>
         </Card>

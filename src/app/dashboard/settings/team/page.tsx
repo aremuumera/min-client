@@ -13,15 +13,20 @@ import { cn } from '@/utils/helper';
 import { toast } from 'sonner';
 import { Portal } from '@/components/ui/portal';
 
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/modal';
+
 export default function TeamManagementPage() {
     const { data, isLoading, error, refetch } = useGetTeamMembersQuery();
-    const [deleteTeamMember] = useDeleteTeamMemberMutation();
+    const [deleteTeamMember, { isLoading: isDeleting }] = useDeleteTeamMemberMutation();
     const [resendInvite] = useResendInviteMutation();
 
     // State for modals
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+
+    // State for delete modal
+    const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null);
 
     const teamMembers = data?.data || [];
 
@@ -30,14 +35,14 @@ export default function TeamManagementPage() {
         setIsEditModalOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to remove this team member? This action cannot be undone.')) {
-            try {
-                await deleteTeamMember(id).unwrap();
-                toast.success('Team member removed successfully');
-            } catch (err: any) {
-                toast.error(err?.data?.message || 'Failed to remove team member');
-            }
+    const confirmDelete = async () => {
+        if (!deletingMember) return;
+        try {
+            await deleteTeamMember(deletingMember.id).unwrap();
+            toast.success('Team member removed successfully');
+            setDeletingMember(null);
+        } catch (err: any) {
+            toast.error(err?.data?.message || 'Failed to remove team member');
         }
     };
 
@@ -51,7 +56,7 @@ export default function TeamManagementPage() {
     };
 
     return (
-        <PermissionGate permission="team_management" fallback={<div className="p-8 text-center text-red-500">You do not have permission to access this page.</div>}>
+        <PermissionGate permission="team_management" fallback={<div className="p-2 lg:p-8 text-center text-red-500">You do not have permission to access this page.</div>}>
             <InviteTeamMemberModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
             <EditTeamMemberModal
                 isOpen={isEditModalOpen}
@@ -61,6 +66,52 @@ export default function TeamManagementPage() {
                 }}
                 member={editingMember}
             />
+
+            {/* Centered Remove Team Member Confirmation Modal */}
+            <Modal open={deletingMember !== null} onClose={() => setDeletingMember(null)} size="sm" className="max-w-md mx-auto">
+                <ModalHeader className="px-4 py-3 border-b border-neutral-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                        <Trash2 className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-bold text-neutral-900">Remove Team Member</h3>
+                    </div>
+                </ModalHeader>
+                <ModalBody className="p-5 space-y-3">
+                    <p className="text-sm text-neutral-600">
+                        Are you sure you want to remove <span className="font-semibold text-neutral-900">{deletingMember?.firstName} {deletingMember?.lastName}</span> ({deletingMember?.email})?
+                    </p>
+                    <p className="text-xs text-neutral-500 bg-neutral-50 p-3 rounded-lg border border-neutral-200">
+                        This action cannot be undone. They will immediately lose access to your merchant dashboard and store operations.
+                    </p>
+                </ModalBody>
+                <ModalFooter className="px-4 py-3 border-t border-neutral-100 flex justify-end gap-2">
+                    <Button
+                        type="button"
+                        variant="outlined"
+                        onClick={() => setDeletingMember(null)}
+                        disabled={isDeleting}
+                        className="border-neutral-300 text-neutral-700 hover:bg-neutral-100 rounded-lg px-4 text-xs font-semibold"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 text-xs font-semibold"
+                    >
+                        {isDeleting ? (
+                            <span className="flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Removing...
+                            </span>
+                        ) : (
+                            'Remove Member'
+                        )}
+                    </Button>
+                </ModalFooter>
+            </Modal>
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -133,7 +184,7 @@ export default function TeamManagementPage() {
                                                     member={member}
                                                     handleEdit={() => handleEdit(member)}
                                                     handleResendInvite={() => handleResendInvite(member.email)}
-                                                    handleDelete={() => handleDelete(member.id)}
+                                                    handleDelete={() => setDeletingMember(member)}
                                                 />
                                             </td>
                                         </tr>

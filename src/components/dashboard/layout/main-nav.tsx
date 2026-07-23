@@ -93,7 +93,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                     className="flex items-center gap-3 p-1 rounded-full bg-gray-50 lg:bg-transparent lg:hover:bg-gray-50 transition-all group"
                                 >
                                     <Avatar className="h-6 w-6 ring-2 ring-white transition-transform group-hover:scale-105">
-                                        <AvatarImage src={user?.avatar || '/profile.svg'} />
+                                        <AvatarImage src={user?.profilePicture || user?.avatar || '/profile.svg'} />
                                         {/* <AvatarFallback className="bg-green-600 text-white font-bold text-xs uppercase">
                                             {user?.firstName?.[0]}{user?.lastName?.[0]}
                                         </AvatarFallback> */}

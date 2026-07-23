@@ -20,8 +20,8 @@ export const settingsApi = createApi({
 
         UpdateUserPreferences: builder.mutation({
             query: (data: any) => ({
-                url: '/auth/current/update-preferences',
-                method: 'POST',
+                url: '/auth/current/preferences',
+                method: 'PUT',
                 body: data,
             }),
         }),

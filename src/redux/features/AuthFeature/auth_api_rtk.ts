@@ -118,6 +118,15 @@ export const authApi = createApi({
       }),
     }),
 
+    // Update Profile
+    updateProfile: builder.mutation({
+      query: (data: any) => ({
+        url: "/auth/current/profile",
+        method: "PUT",
+        body: data,
+      }),
+    }),
+
     // Team Setup
     teamSetup: builder.mutation({
       query: (body) => ({
@@ -148,6 +157,7 @@ export const {
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useChangePasswordMutation,
+  useUpdateProfileMutation,
   useTeamSetupMutation,
   useValidateInviteQuery,
 } = authApi;

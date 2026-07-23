@@ -46,13 +46,23 @@ export interface AvatarProps
 
 const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, size, variant, src, alt, fallback, children, ...props }, ref) => {
-    // If src is provided, it behaves like the old monolithic component for backward compatibility
-    // If no src, it behaves like a container for AvatarImage/AvatarFallback
     const [imageError, setImageError] = React.useState(false);
     const showLegacyBehavior = !!src || !!fallback || !!alt;
 
+    const resolvedSrc = React.useMemo(() => {
+      if (!src) return undefined;
+      if (typeof src === 'object' && 'src' in (src as any)) {
+        return (src as any).src;
+      }
+      return String(src);
+    }, [src]);
+
+    React.useEffect(() => {
+      setImageError(false);
+    }, [resolvedSrc]);
+
     if (showLegacyBehavior) {
-      const showFallback = !src || imageError;
+      const showFallback = !resolvedSrc || imageError;
       const initials = React.useMemo(() => {
         if (!alt) return null;
         const words = alt.trim().split(' ');
@@ -70,7 +80,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         >
           {!showFallback ? (
             <img
-              src={src}
+              src={resolvedSrc}
               alt={alt}
               className="h-full w-full object-cover"
               onError={() => setImageError(true)}
