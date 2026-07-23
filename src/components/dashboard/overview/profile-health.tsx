@@ -218,21 +218,21 @@ export const ProfileHealth = () => {
                 })}
             </div>
 
-            {/* Role Upgrade CTA Banner -> Navigates to Become a Supplier page */}
+            {/* Role Upgrade CTA Banner -> Navigates to Dynamic Role Upgrade page */}
             {!isDualRole && !isRoleUpgradePending && (
                 <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
                     <div className="flex items-center gap-2 min-w-0">
                         <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
                         <p className="text-xs text-gray-700 font-medium truncate">
-                            {isBuyerOnly ? 'Want to sell minerals too?' : 'Need dual buyer & seller access?'}
+                            {isBuyerOnly ? 'Want to sell minerals too?' : 'Want to buy minerals too?'}
                         </p>
                     </div>
 
                     <Link
-                        href={isBuyerOnly ? paths.dashboard.becomeASupplier : paths.dashboard.settings.business}
+                        href={paths.dashboard.becomeASupplier}
                         className="text-xs font-bold text-emerald-700 hover:text-emerald-800 whitespace-nowrap hover:underline shrink-0 flex items-center gap-1"
                     >
-                        {isBuyerOnly ? 'Become a Supplier' : 'Upgrade Role'} <ArrowRight className="w-3 h-3" />
+                        {isBuyerOnly ? 'Become a Supplier' : 'Become a Buyer'} <ArrowRight className="w-3 h-3" />
                     </Link>
                 </div>
             )}

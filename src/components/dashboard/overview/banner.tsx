@@ -21,7 +21,7 @@ const BannerInfo = [
     key: 'products',
     title: 'Create Products',
     description:
-      'Create your products on your company website and increase your visibility to potential buyers.',
+      'Create your products and increase your visibility to potential buyers.',
     userIcon: <AiOutlineShoppingCart className='text-primary text-[24px]' />,
     buttonText: 'List Product',
     buttonLink: `${paths.dashboard.products.create}`,
@@ -30,7 +30,7 @@ const BannerInfo = [
     key: 'rfqs',
     title: 'Create RFQs',
     description:
-      'Create your buy requirement for free on your company website and find suitable suppliers.',
+      'Create your request for quotation and find suitable suppliers.',
     userIcon: <CgShoppingBag className='text-primary text-[24px]' />,
     buttonText: 'Start Now',
     buttonLink: `${paths.dashboard.rfqs.create}`,
@@ -79,10 +79,10 @@ const Banner = () => {
   const filteredBannerInfo = isInspector
     ? []
     : BannerInfo.filter((info) => {
-        if (isSupplier) return info.key === 'products';
-        if (isBuyer) return info.key === 'rfqs';
-        return true; // Dual roles (buyer_supplier / both / admin) see both cards
-      });
+      if (isSupplier) return info.key === 'products';
+      if (isBuyer) return info.key === 'rfqs';
+      return true; // Dual roles (buyer_supplier / both / admin) see both cards
+    });
 
   const filteredPlans = isInspector ? [] : MinMegPlans;
 
