@@ -64,8 +64,19 @@ const productSchema = z.object({
   productName: z.string().min(1, 'Product name is required'),
   deliveryPeriod: z.string().min(1, 'Delivery period is required'),
   unitCurrency: z.string().min(1, 'Unit currency is required').default('NGN'),
-  realPrice: z.string().min(1, 'Real price is required').refine(val => !isNaN(Number(val)), 'Must be a valid number'),
-  prevPrice: z.string().optional(),
+  realPrice: z.string()
+    .min(1, 'Real price is required')
+    .refine(val => !isNaN(Number(stripCommas(val))), 'Must be a valid number')
+    .refine(val => Number(stripCommas(val)) >= 0, 'Price cannot be negative')
+    .refine(val => {
+      const decimals = stripCommas(val).split('.')[1];
+      return !decimals || decimals.length <= 2;
+    }, 'Maximum 2 decimal places allowed'),
+  prevPrice: z.string().optional().refine(val => {
+    if (!val) return true;
+    const decimals = stripCommas(val).split('.')[1];
+    return !decimals || decimals.length <= 2;
+  }, 'Maximum 2 decimal places allowed'),
   composition: z.string().optional(),
   density: z.string().optional(),
   hardness: z.string().optional(),
