@@ -18,6 +18,7 @@ import { MdEdit } from 'react-icons/md';
 
 // import { Option } from '@/components/core/option';
 
+import { supplierBusinessData } from '@/lib/marketplace-data';
 import { paymentTerms, shippingTerms as shippingTermsFields } from '../../CreateProducts/paymentTerms';
 import { mockData } from '../../ListedProducts';
 import SupplierProfileInputEditModal from './SupplierInputEditModal';
@@ -99,7 +100,7 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
       type: 'select',
       label: 'Business Category',
       value: businessCategory,
-      options: ['Metals', 'Non-metals', 'Others'],
+      options: supplierBusinessData.businessCategory,
     },
     companyDescription: {
       id: 'companyDescription',
@@ -114,7 +115,7 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
       value: businessType,
       multipleFields: false,
       selectCategoryName: 'businessType',
-      options: ['Metals', 'Non-metals', 'Others'],
+      options: supplierBusinessData.businessType,
     },
     totalRevenue: {
       id: 'totalRevenue',

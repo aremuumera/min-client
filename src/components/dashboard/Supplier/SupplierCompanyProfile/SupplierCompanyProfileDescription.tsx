@@ -47,6 +47,7 @@ import { toast } from 'sonner';
 import { Option } from '@/components/core/option';
 import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { useAppDispatch, useAppSelector, useAppStore } from '@/redux';
+import { supplierBusinessData as businessData } from '@/lib/marketplace-data';
 
 import { paymentTerms, shippingTerms } from '../CreateProducts/paymentTerms';
 
@@ -645,45 +646,3 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
 };
 
 export default SupplierCompanyProfileDescription;
-
-const businessData = {
-  businessCategory: [
-    'Mineral Producers',
-    'Mining Equipment & Machinery',
-    'Chemical Suppliers for Mining',
-    'Technology Providers',
-    'Engineering & Consulting Services',
-    'Logistics & Transportation',
-    'Recycling & Waste Management',
-    'Sustainability & ESG Solutions',
-    'Mining Software & IT Services',
-    'Others',
-  ],
-  businessType: [
-    'Supplier',
-    'Buyer',
-    'Marketer',
-    'Distributor',
-    'Service Provider',
-    'Consultant',
-    'Manufacturer',
-    'Trader',
-    'Retailer',
-    'Exporter',
-    'Importer',
-    'Mining Engineer',
-    'Geologist',
-    'Environmental Consultant',
-    'Geophysicist',
-    'Mineral Processing Engineer',
-    'Metallurgist',
-    'Mining Equipment Manufacturer',
-    'Mining Software Developer',
-    'Mining Technology Provider',
-    'Mining Services Provider',
-    'Mining Contractor',
-    'Mining Consultant',
-    'Mining Researcher',
-    'Mining Analyst',
-  ],
-};
