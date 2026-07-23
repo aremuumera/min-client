@@ -481,11 +481,11 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
                     </div>
 
                     {/* Preview Modal Button */}
-                    <Box style={{ paddingTop: '24px' }} className="py-[10px] flex items-center justify-between gap-8 w-full">
-                      <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type='button' className='mt-4'>
+                    <Box className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+                      <Button variant="contained" fullWidth onClick={handlePreviewOpen} color="primary" type="button">
                         Preview
                       </Button>
-                      <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" color="primary" type='button' className=''>
+                      <Button fullWidth onClick={handleAddDescriptionField} variant="outlined" color="primary" type="button">
                         Add Description Field
                       </Button>
                     </Box>
