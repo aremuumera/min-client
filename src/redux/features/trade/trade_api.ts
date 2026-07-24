@@ -43,7 +43,16 @@ export const tradeApi = createApi({
 
     createProductInquiry: builder.mutation<any, any>({
       query: (body) => ({
-        url: "/trade/inquiriess/create",
+        url: "/trade/inquiries/create",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["TradeInquiry"],
+    }),
+
+    createBusinessInquiry: builder.mutation<any, any>({
+      query: (body) => ({
+        url: "/trade/business-inquiries",
         method: "POST",
         body,
       }),
@@ -124,6 +133,7 @@ export const {
   useGetMyTradeInquiriesQuery,
   useGetReceivedInquiriesQuery,
   useCreateProductInquiryMutation,
+  useCreateBusinessInquiryMutation,
   useResolveTradeChatMutation,
   useAcknowledgeInquiryMutation,
   useRejectInquiryMutation,

@@ -5,7 +5,7 @@ import { Loader2, CheckCircle, X, MapPin, Calendar, Scale, AlertTriangle, Box, C
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useAlert } from '@/providers';
-import { useCreateProductInquiryMutation, useSubmitRfqOfferMutation } from '@/redux/features/trade/trade_api';
+import { useCreateProductInquiryMutation, useCreateBusinessInquiryMutation, useSubmitRfqOfferMutation } from '@/redux/features/trade/trade_api';
 import { Select } from '@/components/ui/select';
 import { MoqUnits } from '@/lib/marketplace-data';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
@@ -103,11 +103,12 @@ const ProductInquiryModal = ({
     };
 
     const [createInquiry, { isLoading }] = useCreateProductInquiryMutation();
+    const [createBusinessInquiry, { isLoading: isCreatingBusinessInquiry }] = useCreateBusinessInquiryMutation();
     const [submitOffer, { isLoading: isSubmittingOffer }] = useSubmitRfqOfferMutation();
     const { user } = useSelector((state: any) => state.auth);
     const { showAlert } = useAlert();
     const router = useRouter();
-    const loading = isRfqOffer ? isSubmittingOffer : isLoading;
+    const loading = isRfqOffer ? isSubmittingOffer : (itemType === 'business' ? isCreatingBusinessInquiry : isLoading);
 
     if (!isOpen) return null;
 
@@ -173,29 +174,47 @@ const ProductInquiryModal = ({
             } else {
                 const inquiryData = formData as typeof initialState;
                 const isRecurring = inquiryData.timeline_type === 'recurring';
-                const payload = {
-                    product_id: product.id,
-                    entity_type: itemType,
-                    mineral_tag: product.mineral_tag,
-                    quantity: Number(inquiryData.quantity) || 0,
-                    measure_type: inquiryData.measure_type,
-                    delivery_location: inquiryData.delivery_location,
-                    delivery_address: inquiryData.delivery_address,
-                    delivery_state: inquiryData.delivery_state,
-                    delivery_country: inquiryData.delivery_country,
-                    timeline_type: inquiryData.timeline_type,
-                    recurring_frequency: isRecurring ? inquiryData.recurring_frequency : null,
-                    recurring_duration: isRecurring ? (Number(inquiryData.recurring_duration) || null) : null,
-                    inspection_intent: inquiryData.inspection_intent,
-                    preferred_grade: inquiryData.preferred_grade,
-                    urgency: inquiryData.urgency,
-                    description: inquiryData.description,
-                    purity_grade: inquiryData.purity_grade,
-                    moisture_max: inquiryData.moisture_max,
-                    packaging: inquiryData.packaging,
-                    sampling_method: inquiryData.sampling_method,
-                };
-                await createInquiry(payload).unwrap();
+                if (itemType === 'business') {
+                    const payload = {
+                        supplier_profile_id: product.id,
+                        quantity: Number(inquiryData.quantity) || 0,
+                        measure_type: inquiryData.measure_type,
+                        delivery_location: inquiryData.delivery_location,
+                        delivery_address: inquiryData.delivery_address,
+                        delivery_state: inquiryData.delivery_state,
+                        delivery_country: inquiryData.delivery_country,
+                        timeline_type: inquiryData.timeline_type,
+                        recurring_frequency: isRecurring ? inquiryData.recurring_frequency : null,
+                        recurring_duration: isRecurring ? (Number(inquiryData.recurring_duration) || null) : null,
+                        urgency: inquiryData.urgency,
+                        description: inquiryData.description,
+                    };
+                    await createBusinessInquiry(payload).unwrap();
+                } else {
+                    const payload = {
+                        product_id: product.id,
+                        entity_type: itemType,
+                        mineral_tag: product.mineral_tag,
+                        quantity: Number(inquiryData.quantity) || 0,
+                        measure_type: inquiryData.measure_type,
+                        delivery_location: inquiryData.delivery_location,
+                        delivery_address: inquiryData.delivery_address,
+                        delivery_state: inquiryData.delivery_state,
+                        delivery_country: inquiryData.delivery_country,
+                        timeline_type: inquiryData.timeline_type,
+                        recurring_frequency: isRecurring ? inquiryData.recurring_frequency : null,
+                        recurring_duration: isRecurring ? (Number(inquiryData.recurring_duration) || null) : null,
+                        inspection_intent: inquiryData.inspection_intent,
+                        preferred_grade: inquiryData.preferred_grade,
+                        urgency: inquiryData.urgency,
+                        description: inquiryData.description,
+                        purity_grade: inquiryData.purity_grade,
+                        moisture_max: inquiryData.moisture_max,
+                        packaging: inquiryData.packaging,
+                        sampling_method: inquiryData.sampling_method,
+                    };
+                    await createInquiry(payload).unwrap();
+                }
             }
             setStep(3);
         } catch (err: any) {

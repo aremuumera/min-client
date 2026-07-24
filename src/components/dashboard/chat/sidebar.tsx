@@ -5,6 +5,7 @@ import { paths } from '@/config/paths';
 import { Box, Button, IconButton, Stack, Typography, Drawer } from '@/components/ui';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
+import { ChatTeardropText } from '@phosphor-icons/react/dist/ssr/ChatTeardropText';
 
 import { useMediaQuery } from '@/hooks/use-media-query';
 
@@ -263,11 +264,21 @@ function SidebarContent({
               />
             ))
           ) : (
-            <Stack component="li" spacing={1} sx={{ display: 'flex', listStyle: 'none', m: 0, p: 0 }}>
-              <Typography variant="subtitle2" sx={{ textAlign: 'center', pt: '60px' }}>
-                No conversations at this time...
+            <li className="flex flex-col items-center justify-center py-12 px-4 text-center my-auto w-full">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 border border-emerald-100/80 shadow-sm">
+                <ChatTeardropText size={28} weight="duotone" />
+              </div>
+              <Typography variant="subtitle2" className="font-bold text-gray-900 text-sm mb-1">
+                {selectedType === 'all'
+                  ? 'No conversations yet'
+                  : `No ${selectedType.toUpperCase()} conversations`}
               </Typography>
-            </Stack>
+              <Typography variant="caption" className="text-gray-500 max-w-[220px] leading-relaxed text-xs">
+                {selectedType === 'all'
+                  ? 'Your active trade inquiries and messages will appear here.'
+                  : `Trade inquiries related to ${selectedType} will show up in this section.`}
+              </Typography>
+            </li>
           )}
         </Stack>
       </Stack>

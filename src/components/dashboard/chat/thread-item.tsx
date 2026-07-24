@@ -89,10 +89,11 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
     : '';
 
   // Generate text avatar from username
-  const textAvatar = generateTextAvatar(otherUserName || '');
+  const isTradeDesk = itemType === 'trade' || otherUserName === 'Min-meg Trade Desk';
+  const textAvatar = isTradeDesk ? 'MD' : generateTextAvatar(otherUserName || '');
 
   // Generate color from username for consistent avatar background
-  const avatarBgColor = stringToColor(otherUserName || '');
+  const avatarBgColor = isTradeDesk ? '#059669' : stringToColor(otherUserName || '');
 
   // Determining background color based on unreadCount and active state
   const getBackgroundColor = () => {
@@ -122,9 +123,10 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
       >
         {/* Text Avatar */}
         <Avatar
-          className={`${unreadCount > 0 ? 'ring-2 ring-emerald-500' : ''}`}
+          className={`text-white! ${unreadCount > 0 ? 'ring-2 ring-emerald-500' : ''}`}
           style={{
             backgroundColor: avatarBgColor,
+            color: '#ffffff',
             height: '40px',
             width: '40px',
             fontSize: 'var(--fontSize-sm)',

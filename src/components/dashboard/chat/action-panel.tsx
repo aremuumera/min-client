@@ -40,23 +40,23 @@ export function ActionPanel({ thread }: ActionPanelProps) {
 
     if (thread.metadata?.status === 'rejected') {
         return (
-            <Box className="p-6 border-t border-red-100 bg-red-50/30">
+            <Box className="p-3 sm:p-6 border-t border-red-100 bg-red-50/30">
                 <Card className="border-red-200 overflow-hidden shadow-sm">
                     <CardContent className="p-0">
-                        <Box className="bg-red-600 p-4 text-white flex items-center gap-2">
-                            <XCircleIcon size={20} weight="fill" />
+                        <Box className="bg-red-600 p-3 sm:p-4 text-white flex items-center gap-2">
+                            <XCircleIcon size={20} weight="fill" className="shrink-0" />
                             <Typography variant="subtitle2" className="font-bold uppercase tracking-wider text-[11px] text-white!">
                                 Trade Inquiry Declined
                             </Typography>
                         </Box>
-                        <Box className="p-6 space-y-4 bg-white text-center">
-                            <Typography variant="h6" className="font-black text-gray-900">
+                        <Box className="p-4 sm:p-6 space-y-4 bg-white text-center">
+                            <Typography variant="h6" className="font-black text-gray-900 leading-snug break-words">
                                 This inquiry has been declined
                             </Typography>
                             {thread.metadata?.rejection_reason && (
-                                <Box className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-left">
+                                <Box className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-100 text-left">
                                     <Typography variant="caption" className="block text-gray-400 uppercase font-bold mb-1">Reason provided:</Typography>
-                                    <Typography variant="body2" className="text-gray-600 font-medium italic">
+                                    <Typography variant="body2" className="text-gray-600 font-medium italic break-words">
                                         &quot;{thread.metadata.rejection_reason}&quot;
                                     </Typography>
                                 </Box>
@@ -73,45 +73,45 @@ export function ActionPanel({ thread }: ActionPanelProps) {
     }
 
     return (
-        <Box className="p-6 border-t border-emerald-100 bg-emerald-50/30">
+        <Box className="p-3 sm:p-6 border-t border-emerald-100 bg-emerald-50/30">
             <Card className="border-emerald-200 overflow-hidden">
                 <CardContent className="p-0">
-                    <Box className="bg-emerald-600 p-4 text-white flex items-center gap-2">
-                        <InfoIcon size={20} weight="fill" />
+                    <Box className="bg-emerald-600 p-3 sm:p-4 text-white flex items-center gap-2">
+                        <InfoIcon size={20} weight="fill" className="shrink-0" />
                         <Typography variant="subtitle2" className="font-bold uppercase tracking-wider text-[11px] text-white!">
                             New Multi-Mineral Trade Inquiry
                         </Typography>
                     </Box>
-                    <Box className="p-6 space-y-6 bg-white">
+                    <Box className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-white">
                         <Stack spacing={1}>
-                            <Typography variant="h5" className="font-black text-gray-900">
+                            <Typography variant="h5" className="font-black text-gray-900 leading-snug break-words text-lg sm:text-xl">
                                 {thread.itemTitle || 'Trade Inquiry'}
                             </Typography>
-                            <Typography variant="body2" className="text-gray-500 italic">
+                            <Typography variant="body2" className="text-gray-500 italic break-words text-xs sm:text-sm">
                                 &quot;{thread.metadata?.description || 'Buyer is interested in establishing a trade relationship for this item.'}&quot;
                             </Typography>
                         </Stack>
 
                         {!showRejectForm ? (
-                            <Stack direction="row" spacing={2}>
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <Button
                                     onClick={handleAcknowledge}
                                     disabled={isSubmitting}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 py-3 rounded-xl font-bold flex items-center gap-2 justify-center transition-all uppercase tracking-widest text-xs"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:flex-1 py-3 px-4 rounded-xl font-bold flex items-center gap-2 justify-center transition-all uppercase tracking-wider text-xs"
                                 >
-                                    {isSubmitting ? <Spinner size={20} color="text-white" /> : <CheckCircleIcon size={20} weight="bold" />}
-                                    {isSubmitting ? 'Processing...' : 'Acknowledge & Start Chat'}
+                                    {isSubmitting ? <Spinner size={20} color="text-white" /> : <CheckCircleIcon size={20} weight="bold" className="shrink-0" />}
+                                    <span>{isSubmitting ? 'Processing...' : 'Acknowledge & Start Chat'}</span>
                                 </Button>
                                 <Button
                                     variant="outlined"
                                     onClick={() => setShowRejectForm(true)}
                                     disabled={isSubmitting}
-                                    className="border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 py-3 rounded-xl font-bold flex items-center gap-2 justify-center transition-all uppercase tracking-widest text-xs"
+                                    className="border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 w-full sm:w-auto py-3 px-6 rounded-xl font-bold flex items-center gap-2 justify-center transition-all uppercase tracking-wider text-xs"
                                 >
-                                    <XCircleIcon size={20} weight="bold" />
+                                    <XCircleIcon size={20} weight="bold" className="shrink-0" />
                                     Decline
                                 </Button>
-                            </Stack>
+                            </div>
                         ) : (
                             <Stack spacing={3} className="pt-2">
                                 <Box className="space-y-2">
@@ -122,32 +122,32 @@ export function ActionPanel({ thread }: ActionPanelProps) {
                                         value={rejectionReason}
                                         onChange={(e) => setRejectionReason(e.target.value)}
                                         placeholder="e.g., Out of stock, price mismatch..."
-                                        className="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-100 focus:border-red-400 transition-all outline-none text-sm min-h-[100px]"
+                                        className="w-full p-3 sm:p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-100 focus:border-red-400 transition-all outline-none text-sm min-h-[100px]"
                                     />
                                 </Box>
-                                <Stack direction="row" spacing={2}>
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         onClick={handleReject}
                                         variant="outlined"
                                         disabled={isSubmitting || !rejectionReason.trim()}
-                                        className="bg-red-600 hover:bg-red-700 text-white flex-1 py-3 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+                                        className="bg-red-600 hover:bg-red-700 text-white w-full sm:flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2"
                                     >
-                                        {isSubmitting ? <Spinner size={20} color="text-white" /> : <XCircleIcon size={20} weight="bold" />}
+                                        {isSubmitting ? <Spinner size={20} color="text-white" /> : <XCircleIcon size={20} weight="bold" className="shrink-0" />}
                                         {isSubmitting ? 'Declining...' : 'Confirm Decline'}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         onClick={() => setShowRejectForm(false)}
                                         disabled={isSubmitting}
-                                        className="border-gray-200 py-3 px-6 rounded-xl font-bold uppercase tracking-widest text-xs"
+                                        className="border-gray-200 w-full sm:w-auto py-3 px-6 rounded-xl font-bold uppercase tracking-wider text-xs"
                                     >
                                         Back
                                     </Button>
-                                </Stack>
+                                </div>
                             </Stack>
                         )}
 
-                        <Typography variant="caption" className="block text-center text-gray-400 font-medium">
+                        <Typography variant="caption" className="block text-center text-gray-400 font-medium text-xs">
                             The trade desk will be notified of your decision immediately.
                         </Typography>
                     </Box>

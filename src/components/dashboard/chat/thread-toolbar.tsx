@@ -14,6 +14,7 @@ import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 import tradeApi from '@/redux/features/trade/trade_api';
 
 import { ChatContext } from '@/providers/chat-provider';
+import { TRADE_DESK_IDENTITY } from '@/config/chat-config';
 
 export function ThreadToolbar({ thread }: any) {
   const { activeInquiryId, setActiveInquiryId, roomInquiries } = React.useContext(ChatContext);
@@ -25,7 +26,8 @@ export function ThreadToolbar({ thread }: any) {
   const popover = usePopover();
   const [openInvoiceModal, setOpenInvoiceModal] = React.useState(false);
 
-  const avatarBgColor = stringToColor(thread.otherUserName || 'User');
+  const isTradeDesk = thread?.conversationType === 'trade' || thread?.itemType === 'trade' || thread?.otherUserName === TRADE_DESK_IDENTITY.DISPLAY_NAME;
+  const avatarBgColor = isTradeDesk ? '#059669' : stringToColor(thread.otherUserName || 'User');
 
   const activeCycle = React.useMemo(() => {
     if (activeInquiryId && roomInquiries?.length > 0) {

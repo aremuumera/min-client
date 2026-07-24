@@ -20,6 +20,7 @@ interface Products {
   supplierId: string | number;
   real_price: number | string;
   display_price?: number | string;
+  prev_price?: number | string;
   selected_payments?: string[];
   supplier?: any;
   productHeaderDescription?: string;
@@ -55,6 +56,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
     supplierId,
     real_price,
     display_price,
+    prev_price,
     selected_payments,
     supplier,
     productHeaderDescription,
@@ -120,8 +122,13 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
         <div className="w-full bg-gray-200 mt-4 mb-4 h-px"></div>
 
         <div className="space-y-3">
-          <div className="w-full flex items-baseline gap-1">
-            <span className="text-2xl sm:text-3xl font-bold text-gray-900">{currencySymbol}{formatNumberWithCommas(display_price || real_price || '0')}</span>
+          <div className="w-full flex items-baseline gap-3 flex-wrap">
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">{currencySymbol}{formatNumberWithCommas(display_price || '0')}</span>
+            {prev_price && Number(prev_price) > 0 && (
+              <span className="text-lg sm:text-xl text-gray-400 font-medium line-through decoration-gray-400">
+                {currencySymbol}{formatNumberWithCommas(prev_price)}
+              </span>
+            )}
             <span className="text-gray-500 text-sm sm:text-base font-medium">/ {measure || 'unit'}</span>
           </div>
 

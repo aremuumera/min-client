@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 const FilterTab = ({ active, children, onClick }: any) => (
     <Box
         onClick={onClick}
-        className={`cursor-pointer px-3 py-1 rounded-lg text-xs transition-colors duration-200 ${active ? 'font-bold bg-emerald-500 text-white! shadow-sm' : 'font-medium bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+        className={`cursor-pointer px-3 py-1 rounded-lg text-xs transition-colors duration-200 ${active ? 'font-bold bg-emerald-600 text-white! shadow-sm' : 'font-medium bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
     >
         {children}
     </Box>

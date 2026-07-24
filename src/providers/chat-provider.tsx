@@ -103,7 +103,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [acknowledgeInquiry] = useAcknowledgeInquiryMutation();
   const [rejectInquiry] = useRejectInquiryMutation();
   const { user, effectiveUserId: rawEffectiveUserId, fullName: authFullName } = useAuthIdentity();
-  const effectiveUserId = String(rawEffectiveUserId || '').replace(/-/g, '');
+  const effectiveUserId = String(rawEffectiveUserId || '');
   const userRole = user?.role || user?.team_role || user?.rtype || 'buyer';
   const fullName = authFullName || `${user?.firstName || ''} ${user?.lastName || ''}`;
 

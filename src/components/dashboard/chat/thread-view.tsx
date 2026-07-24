@@ -92,7 +92,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
       {/* Inquiry Sub-Tabs (Cycles) */}
       {roomInquiries && roomInquiries.length > 1 && (
-        <div className="flex-none flex bg-gray-50 border-b border-gray-200 px-4 pt-2 gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex-none flex bg-gray-50 border-b border-gray-200 px-2 sm:px-4 pt-2 gap-2 overflow-x-auto no-scrollbar">
           {roomInquiries.map((inq: any, index: number) => (
             <button
               key={inq.id}
@@ -100,8 +100,8 @@ export function ThreadView({ threadId }: ThreadViewProps) {
                 setActiveInquiryId?.(inq.id);
                 router.push(`/dashboard/chat/${threadType}/${threadId}/${inq.id}`);
               }}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeInquiryId === inq.id
-                ? 'border-green-600 text-green-600'
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeInquiryId === inq.id
+                ? 'border-emerald-600 text-emerald-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
@@ -124,10 +124,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       )}
 
       {/* Main Mode Tabs */}
-      <div className="flex bg-white border-b border-gray-100 flex-none px-6 pt-2 select-none shadow-sm z-10 relative">
+      <div className="flex bg-white border-b border-gray-100 flex-none px-3 sm:px-6 pt-2 select-none shadow-sm z-10 relative">
         <button
           onClick={() => setActiveTab('chat')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'chat'
+          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all ${activeTab === 'chat'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
             : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
             }`}
@@ -136,7 +136,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         </button>
         <button
           onClick={() => setActiveTab('vault')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'vault'
+          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'vault'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
             : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
             }`}
@@ -146,7 +146,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       </div>
 
       {activeTab === 'vault' ? (
-        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-6">
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
           <DocumentVault
             inquiryId={activeInquiryId || ''}
             itemType={(() => {
@@ -162,7 +162,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           <Stack
             ref={messagesRef}
             spacing={2}
-            className="flex-auto overflow-y-auto p-6 relative bg-gray-50/30"
+            className="flex-auto overflow-y-auto p-3 sm:p-6 relative bg-gray-50/30"
             style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {loadingMessages && messages.length === 0 ? (

@@ -31,8 +31,9 @@ import dayjs from 'dayjs';
 import { useAppSelector } from '@/redux';
 import { useGetDocumentsByInquiryQuery } from '@/redux/features/doc-hub/doc_hub_api';
 
-// Import utilities from shared utils
+// Import utilities and constants
 import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
+import { TRADE_DESK_IDENTITY, isSystemOrAdminMessage } from '@/config/chat-config';
 
 export function MessageBox({ message }: { message: Message }) {
   const { user } = useAppSelector((state) => state.auth);
@@ -40,9 +41,12 @@ export function MessageBox({ message }: { message: Message }) {
   const senderId = message?.senderId || message?.sender_id;
   const position = senderId === user?.id ? 'right' : 'left';
 
-  // Use robust naming for avatar generation
-  const displayName = message?.senderName || message?.sender_display || 'User';
-  const avatarBgColor = stringToColor(displayName);
+  const isSystemOrAdmin = isSystemOrAdminMessage(message);
+
+  // Standardize display name for all system/admin messages to "Min-meg Trade Desk" (Avatar MD)
+  const rawDisplayName = message?.senderName || message?.sender_display || 'User';
+  const displayName = isSystemOrAdmin ? TRADE_DESK_IDENTITY.DISPLAY_NAME : rawDisplayName;
+  const avatarBgColor = isSystemOrAdmin ? '#059669' : stringToColor(displayName);
   const { deleteAttachment, markMessageAsDelivered, markMessageAsRead, sendMessage, setActiveTab, activeInquiryId } = useChat();
 
   // State for modals
@@ -413,7 +417,9 @@ export function MessageBox({ message }: { message: Message }) {
             <Stack spacing={1}>
               <div>
                 <Typography variant="subtitle2" className={`text-sm! cursor-pointer ${position === 'right' ? 'text-white!' : 'text-black'}`}>
-                  {`${message?.senderName || message?.sender_display || 'User'}  -  (${message?.senderCompanyName || message?.sender_company_name || 'Platform Admin'})`}
+                  {isSystemOrAdmin
+                    ? `${TRADE_DESK_IDENTITY.DISPLAY_NAME} - (${TRADE_DESK_IDENTITY.COMPANY_NAME})`
+                    : `${rawDisplayName} - (${message?.senderCompanyName || message?.sender_company_name || 'Individual'})`}
                 </Typography>
               </div>
 

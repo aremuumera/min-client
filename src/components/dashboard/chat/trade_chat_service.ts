@@ -73,7 +73,7 @@ export const customerTradeChatService = {
    * Internal helper to ensure IDs are unhyphenated for consistent Firestore paths
    */
   _sanitizeId(id: string): string {
-    return String(id).replace(/-/g, "");
+    return String(id || "");
   },
 
   /**
@@ -237,7 +237,7 @@ export const customerTradeChatService = {
           if (roomEntityType === "rfq" && userRole === "supplier") {
             inquiries = inquiries.filter(
               (trade: any) =>
-                String(trade.supplier_id || "").replace(/-/g, "") === uId,
+                String(trade.supplier_id || "") === uId,
             );
           }
 
@@ -247,7 +247,7 @@ export const customerTradeChatService = {
               (trade: any) =>
                 String(
                   trade.inspector_id || trade.matched_inspector_id || "",
-                ).replace(/-/g, "") === uId,
+                ) === uId,
             );
           }
           // For product/business rooms OR buyer role → no filtering, show all
@@ -571,38 +571,37 @@ export const customerTradeChatService = {
     callback: (conversations: any[]) => void,
     errorCallback?: (error: any) => void,
   ) {
-    // Sanitize userId (remove hyphens) to ensure it matches Firestore unhyphenated IDs
-    const uId = String(userId).replace(/-/g, "");
+    const cleanUserId = String(userId || "");
 
     // Query for rooms where user is buyer
     const buyerQuery = query(
       collection(db, "trade_rooms"),
-      where("buyer_id", "==", uId),
+      where("buyer_id", "==", cleanUserId),
     );
     // Query for rooms where user is supplier
     const supplierQuery = query(
       collection(db, "trade_rooms"),
-      where("supplier_id", "==", uId),
+      where("supplier_id", "==", cleanUserId),
     );
     // Query for rooms where user is inspector
     const inspectorQuery = query(
       collection(db, "trade_rooms"),
-      where("inspector_id", "==", uId),
+      where("inspector_id", "==", cleanUserId),
     );
     // Query for rooms where user is manager
     const managerQuery = query(
       collection(db, "trade_rooms"),
-      where("assigned_manager_id", "==", uId),
+      where("assigned_manager_id", "==", cleanUserId),
     );
     // Query for rooms where user is admin
     const adminQuery = query(
       collection(db, "trade_rooms"),
-      where("assigned_admin_id", "==", uId),
+      where("assigned_admin_id", "==", cleanUserId),
     );
     // Query for rooms where user is in the participant list (Multi-RFQ support)
     const participantQuery = query(
       collection(db, "trade_rooms"),
-      where("participant_ids", "array-contains", uId),
+      where("participant_ids", "array-contains", cleanUserId),
     );
 
     let buyerRooms: any[] = [];
@@ -632,7 +631,7 @@ export const customerTradeChatService = {
             }
 
             const tradeId = docSnap.id;
-            const spoke = this.getSpokeByContext(uId, data);
+            const spoke = this.getSpokeByContext(cleanUserId, data);
             if (!spoke) {
               logger.warn(
                 `[TradeChat] Access denied for room ${tradeId}. Skipping.`,
@@ -843,13 +842,13 @@ const createNotification = async (
   type: string,
   contentType?: string,
 ) => {
-  const uId = String(userId).replace(/-/g, "");
-  const sId = String(senderId).replace(/-/g, "");
+  const uId = String(userId || "");
+  const sId = String(senderId || "");
   try {
     await addDoc(collection(db, "notifications"), {
       userId: uId,
       type,
-      conversationId: String(conversationId).replace(/-/g, ""),
+      conversationId: String(conversationId || ""),
       senderId: sId,
       senderName,
       senderCompanyName,

@@ -87,7 +87,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
 
     const productCardRoute = `/dashboard/products/details/${id}/${formatCompanyNameForUrl(product_name)}`;
 
-    const finalPrice = display_price || real_price;
+    const finalPrice = display_price;
 
     return (
         <div>
@@ -177,9 +177,9 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                     {finalPrice && (
                                         <span className='sm:text-[24px] text-[1.1rem] font-[700] text-gray-900'>{currencySymbol}{formatPrice(finalPrice)}</span>
                                     )}
-                                    {/* {prev_price && (
+                                    {prev_price && Number(prev_price) > 0 && (
                                         <span className='text-[14px] font-[400] text-[#666666] line-through decoration-gray-400'>{currencySymbol}{formatPrice(prev_price)}</span>
-                                    )} */}
+                                    )}
                                 </div>
 
                                 {quantity && (
