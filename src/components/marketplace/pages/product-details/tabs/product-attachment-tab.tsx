@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -62,10 +61,10 @@ const ProductAttachmentTab = ({ products }: { products: any }) => {
 
   if (!attachments || attachments.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+      <div className="flex flex-col items-center justify-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
         <Paperclip className="w-16 h-16 text-gray-300 mb-4" />
         <h2 className="text-xl font-medium text-gray-600 mb-2">No Attachments Available</h2>
-        <p className="text-gray-500 text-center max-w-md">
+        <p className="text-gray-500 text-center max-w-md text-sm">
           There are currently no documents or files attached to this product.
         </p>
       </div>
@@ -73,17 +72,17 @@ const ProductAttachmentTab = ({ products }: { products: any }) => {
   }
 
   return (
-    <div className="w-full py-8">
-      <h2 className="text-2xl font-semibold mb-6 flex items-center text-gray-800">
-        <Paperclip className="mr-2 w-6 h-6" />
+    <div className="w-full py-6">
+      <h2 className="text-xl font-bold mb-6 flex items-center text-gray-900">
+        <Paperclip className="mr-2 w-5 h-5 text-green-700" />
         Product Attachments
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar */}
-        <div className="lg:col-span-1 border rounded-lg p-4 bg-gray-50 h-fit">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Available Files</h3>
-          <div className="space-y-3">
+        <div className="lg:col-span-1 border border-gray-200 rounded-xl p-4 bg-gray-50/50 h-fit">
+          <h3 className="text-base font-semibold mb-4 text-gray-900">Available Files</h3>
+          <div className="space-y-2">
             {attachments.map((attachmentItem: any, index: number) => {
               const attachment = typeof attachmentItem === 'string' ? attachmentItem : (attachmentItem?.url || attachmentItem?.fileUrl || '');
               if (!attachment) return null;
@@ -94,26 +93,26 @@ const ProductAttachmentTab = ({ products }: { products: any }) => {
               return (
                 <div
                   key={index}
-                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all hover:bg-white hover:shadow-sm ${selectedAttachment === attachment ? 'bg-white border-green-400 shadow-sm border' : 'bg-transparent border border-transparent'
+                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border ${selectedAttachment === attachment ? 'bg-white border-green-500 text-green-800' : 'bg-transparent border-transparent hover:bg-white hover:border-gray-200'
                     }`}
                   onClick={() => setSelectedAttachment(attachment)}
                 >
                   <div className="mr-3">
-                    {renderFileIcon(fileType, 24)}
+                    {renderFileIcon(fileType, 20)}
                   </div>
                   <div className="flex-grow overflow-hidden">
-                    <p className="font-medium text-sm truncate text-gray-800">{fileName}</p>
-                    <p className="text-xs text-gray-500">{fileType.toUpperCase()}</p>
+                    <p className="font-medium text-xs md:text-sm truncate text-gray-900">{fileName}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">{fileType}</p>
                   </div>
                   <button
-                    className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="ml-2 p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDownload(attachment);
                     }}
                     title="Download file"
                   >
-                    <Download size={18} className="text-gray-600" />
+                    <Download size={16} className="text-gray-600" />
                   </button>
                 </div>
               );
@@ -122,29 +121,29 @@ const ProductAttachmentTab = ({ products }: { products: any }) => {
         </div>
 
         {/* Preview Area */}
-        <div className="lg:col-span-2 border rounded-lg p-4 bg-white flex flex-col min-h-[400px]">
+        <div className="lg:col-span-2 border border-gray-200 rounded-xl p-4 bg-white flex flex-col min-h-[400px]">
           {selectedAttachment && (
             <>
-              <div className="flex justify-between items-center mb-4 border-b pb-4">
-                <h3 className="text-lg font-medium text-gray-800 truncate pr-4">
+              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                <h3 className="text-sm font-semibold text-gray-900 truncate pr-4">
                   {getFileName(selectedAttachment)}
                 </h3>
                 <button
                   onClick={() => handleDownload(selectedAttachment)}
-                  className="inline-flex items-center px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 border border-green-200/80 rounded-lg hover:bg-green-100 transition-colors"
                 >
-                  <Download className="mr-1.5 w-4 h-4" />
+                  <Download className="mr-1.5 w-3.5 h-3.5" />
                   Download
                 </button>
               </div>
 
-              <div className="flex-grow rounded-lg overflow-hidden border bg-gray-50 flex items-center justify-center relative">
+              <div className="flex-grow rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center relative">
                 {getFileType(selectedAttachment) === 'image' ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={selectedAttachment}
                     alt="Product attachment"
-                    className="max-h-[500px] w-auto h-auto object-contain"
+                    className="max-h-[500px] w-auto h-auto object-contain p-2"
                   />
                 ) : getFileType(selectedAttachment) === 'pdf' ? (
                   <iframe
@@ -155,20 +154,16 @@ const ProductAttachmentTab = ({ products }: { products: any }) => {
                 ) : (
                   <div className="text-center p-8">
                     <div className="mx-auto mb-4 flex justify-center">
-                      {renderFileIcon(getFileType(selectedAttachment), 72)}
+                      {renderFileIcon(getFileType(selectedAttachment), 64)}
                     </div>
-                    <h4 className="text-xl font-medium mb-2 text-gray-800">
+                    <h4 className="text-base font-semibold mb-2 text-gray-900">
                       {getFileName(selectedAttachment)}
                     </h4>
-                    <p className="text-gray-500 mb-6">
-                      This file type cannot be previewed. Please download to view.
-                    </p>
                     <button
                       onClick={() => handleDownload(selectedAttachment)}
-                      className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition-colors"
                     >
-                      <Download className="mr-2 w-5 h-5" />
-                      Download File
+                      Download File to View
                     </button>
                   </div>
                 )}

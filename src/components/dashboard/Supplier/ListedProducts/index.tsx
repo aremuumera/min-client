@@ -15,6 +15,7 @@ import { SupplierProductsTable } from "./productsTable";
 import { useGetAllProductBySupplierIdQuery } from "@/redux/features/supplier-products/products_api";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useAuthIdentity } from "@/hooks/use-auth-identity";
+import { useGetMainCategoryQuery } from "@/redux/features/categories/cat_api";
 import Link from "next/link";
 
 export const mockData = [
@@ -441,11 +442,14 @@ const ListedProducts = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch = useAppDispatch();
 
+  const { data: mainCategories } = useGetMainCategoryQuery();
+
   const params = {
     supplierId: effectiveUserId,
     page: page + 1,
     limit: rowsPerPage,
     q: searchTerm,
+    search: searchTerm,
     category: categoryFilter,
     sort: "createdAt",
   };
@@ -497,26 +501,29 @@ const ListedProducts = () => {
       {/* Search and Filter */}
       <div className="flex flex-col gap-[20px] md:flex-row justify-between items-center my-8">
         <TextField
-          label="Search for RFQs"
+          label="Search Products"
           variant="outlined"
           value={searchTerm}
           placeholder="Search for your listed products"
           onChange={handleSearch}
-          // borderRadius='40px'
-          //  sx={{py: 2}}
-          className="w-full md:w-[30%] py-2 rounded-[60px]! "
+          className="w-full md:w-[30%] py-2 rounded-[60px]!"
         />
         <Select
           value={categoryFilter}
           onChange={handleCategoryFilter}
-          // displayEmpty
           size="sm"
           label="Category"
-          className="mt-2 md:mt-0 md:ml-4  w-full md:w-[20%]"
+          className="mt-2 md:mt-0 md:ml-4 w-full md:w-[20%]"
         >
-          <MenuItem value="">Filter by Category</MenuItem>
-          <MenuItem value="Metals">Metals</MenuItem>
-          <MenuItem value="Non-metals">Non-metals</MenuItem>
+          <MenuItem value="">All Categories</MenuItem>
+          {Array.isArray(mainCategories) && mainCategories.map((cat: any) => (
+            <MenuItem key={cat.id || cat.name} value={cat.name}>
+              {cat.name}
+            </MenuItem>
+          ))}
+          <MenuItem value="Metallic Minerals">Metallic Minerals</MenuItem>
+          <MenuItem value="Non-Metallic Minerals">Non-Metallic Minerals</MenuItem>
+          <MenuItem value="Energy Minerals">Energy Minerals</MenuItem>
         </Select>
       </div>
 

@@ -95,10 +95,10 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
 
                 <div className='relative scroll-smooth'>
                     <div className='gap-[10px]'>
-                        <div className={`group transition-all duration-300 hover:shadow-md ${isGridView ? 'flex w-full flex-col flex-grow' : 'flex flex-row w-full justify-around gap-[30px]'} shadow-sm shadow-[#0000002a] mb-[14px] bg-[#fff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full`}>
+                        <div className={`group transition-all duration-300 hover:border-gray-300 ${isGridView ? 'flex w-full flex-col flex-grow' : 'flex flex-col sm:flex-row w-full justify-between gap-4 sm:gap-6'} border border-gray-200 mb-[14px] bg-white p-3 rounded-[15px] h-full`}>
                             {/* images  */}
                             <div>
-                                <div className={`${isGridView ? 'w-full aspect-square md:h-[230px]' : 'max-w-[430px] w-full aspect-[4/3] md:h-[280px]'} widget_image_container relative h-auto overflow-hidden rounded-xl`}>
+                                <div className={`${isGridView ? 'w-full aspect-square md:h-[230px]' : 'w-full sm:max-w-[320px] aspect-[4/3] sm:h-[240px]'} widget_image_container relative h-auto overflow-hidden rounded-xl bg-gray-50 border border-gray-100`}>
                                     <div className="absolute inset-0 z-0">
                                         {/* Image & Video Carousel */}
                                         <Link href={productCardRoute} className="w-full h-full flex" style={imageContainerStyle}>
@@ -165,7 +165,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                             </div>
 
                             {/* Products description */}
-                            <div className="flex-1 flex flex-col overflow-hidden">
+                            <div className="flex-1 flex flex-col min-w-0">
                                 <h2
                                     className='pt-[5px] sm:text-[15px] text-[16px] w-full font-semibold line-clamp-2 min-h-[40px] break-words'
                                 // title={product_name}
@@ -239,10 +239,10 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                             </div>
 
                             {/* buttons save/Contact Now */}
-                            <div className={`${isGridView ? 'w-full' : 'max-w-[190px]'} flex flex-col pt-[15px] items-end justify-center gap-[10px] w-full mt-auto`}>
+                            <div className={`${isGridView ? 'w-full' : 'w-full sm:max-w-[180px]'} flex flex-col pt-2 items-stretch sm:items-end justify-center gap-2.5 mt-2 sm:mt-auto`}>
                                 <Link
                                     href={productCardRoute}
-                                    className="w-full bg-[#0a9150] hover:bg-[#087f45] text-white text-center text-sm font-medium py-2.5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:transform active:scale-[0.98]"
+                                    className="w-full bg-[#0a9150] hover:bg-[#087f45] text-white text-center text-sm font-medium py-2.5 rounded-lg transition-all duration-200 shadow-xs"
                                 >
                                     Contact Now
                                 </Link>

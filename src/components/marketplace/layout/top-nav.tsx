@@ -82,26 +82,31 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
             </Link>
           </div>
 
-          <div className="hidden md:flex gap-1.5 p-1 bg-white rounded-lg border border-gray-100">
+          {/* View Mode Toggle — Visible on both Mobile & Desktop */}
+          <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-gray-200 shadow-2xs">
             <button
               onClick={() => setIsGridView(true)}
-              className={`p-1.5 rounded-md transition-all duration-200 ${isGridView
-                ? 'bg-[#E0E0E0] text-green-600 shadow-sm'
-                : 'text-gray-400 hover:text-gray-600'
-                }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                isGridView
+                  ? 'bg-green-700 text-white shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+              }`}
               title="Grid View"
             >
-              <LayoutGrid size={18} />
+              <LayoutGrid size={16} />
+              <span className="hidden sm:inline">Grid</span>
             </button>
             <button
               onClick={() => setIsGridView(false)}
-              className={`p-1.5 rounded-md transition-all duration-200 ${!isGridView
-                ? 'bg-[#E0E0E0] text-green-600 shadow-sm'
-                : 'text-gray-400 hover:text-gray-600'
-                }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                !isGridView
+                  ? 'bg-green-700 text-white shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+              }`}
               title="List View"
             >
-              <List size={18} />
+              <List size={16} />
+              <span className="hidden sm:inline">List</span>
             </button>
           </div>
         </div>

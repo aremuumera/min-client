@@ -122,8 +122,8 @@ const ProductDetailReview = ({ products }: { products: any }) => {
   };
 
   return (
-    <section className="py-6 md:py-8 rounded-lg mb-6 bg-gray-50 border border-gray-100">
-      <div className="flex flex-col md:flex-row justify-between px-4 md:px-[65px] items-start md:items-center gap-4 md:gap-0">
+    <section className="py-6 md:py-8 rounded-xl mb-6 bg-white border border-gray-200">
+      <div className="flex flex-col md:flex-row justify-between px-4 md:px-8 items-start md:items-center gap-4 md:gap-0">
         <div className="flex flex-col">
           <h2 className="text-xl font-medium text-gray-800">
             {showAllReviews ? (
@@ -161,7 +161,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
         <div className="hidden md:flex items-center justify-between gap-4">
           {canPostReview && (
             <button
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
+              className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
               onClick={() => setShowReviewModal(true)}
             >
               Write a Review
@@ -232,7 +232,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
                 <motion.div
                   key={review.id || index}
                   variants={itemVariants}
-                  className="bg-white p-4 border border-gray-200 rounded-lg h-full flex flex-col shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-white p-5 border border-gray-200 rounded-xl h-full flex flex-col hover:border-gray-300 transition-colors"
                 >
                   {review.title && <h4 className="font-semibold text-gray-800 mb-1">{review.title}</h4>}
                   <p className="text-gray-600 mb-6 grow text-sm leading-relaxed">{review.comment}</p>
@@ -251,7 +251,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center mt-8">
                 <button
                   onClick={() => setShowAllReviews(false)}
-                  className="flex items-center text-gray-600 border border-gray-300 px-4 py-2 rounded hover:bg-gray-50 transition"
+                  className="flex items-center text-gray-700 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
                   <ArrowLeft size={16} className="mr-2" />
                   Back to Summary
