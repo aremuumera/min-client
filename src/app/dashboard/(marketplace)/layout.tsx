@@ -48,7 +48,7 @@ export default function MarketplaceLayout({
                                 <TopNav onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} isSidebarOpen={sidebarOpen} />
                             </div>
                         )}
-                        <main className="flex-1 overflow-y-auto pt-4 px-4 lg:px-0 scroll-smooth">
+                        <main className="flex-1 overflow-y-auto pt-1 px-4 lg:px-0 scroll-smooth">
                             {children}
                         </main>
                     </div>

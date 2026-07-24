@@ -220,10 +220,10 @@ const SearchInput = ({ className }: SearchInputProps) => {
         <div ref={categoryRef} className="relative">
           <button
             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-            className="flex items-center gap-1 sm:gap-2 text-gray-300 hover:text-white transition-colors pr-3 text-sm md:text-base whitespace-nowrap"
+            className="flex items-center gap-1 sm:gap-2 text-gray-900 hover:text-green-700 transition-colors pr-3 text-sm md:text-base whitespace-nowrap"
           >
-            <span className="font-medium text-gray-400">{getCurrentCategoryLabel()}</span>
-            <ChevronDown className={`w-4 h-4 transition-transform text-gray-400 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+            <span className="font-semibold text-gray-800">{getCurrentCategoryLabel()}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform text-gray-500 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Category Dropdown */}
@@ -242,8 +242,8 @@ const SearchInput = ({ className }: SearchInputProps) => {
                     variants={itemVariants}
                     onClick={() => handleCategorySelect(category.value)}
                     className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedCategory === category.value
-                      ? 'bg-green-500/20 text-green-900'
-                      : 'text-gray-500 hover:bg-[#E5E5E5] hover:text-green-900'
+                      ? 'bg-green-50 text-green-900 font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-green-900'
                       }`}
                   >
                     {category.label}
@@ -255,7 +255,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
         </div>
 
         {/* Divider */}
-        <div className="w-px sm:mx-3 h-5 bg-gray-400 " />
+        <div className="w-px sm:mx-3 h-5 bg-gray-300" />
 
         {/* Search Input */}
         <input
@@ -263,7 +263,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
           value={searchTerm}
           onChange={handleSearchChange}
           placeholder="Search for any minerals"
-          className="flex-1 bg-transparent border-none! focus:border-none! focus:outline-none! focus:ring-0!  text-gray-300 placeholder-gray-500 text-sm md:text-base"
+          className="flex-1 bg-transparent border-none! focus:border-none! focus:outline-none! focus:ring-0! text-gray-900 font-medium placeholder-gray-400 text-sm md:text-base"
         />
 
         {/* Search Icon */}
@@ -306,21 +306,33 @@ const SearchInput = ({ className }: SearchInputProps) => {
                     className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100 transition-colors border-b border-[#E5E5E5]"
                   >
                     {/* Product Image */}
-                    <div className="w-12 h-12 shrink-0 rounded overflow-hidden bg-gray-800">
+                    <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
                       <img
-                        src={product.images?.[0] || '/api/placeholder/50/50'}
-                        alt={product.product_name}
+                        src={
+                          (typeof product.images?.[0] === 'string'
+                            ? product.images[0]
+                            : product.images?.[0]?.url || product.images?.[0]?.secure_url || product.image || product.product_image) ||
+                          '/placeholder-product.png'
+                        }
+                        alt={product.product_name || 'Product'}
                         className="w-full h-full object-cover"
+                        onError={(e: any) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/placeholder-product.png';
+                        }}
                       />
                     </div>
 
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-black truncate">{product.product_name}</h4>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {product.product_category} | {product.storeProfile?.company_name}
+                      <h4 className="text-sm font-semibold text-gray-900 truncate">{product.product_name}</h4>
+                      <p className="text-xs text-gray-500 mt-1 font-medium">
+                        {product.product_category || 'Mineral'} {product.storeProfile?.company_name ? `| ${product.storeProfile.company_name}` : ''}
                       </p>
-                      <p className="text-sm font-semibold text-green-800 mt-1">${product.display_price || product.real_price}</p>
+                      <p className="text-sm font-bold text-green-700 mt-1">
+                        {(product.unitCurrency === 'USD' ? '$' : product.unitCurrency === 'EUR' ? '€' : product.unitCurrency === 'GBP' ? '£' : '₦')}
+                        {Number(product.display_price || product.real_price || 0).toLocaleString()}
+                      </p>
                     </div>
                   </a>
                 ))}

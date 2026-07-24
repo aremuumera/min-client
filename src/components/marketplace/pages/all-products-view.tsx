@@ -125,7 +125,7 @@ const AllProductsView = () => {
 
   return (
     <div ref={scrollRef} className="">
-      <div className="mt-[10px]">
+      <div className="mt-1">
         {isLoading ? (
           <ProductSkeleton count={8} />
         ) : productsToShow.length > 0 ? (
@@ -133,7 +133,7 @@ const AllProductsView = () => {
             className={`grid ${isGridView
               ? 'grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6'
               : 'grid-cols-1 gap-4'
-              } mt-[20px]`}
+              } mt-2`}
           >
             {productsToShow.map((prod: any, i: number) => (
               <div key={i}>

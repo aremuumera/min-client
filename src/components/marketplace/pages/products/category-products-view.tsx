@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useViewMode } from '@/contexts/view-product-mode';
 import ProductWidgets from '@/components/marketplace/product-widgets/product-widget';
 import { real } from '@/lib/marketplace-data';
+import NoProducts from '@/utils/no-products';
 import { paths } from '@/config/paths';
 
 interface CategoryProductsViewProps {
@@ -63,11 +64,11 @@ const CategoryProductsView = ({ mainCategoryId }: CategoryProductsViewProps) => 
     const subCategories = currentCategory?.children || [];
 
     return (
-        <div ref={scrollRef} className="mt-10 sm:mt-0">
-            <div className="p-4 relative h-full w-full">
-                <div className="flex justify-between items-center">
-                    <h2 className="sm:text-2xl text-[1rem] pl-2 pt-2 font-bold mb-4">All {currentCategory?.name}</h2>
-                    <h2 className="sm:text-2xl text-[1rem] pl-2 pt-2 font-bold mb-4">
+        <div ref={scrollRef} className="mt-1">
+            <div className="py-2 px-2 relative h-full w-full">
+                <div className="flex justify-between items-center mb-2">
+                    <h2 className="sm:text-xl text-base font-bold text-gray-900">All {currentCategory?.name}</h2>
+                    <h2 className="sm:text-xl text-base font-bold text-gray-500">
                         {data?.products?.length > 0 ? `(${data?.products?.length})` : ''}
                     </h2>
                 </div>
@@ -82,7 +83,7 @@ const CategoryProductsView = ({ mainCategoryId }: CategoryProductsViewProps) => 
                                     className="h-full w-full sm:max-w-[150px] max-w-[120px] flex-none text-center group"
                                 >
                                     <div
-                                        className={`shadow-lg mx-auto border h-24 w-24 p-1 border-gray-200 rounded-full transform transition-transform group-hover:scale-105 relative overflow-hidden`}
+                                        className={`mx-auto border h-20 w-20 p-1 border-gray-200 hover:border-green-600 rounded-full transform transition-all group-hover:scale-105 relative overflow-hidden bg-gray-50`}
                                     >
                                         <img src={item.img} alt={item.name} className="w-full h-full rounded-full object-cover" />
                                     </div>
@@ -112,12 +113,7 @@ const CategoryProductsView = ({ mainCategoryId }: CategoryProductsViewProps) => 
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-64">
-                        <div className="relative w-[200px] h-[200px] mb-4">
-                            <img src="/assets/no product.png" alt="No products" className="object-contain" />
-                        </div>
-                        <p className="text-lg font-medium">Ooooppppsss!!!!! There is no products at this time</p>
-                    </div>
+                    <NoProducts />
                 )}
             </div>
 

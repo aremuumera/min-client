@@ -21,8 +21,8 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
   const breadcrumbs = generateMarketplaceBreadcrumbs(pathname, params as any);
 
   return (
-    <div className="px-4 py-4 w-full bg-[#F5F5F5] border rounded-[20px] border-[#E0E0E0] flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+    <div className="px-4 py-2.5 w-full bg-[#F5F5F5] border rounded-[20px] border-[#E0E0E0] flex flex-col gap-2.5">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-6">
         {/* Left Side: Breadcrumbs and Filter Button */}
         <div className="flex items-center gap-4 w-full md:flex-1 md:min-w-0">
           <button
@@ -67,7 +67,7 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
         </div>
 
         {/* Center: Integrated Search Input */}
-        <div className="w-full md:max-w-[500px] lg:max-w-[600px] flex-1">
+        <div className="w-full md:max-w-[500px] lg:max-w-[600px] pt-6 flex-1">
           <SearchInput className="w-full" />
         </div>
 
@@ -86,11 +86,10 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
           <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-gray-200 shadow-2xs">
             <button
               onClick={() => setIsGridView(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                isGridView
-                  ? 'bg-green-700 text-white shadow-xs'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${isGridView
+                ? 'bg-green-700 text-white shadow-xs'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                }`}
               title="Grid View"
             >
               <LayoutGrid size={16} />
@@ -98,11 +97,10 @@ const TopNav = ({ onToggleSidebar, isSidebarOpen }: TopNavProps) => {
             </button>
             <button
               onClick={() => setIsGridView(false)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                !isGridView
-                  ? 'bg-green-700 text-white shadow-xs'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${!isGridView
+                ? 'bg-green-700 text-white shadow-xs'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                }`}
               title="List View"
             >
               <List size={16} />

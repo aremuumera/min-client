@@ -204,52 +204,77 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
     <div className="text-gray-900 w-full pt-[10px] duration-500">
       {real?.map((category) => (
         <div key={category.id}>
-          {/* Recursive rendering logic similar to original but adapted for Next.js Links */}
+          {/* Recursive rendering logic adapted for Next.js Links */}
           <div className="h-full">
             {category.submenu ? (
               // Category with submenu
               <>
                 <div
-                  onClick={() => category.id && toggleCategory(category.id)}
-                  className={`py-[10px] cursor-pointer text-[.85rem] border-b-[1px] border-b-gray-200 px-[8px] font-[500] flex justify-between items-center
+                  className={`py-[10px] text-[.85rem] border-b-[1px] border-b-gray-200 px-[8px] font-[500] flex justify-between items-center
                      ${pathname?.includes(category.tag || '') ? 'bg-green-50 text-green-600' : ''}`}
                 >
-                  <Link href={`/dashboard/products/rfq-products/${category.tag}`} className="flex-1 hover:text-green-600">
+                  <Link
+                    href={`/dashboard/products/rfq-products/${category.tag}`}
+                    className="flex-1 hover:text-green-600"
+                    onClick={() => onClose()}
+                  >
                     {category.name}
                   </Link>
-                  <span className="text-sm">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      category.id && toggleCategory(category.id);
+                    }}
+                    className="text-sm p-1 hover:text-green-600 cursor-pointer focus:outline-none"
+                    aria-label="Toggle subcategories"
+                  >
                     {activeCategory === category.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </span>
+                  </button>
                 </div>
-                <div
-                  className={`transition-all duration-500 ease-in-out ${activeCategory === category.id ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-                    } overflow-hidden`}
-                >
-                  <div className="overflow-y-auto max-h-[400px]">
+                  <div
+                    className={`transition-all duration-300 ease-in-out ${activeCategory === category.id ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
+                      } overflow-y-auto pr-1 custom-thin-scrollbar`}
+                  >
+                  <div>
                     {category.children?.map((subCategory) => (
                       <div key={subCategory.id}>
                         {subCategory.children && subCategory.children.length > 0 ? (
                           <>
                             <div
-                              onClick={() => category.id && toggleSubCategory(category.id, subCategory.id!)}
-                              className={`py-[8px] pl-4 pr-2 text-[.8rem] flex justify-between items-center cursor-pointer hover:bg-gray-50
+                              className={`py-[8px] pl-4 pr-2 text-[.8rem] flex justify-between items-center hover:bg-gray-50
                                 ${pathname?.includes(subCategory.tag || '') ? 'bg-green-50 text-green-600 font-medium' : 'text-gray-600'}`}
                             >
-                              <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`} className="flex-1">
+                              <Link
+                                href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`}
+                                className="flex-1 hover:text-green-600"
+                                onClick={() => onClose()}
+                              >
                                 {subCategory.name}
                               </Link>
-                              <span className="text-xs">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  category.id && toggleSubCategory(category.id, subCategory.id!);
+                                }}
+                                className="text-xs p-1 hover:text-green-600 cursor-pointer focus:outline-none"
+                                aria-label="Toggle items"
+                              >
                                 {activeSubCategory === `${category.id}-${subCategory.id}` ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                              </span>
+                              </button>
                             </div>
                             <div
-                              className={`transition-all duration-500 ease-in-out ${activeSubCategory === `${category.id}-${subCategory.id}` ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-                                } overflow-hidden pl-4`}
+                              className={`transition-all duration-300 ease-in-out ${activeSubCategory === `${category.id}-${subCategory.id}` ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'
+                                } overflow-y-auto pl-4 pr-1 custom-thin-scrollbar`}
                             >
                               {subCategory.children.map((item) => (
                                 <div key={item.id} className={`py-1.5 pl-4 pr-2 text-[0.75rem] hover:text-green-600 transition-colors
                                   ${pathname?.includes(item.tag || '') ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
-                                  <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}/${item.tag}`}>
+                                  <Link
+                                    href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}/${item.tag}`}
+                                    onClick={() => onClose()}
+                                  >
                                     {item.name}
                                   </Link>
                                 </div>
@@ -259,7 +284,10 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
                         ) : (
                           <div className={`py-[8px] pl-6 pr-2 text-[.8rem] hover:bg-gray-50
                                 ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
-                            <Link href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`}>
+                            <Link
+                              href={`/dashboard/products/rfq-products/${category.tag}/${subCategory.tag}`}
+                              onClick={() => onClose()}
+                            >
                               {subCategory.name}
                             </Link>
                           </div>
@@ -293,7 +321,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-5 pb-5 scrollbar-thin scrollbar-thumb-gray-200">
+      <div className="flex-1 overflow-y-auto px-5 pb-5 custom-thin-scrollbar">
         {/* Categories Header */}
         <div className="flex justify-between items-center mt-4 mb-2">
           <h2 className="font-semibold text-[0.95rem] text-gray-900">Categories</h2>
@@ -312,45 +340,70 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
               {category.children && category.children.length > 0 ? (
                 <>
                   <div
-                    onClick={() => category.id && toggleCategory(category.id)}
-                    className={`py-2.5 px-2 cursor-pointer text-[0.85rem] font-medium flex justify-between items-center transition-colors rounded-lg group
+                    className={`py-2.5 px-2 text-[0.85rem] font-medium flex justify-between items-center transition-colors rounded-lg group
                         ${pathname?.includes(category.tag || '') ? 'bg-green-50 text-green-600' : 'text-gray-700 hover:text-green-600'}`}
                   >
-                    <Link href={`/dashboard/products/all-mineral-cp/${category.tag}`} className="flex-1">
+                    <Link
+                      href={`/dashboard/products/all-mineral-cp/${category.tag}`}
+                      className="flex-1 hover:text-green-600"
+                      onClick={() => onClose()}
+                    >
                       {category.name}
                     </Link>
-                    <span className="text-sm">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        category.id && toggleCategory(category.id);
+                      }}
+                      className="text-sm p-1 hover:text-green-600 cursor-pointer focus:outline-none"
+                      aria-label="Toggle subcategories"
+                    >
                       {activeCategory === category.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </span>
+                    </button>
                   </div>
                   <div
-                    className={`transition-all duration-500 ease-in-out ${activeCategory === category.id ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-                      } overflow-hidden`}
+                    className={`transition-all duration-300 ease-in-out ${activeCategory === category.id ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
+                      } overflow-y-auto pr-1 custom-thin-scrollbar`}
                   >
                     {category.children.map((subCategory) => (
                       <div key={subCategory.id}>
                         {subCategory.children && subCategory.children.length > 0 ? (
                           <>
                             <div
-                              onClick={() => category.id && toggleSubCategory(category.id, subCategory.id!)}
-                              className={`py-2 pl-6 pr-2 text-[0.8rem] flex justify-between items-center cursor-pointer hover:text-green-600
+                              className={`py-2 pl-6 pr-2 text-[0.8rem] flex justify-between items-center hover:text-green-600
                                  ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}
                             >
-                              <Link href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}`} className="flex-1">
+                              <Link
+                                href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}`}
+                                className="flex-1 hover:text-green-600"
+                                onClick={() => onClose()}
+                              >
                                 {subCategory.name}
                               </Link>
-                              <span className="text-xs">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  category.id && toggleSubCategory(category.id, subCategory.id!);
+                                }}
+                                className="text-xs p-1 hover:text-green-600 cursor-pointer focus:outline-none"
+                                aria-label="Toggle items"
+                              >
                                 {activeSubCategory === `${category.id}-${subCategory.id}` ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                              </span>
+                              </button>
                             </div>
                             <div
-                              className={`transition-all duration-300 ease-in-out ${activeSubCategory === `${category.id}-${subCategory.id}` ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
-                                } overflow-hidden pl-4`}
+                              className={`transition-all duration-300 ease-in-out ${activeSubCategory === `${category.id}-${subCategory.id}` ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'
+                                } overflow-y-auto pl-4 pr-1 custom-thin-scrollbar`}
                             >
                               {subCategory.children.map((item) => (
                                 <div key={item.id} className={`py-1.5 pl-6 pr-2 text-[0.75rem] hover:text-green-600 transition-colors
                                     ${pathname?.includes(item.tag || '') ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
-                                  <Link href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}/${item.tag}`}>
+                                  <Link
+                                    href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}/${item.tag}`}
+                                    onClick={() => onClose()}
+                                  >
                                     {item.name}
                                   </Link>
                                 </div>
@@ -360,7 +413,10 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
                         ) : (
                           <div className={`py-2 pl-6 pr-2 text-[0.8rem] hover:text-green-600 transition-colors
                             ${pathname?.includes(subCategory.tag || '') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
-                            <Link href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}`}>
+                            <Link
+                              href={`/dashboard/products/all-mineral-cp/${category.tag}/${subCategory.tag}`}
+                              onClick={() => onClose()}
+                            >
                               {subCategory.name}
                             </Link>
                           </div>

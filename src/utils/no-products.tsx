@@ -1,24 +1,30 @@
 
 import React from 'react';
-// import { Box } from '@/components/ui/box';
-import { Typography } from '@/components/ui/typography'; // Replacing with Tailwind
 
 interface NoProductsProps {
   image?: string;
   message?: string;
   height?: string;
+  className?: string;
 }
 
 const NoProducts = ({
-  image = '/assets/no product.png', // Ensure this asset exists
-  message = 'Ooppsss!!!!! There are no products at this time',
-  height = 'h-64',
+  image = '/assets/no product.png',
+  message = 'Ooooppppsss!!!!! There are no products at this time',
+  height = 'py-8 md:py-12',
+  className = '',
 }: NoProductsProps) => {
   return (
-    <div className={`flex flex-col items-center pt-[50px] justify-center ${height}`}>
+    <div className={`flex flex-col items-center justify-center text-center px-4 w-full ${height} ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={image} alt="No products" className="max-w-[200px] mb-4 object-contain" />
-      <p className="text-sm text-gray-500 font-medium text-center">{message}</p>
+      <img
+        src={image}
+        alt="No products"
+        className="w-24 sm:w-32 md:w-40 max-w-full mb-3 object-contain transition-all"
+      />
+      <p className="text-xs sm:text-sm md:text-base font-medium text-gray-500 max-w-md leading-relaxed text-center">
+        {message}
+      </p>
     </div>
   );
 };

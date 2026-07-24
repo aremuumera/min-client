@@ -72,10 +72,10 @@ const SubCategoriesProductsView = ({ mainCategoryId, mineralCategoryId, subMiner
     const SubCategoryByName = data?.products?.length > 0 ? data?.products : [];
 
     return (
-        <div ref={scrollRef}>
+        <div ref={scrollRef} className="mt-1">
             <div className="w-full lg:max-w-[65vw]">
-                <div className="p-4 relative h-full">
-                    <h2 className="sm:text-2xl text-[1rem] pl-2 pt-2 font-bold mb-4"> All {mineralsCategoryName}</h2>
+                <div className="py-2 px-2 relative h-full">
+                    <h2 className="sm:text-xl text-base font-bold text-gray-900 mb-2"> All {mineralsCategoryName}</h2>
                     <div>
                         <div className="relative !overflow-x-hidden w-full">
                             <div className="relative px-1 flex flex-row overflow-x-auto scroll-style scrollbar-hide">
@@ -87,7 +87,7 @@ const SubCategoriesProductsView = ({ mainCategoryId, mineralCategoryId, subMiner
                                             className="h-full w-full max-w-[100px] flex-none text-center group"
                                         >
                                             <div
-                                                className={`shadow-lg ${subMineralCategoryId === item.tag ? 'bg-primary-50 ring-2 ring-primary-500' : ''} mx-auto border h-24 w-24 p-1 border-gray-200 rounded-full transform transition-transform group-hover:scale-105 relative overflow-hidden`}
+                                                className={`${subMineralCategoryId === item.tag ? 'border-green-600 ring-2 ring-green-500' : 'border-gray-200'} mx-auto border h-20 w-20 p-1 rounded-full transform transition-all group-hover:scale-105 relative overflow-hidden bg-gray-50`}
                                             >
                                                 <img src={item.img} alt={item.name} className="w-full h-full rounded-full object-cover" />
                                             </div>
@@ -120,13 +120,7 @@ const SubCategoriesProductsView = ({ mainCategoryId, mineralCategoryId, subMiner
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-64">
-                        <div className="relative w-[200px] h-[200px] mb-4">
-                            <img src="/assets/no product.png" alt="No products" className="object-contain" />
-                        </div>
-                        <p className="text-lg font-medium">Ooooppppsss!!!!! There is no products at this time</p>
-                        {/* <NoProducts /> */}
-                    </div>
+                    <NoProducts />
                 )}
             </div>
 
