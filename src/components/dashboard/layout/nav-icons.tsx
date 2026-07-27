@@ -22,7 +22,11 @@ import {
   Briefcase,
   Globe,
   Plus,
-  Calculator
+  Calculator,
+  Store,
+  UserPlus,
+  Sparkles,
+  Search,
 } from 'lucide-react';
 
 export const icons = {
@@ -59,6 +63,12 @@ export const icons = {
   gear: Settings,
   users: Users,
   calculator: Calculator,
+  store: Store,
+  marketplace: Store,
+  'user-plus': UserPlus,
+  'become-supplier': UserPlus,
+  sparkles: Sparkles,
+  search: Search,
 };
 
 export type IconName = keyof typeof icons;

@@ -52,8 +52,7 @@ export const dashboardConfig: DashboardConfig = {
           key: "marketplace",
           title: "Marketplace",
           href: paths.marketplace.products,
-          icon: "credit-card",
-          permission: "products",
+          icon: "store",
         },
       ],
     },
@@ -225,7 +224,7 @@ export const dashboardConfig: DashboardConfig = {
           key: "becomeasupplier",
           title: "Become a supplier",
           href: paths.dashboard.becomeASupplier,
-          icon: "credit-card",
+          icon: "user-plus",
         },
         {
           key: "Wishlist",

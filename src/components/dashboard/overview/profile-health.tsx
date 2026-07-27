@@ -3,13 +3,14 @@
 import React from 'react';
 import { Box } from '@/components/ui/box';
 import { Typography } from '@/components/ui/typography';
-import { CheckCircle, Circle, ArrowRight, ShieldCheck, Store, PackagePlus, FilePlus2, Search, Sparkles, ShieldAlert, Clock } from 'lucide-react';
+import { CheckCircle, Circle, ArrowRight, ShieldCheck, Store, PackagePlus, FilePlus2, Sparkles, ShieldAlert, Clock } from 'lucide-react';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { useAppSelector } from '@/redux/hooks';
 import Link from 'next/link';
 import { paths } from '@/config/paths';
 import { useGetAllProductBySupplierIdQuery } from '@/redux/features/supplier-products/products_api';
 import { useGetAllRfqByBuyerIdQuery } from '@/redux/features/buyer-rfq/rfq-api';
+import { useGetMyRfqOffersQuery } from '@/redux/features/trade/trade_api';
 
 export const ProfileHealth = () => {
     const { appData, user, effectiveUserId, isBuyer, isDualRole, isBusinessVerified, isProfileCreated, roleUpgradeStatus, roleUpgradeReason } = useAuthIdentity();
@@ -34,8 +35,13 @@ export const ProfileHealth = () => {
         page,
         buyerId: effectiveUserId,
     }, { skip: !user?.id });
+
+    // Fetch RFQ offers to check supplier offer activity
+    const { data: offerData } = useGetMyRfqOffersQuery(undefined, { skip: !user?.id || isBuyerOnly });
+
     const hasProducts = (prodData?.total_items || 0) > 0 || (prodData?.total || 0) > 0 || (Array.isArray(prodData?.data) && prodData.data.length > 0) || (Array.isArray(prodData?.products) && prodData.products.length > 0);
     const hasRfqs = (rfqData?.total_items || 0) > 0 || (rfqData?.total || 0) > 0 || (Array.isArray(rfqData?.data) && rfqData.data.length > 0) || (Array.isArray(rfqData?.rfqs) && rfqData.rfqs.length > 0);
+    const hasOffers = (offerData?.total_items || 0) > 0 || (offerData?.total || 0) > 0 || (Array.isArray(offerData?.data) && offerData.data.length > 0) || (Array.isArray(offerData?.offers) && offerData.offers.length > 0) || (Array.isArray(offerData) && offerData.length > 0);
 
     // Tailored checklist steps based on user role (buyer, supplier, or buyer_supplier)
     const steps = isBuyerOnly ? [
@@ -59,13 +65,6 @@ export const ProfileHealth = () => {
             link: paths.dashboard.rfqs.create,
             description: 'Post a Request For Quote to source minerals globally.',
             icon: FilePlus2,
-        },
-        {
-            label: 'Explore Catalog & Products',
-            completed: hasRfqs || (prodData?.total_items || 0) > 0,
-            link: paths.marketplace.products,
-            description: 'Browse verified mineral products and contact suppliers.',
-            icon: Search,
         }
     ] : [
         {
@@ -89,13 +88,19 @@ export const ProfileHealth = () => {
             description: 'Add your mineral inventory to the marketplace catalog.',
             icon: PackagePlus,
         },
-        {
-            label: isDualRole ? 'Create Your First RFQ' : 'RFQ Sourcing Activity',
+        ...(isDualRole ? [{
+            label: 'Create Your First RFQ',
             completed: hasRfqs,
             link: paths.dashboard.rfqs.create,
             description: 'Post a Request For Quote to source minerals globally.',
             icon: FilePlus2,
-        }
+        }] : [{
+            label: 'Submit an RFQ Offer',
+            completed: hasOffers,
+            link: paths.dashboard.rfqs.submittedOffers,
+            description: 'Respond to buyer RFQs and submit competitive trade offers.',
+            icon: FilePlus2,
+        }])
     ];
 
     const completedCount = steps.filter(s => s.completed).length;
