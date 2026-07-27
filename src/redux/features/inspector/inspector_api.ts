@@ -176,6 +176,14 @@ export const inspectorApi = createApi({
       ],
     }),
 
+    deletePricingEngine: builder.mutation({
+      query: (engineId) => ({
+        url: `/inspector/profile/pricing/engine/${engineId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["InspectorCompany"],
+    }),
+
     deletePricingAddon: builder.mutation({
       query: (addonId) => ({
         url: `/inspector/profile/pricing/addon/${addonId}`,
@@ -225,6 +233,51 @@ export const inspectorApi = createApi({
         "InspectorCompany",
       ],
     }),
+
+    // ============ INSPECTION PHOTO ENDPOINTS ============
+    uploadAssignmentPhotos: builder.mutation({
+      query: ({ assignmentId, formData }) => ({
+        url: `/inspector/assignments/${assignmentId}/photos`,
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: (result, error, { assignmentId }) => [
+        { type: "InspectorAssignment", id: assignmentId },
+        { type: "InspectorAssignment", id: `PHOTOS_${assignmentId}` },
+      ],
+    }),
+    getAssignmentPhotos: builder.query<any, string>({
+      query: (assignmentId) =>
+        `/inspector/assignments/${assignmentId}/photos`,
+      providesTags: (result, error, assignmentId) => [
+        { type: "InspectorAssignment", id: `PHOTOS_${assignmentId}` },
+      ],
+    }),
+
+    // ============ INSPECTION COMPLETION ============
+    completeInspection: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/inspector/assignment/report/complete/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "InspectorAssignment", id },
+        "InspectorAssignments",
+      ],
+    }),
+    startInspection: builder.mutation({
+      query: (id) => ({
+        url: `/inspector/assignment/report/start/${id}`,
+        method: "PUT",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "InspectorAssignment", id },
+        "InspectorAssignments",
+      ],
+    }),
+
+
   }),
 });
 
@@ -250,6 +303,7 @@ export const {
   useGetInspectorPricingQuery,
   useUpdateInspectorPricingMutation,
   useSetPricingAddonMutation,
+  useDeletePricingEngineMutation,
   useDeletePricingAddonMutation,
   useGetCapabilityDefinitionsQuery,
   useGetPricingDefinitionsQuery,
@@ -258,6 +312,10 @@ export const {
   useUpdateInspectorProfileMutation,
   useGetMyCompanyDetailsQuery,
   useUpdateInspectorMediaMutation,
+  useUploadAssignmentPhotosMutation,
+  useGetAssignmentPhotosQuery,
+  useCompleteInspectionMutation,
+  useStartInspectionMutation,
 } = inspectorApi;
 
 export default inspectorApi;

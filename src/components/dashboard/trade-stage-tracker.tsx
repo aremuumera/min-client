@@ -33,7 +33,7 @@ export const TradeStageTracker = ({ inquiryId, currentStatus }: { inquiryId: str
 
     // Fallback if no exact string match is found
     if (currentStepIndex === -1) {
-        if (currentStatus === 'PENDING' || currentStatus === 'CLAIMED') currentStepIndex = 0;
+        if (currentStatus === 'PENDING' || currentStatus === 'pending') currentStepIndex = 0;
         else if (currentStatus === 'SUPPLIER_MATCHED' || currentStatus === 'ACKNOWLEDGED') currentStepIndex = 1;
         else currentStepIndex = 2; // Default show some progress
     }

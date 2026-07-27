@@ -43,35 +43,42 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
 
   const mdDown = useMediaQuery('down', 'md');
 
-  // Set active conversation when URL param changes
+  // Set active conversation when URL param changes (guard against redundant state updates)
   useEffect(() => {
     if (threadId && Array.isArray(conversations) && conversations.length > 0) {
-      const conversation = conversations.find((c) => c.conversationId === threadId);
-      if (conversation) {
+      const conversation = conversations.find((c) =>
+        String(c.conversationId).trim().toLowerCase() === String(threadId).trim().toLowerCase()
+      );
+      if (conversation && String(activeConversation?.conversationId).trim().toLowerCase() !== String(conversation.conversationId).trim().toLowerCase()) {
         setActiveConversation(conversation);
       }
     }
-  }, [threadId, conversations, setActiveConversation]);
+  }, [threadId, conversations, activeConversation?.conversationId, setActiveConversation]);
 
   // Handle conversation selection
   const handleContactSelect = useCallback(
     (id: string) => {
       if (id && Array.isArray(conversations) && conversations.length > 0) {
-        const conversation = conversations.find((c) => c.conversationId === id);
-        if (conversation) {
+        const conversation = conversations.find((c) =>
+          String(c.conversationId).trim().toLowerCase() === String(id).trim().toLowerCase()
+        );
+        if (conversation && String(activeConversation?.conversationId).trim().toLowerCase() !== String(conversation.conversationId).trim().toLowerCase()) {
           setActiveConversation(conversation);
         }
       }
     },
-    [setActiveConversation, conversations, router]
+    [setActiveConversation, conversations, activeConversation?.conversationId]
   );
 
   // Handle thread / active conversation selection
   const handleThreadSelect = useCallback(
     (threadType: any, threadId: any, itemId: any) => {
-      router.push(`/dashboard/chat/${threadType}/${threadId}/${itemId}`);
+      const targetPath = `/dashboard/chat/${threadType}/${threadId}/${itemId}`;
+      if (pathname !== targetPath) {
+        router.push(targetPath);
+      }
     },
-    [router]
+    [router, pathname]
   );
 
   const handleSidebarToggle = () => {

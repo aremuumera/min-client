@@ -9,20 +9,28 @@ export type PermissionKey =
     | 'inspectors'
     | 'analytics'
     | 'settings'
-    | 'team_management';
+    | 'team_management'
+    | 'activity';
 
 export const usePermission = (permission: PermissionKey): boolean => {
-    const { isTeamMember, permissions } = useAppSelector((state) => state.auth);
+    const { isTeamMember, permissions, user } = useAppSelector((state) => state.auth);
 
-    if (!isTeamMember) {
-        // Regular users (owners) have all permissions implicitly
-        // Or we can assume owners have full access.
-        // However, if the user role is strictly "buyer" they might not have "products".
-        // But for the scope of B2B Team, "True Owner" means full access.
-        return true;
+    if (isTeamMember) {
+        return permissions.includes(permission);
     }
 
-    return permissions.includes(permission);
+    const normalizedRole = (user?.role || '').toLowerCase();
+
+    switch (permission) {
+        case 'products':
+            return normalizedRole === 'supplier' || normalizedRole === 'buyer_supplier' || normalizedRole === 'both' || normalizedRole === 'admin';
+        case 'rfq':
+            return normalizedRole === 'buyer' || normalizedRole === 'buyer_supplier' || normalizedRole === 'both' || normalizedRole === 'admin';
+        case 'inspectors':
+            return normalizedRole === 'inspector' || normalizedRole === 'admin';
+        default:
+            return true;
+    }
 };
 
 export const useIsTeamMember = (): boolean => {

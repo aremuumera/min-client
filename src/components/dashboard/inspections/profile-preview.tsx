@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Phone, Mail, CheckCircle2, MapPin, Shield, Briefcase, Award, Star, Globe, Wrench } from 'lucide-react';
+import { Phone, Mail, CheckCircle2, MapPin, Shield, Briefcase, Award, Star, Globe, Wrench, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import dynamic from 'next/dynamic';
+import { useGetInspectorPricingQuery } from '@/redux/features/inspector/inspector_api';
 
-const LeafletMap = dynamic(() => import('@/components/marketplace/LeafletMap'), { ssr: false });
+// const LeafletMap = dynamic(() => import('@/components/marketplace/LeafletMap'), { ssr: false });
 
 interface InspectorProfilePreviewProps {
     profile: any;
     isLoading?: boolean;
+    onExitPreview?: () => void;
 }
 
 /* ─── HERO ─── */
@@ -21,22 +23,24 @@ const InspectorHero = ({ profile }: { profile: any }) => {
     return (
         <div className="w-full">
             {/* Banner */}
-            <div className="relative w-full bg-gray-900 rounded-2xl overflow-hidden">
-                <div className="w-full h-40 md:h-56 lg:h-64">
+            <div className="relative w-full">
+                <div className="w-full h-40 md:h-56 lg:h-64 bg-gray-900 rounded-2xl overflow-hidden">
                     {banner ? (
                         <img src={banner} alt={`${profile?.companyName} banner`} className="w-full h-full object-cover opacity-80" />
                     ) : (
-                        <div className="w-full h-full bg-linear-to-r from-green-900 via-emerald-800 to-gray-900" />
+                        <div className="w-full h-full bg-gradient-to-r from-blue-950 via-slate-900 to-teal-950 flex items-center justify-center p-6">
+                            <img src="/assets/MINMEG 4.png" alt="Minmeg Default Banner" className="h-14 md:h-20 object-contain opacity-85" />
+                        </div>
                     )}
                 </div>
 
                 {/* Logo */}
-                <div className="absolute left-6 md:left-10 bottom-0 translate-y-1/2 p-1.5 bg-white rounded-2xl shadow-lg">
+                <div className="absolute left-6 md:left-10 bottom-0 translate-y-1/2 p-1.5 bg-white rounded-2xl border border-gray-100 shadow-md z-10">
                     {logo ? (
                         <img src={logo} alt={`${profile?.companyName} logo`} className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl object-cover border border-gray-100 bg-white" />
                     ) : (
-                        <div className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl bg-linear-to-br from-green-100 to-green-50 border border-green-100 flex items-center justify-center">
-                            <Shield className="w-10 h-10 md:w-14 md:h-14 text-green-600" />
+                        <div className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl bg-white border border-gray-100 flex items-center justify-center p-3">
+                            <img src="/assets/MINMEG 4.png" alt="Minmeg Logo" className="w-full h-full object-contain" />
                         </div>
                     )}
                 </div>
@@ -200,17 +204,24 @@ const CoverageTab = ({ profile }: { profile: any }) => {
                     </div>
                 </div>
 
-                {/* Map Placeholder — no lat/lng in InspectorCompany model yet */}
-                <div className="p-2">
-                    <div className="w-full h-[350px] bg-gray-50 rounded-2xl flex flex-col items-center justify-center text-center p-12">
-                        <div className="bg-white p-6 rounded-full shadow-sm mb-6">
-                            <Globe className="w-12 h-12 text-gray-200 animate-pulse" />
-                        </div>
-                        <h4 className="text-xl font-bold text-gray-900 mb-2">Map Preview</h4>
-                        <p className="text-gray-500 max-w-sm font-medium">
-                            The coverage area for <span className="text-green-600">{profile?.companyName}</span> spans the regions listed below.
-                        </p>
-                    </div>
+                {/* Google Maps Location / Coverage Map */}
+                <div className="p-4">
+                    {(() => {
+                        const locationQuery = profile?.address || `${profile?.companyName ? `${profile.companyName}, ` : ''}${countries.join(', ') || 'Nigeria'}`;
+                        const googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+                        return (
+                            <iframe
+                                title="Coverage Area Map"
+                                width="100%"
+                                height="350"
+                                style={{ border: 0 }}
+                                loading="lazy"
+                                allowFullScreen
+                                src={googleMapsUrl}
+                                className="w-full rounded-2xl border border-gray-100 shadow-xs"
+                            />
+                        );
+                    })()}
                 </div>
 
                 <div className="p-8 bg-gray-50/50 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -245,8 +256,162 @@ const ReviewsTab = () => (
     </div>
 );
 
+function PreviewMineralPricingAccordion({ mineral, pricingRules, addons = [] }: { mineral: string; pricingRules: any[]; addons?: any[] }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="border border-gray-200 rounded-xl bg-white overflow-hidden transition-all shadow-xs">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full p-4 flex items-center justify-between bg-gray-50/60 hover:bg-gray-100/80 transition-colors text-left cursor-pointer"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-green-100 text-green-800 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                        {mineral.substring(0, 2)}
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-900 capitalize text-sm">
+                            {mineral.replace(/_/g, ' ')}
+                        </h4>
+                        <p className="text-xs text-gray-500 font-medium">
+                            {pricingRules.length} {pricingRules.length === 1 ? 'base rate' : 'base rates'}{addons.length > 0 ? `, ${addons.length} ${addons.length === 1 ? 'addon' : 'addons'}` : ''}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <span className="text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-semibold border border-green-100">
+                        {pricingRules.length} Base Rates
+                    </span>
+                    {addons.length > 0 && (
+                        <span className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-semibold border border-blue-100">
+                            +{addons.length} Addons
+                        </span>
+                    )}
+                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                </div>
+            </button>
+
+            {isOpen && (
+                <div className="p-4 bg-white border-t border-gray-100 space-y-4">
+                    {/* Base Rates */}
+                    <div className="space-y-2">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Standard Base Rates</span>
+                        {pricingRules.map((rule: any) => {
+                            const baseFeeVal = parseFloat(rule.base_fee) || 0;
+                            return (
+                                <div key={rule.id} className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                                    <div>
+                                        <span className="font-bold text-gray-900 uppercase text-xs tracking-wider block">
+                                            {rule.pricing_method ? rule.pricing_method.replace(/_/g, ' ') : 'Standard Rate'}
+                                        </span>
+                                        {rule.input_logic_json?.custom_method_name && (
+                                            <span className="text-xs text-gray-400 font-medium">({rule.input_logic_json.custom_method_name})</span>
+                                        )}
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-xs text-gray-400 uppercase font-bold tracking-wider block">Base Fee</span>
+                                        <span className="text-sm font-black text-gray-900">₦{baseFeeVal.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Addons for this mineral */}
+                    {addons.length > 0 && (
+                        <div className="pt-3 border-t border-gray-100 space-y-2">
+                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                                Optional Fee Addons & Surcharges ({addons.length})
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {addons.map((addon: any) => {
+                                    const priceVal = parseFloat(addon.addon_price) || 0;
+                                    const defName = addon.definition?.fee_name || 'Additional Service';
+                                    return (
+                                        <div key={addon.id} className="p-3 rounded-lg border border-gray-100 bg-white flex items-center justify-between text-xs">
+                                            <span className="font-semibold text-gray-800">{defName}</span>
+                                            <span className="font-bold text-green-700">+₦{priceVal.toLocaleString()}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ─── PRICING & RATES TAB ─── */
+const PricingTab = ({ profile }: { profile: any }) => {
+    const inspectorId = profile?.id;
+    const { data: pricingRes, isLoading } = useGetInspectorPricingQuery(inspectorId, {
+        skip: !inspectorId,
+    });
+
+    const engineEntries = pricingRes?.data?.engine || [];
+    const addonEntries = pricingRes?.data?.addons || profile?.pricingAddons || [];
+
+    if (isLoading) {
+        return (
+            <div className="py-8 space-y-4 max-w-4xl mx-auto">
+                <Skeleton className="h-16 w-full rounded-2xl" />
+                <Skeleton className="h-16 w-full rounded-2xl" />
+            </div>
+        );
+    }
+
+    if (engineEntries.length === 0) {
+        return (
+            <div className="py-12 flex flex-col items-center justify-center text-center">
+                <div className="bg-gray-50 p-6 rounded-full mb-4">
+                    <Award className="w-10 h-10 text-gray-300" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900 mb-1">No Pricing Configured</h4>
+                <p className="text-gray-500 max-w-sm text-sm">
+                    This inspector has not published standard base rates yet.
+                </p>
+            </div>
+        );
+    }
+
+    const groupedEngine = engineEntries.reduce((acc: Record<string, any[]>, rule: any) => {
+        const tag = rule.mineral_tag ? rule.mineral_tag.toLowerCase() : 'general';
+        if (!acc[tag]) acc[tag] = [];
+        acc[tag].push(rule);
+        return acc;
+    }, {});
+
+    return (
+        <div className="py-6 max-w-4xl mx-auto space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xs space-y-6">
+                <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Configured Base Rates & Service Fees</h3>
+                    <p className="text-xs text-gray-500">
+                        Standard service rates and fee addons published by <strong className="text-gray-800">{profile?.companyName}</strong>. Click any mineral to expand.
+                    </p>
+                </div>
+
+                <div className="space-y-3">
+                    {Object.entries(groupedEngine).map(([mineralTag, rules]: [string, any]) => (
+                        <PreviewMineralPricingAccordion
+                            key={mineralTag}
+                            mineral={mineralTag}
+                            pricingRules={rules}
+                            addons={addonEntries.filter((a: any) => a.mineral_tag?.toLowerCase() === mineralTag.toLowerCase())}
+                        />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 /* ─── MAIN COMPONENT ─── */
-export default function InspectorProfilePreview({ profile, isLoading }: InspectorProfilePreviewProps) {
+export default function InspectorProfilePreview({ profile, isLoading, onExitPreview }: InspectorProfilePreviewProps) {
     const [currentTab, setCurrentTab] = useState(0);
 
     if (isLoading) {
@@ -265,12 +430,31 @@ export default function InspectorProfilePreview({ profile, isLoading }: Inspecto
 
     const tabs = [
         { label: "About", component: <AboutTab profile={profile} /> },
+        { label: "Pricing & Rates", component: <PricingTab profile={profile} /> },
         { label: "Coverage & Location", component: <CoverageTab profile={profile} /> },
         { label: "Reviews", component: <ReviewsTab /> },
     ];
 
     return (
-        <div className="animate-in fade-in duration-500">
+        <div className="animate-in fade-in duration-500 relative">
+            {onExitPreview && (
+                <div className="sticky top-4 z-50 bg-neutral-900/95 text-white px-6 py-3.5 shadow-xl flex items-center justify-between rounded-2xl mb-6 border border-neutral-800 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <div>
+                            <span className="text-sm font-bold block leading-tight">Public Profile Preview</span>
+                            <span className="text-xs text-neutral-400 font-medium">Viewing profile as seen by buyers and clients</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onExitPreview}
+                        className="bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-xs cursor-pointer"
+                    >
+                        <span>← Exit Preview</span>
+                    </button>
+                </div>
+            )}
+
             <InspectorHero profile={profile} />
 
             {/* Tabs */}

@@ -22,13 +22,19 @@ export const categoryApi = createApi({
             query: (id) => `/allCategories/${id}`,
             providesTags: ['category'],
         }),
+
+        getCategoryTree: builder.query<any, void>({
+            query: () => `/allCategories/tree`,
+            providesTags: ['category'],
+        }),
     }),
 });
 
 export const {
     useGetMainCategoryQuery,
     useGetCategoryQuery,
-    useGetSubCategoryQuery
+    useGetSubCategoryQuery,
+    useGetCategoryTreeQuery,
 } = categoryApi;
 
 export default categoryApi;

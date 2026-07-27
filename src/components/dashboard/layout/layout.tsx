@@ -39,9 +39,18 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     // Helper to check if a user has permission
     const hasPermission = React.useCallback((permission?: string) => {
         if (!permission) return true;
-        if (!isTeamMember) return true; // Owner has all permissions
-        return permissions.includes(permission);
-    }, [isTeamMember, permissions]);
+        if (isTeamMember) return permissions.includes(permission);
+        switch (permission) {
+            case 'products':
+                return isSupplier || isDualRole || isAdmin;
+            case 'rfq':
+                return isBuyer || isDualRole || isAdmin;
+            case 'inspectors':
+                return isInspector || isAdmin;
+            default:
+                return true;
+        }
+    }, [isTeamMember, permissions, isSupplier, isBuyer, isDualRole, isInspector, isAdmin]);
 
     // Recursive filtering function
     const filterNavItems = React.useCallback((items: any[]) => {
@@ -124,6 +133,22 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                 };
             }
 
+            // For pure suppliers: Hide 'my-trade-inquiries' (buyer-only feature)
+            if (section.key === 'product' && isSupplierOnly) {
+                return {
+                    ...section,
+                    items: section.items?.filter((subItem) => subItem.key !== 'my-trade-inquiries'),
+                };
+            }
+
+            // For pure buyers: Hide 'rfq-submitted-offers' (supplier-only feature for bidding on RFQs)
+            if (section.key === 'rfq' && isBuyerOnly) {
+                return {
+                    ...section,
+                    items: section.items?.filter((subItem) => subItem.key !== 'rfq-submitted-offers'),
+                };
+            }
+
             // For pure suppliers: Hide the 'buyer' sub-group (Create RFQ, Listed RFQs, Offer Board)
             if (section.key === 'rfq' && isSupplierOnly) {
                 return {
@@ -149,15 +174,6 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                         return {
                             ...section,
                             items: section.items?.filter(item => ['chat', 'settings'].includes(item.key))
-                                .map(item => {
-                                    if (item.key === 'settings') {
-                                        return {
-                                            ...item,
-                                            items: item.items?.filter(subItem => subItem.key === 'settings:account')
-                                        };
-                                    }
-                                    return item;
-                                })
                         };
                     }
                     return section;

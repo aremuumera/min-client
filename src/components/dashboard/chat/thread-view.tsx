@@ -5,6 +5,7 @@ import { Box } from '@/components/ui/box';
 import { Stack } from '@/components/ui/stack';
 import { Typography } from '@/components/ui/typography';
 import { CircularProgress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
@@ -12,11 +13,15 @@ import { ThreadToolbar } from './thread-toolbar';
 import { ActionPanel } from './action-panel';
 import { InspectorActionPanel } from './inspector-action-panel';
 import { DocumentVault } from './document-vault';
+import { TradeActivityTimeline } from './trade-activity-timeline';
 import { ChatContext } from '@/providers/chat-provider';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+
+import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface ThreadViewProps {
   threadId: string;
@@ -29,15 +34,19 @@ export function ThreadView({ threadId }: ThreadViewProps) {
   const params = useParams();
   const threadType = params?.threadType as string;
 
-  const thread = conversations.find((t: any) => t.conversationId === threadId);
+  // Normalized thread ID comparison helper
+  const isMatch = (id1?: string, id2?: string) =>
+    !!id1 && !!id2 && String(id1).trim().toLowerCase() === String(id2).trim().toLowerCase();
 
-  console.log('roomInquiries', roomInquiries)
+  // Use activeConversation as instant fallback while conversations array is populating
+  const thread = conversations.find((t: any) => isMatch(t.conversationId, threadId)) ||
+    (isMatch(activeConversation?.conversationId, threadId) ? activeConversation : null);
 
   useEffect(() => {
-    if (threadId && thread) {
+    if (threadId && thread && !isMatch(activeConversation?.conversationId, thread.conversationId)) {
       setActiveConversation?.(thread);
     }
-  }, [threadId, conversations, setActiveConversation, thread]);
+  }, [threadId, conversations, setActiveConversation, thread, activeConversation?.conversationId]);
 
   const isInspector = user?.id && thread?.metadata?.inspector_id && String(user.id) === String(thread.metadata.inspector_id);
   const isSupplier = user?.id && thread?.metadata?.supplier_id && String(user.id) === String(thread.metadata.supplier_id);
@@ -66,21 +75,45 @@ export function ThreadView({ threadId }: ThreadViewProps) {
     }
   }, [messages]);
 
-  if (loading && !thread) {
+  // Check if initial room sync is still in progress
+  const isSyncing = loading || (conversations.length === 0 && (!activeConversation || activeConversation.conversationId !== threadId));
+
+  if (isSyncing && !thread) {
     return (
-      <Box className="flex items-center justify-center h-full flex-auto">
-        <CircularProgress />
-      </Box>
+      <div className="flex flex-col items-center justify-center h-full flex-1 p-8 text-center bg-gray-50/50">
+        <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-emerald-600 mb-3 animate-pulse">
+          <MessageSquare size={22} />
+        </div>
+        <p className="text-sm font-bold text-gray-900">Connecting to Min-meg Trade Desk...</p>
+        <p className="text-xs text-gray-400 font-medium mt-0.5">Synchronizing trade room history</p>
+      </div>
     );
   }
 
   if (!thread) {
     return (
-      <Box className="flex items-center justify-center flex-auto">
-        <Typography color="textSecondary" variant="h6">
-          Thread not found
-        </Typography>
-      </Box>
+      <div className="flex flex-col items-center justify-center h-full flex-1 p-6 text-center bg-white">
+        <div className="max-w-md w-full p-8 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-gray-100 border border-gray-200 mx-auto flex items-center justify-center text-gray-400">
+            <MessageSquareDashed size={26} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-black text-gray-900">Trade Room Unavailable</h3>
+            <p className="text-xs text-gray-500 font-medium leading-relaxed">
+              The requested trade room could not be loaded or is unavailable for this account.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/dashboard/my-trade-inquiries"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
+            >
+              <ArrowLeft size={14} />
+              Return to Trade Inquiries
+            </Link>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -143,6 +176,15 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         >
           Document Vault
         </button>
+        <button
+          onClick={() => setActiveTab('activity')}
+          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'activity'
+            ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+            : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          Activity Log
+        </button>
       </div>
 
       {activeTab === 'vault' ? (
@@ -156,6 +198,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               return (inq.type === 'rfq' || inq.type === 'rfq_offer') ? 'rfq' : 'product';
             })()}
           />
+        </div>
+      ) : activeTab === 'activity' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradeActivityTimeline inquiryId={activeInquiryId || ''} />
         </div>
       ) : (
         <>
@@ -178,8 +224,23 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
           {/* Transition to Message Input once acknowledged/started */}
           {(() => {
+            if (loading || loadingMessages) {
+              return (
+                <Box className="p-3 sm:p-4 border-t border-gray-100 bg-white">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rounded" className="h-12 flex-1 rounded-xl bg-gray-100" />
+                    <Skeleton variant="rounded" className="h-12 w-28 rounded-xl bg-gray-100" />
+                  </div>
+                </Box>
+              );
+            }
+
+            if (!thread) {
+              return null;
+            }
+
             const activeInq = roomInquiries.find((i: any) => i.id === activeInquiryId);
-            const currentStatus = activeInq?.status || thread.metadata?.status;
+            const currentStatus = activeInq?.status || thread?.metadata?.status || null;
             const isRejected = currentStatus === 'REJECTED' || currentStatus === 'rejected';
             const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
             const _isSupplier = user?.id && (thread.metadata?.supplier_id && user.id === thread.metadata.supplier_id);

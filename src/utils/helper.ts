@@ -2,6 +2,24 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
+ * Formats 24h time string (e.g. "13:58" or "04:19") into AM/PM format (e.g. "1:58 PM" or "4:19 AM").
+ */
+export function formatTimeAmPm(timeStr?: string | null): string {
+    if (!timeStr) return '';
+    const parts = String(timeStr).trim().split(':');
+    if (parts.length < 2) return timeStr;
+    let hours = parseInt(parts[0], 10);
+    const minutes = parts[1].padStart(2, '0');
+    if (isNaN(hours)) return timeStr;
+
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
+    return `${hours}:${minutes} ${ampm}`;
+}
+
+/**
  * Validates a social media URL for specific platforms.
  */
 export function validateSocialURL(url: string, platform: 'linkedin' | 'facebook' | 'instagram' | 'twitter' | 'x' | string): boolean {
@@ -228,49 +246,55 @@ export function getErrorMessage(err: any, fallback = 'An unexpected error occurr
 
     // 1. Check for nested validation errors array inside err.data or err
     const data = err?.data || err;
-    const validationErrors = data?.errors || data?.error?.errors;
-    if (validationErrors && Array.isArray(validationErrors)) {
+    const validationErrors = data?.errors || data?.error?.errors || err?.errors || err?.error?.errors;
+    if (validationErrors && Array.isArray(validationErrors) && validationErrors.length > 0) {
         return validationErrors
             .map((e: any) => {
                 const messageString = typeof e === 'string' ? e : e?.message || JSON.stringify(e);
-                // Strip field prefix (e.g., "phoneNumber: Invalid phone number" -> "Invalid phone number")
                 if (messageString.includes(': ')) {
-                    return messageString.split(': ').slice(1).join(': ');
+                    const [field, ...rest] = messageString.split(': ');
+                    const formattedField = field
+                        .replace(/([A-Z])/g, ' $1')
+                        .replace(/^./, (str: string) => str.toUpperCase())
+                        .trim();
+                    return `${formattedField}: ${rest.join(': ')}`;
                 }
                 return messageString;
             })
             .join(', ');
     }
 
-    // 2. Check: err.data.message
+    // 2. Check: err.data.error.message (Standard backend API error response format)
+    if (err?.data?.error?.message && typeof err.data.error.message === 'string') {
+        return err.data.error.message;
+    }
+
+    // 3. Check: err.data.message
     if (err?.data?.message && typeof err.data.message === 'string') {
         return err.data.message;
     }
 
-    // 3. Check: err.data.error (string or object)
-    if (err?.data?.error) {
-        if (typeof err.data.error === 'string') return err.data.error;
-        if (typeof err.data.error === 'object' && err.data.error.message && typeof err.data.error.message === 'string') {
-            return err.data.error.message;
-        }
+    // 4. Check: err.data.error (string)
+    if (err?.data?.error && typeof err.data.error === 'string') {
+        return err.data.error;
     }
 
-    // 4. Check: err.error.message
+    // 5. Check: err.error.message
     if (err?.error?.message && typeof err.error.message === 'string') {
         return err.error.message;
     }
 
-    // 5. Check: err.error (string)
+    // 6. Check: err.error (string)
     if (err?.error && typeof err.error === 'string') {
         return err.error;
     }
 
-    // 6. Check: err.message
+    // 7. Check: err.message
     if (err?.message && typeof err.message === 'string') {
         return err.message;
     }
 
-    // 7. Check: err.data (string)
+    // 8. Check: err.data (string)
     if (err?.data && typeof err.data === 'string') {
         return err.data;
     }

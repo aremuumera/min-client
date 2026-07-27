@@ -15,6 +15,7 @@ export const activityApi = createApi({
         actionType?: string;
         entityType?: string;
         search?: string;
+        inquiryId?: string;
         orderBy?: string;
         order?: string;
       }

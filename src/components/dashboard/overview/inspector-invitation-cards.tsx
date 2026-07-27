@@ -13,6 +13,7 @@ import { paths } from '@/config/paths';
 import { useUpdateAssignmentStatusMutation } from '@/redux/features/inspector/inspector_api';
 import { toast } from 'sonner';
 import { FiCopy } from 'react-icons/fi';
+import AssignmentDetailsModal, { CopyableId } from '../inspections/AssignmentDetailsModal';
 
 interface Job {
     id: string;
@@ -30,16 +31,8 @@ interface Props {
 
 export const InspectorInvitationCards = ({ assignments, isLoading }: Props) => {
     const invitations = assignments.filter(a => a.status === 'ASSIGNED').slice(0, 2);
-    const [updateStatus, { isLoading: isUpdating }] = useUpdateAssignmentStatusMutation();
-
-    const handleAction = async (id: string, status: string) => {
-        try {
-            await updateStatus({ id, status }).unwrap();
-            toast.success(`Invitation ${status.toLowerCase()}ed successfully`);
-        } catch (err) {
-            toast.error("Failed to update invitation status");
-        }
-    };
+    const [selectedAssignment, setSelectedAssignment] = React.useState<Job | null>(null);
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
 
     if (isLoading) {
         return (
@@ -53,7 +46,7 @@ export const InspectorInvitationCards = ({ assignments, isLoading }: Props) => {
     if (invitations.length === 0) {
         return (
             <Card outlined className="min-h-[300px] flex flex-col items-center justify-center text-center p-8 border-dashed border-neutral-200 bg-neutral-50/20">
-                <div className="w-16 h-16 bg-white border border-neutral-100 rounded-2xl flex items-center justify-center mb-6 text-green-600 shadow-sm shadow-green-100">
+                <div className="w-16 h-16 bg-white border border-neutral-100 rounded-2xl flex items-center justify-center mb-6 text-green-600 shadow-xs shadow-green-100">
                     <Briefcase className="w-8 h-8" />
                 </div>
                 <Typography variant="h6" className="font-black text-neutral-900 tracking-tight">Zero Pending Requests</Typography>
@@ -72,60 +65,68 @@ export const InspectorInvitationCards = ({ assignments, isLoading }: Props) => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 max-h-[500px] overflow-y-auto pr-2 no-scrollbar">
-                {invitations.map((job, index) => (
-                    <Card key={job.id || `inv-${index}`} outlined className="group border-l-4 border-l-primary-500 hover:border-primary-200 transition-all">
-                        <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="space-y-2.5">
-                                    <div className="flex items-center gap-2">
-                                        <Chip label="High Priority" color="primary" variant="outlined" />
-                                        <Typography variant="caption" className="text-neutral-400 font-bold uppercase tracking-widest">
-                                            ID: {job.id.split('-')[0]}
-                                        </Typography>
-                                    </div>
-                                    <Typography variant="h6" className="font-black text-neutral-900 leading-none">
-                                        {job.product_name || job.productName}
-                                    </Typography>
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                        <div className="flex items-center gap-1.5 text-neutral-500">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            <Typography variant="caption" className="font-medium whitespace-nowrap">
-                                                {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Flexible'}
-                                            </Typography>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-neutral-500">
-                                            <MapPin className="w-3.5 h-3.5" />
-                                            <Typography variant="caption" className="font-medium truncate max-w-[200px]">
-                                                {job.inspectionLocation}
-                                            </Typography>
-                                        </div>
-                                    </div>
-                                </div>
+                {invitations.map((job, index) => {
+                    const isRfq = job.item_type === 'rfq';
+                    const productName = job.productName || job.product_name || (isRfq ? 'RFQ Request' : 'Product Inquiry');
+                    const locationStr = job.inspectionLocation || job.location || job.delivery_location;
 
-                                <div className="flex items-center gap-2 mt-2 md:mt-0 md:self-center">
-                                    <Button
-                                        variant="outlined"
-                                        size="sm"
-                                        className="text-error-600 border-error-100 hover:bg-error-50"
-                                        disabled={isUpdating}
-                                        onClick={() => handleAction(job.id, 'REJECTED')}
-                                    >
-                                        Reject
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        size="sm"
-                                        disabled={isUpdating}
-                                        onClick={() => handleAction(job.id, 'ACCEPTED')}
-                                    >
-                                        Accept Job
-                                    </Button>
+                    return (
+                        <Card key={job.id || `inv-${index}`} outlined className="group border-l-4 border-l-green-600 hover:border-green-700 transition-all">
+                            <CardContent className="p-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isRfq ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
+                                                {isRfq ? 'RFQ Inspection' : 'Product Inspection'}
+                                            </span>
+                                            <CopyableId id={job.id} />
+                                        </div>
+                                        <Typography variant="h6" className="font-black text-neutral-900 leading-none">
+                                            {productName}
+                                        </Typography>
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                            <div className="flex items-center gap-1.5 text-neutral-500">
+                                                <Calendar className="w-3.5 h-3.5 text-neutral-400" />
+                                                <Typography variant="caption" className="font-medium whitespace-nowrap">
+                                                    {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Flexible'}
+                                                </Typography>
+                                            </div>
+                                            {locationStr && locationStr !== 'N/A' && (
+                                                <div className="flex items-center gap-1.5 text-neutral-500">
+                                                    <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                                                    <Typography variant="caption" className="font-medium truncate max-w-[200px]">
+                                                        {locationStr}
+                                                    </Typography>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 mt-2 md:mt-0 md:self-center">
+                                        <Button
+                                            variant="outlined"
+                                            size="sm"
+                                            className="text-neutral-700 border-neutral-200 hover:bg-neutral-50 font-bold text-xs"
+                                            onClick={() => { setSelectedAssignment(job); setIsModalOpen(true); }}
+                                        >
+                                            Review & Respond
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
+
+            {/* Modal for response */}
+            {selectedAssignment && (
+                <AssignmentDetailsModal
+                    isOpen={isModalOpen}
+                    onClose={() => { setIsModalOpen(false); setSelectedAssignment(null); }}
+                    assignment={selectedAssignment}
+                />
+            )}
         </Box>
     );
 };

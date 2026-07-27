@@ -11,20 +11,59 @@ import {
     XCircle,
     Info,
     ShieldCheck,
-    CreditCard
+    Copy,
+    Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUpdateAssignmentStatusMutation } from '@/redux/features/inspector/inspector_api';
 import { toast } from 'sonner';
+import { formatTimeAmPm } from '@/utils/helper';
+import { getErrorMessage } from '@/utils/helper';
 
 interface AssignmentDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     assignment: any;
+    initialAction?: 'idle' | 'accepting' | 'rejecting';
 }
 
-const AssignmentDetailsModal = ({ isOpen, onClose, assignment }: AssignmentDetailsModalProps) => {
+export function CopyableId({ id, className = "" }: { id: string; className?: string }) {
+    const [copied, setCopied] = React.useState(false);
+    if (!id) return null;
+    const shortDisplay = id.length > 8 ? `${id.substring(0, 8)}...` : id;
+
+    const handleCopy = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(id);
+        setCopied(true);
+        toast.success(`Copied ID: ${id}`);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <span
+            onClick={handleCopy}
+            title={`Click to copy full ID: ${id}`}
+            className={`inline-flex items-center gap-1 font-mono text-[10px] font-bold text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer transition-colors ${className}`}
+        >
+            <span>#{shortDisplay}</span>
+            {copied ? (
+                <Check size={11} className="text-green-600 shrink-0" />
+            ) : (
+                <Copy size={11} className="text-gray-400 shrink-0" />
+            )}
+        </span>
+    );
+}
+
+const AssignmentDetailsModal = ({ isOpen, onClose, assignment, initialAction = 'idle' }: AssignmentDetailsModalProps) => {
     const [updateStatus, { isLoading: isUpdating }] = useUpdateAssignmentStatusMutation();
+    const [actionState, setActionState] = React.useState<'idle' | 'accepting' | 'rejecting'>(initialAction);
+    const [notes, setNotes] = React.useState('');
+
+    React.useEffect(() => {
+        setActionState(initialAction);
+    }, [initialAction, isOpen]);
 
     if (!isOpen || !assignment) return null;
 
@@ -32,97 +71,164 @@ const AssignmentDetailsModal = ({ isOpen, onClose, assignment }: AssignmentDetai
         try {
             await updateStatus({
                 id: assignment.id,
-                status: status
+                status: status,
+                notes: notes.trim() || undefined
             }).unwrap();
             toast.success(`Assignment ${status.toLowerCase()} successfully`);
+            setActionState('idle');
+            setNotes('');
             onClose();
-        } catch (err) {
-            toast.error(`Failed to ${status.toLowerCase()} assignment`);
+        } catch (error: any) {
+            toast.error(getErrorMessage(error, `Failed to ${status.toLowerCase()} assignment`));
         }
     };
 
+    const isRfq = assignment.item_type === 'rfq';
+    const productName = assignment.productName || assignment.product_name || (isRfq ? 'RFQ Request' : 'Product Inquiry');
+    const mineralTag = assignment.mineral_tag && assignment.mineral_tag !== 'N/A' && assignment.mineral_tag !== 'mineral' ? assignment.mineral_tag : null;
+    const quantityStr = assignment.quantity || assignment.quantityRequired ? `${assignment.quantity || assignment.quantityRequired} ${assignment.unitType || assignment.measure_type || 'MT'}` : null;
+    const gradeStr = assignment.agreedGradePercentage ? `${assignment.agreedGradePercentage}%` : null;
+
+    const locationStr = [assignment.inspectionLocation || assignment.location || assignment.delivery_location, assignment.inspectionState || assignment.delivery_state]
+        .filter(Boolean)
+        .filter(val => val !== 'N/A')
+        .join(', ');
+
+    const dateStr = assignment.scheduledDate ? new Date(assignment.scheduledDate).toLocaleDateString(undefined, { dateStyle: 'medium' }) : null;
+
     const specs = [
-        { label: 'Product', value: assignment.product_name || assignment.productName, icon: Box },
-        { label: 'Mineral Type', value: assignment.mineral_tag, icon: Layers },
-        { label: 'Quantity', value: `${assignment.quantityRequired || assignment.quantity || '-'} ${assignment.quantityMeasure || assignment.measure_type || ''}`, icon: Info },
-        { label: 'Location', value: assignment.location || assignment.delivery_location || 'Port Access', icon: MapPin },
-        { label: 'Target Date', value: assignment.scheduledDate ? new Date(assignment.scheduledDate).toLocaleDateString() : 'Flexible', icon: Calendar },
-    ];
+        { label: isRfq ? 'RFQ Title' : 'Product Name', value: productName, icon: Box, fullWidth: true },
+        { label: 'Category', value: mineralTag || 'N/A', icon: Layers, fullWidth: true },
+        quantityStr ? { label: 'Quantity & Unit', value: quantityStr, icon: Info } : null,
+        gradeStr ? { label: 'Target Grade', value: gradeStr, icon: ShieldCheck } : null,
+        locationStr ? { label: 'Inspection Site & Location', value: locationStr, icon: MapPin, fullWidth: true } : null,
+        dateStr ? { label: 'Scheduled Date & Time', value: `${dateStr}${assignment.scheduledTime ? ` at ${formatTimeAmPm(assignment.scheduledTime)}` : ''}`, icon: Calendar } : null,
+    ].filter(Boolean);
 
     return (
-        <div className="fixed inset-0 z-12000 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white rounded-[40px] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl border border-gray-100">
+        <div className="fixed inset-0 z-12000 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-xl overflow-hidden flex flex-col border border-gray-100">
 
                 {/* Header */}
-                <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                            <ShieldCheck size={24} className="text-primary-600" />
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Inspection Invitation</h2>
+                <div className="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-2.5">
+                            <ShieldCheck size={22} className="text-green-600" />
+                            <h2 className="text-xl font-black text-gray-900 tracking-tight">Inspection Assignment</h2>
                         </div>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] ml-9">REF: {assignment.id?.substring(0, 12).toUpperCase()}</p>
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${isRfq ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+                                {isRfq ? 'RFQ Inspection' : 'Product Inspection'}
+                            </span>
+                            <CopyableId id={assignment.id} />
+                        </div>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-gray-100 rounded-2xl transition-all">
-                        <X size={24} className="text-gray-400" />
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                        <X size={20} className="text-gray-400" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-8 space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {specs.map((spec, i) => (
-                            <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-gray-100 text-primary-600">
-                                    <spec.icon size={18} />
+                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {specs.map((spec: any, i: number) => (
+                            <div key={i} className={`flex items-start gap-3.5 p-3.5 rounded-xl bg-gray-50 border border-gray-100 ${spec.fullWidth ? 'col-span-1 md:col-span-2' : ''}`}>
+                                <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center border border-gray-100 text-gray-600 shrink-0 mt-0.5">
+                                    <spec.icon size={16} />
                                 </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{spec.label}</p>
-                                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{spec.value || 'N/A'}</p>
+                                <div className="space-y-0.5 min-w-0 flex-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{spec.label}</p>
+                                    <p className="text-xs font-black text-gray-900 break-words whitespace-pre-wrap leading-snug">{spec.value}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* Payout Card */}
-                    <div className="relative overflow-hidden bg-neutral-900 rounded-[32px] p-8 text-white">
-                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-primary-400">
-                                    <CreditCard size={16} />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.25em]">Estimated Payout</span>
-                                </div>
-                                <h3 className="text-4xl font-black tracking-tighter">$1,250.00 <span className="text-sm font-bold text-white/40 uppercase tracking-widest">USD</span></h3>
-                                <p className="text-xs text-white/50 font-medium">Billed after report authentication & ledger sync.</p>
-                            </div>
-                            <div className="px-6 py-3 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-md">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-primary-400">Assignment SLA</p>
-                                <p className="text-sm font-bold mt-1">48 Hours (Reporting)</p>
-                            </div>
+                    {/* Product / Job Description if present */}
+                    {assignment.productDescription && (
+                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Description & Notes</p>
+                            <p className="text-xs font-medium text-gray-700 leading-relaxed">{assignment.productDescription}</p>
                         </div>
-                        {/* Decorative background element */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                    </div>
+                    )}
+
+                    {/* Admin Instructions if present */}
+                    {assignment.adminNotes && (
+                        <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-100 space-y-1">
+                            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Admin Notes</p>
+                            <p className="text-xs font-medium text-amber-900 leading-relaxed">{assignment.adminNotes}</p>
+                        </div>
+                    )}
+
+                    {/* Confirmation Input Box */}
+                    {actionState !== 'idle' && (
+                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2 animate-in fade-in duration-150">
+                            <label className="block text-xs font-bold text-gray-800">
+                                {actionState === 'rejecting' ? 'Reason for Declining (Required)' : 'Confirmation Notes (Optional)'}
+                            </label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder={actionState === 'rejecting' ? 'State why your company cannot fulfill this assignment...' : 'Add any instructions or notes for the admin...'}
+                                className="w-full p-3 rounded-lg border border-gray-200 text-xs text-gray-900 bg-white focus:outline-hidden focus:border-green-600 resize-none h-20"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex gap-4">
-                    <Button
-                        onClick={() => handleAction('REJECTED')}
-                        disabled={isUpdating}
-                        variant="outlined"
-                        className="flex-1 py-7 rounded-2xl border-2 border-gray-200 text-gray-400 font-black uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
-                    >
-                        <XCircle size={18} />
-                        Decline
-                    </Button>
-                    <Button
-                        onClick={() => handleAction('ACCEPTED')}
-                        disabled={isUpdating}
-                        className="flex-2 py-7 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                    >
-                        <CheckCircle2 size={18} />
-                        Accept Assignment
-                    </Button>
+                <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+                    {actionState === 'idle' ? (
+                        <>
+                            {assignment.status === 'ASSIGNED' && (
+                                <>
+                                    <Button
+                                        onClick={() => setActionState('rejecting')}
+                                        disabled={isUpdating}
+                                        variant="outlined"
+                                        className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-600 font-bold text-xs hover:bg-gray-100 transition-all flex items-center justify-center gap-1.5"
+                                    >
+                                        <XCircle size={16} />
+                                        Decline
+                                    </Button>
+                                    <Button
+                                        onClick={() => setActionState('accepting')}
+                                        disabled={isUpdating}
+                                        className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                                    >
+                                        <CheckCircle2 size={16} />
+                                        Accept Assignment
+                                    </Button>
+                                </>
+                            )}
+                            {assignment.status !== 'ASSIGNED' && (
+                                <Button
+                                    onClick={onClose}
+                                    className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-xs transition-all"
+                                >
+                                    Close Details
+                                </Button>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                onClick={() => { setActionState('idle'); setNotes(''); }}
+                                disabled={isUpdating}
+                                variant="outlined"
+                                className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-600 font-bold text-xs hover:bg-gray-100 transition-all"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={() => handleAction(actionState === 'accepting' ? 'ACCEPTED' : 'REJECTED')}
+                                disabled={isUpdating || (actionState === 'rejecting' && !notes.trim())}
+                                className={`flex-1 py-3 text-white rounded-xl font-bold text-xs transition-all ${actionState === 'accepting' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700 disabled:opacity-50'}`}
+                            >
+                                {isUpdating ? 'Processing...' : actionState === 'accepting' ? 'Confirm Acceptance' : 'Confirm Decline'}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

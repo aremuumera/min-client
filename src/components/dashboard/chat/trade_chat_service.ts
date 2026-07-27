@@ -59,9 +59,10 @@ export interface TradeMessage {
   sender_role: string;
   sender_display: string;
   sender_name: string;
+  sender_company_name?: string;
   text: string;
   timestamp: any;
-  type: "text" | "system" | "document" | "attachment";
+  type: "text" | "system" | "document" | "attachment" | "trade_document" | "trade_document_update" | string;
   attachments?: any[];
   isRead?: boolean;
 }

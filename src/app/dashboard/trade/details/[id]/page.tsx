@@ -4,47 +4,33 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     useGetTradeInquiryQuery,
-    useAcknowledgeInquiryMutation,
-    useRejectInquiryMutation
+    useAcknowledgeInquiryMutation
 } from '@/redux/features/trade/trade_api';
 import { useSelector } from 'react-redux';
 import {
-    Clock,
-    Box,
-    AlertCircle,
-    CheckCircle2,
-    RefreshCw,
-    Info,
     MapPin,
-    Zap,
     MessageSquare,
     ThumbsUp,
-    ThumbsDown,
     ChevronRight,
     ArrowLeft,
     ShieldCheck,
     FileCheck,
-    Truck,
-    CreditCard,
     FileText,
-    Image,
-    Paperclip,
-    ExternalLink,
     Eye,
-    Calendar,
-    Package
+    Package,
+    Tag,
+    UserCheck,
+    Building2,
+    Layers,
+    ExternalLink,
+    Box
 } from 'lucide-react';
 import Link from 'next/link';
-import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/core/toaster';
 import { cn } from '@/utils/helper';
-import { Divider } from '@/components/ui/divider';
-import { Typography } from '@/components/ui/typography';
-import { customerTradeChatService } from '@/components/dashboard/chat/trade_chat_service';
+import { paths } from '@/config/paths';
 import { TradeStageTracker } from '@/components/dashboard/trade-stage-tracker';
-
-// --- Components ---
 
 export default function TradeDetailPage() {
     const params = useParams();
@@ -54,7 +40,6 @@ export default function TradeDetailPage() {
     const { user } = useSelector((state: any) => state.auth);
     const { data: inquiryResult, isLoading, refetch } = useGetTradeInquiryQuery(tradeId);
     const [acknowledge] = useAcknowledgeInquiryMutation();
-    const [reject] = useRejectInquiryMutation();
 
     const inquiry = inquiryResult?.data;
     const isSupplier = user?.role === 'supplier';
@@ -63,435 +48,420 @@ export default function TradeDetailPage() {
     const handleAcknowledge = async () => {
         try {
             await acknowledge(tradeId).unwrap();
-
-            // Initialize Firestore room for Hub-and-Spoke ONLY AFTER Acknowledgment
-            if (inquiry) {
-                try {
-                    await customerTradeChatService.createTradeRoom(inquiry.id, {
-                        inquiry_id: inquiry.id,
-                        entity_type: inquiry.entity_type,
-                        status: 'acknowledged',
-                        buyer_id: inquiry.user_id,
-                        buyer_name: inquiry.buyer_name || 'Buyer',
-                        mineral_tag: inquiry.mineral_tag,
-                        quantity: String(inquiry.quantity),
-                        measure_type: inquiry.measure_type,
-                        supplier_id: user?.id, // Authenticated user is the supplier acknowledging
-                    });
-
-                    // Copy the initial buyer inquiry message to the admin_buyer spoke thread
-                    await customerTradeChatService.sendMessage(
-                        tradeId,            // The main room ID (from params)
-                        inquiry.id,         // The specific inquiry ID
-                        'admin_buyer',      // The thread spoke
-                        inquiry.user_id,    // The sender
-                        'buyer',            // The role
-                        inquiry.buyer_name || 'Buyer',
-                        inquiry.buyer?.company_name || 'Independent',
-                        `Initial Inquiry Requirements:\n\nQuantity: ${inquiry.quantity} ${inquiry.measure_type?.replace(/_/g, ' ')}\nLocation: ${inquiry.delivery_location}, ${inquiry.delivery_state}\nGrade: ${inquiry.preferred_grade || 'Standard'}\nNotes: ${inquiry.description || 'None'}`
-                    );
-                } catch (fsErr) {
-                    console.error('Firestore Init Error:', fsErr);
-                }
-            }
-
             toast.success('Inquiry acknowledged successfully');
             refetch();
         } catch (err) {
-            toast.error('Failed to acknowledge');
+            toast.error('Failed to acknowledge inquiry');
         }
     };
 
-    if (isLoading) return <div className="p-20 text-center animate-pulse text-gray-400 font-bold">Loading Trade Intelligence...</div>;
+    if (isLoading) return <div className="p-20 text-center text-gray-400 font-bold">Loading Trade Details...</div>;
     if (!inquiry) return <div className="p-20 text-center text-red-500 font-bold">Trade reference not found.</div>;
 
+    const product = inquiry.product;
+    const targetProductId = product?.id || inquiry.product_id;
+    const rawSlug = product?.product_name || inquiry.item_name || 'details';
+    const cleanSlug = rawSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'details';
+    const productDetailsUrl = targetProductId ? paths.marketplace.productDetails(targetProductId, cleanSlug) : '#';
+
     return (
-        <div className="max-w-7xl mx-auto p-6 md:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Top Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 bg-white min-h-screen">
+            {/* Header / Top Navigation Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => router.back()}
-                        className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all shadow-sm"
+                        className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+                        title="Back"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={18} />
                     </button>
                     <div>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">
-                            <span>Reference</span>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                            <span>Trade Reference</span>
                             <ChevronRight size={10} />
-                            <span className="text-gray-900">#{inquiry.external_id?.toUpperCase()}</span>
+                            <span className="text-emerald-700 font-mono">#{inquiry.external_id?.toUpperCase()}</span>
                         </div>
-                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Trade Orchestration</h1>
+                        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Trade Details</h1>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {targetProductId && (
+                        <Link
+                            href={productDetailsUrl}
+                            target="_blank"
+                            className="bg-white border border-gray-300 text-gray-800 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors text-sm"
+                        >
+                            <ExternalLink size={16} className="text-emerald-600" />
+                            View Product Page
+                        </Link>
+                    )}
                     <Link
-                        href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.external_id}/${inquiry.product_id}`}
-                        className="bg-green-600 text-white px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-200"
+                        href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
+                        className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-700 transition-colors text-sm"
                     >
-                        <MessageSquare size={18} />
+                        <MessageSquare size={16} />
                         Open Trade Room
                     </Link>
                 </div>
             </div>
 
-            {/* Stepper */}
+            {/* Trade Progress Stepper */}
             <TradeStageTracker inquiryId={inquiry.id} currentStatus={inquiry.status} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Left Column: Key Information */}
-                <div className="lg:col-span-2 space-y-10">
-                    {/* Primary Specs Card */}
-                    <div className="bg-white rounded-[40px] border border-gray-100 p-10 shadow-sm space-y-8">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-gray-900">Inquiry Specifications</h3>
-                            <div className="px-4 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">
-                                {inquiry.entity_type} Transaction
-                            </div>
-                        </div>
+            {/* Main Content Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* Left Column (2 Cols): Inquiry Specs vs Product Information */}
+                <div className="lg:col-span-2 space-y-8">
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mineral</p>
-                                <p className="text-lg font-black text-gray-900 capitalize">{inquiry.item_name || inquiry.mineral_tag?.replace(/_/g, ' ')}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</p>
-                                <p className="text-lg font-black text-gray-900">{inquiry.quantity} <span className="text-xs text-gray-400 uppercase">{inquiry.measure_type?.replace(/_/g, ' ')}</span></p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Urgency</p>
-                                <p className={cn("text-lg font-black", inquiry.priority === 'urgent' ? 'text-red-500' : 'text-gray-900')}>{inquiry.priority?.toUpperCase() || 'STANDARD'}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Terms</p>
-                                <p className="text-lg font-black text-gray-900">LC / TT</p>
-                            </div>
-                        </div>
-
-                        <div className="p-8 bg-gray-50/50 rounded-[32px] border border-gray-100 flex items-start gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-blue-600 flex-none shadow-sm">
-                                <MapPin size={24} />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Destination Basis (CIF)</p>
-                                <p className="text-sm font-bold text-gray-900 leading-relaxed">
-                                    {inquiry.delivery_address}, {inquiry.delivery_location}, {inquiry.delivery_state}, {inquiry.delivery_country}
-                                </p>
-                            </div>
-                        </div>
-
-                        {inquiry.description && (
-                            <div className="pt-4">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Buyer's Requirements</p>
-                                <p className="text-sm text-gray-600 leading-loose italic font-medium">"{inquiry.description}"</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Supplier's Context / Notes (If Offer Context) */}
-                    {inquiry.entity_type === 'rfq' && inquiry.found_offer?.description && (
-                        <div className="bg-emerald-50/50 border border-emerald-100/50 p-10 rounded-[40px] relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-6 opacity-5">
-                                <MessageSquare size={80} className="text-emerald-500" />
-                            </div>
-                            <h3 className="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2">
-                                <MessageSquare size={20} />
-                                Supplier Feedback
-                            </h3>
-                            <p className="text-sm text-emerald-800 leading-relaxed font-medium italic relative z-10 whitespace-pre-wrap">
-                                "{inquiry.found_offer.description}"
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Supplier Counter-Specs (If Offer Context) */}
-                    {inquiry.entity_type === 'rfq' && inquiry.found_offer && (
-                        <div className="bg-white rounded-[40px] border border-gray-100 p-10 shadow-sm space-y-8">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xl font-bold text-gray-900">Supplier's Counter-Specs</h3>
-                                <div className="px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none">
-                                    Supplier Terms
+                    {/* SECTION 1: BUYER INQUIRY SPECIFICATIONS */}
+                    <section className="rounded-2xl border border-emerald-200/80 bg-emerald-50/20 p-6 space-y-6">
+                        <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-emerald-100 text-emerald-800 rounded-lg">
+                                    <Package size={18} />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-gray-900">Buyer Inquiry Specifications</h2>
+                                    <p className="text-xs text-gray-500 font-medium">Requirements submitted by buyer for this trade</p>
                                 </div>
                             </div>
+                            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-200">
+                                {inquiry.status}
+                            </span>
+                        </div>
 
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Offered Qty</p>
-                                    <p className="text-lg font-black text-gray-900">
-                                        {Number(inquiry.found_offer.quantity).toLocaleString()}
-                                        <span className="text-xs text-gray-400 font-bold ml-1 uppercase">{inquiry.found_offer.measure_type}</span>
+                        {/* Primary Inquiry Metric Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="p-3 bg-white rounded-xl border border-gray-200">
+                                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-0.5">Target Mineral</span>
+                                <span className="text-sm font-black text-gray-900 capitalize block truncate">
+                                    {inquiry.item_name || inquiry.mineral_tag?.replace(/_/g, ' ')}
+                                </span>
+                            </div>
+
+                            <div className="p-3 bg-white rounded-xl border border-gray-200">
+                                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-0.5">Required Quantity</span>
+                                <span className="text-sm font-black text-gray-900 block">
+                                    {inquiry.quantity} <span className="text-xs text-gray-400 font-bold">{inquiry.measure_type?.replace(/_/g, ' ')}</span>
+                                </span>
+                            </div>
+
+                            <div className="p-3 bg-white rounded-xl border border-gray-200">
+                                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-0.5">Grade / Purity</span>
+                                <span className="text-sm font-black text-gray-900 block">
+                                    {inquiry.purity_grade || inquiry.preferred_grade || 'Standard'}
+                                </span>
+                            </div>
+
+                            <div className="p-3 bg-white rounded-xl border border-gray-200">
+                                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-0.5">Order Urgency</span>
+                                <span className={cn("text-sm font-black block uppercase", inquiry.priority === 'urgent' ? 'text-red-600' : 'text-gray-900')}>
+                                    {inquiry.priority || 'Standard'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Inquiry Logistics & Address */}
+                        <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+                            <div className="flex items-start gap-3">
+                                <MapPin size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 block mb-0.5">Delivery Destination & Address</span>
+                                    <p className="text-xs sm:text-sm font-bold text-gray-900 leading-relaxed">
+                                        {inquiry.delivery_address ? `${inquiry.delivery_address}, ` : ''}
+                                        {inquiry.delivery_location}, {inquiry.delivery_state}, {inquiry.delivery_country}
                                     </p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Purity/Grade</p>
-                                    <p className="text-lg font-black text-gray-900">{inquiry.found_offer.purity_grade || 'Standard'}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Max Moisture</p>
-                                    <p className="text-lg font-black text-emerald-600">{inquiry.found_offer.moisture_max ? `${inquiry.found_offer.moisture_max}%` : 'N/A'}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Packaging</p>
-                                    <p className="text-sm font-bold text-gray-900">{inquiry.found_offer.packaging || 'Standard Bulk'}</p>
-                                </div>
                             </div>
-
-                            <div className="p-8 bg-gray-50/50 rounded-[32px] border border-gray-100 space-y-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-red-500 shadow-sm flex-none">
-                                        <MapPin size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Loading Point / Origin</p>
-                                        <p className="text-sm font-bold text-gray-900 leading-relaxed">
-                                            {inquiry.found_offer.delivery_address || inquiry.found_offer.delivery_location || 'TBD'}
-                                            <span className="text-gray-500 font-medium ml-2">({inquiry.found_offer.delivery_state || 'N/A'}, {inquiry.found_offer.delivery_country || 'N/A'})</span>
-                                        </p>
-                                    </div>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-100 text-xs">
+                                <div>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase block">Supply Timeline</span>
+                                    <span className="font-bold text-gray-800 capitalize">{inquiry.timeline_type?.replace(/_/g, ' ') || 'Immediate'}</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <Calendar size={18} className="text-blue-500" />
-                                        <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase">Lead Time</p>
-                                            <p className="text-sm font-bold text-gray-900 capitalize">{inquiry.found_offer.timeline_type?.replace(/_/g, ' ') || 'Immediate'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Zap size={18} className="text-emerald-500" />
-                                        <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase">Frequency</p>
-                                            <p className="text-sm font-bold text-gray-900">{inquiry.found_offer.recurring_frequency || 'Single Order'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Media & Documents (Unified Hub) */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="h-px bg-gray-100 flex-1" />
-                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex-none px-2">Media & Document Hub</h3>
-                            <div className="h-px bg-gray-100 flex-1" />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Buyer RFQ Media */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 px-2">
-                                    <Paperclip size={14} className="text-gray-400" />
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Buyer RFQ Reference</p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-                                    {(() => {
-                                        const rfqAttachments = inquiry.rfq?.attachments || inquiry.rfq?.documents || [];
-                                        const attachments = Array.isArray(rfqAttachments) ? rfqAttachments : (typeof rfqAttachments === 'string' ? JSON.parse(rfqAttachments) : []);
-                                        if (attachments.length === 0) return <p className="text-[11px] text-gray-400 font-medium px-2">No attachments provided with RFQ.</p>;
-
-                                        return attachments.map((file: any, idx: number) => (
-                                            <a
-                                                key={idx}
-                                                href={file.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="group p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-blue-200 hover:bg-blue-50/20 transition-all"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-blue-500 transition-colors">
-                                                        <FileText size={18} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900 truncate max-w-[160px]">{file.name || `RFQ Doc ${idx + 1}`}</p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Buyer Reference</p>
-                                                    </div>
-                                                </div>
-                                                <Eye size={16} className="text-gray-300 group-hover:text-blue-500" />
-                                            </a>
-                                        ));
-                                    })()}
-                                </div>
-                            </div>
-
-                            {/* Supplier Offer Media */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 px-2">
-                                    <ShieldCheck size={14} className="text-emerald-400" />
-                                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Supplier Verifications</p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-                                    {(() => {
-                                        const rawAttachments = inquiry.found_offer?.attachments || [];
-                                        const attachments = Array.isArray(rawAttachments) ? rawAttachments : (typeof rawAttachments === 'string' ? JSON.parse(rawAttachments) : []);
-                                        if (attachments.length === 0) return <p className="text-[11px] text-gray-400 font-medium px-2">No supporting documents uploaded by supplier.</p>;
-
-                                        return attachments.map((file: any, idx: number) => (
-                                            <a
-                                                key={idx}
-                                                href={file.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="group p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-emerald-200 hover:bg-emerald-50/20 transition-all"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-emerald-500 transition-colors">
-                                                        {file.type === 'image' || file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? <Image size={18} /> : <FileText size={18} />}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900 truncate max-w-[160px]">{file.name || `Offer Media ${idx + 1}`}</p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Supplier Attachment</p>
-                                                    </div>
-                                                </div>
-                                                <Eye size={16} className="text-gray-300 group-hover:text-emerald-500" />
-                                            </a>
-                                        ));
-                                    })()}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Formal Trade Documents (Hub) */}
-                        {inquiry.documents && inquiry.documents.length > 0 && (
-                            <div className="pt-4 border-t border-gray-50">
-                                <div className="flex items-center gap-2 px-2 mb-4">
-                                    <FileCheck size={14} className="text-blue-500" />
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Formal Trade Document Hub</p>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {inquiry.documents.map((doc: any, idx: number) => (
-                                        <a
-                                            key={idx}
-                                            href={doc.document_url || doc.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="group p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-blue-200 hover:bg-blue-50/20 transition-all"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-blue-500 transition-colors">
-                                                    <ShieldCheck size={18} />
-                                                </div>
-                                                <div className="overflow-hidden">
-                                                    <p className="text-sm font-bold text-gray-900 truncate max-w-[180px]">{doc.document_name || doc.name || `Trade Doc ${idx + 1}`}</p>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">{doc.document_type?.replace(/_/g, ' ') || 'Official Document'}</p>
-                                                </div>
-                                            </div>
-                                            <Eye size={16} className="text-gray-300 group-hover:text-blue-500" />
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Logistics Detail Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="bg-white rounded-[32px] border border-gray-100 p-8 space-y-6 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                    <Truck size={20} />
-                                </div>
-                                <h4 className="font-bold text-gray-900">Supply Timeline</h4>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-400 font-medium">Schedule Type</span>
-                                    <span className="text-xs font-bold text-gray-900 capitalize">{inquiry.timeline_type?.replace(/_/g, ' ')}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-400 font-medium">Frequency</span>
-                                    <span className="text-xs font-bold text-gray-900">{inquiry.recurring_frequency || 'Single Shipment'}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-[32px] border border-gray-100 p-8 space-y-6 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                                    <ShieldCheck size={20} />
-                                </div>
-                                <h4 className="font-bold text-gray-900">Security & Inspection</h4>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-400 font-medium">Inspection Required</span>
-                                    <span className="text-xs font-bold text-gray-900">{inquiry.inspection_intent ? 'Yes' : 'No'}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-400 font-medium">Matched Supplier</span>
-                                    <span className="text-xs font-bold text-green-600">Verified Partner</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Actions & Context */}
-                <div className="space-y-10">
-                    {/* Contextual Action Card */}
-                    {isSupplier && (inquiry.status === 'PENDING' || inquiry.status === 'CLAIMED') && (
-                        <div className="bg-neutral-900 rounded-[40px] p-10 text-white space-y-8 shadow-2xl shadow-neutral-200">
-                            <div className="space-y-2">
-                                <h3 className="text-xl font-bold">Action Required</h3>
-                                <p className="text-neutral-400 text-sm leading-relaxed">As the matched supplier, please acknowledge this inquiry to begin the formal trade process.</p>
-                            </div>
-                            <div className="space-y-3">
-                                <Button
-                                    onClick={handleAcknowledge}
-                                    className="w-full bg-white text-neutral-900 hover:bg-neutral-200 rounded-2xl py-7 font-black flex items-center justify-center gap-2"
-                                >
-                                    <ThumbsUp size={18} />
-                                    Acknowledge Trade
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    className="w-full border-neutral-700 text-white hover:bg-neutral-800 rounded-2xl py-7 font-bold flex items-center justify-center gap-2"
-                                >
-                                    <ThumbsDown size={18} />
-                                    Review / Decline
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Meta Info */}
-                    <div className="bg-gray-50 rounded-[40px] p-10 space-y-8 border border-gray-100">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <Info size={16} className="text-gray-400" />
-                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Trade Lifecycle</h4>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="flex gap-4 items-start">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-none" />
+                                {inquiry.moisture_max && (
                                     <div>
-                                        <p className="text-xs font-bold text-gray-900">{format(new Date(inquiry.createdAt), 'MMM d, yyyy')}</p>
-                                        <p className="text-[10px] text-gray-400 font-medium">Inquiry submitted by Buyer</p>
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase block">Max Moisture</span>
+                                        <span className="font-bold text-gray-800">{inquiry.moisture_max}%</span>
                                     </div>
-                                </div>
-                                {inquiry.status !== 'PENDING' && (
-                                    <div className="flex gap-4 items-start">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-none" />
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-900">{format(new Date(), 'MMM d, yyyy')}</p>
-                                            <p className="text-[10px] text-gray-400 font-medium">Status updated to {inquiry.status}</p>
-                                        </div>
+                                )}
+                                {inquiry.packaging && (
+                                    <div>
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase block">Packaging Requested</span>
+                                        <span className="font-bold text-gray-800">{inquiry.packaging}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="h-px bg-gray-200" />
+                        {/* Buyer Specific Notes */}
+                        {inquiry.description && (
+                            <div className="p-4 bg-white rounded-xl border border-gray-200">
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">Buyer Notes & Instructions</span>
+                                <p className="text-xs sm:text-sm text-gray-700 italic font-medium leading-relaxed">
+                                    "{inquiry.description}"
+                                </p>
+                            </div>
+                        )}
+                    </section>
 
-                        <div className="space-y-4">
-                            <p className="text-[10px] font-medium text-gray-400 leading-relaxed uppercase tracking-tight">Need technical assistance with this trade? Contact our 24/7 Desk at <span className="text-gray-900 font-bold">+1 (0) Trade Desk</span></p>
+
+                    {/* SECTION 2: TARGET PRODUCT INFORMATION */}
+                    {product ? (
+                        <section className="rounded-2xl border border-gray-200 bg-white p-6 space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-slate-100 text-slate-800 rounded-lg">
+                                        <Layers size={18} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-black text-gray-900">Target Product Information</h2>
+                                        <p className="text-xs text-gray-500 font-medium">Marketplace listing details and product specifications</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Link
+                                        href={productDetailsUrl}
+                                        target="_blank"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors shrink-0"
+                                    >
+                                        <ExternalLink size={14} />
+                                        View Product Details Page
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* Product Header Info */}
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 uppercase tracking-wider">
+                                    <Tag size={14} />
+                                    {product.product_main_category || 'Minerals'} &gt; {product.product_category || 'Mineral Ore'} &gt; {product.product_sub_category || product.category_tag}
+                                </div>
+                                <h3 className="text-xl font-black text-gray-900 leading-snug">
+                                    {product.product_name}
+                                </h3>
+                                {product.productHeaderDescription && (
+                                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed border-l-2 border-slate-300 pl-3">
+                                        {product.productHeaderDescription}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Product Financials */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
+                                <div>
+                                    <span className="text-[10px] font-extrabold uppercase text-gray-400 block mb-0.5">Marketplace Selling Price</span>
+                                    <span className="text-base font-black text-emerald-900">
+                                        {product.unitCurrency === 'USD' ? '$' : '₦'}{Number(product.display_price || product.real_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        <span className="text-xs font-normal text-gray-500 ml-1">/ {product.measure || inquiry.measure_type}</span>
+                                    </span>
+                                </div>
+                                {product.prev_price && (
+                                    <div>
+                                        <span className="text-[10px] font-extrabold uppercase text-gray-400 block mb-0.5">Prev List Price</span>
+                                        <span className="text-base font-black text-red-600 line-through">
+                                            {product.unitCurrency === 'USD' ? '$' : '₦'}{Number(product.prev_price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                )}
+                                <div>
+                                    <span className="text-[10px] font-extrabold uppercase text-gray-400 block mb-0.5">Available Supply</span>
+                                    <span className="text-base font-black text-gray-900">
+                                        {Number(product.quantity || 0).toLocaleString()} <span className="text-xs font-medium text-gray-500">{product.measure}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Product Technical Specs Grid */}
+                            <div className="space-y-3">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Technical & Material Specs</span>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                                    {product.purity_grade && (
+                                        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Certified Grade</span>
+                                            <span className="font-bold text-gray-900">{product.purity_grade}</span>
+                                        </div>
+                                    )}
+                                    {product.composition && (
+                                        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50/50 col-span-2">
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Chemical Composition</span>
+                                            <span className="font-bold text-gray-900">{product.composition}</span>
+                                        </div>
+                                    )}
+                                    {product.color && (
+                                        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Color / Form</span>
+                                            <span className="font-bold text-gray-900">{product.color}</span>
+                                        </div>
+                                    )}
+                                    {product.hardness && (
+                                        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Hardness</span>
+                                            <span className="font-bold text-gray-900">{product.hardness}</span>
+                                        </div>
+                                    )}
+                                    {product.selected_country_name && (
+                                        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Origin</span>
+                                            <span className="font-bold text-gray-900">{product.selected_state ? `${product.selected_state}, ` : ''}{product.selected_country_name}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+                    ) : (
+                        <div className="p-6 rounded-2xl border border-gray-200 bg-gray-50 text-center text-xs font-bold text-gray-500">
+                            Custom RFQ Inquiry (Direct Buyer Specification Posting)
+                        </div>
+                    )}
+
+                    {/* Media & Attachments Section */}
+                    {inquiry.documents && inquiry.documents.length > 0 && (
+                        <section className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+                            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+                                <FileCheck size={18} className="text-emerald-600" />
+                                <h3 className="text-base font-bold text-gray-900">Trade Documents</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {inquiry.documents.map((doc: any, idx: number) => (
+                                    <a
+                                        key={idx}
+                                        href={doc.document_url || doc.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between group text-xs"
+                                    >
+                                        <div className="flex items-center gap-2.5 truncate">
+                                            <FileText size={16} className="text-gray-400 group-hover:text-emerald-600 shrink-0" />
+                                            <span className="font-bold text-gray-900 truncate">{doc.document_name || doc.name || `Document #${idx + 1}`}</span>
+                                        </div>
+                                        <Eye size={14} className="text-gray-400 group-hover:text-emerald-600 shrink-0 ml-2" />
+                                    </a>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                </div>
+
+                {/* Right Column: Counterparties & Action Sidebar */}
+                <div className="space-y-6">
+
+                    {/* Supplier Action Panel */}
+                    {isSupplier && (inquiry.status === 'PENDING' || inquiry.status === 'pending') && (
+                        <div className="rounded-2xl border border-gray-900 bg-gray-900 p-6 text-white space-y-4">
+                            <div className="space-y-1">
+                                <h3 className="text-base font-extrabold">Supplier Action Required</h3>
+                                <p className="text-xs text-gray-300 leading-relaxed">
+                                    Please acknowledge this trade inquiry to open negotiations and proceed with Min-meg Trade Desk.
+                                </p>
+                            </div>
+                            <Button
+                                onClick={handleAcknowledge}
+                                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-3 font-bold flex items-center justify-center gap-2 text-sm"
+                            >
+                                <ThumbsUp size={16} />
+                                Acknowledge Inquiry
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Verified Parties Box (Privacy Safe) */}
+                    <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block border-b border-gray-100 pb-2">
+                            Assigned Trade Desk
+                        </span>
+
+                        <div className="space-y-3">
+                            {/* Min-meg Trade Desk */}
+                            <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-center gap-3">
+                                <div className="p-2 bg-emerald-600 text-white rounded-lg font-bold text-xs">
+                                    <ShieldCheck size={18} />
+                                </div>
+                                <div className="text-xs">
+                                    <span className="font-extrabold text-emerald-900 block">Min-meg Trade Desk</span>
+                                    <span className="text-[10px] font-medium text-emerald-700">Official Trade Coordinator</span>
+                                </div>
+                            </div>
+
+                            {/* Supplier Identity (Render if matched) */}
+                            {(inquiry.matched_supplier_id || inquiry.supplier || product?.supplierId) ? (
+                                <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 flex items-center gap-3">
+                                    <div className="p-2 bg-gray-200 text-gray-600 rounded-lg">
+                                        <Building2 size={16} />
+                                    </div>
+                                    <div className="text-xs">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase block">Matched Supplier</span>
+                                        <span className="font-bold text-gray-900 block">
+                                            {isBuyer
+                                                ? 'Min-meg Verified Supplier'
+                                                : (inquiry.supplier?.company_name || 'Verified Supplier')}
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-3 rounded-xl bg-gray-50/50 border border-dashed border-gray-200 flex items-center gap-3 opacity-70">
+                                    <div className="p-2 bg-gray-100 text-gray-400 rounded-lg">
+                                        <Building2 size={16} />
+                                    </div>
+                                    <div className="text-xs">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase block">Matched Supplier</span>
+                                        <span className="text-xs font-bold text-gray-500 italic">Matching in Progress</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Inspector Identity (ONLY show if Min-meg Admin has assigned an inspector) */}
+                            {(inquiry.matched_inspector_id || inquiry.inspector) && (
+                                <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100 flex items-center gap-3">
+                                    <div className="p-2 bg-purple-600 text-white rounded-lg">
+                                        <UserCheck size={16} />
+                                    </div>
+                                    <div className="text-xs">
+                                        <span className="text-[9px] font-bold text-purple-700 uppercase block">Appointed Inspector</span>
+                                        <span className="font-bold text-purple-950 block">
+                                            {isBuyer
+                                                ? 'Min-meg Appointed Inspector'
+                                                : (inquiry.inspector?.company_name || 'Assigned Inspector')}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
+
+                    {/* Quick Links & Product Navigation */}
+                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 space-y-3 text-xs">
+                        <span className="font-bold text-gray-900 block">Product & Trade Navigation</span>
+                        <p className="text-gray-500 leading-relaxed">
+                            View the original product listing on the marketplace or open the active trade chat room.
+                        </p>
+                        <div className="space-y-2 pt-1">
+                            {targetProductId && (
+                                <Link
+                                    href={productDetailsUrl}
+                                    target="_blank"
+                                    className="w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors block text-center"
+                                >
+                                    <Box size={14} />
+                                    View Full Product Page
+                                </Link>
+                            )}
+                            <Link
+                                href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
+                                className="w-full bg-white border border-gray-300 text-gray-900 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors block text-center"
+                            >
+                                <MessageSquare size={14} className="text-emerald-600" />
+                                Go to Trade Room
+                            </Link>
+                        </div>
+                    </div>
+
                 </div>
+
             </div>
         </div>
     );

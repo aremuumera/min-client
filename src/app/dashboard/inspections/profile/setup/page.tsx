@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import { paths } from "@/config/paths";
 import StateSelector from "@/utils/state-selector-modal";
 import CountrySelectionModal from "@/utils/country-selection-modal";
+import { getErrorMessage } from "@/utils/helper";
 import z from "zod";
 
 
@@ -299,7 +300,7 @@ export default function InspectorProfileSetupPage() {
                 window.location.href = paths.dashboard.overview;
             }, 500);
         } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to complete setup");
+            toast.error(getErrorMessage(error, "Failed to complete setup"));
         }
     };
 

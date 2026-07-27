@@ -175,21 +175,24 @@ export default function OperationalLimitsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
-                    <Box className="flex items-center gap-2">
-                        <Typography variant="h3">Operational Limits</Typography>
-                        <Button onClick={() => setInfoOpen(true)}
+                    <Box className="flex flex-wrap items-center gap-2.5">
+                        <Typography variant="h3">Work Capacity &amp; Availability</Typography>
+                        <Button
+                            onClick={() => setInfoOpen(true)}
                             variant="outlined"
                             size="sm"
-                            className="text-neutral-400 hover:text-green-600 transition-colors">
-                            <HelpCircle className="w-5 h-5" />
+                            className="border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 rounded-xl px-3 py-1.5 font-bold text-xs whitespace-nowrap shrink-0 transition-all inline-flex items-center gap-1.5"
+                        >
+                            <HelpCircle className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span className="whitespace-nowrap">How it works</span>
                         </Button>
                     </Box>
-                    <Typography variant="body2" className="text-neutral-500 mt-1">
-                        Define your workload capacity, availability, and service commitments.
+                    <Typography variant="body2" className="text-neutral-500 mt-1 max-w-2xl">
+                        Specify how many inspection jobs your team can handle per day or week, working hours, and advance booking lead times.
                     </Typography>
                 </div>
                 <Button variant="contained" color="primary" size="lg" onClick={handleSave} loading={saving}>
-                    Save Changes
+                    Save Capacity
                 </Button>
             </div>
 

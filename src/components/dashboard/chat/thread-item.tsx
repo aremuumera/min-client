@@ -81,7 +81,8 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
   // --- Dynamic Status Sync ---
   const isSelected = activeConversation?.conversationId === conversationId;
   const activeCycle = isSelected ? roomInquiries.find(i => i.id === activeInquiryId) : null;
-  const displayStatus = activeCycle?.status || metadata?.status;
+  // const displayStatus = activeCycle?.status || metadata?.status;
+  const displayStatus = isSelected && activeCycle?.status ? activeCycle.status : 'ACTIVE';
 
   // Format timestamp from lastMessageTime
   const formattedTime = lastMessageTime

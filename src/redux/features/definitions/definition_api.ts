@@ -14,6 +14,14 @@ export const definitionApi = createApi({
             }),
             providesTags: ['CapabilityDefinitions'],
         }),
+        createCapability: builder.mutation<any, { category: string; display_name: string; tech_id: string; target_role?: string }>({
+            query: (body) => ({
+                url: '/definitions/capabilities',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['CapabilityDefinitions'],
+        }),
         getPricingDefs: builder.query<any, void>({
             query: () => '/definitions/pricing',
             providesTags: ['PricingDefinitions'],
@@ -23,6 +31,7 @@ export const definitionApi = createApi({
 
 export const {
     useGetCapabilitiesQuery,
+    useCreateCapabilityMutation,
     useGetPricingDefsQuery,
 } = definitionApi;
 

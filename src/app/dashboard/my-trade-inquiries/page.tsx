@@ -240,7 +240,7 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                             Return
                         </Button>
                         <Link
-                            href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.external_id}/${inquiry.id}`}
+                            href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
                             className="flex-3 bg-green-600 text-white rounded-2xl flex items-center justify-center px-10 font-bold hover:bg-green-700 transition-all border border-green-700/10"
                         >
                             Enter Trade Room
@@ -396,7 +396,7 @@ export default function MyTradeInquiries() {
                                                     <Eye size={16} className="text-blue-500" />
                                                     <span className="font-bold">View Progress</span>
                                                 </MenuItem>
-                                                <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.external_id}/${inquiry.id}`} className="gap-2">
+                                                <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
                                                     <MessageSquare size={16} className="text-green-500" />
                                                     <span className="font-bold">Chat with Admin</span>
                                                 </MenuItem>

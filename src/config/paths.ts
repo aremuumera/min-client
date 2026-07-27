@@ -124,7 +124,9 @@ export const paths = {
       create: "/dashboard/supplier-list/create",
       update: "/dashboard/supplier-list/update",
       companyProfile: "/dashboard/supplier-list/company-profile/create",
+      receivedInquiries: "/dashboard/received-inquiries",
     },
+    myTradeInquiries: "/dashboard/my-trade-inquiries",
     // rfq listing
     rfqs: {
       list: "/dashboard/rfq-list",
@@ -134,6 +136,7 @@ export const paths = {
       submittedOffers: "/dashboard/my-submitted-offers",
     },
     calculator: "/dashboard/calculator",
+    activity: "/dashboard/activity",
   },
 
   waitlist: "https://waitlist.minmeg.com/",
@@ -190,15 +193,21 @@ export const routeAccess = {
     paths.dashboard.products.create,
     paths.dashboard.products.update,
     paths.dashboard.products.companyProfile,
+    paths.dashboard.products.receivedInquiries,
+    paths.dashboard.myTradeInquiries,
     // rfqs
     paths.dashboard.rfqs.list,
     paths.dashboard.rfqs.create,
     paths.dashboard.rfqs.update,
     paths.dashboard.rfqs.submittedOffers,
+    "/dashboard/rfq/offers",
     // settings
     paths.dashboard.settings.account,
     paths.dashboard.settings.notifications,
     paths.dashboard.settings.security,
+    paths.dashboard.settings.business,
+    paths.dashboard.settings.legals,
+    paths.dashboard.settings.team,
     // chat
     paths.dashboard.chat.base,
     paths.dashboard.chat.compose,
@@ -206,8 +215,10 @@ export const routeAccess = {
     paths.dashboard.analytics,
     paths.dashboard.savedProducts,
     paths.dashboard.becomeASupplier,
-    // notifications
+    // notifications & activity
     paths.dashboard.notifications,
+    "/dashboard/activity",
+    "/dashboard/trade/details",
     // marketplace
     paths.marketplace.products,
     paths.marketplace.allCp,
@@ -215,10 +226,12 @@ export const routeAccess = {
     // inspections
     paths.dashboard.inspections.list,
     paths.dashboard.inspections.profile,
+    paths.dashboard.inspections.setup,
     paths.dashboard.inspections.analytics,
     paths.dashboard.inspections.services.matrix,
     paths.dashboard.inspections.services.limits,
     paths.dashboard.inspections.services.pricing,
+    "/dashboard/inspections/workbench",
     paths.dashboard.calculator,
     // paths.marketplace.mainCategory(':mainCategoryId'),
   ],

@@ -290,7 +290,7 @@ export default function ReceivedTradeInquiries() {
                                                 }
                                                 usePortal={true}
                                             >
-                                                <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.external_id}/${inquiry.product_id}`} className="gap-2">
+                                                <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
                                                     <MessageSquare size={16} className="text-green-500" />
                                                     <span className="font-bold">Open Chat Room</span>
                                                 </MenuItem>

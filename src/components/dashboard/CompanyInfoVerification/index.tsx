@@ -57,7 +57,7 @@ import { StepLabel } from '@/components/ui/stepper';
 import { Stepper } from '@/components/ui/stepper';
 import { TextField } from '@/components/ui/input';
 import { Typography } from '@/components/ui/typography';
-import { cn } from '@/utils/helper';
+import { cn, getErrorMessage } from '@/utils/helper';
 import { Country, State } from 'country-state-city';
 import { motion } from 'framer-motion';
 import { useAppSelector } from '@/redux/hooks';
@@ -393,7 +393,7 @@ const BusinessCategoryModal = ({ open, setShowCategoryModal, onComplete }: any) 
         setErrors(fieldErrors);
       } else {
         console.error('Failed to save category:', err);
-        showAlert(err?.data?.message || 'Failed to save category', 'error');
+        showAlert(getErrorMessage(err, 'Failed to save category'), 'error');
       }
     }
   };
@@ -853,7 +853,7 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
             showAlert(`${field}: ${message}`, 'error');
           });
         } else {
-          showAlert(err?.data?.message || err?.message || 'Failed to submit business profile. Please try again.', 'error');
+          showAlert(getErrorMessage(err, 'Failed to submit business profile. Please try again.'), 'error');
         }
       }
     }
@@ -1215,7 +1215,7 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
             showAlert(`${field}: ${message}`, 'error');
           });
         } else {
-          showAlert(err?.data?.message || err?.message || 'Failed to submit business registration. Please try again.', 'error');
+          showAlert(getErrorMessage(err, 'Failed to submit business registration. Please try again.'), 'error');
         }
       }
     }
@@ -1521,7 +1521,7 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
           });
         } else {
           showAlert(
-            err?.data?.message || err?.message || 'Failed to submit tax compliance information. Please try again.',
+            getErrorMessage(err, 'Failed to submit tax compliance information. Please try again.'),
             'error'
           );
         }
@@ -1832,7 +1832,7 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
           });
         } else {
           showAlert(
-            err?.data?.message || err?.message || 'Failed to submit business authorization. Please try again.',
+            getErrorMessage(err, 'Failed to submit business authorization. Please try again.'),
             'error'
           );
         }
@@ -2451,7 +2451,7 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
             showAlert(`${field}: ${message}`, 'error');
           });
         } else {
-          showAlert(err?.data?.message || err?.message || 'Failed to submit director. Please try again.', 'error');
+          showAlert(getErrorMessage(err, 'Failed to submit director. Please try again.'), 'error');
         }
       }
     }
@@ -2471,7 +2471,7 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
       setDirectorToDelete(null);
     } catch (err: any) {
       console.error('Failed to delete director:', err);
-      showAlert(err?.data?.message || 'Failed to delete director', 'error');
+      showAlert(getErrorMessage(err, 'Failed to delete director'), 'error');
     }
   };
 
@@ -2483,7 +2483,7 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
       onSubmit();
     } catch (err: any) {
       console.error('Failed to submit directors step:', err);
-      showAlert(err?.data?.message || 'Failed to submit directors information', 'error');
+      showAlert(getErrorMessage(err, 'Failed to submit directors information'), 'error');
     }
   };
 

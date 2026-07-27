@@ -26,6 +26,7 @@ interface DocStats {
     signed: number;
     pending: number;
     flagged: number;
+    rejected: number;
     superseded: number;
 }
 
@@ -82,7 +83,15 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
         itemType,
     }, {
         skip: !inquiryId,
+        refetchOnMountOrArgChange: true,
     });
+
+    // Always refetch fresh documents on mount / tab open
+    React.useEffect(() => {
+        if (inquiryId) {
+            refetch();
+        }
+    }, [inquiryId, refetch]);
 
 
     console.log('apiResponse', apiResponse, inquiryId)
@@ -130,7 +139,22 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
     };
 
     const documents = Array.isArray(apiResponse?.data) ? apiResponse.data : [];
-    const stats = apiResponse?.stats || { total: 0, signed: 0, pending: 0, flagged: 0, superseded: 0 };
+
+    const stats: DocStats = React.useMemo(() => {
+        const backendStats = apiResponse?.stats;
+        const computedPending = documents.filter((d: any) =>
+            ['sent', 'pending_review', 'pending_signature', 'pending'].includes(d.status)
+        ).length;
+
+        return {
+            total: backendStats?.total !== undefined ? backendStats.total : documents.length,
+            signed: backendStats?.signed !== undefined ? backendStats.signed : documents.filter((d: any) => d.status === 'signed').length,
+            pending: backendStats?.pending !== undefined && backendStats.pending > 0 ? backendStats.pending : computedPending,
+            flagged: backendStats?.flagged !== undefined ? backendStats.flagged : documents.filter((d: any) => d.status === 'flagged').length,
+            rejected: backendStats?.rejected !== undefined ? backendStats.rejected : documents.filter((d: any) => d.status === 'rejected').length,
+            superseded: backendStats?.superseded !== undefined ? backendStats.superseded : documents.filter((d: any) => d.status === 'superseded').length,
+        };
+    }, [documents, apiResponse?.stats]);
 
     // Group documents by stage name
     const grouped = React.useMemo(() => {
@@ -152,7 +176,8 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
         { label: 'Total', value: stats.total, color: '#3b82f6', bg: '#eff6ff' },
         { label: 'Signed', value: stats.signed, color: '#10b981', bg: '#ecfdf5' },
         { label: 'Pending', value: stats.pending, color: '#f59e0b', bg: '#fffbeb' },
-        { label: 'Flagged', value: stats.flagged, color: '#ef4444', bg: '#fef2f2' },
+        { label: 'Flagged', value: stats.flagged, color: '#d97706', bg: '#fffbeb' },
+        { label: 'Rejected', value: stats.rejected, color: '#ef4444', bg: '#fef2f2' },
     ];
 
     return (
@@ -166,7 +191,7 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
             </Stack>
 
             {/* Stat Cards */}
-            <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+            <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
                 {statCards.map((stat) => (
                     <Card key={stat.label} style={{ borderRadius: '0.75rem', border: `1px solid ${stat.bg}`, overflow: 'hidden' }}>
                         <CardContent style={{ padding: '0.75rem', textAlign: 'center' }}>
@@ -266,7 +291,7 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
                                                                 {/* <span>•</span> */}
                                                                 <span>v{doc.version_number}</span>
                                                                 <span>•</span>
-                                                                <span>{dayjs(doc.createdAt).format('MMM D, YYYY')}</span>
+                                                                <span>{dayjs(doc.createdAt).format('MMM D, YYYY • h:mm A')}</span>
                                                             </Typography>
                                                             {doc.template?.description && (
                                                                 <Typography variant="caption" style={{ color: '#6b7280', fontSize: '0.65rem', fontStyle: 'italic', marginTop: '4px', borderLeft: '2px solid #e5e7eb', paddingLeft: '8px' }}>
@@ -281,6 +306,11 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
                                                         <Box style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 6px', borderRadius: '999px', background: config.bg, color: config.color, fontSize: '0.6rem', fontWeight: 700 }}>
                                                             {config.icon}
                                                             {statusLabel[doc.status] || doc.status}
+                                                        </Box>
+                                                        {/* Sigs Badge */}
+                                                        <Box style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 6px', borderRadius: '999px', background: '#f3f4f6', color: '#4b5563', fontSize: '0.6rem', fontWeight: 700 }}>
+                                                            <CheckCircle size={10} color="#9ca3af" />
+                                                            {(doc.signatures || []).filter((s: any) => s.action === 'signed' || s.action === 'accepted').length} SIGS
                                                         </Box>
                                                         {/* Recipient Role Chips with defensive parsing */}
                                                         {/* {(() => {

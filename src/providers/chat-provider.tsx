@@ -29,8 +29,8 @@ interface ChatContextType {
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
-  activeTab: 'chat' | 'vault';
-  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault'>>;
+  activeTab: 'chat' | 'vault' | 'activity';
+  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity'>>;
   loading: boolean;
   loadingMessages: boolean;
   loadingAttachments: boolean;
@@ -93,8 +93,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeInquiryId, setActiveInquiryId] = useState<string | null>(null);
   const [roomInquiries, setRoomInquiries] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'vault'>('chat');
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity'>('chat');
+  const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -154,36 +154,33 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   // Loading active room inquiries (tabs)
   useEffect(() => {
     let unsubscribe: any = null;
+    const conversationId = activeConversation?.conversationId;
 
-    if (activeConversation) {
-      const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation.conversationType === 'trade';
+    if (conversationId) {
+      const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation?.conversationType === 'trade';
 
       if (isTradeType) {
-        const conversationId = activeConversation.conversationId;
-
-        // console.log('🟣 [ChatProvider] Room inquiries effect ENTERED. conversationId:', conversationId, 'effectiveUserId:', effectiveUserId, 'userRole:', userRole, 'firestorePath:', `trade_rooms/${conversationId}/trades`);
-
         unsubscribe = customerTradeChatService.getRoomInquiries(
           String(conversationId),
           effectiveUserId,
           userRole,
           (inquiries: any[]) => {
-            // console.log('🔵 [ChatProvider] Room inquiries received:', inquiries.length, 'ids:', inquiries.map(i => i.id), 'for room:', conversationId);
             setRoomInquiries(inquiries);
 
             // Auto-select the inquiry from URL or the most recent one
             const urlItemId = params?.itemId as string;
             if (inquiries.length > 0) {
               setActiveInquiryId(prev => {
-                // 1. If we have a URL param, prioritize it
-                if (urlItemId && inquiries.find(i => i.id === urlItemId)) {
-                  return urlItemId;
+                // URL itemId is the inquiry's external_id = Firestore doc ID = inquiry.id in roomInquiries
+                if (urlItemId) {
+                  const urlMatch = inquiries.find(i => i.id === urlItemId);
+                  if (urlMatch) return urlMatch.id;
                 }
-                // 2. If we already had an active one that's still valid, keep it
+                // Keep current selection if still valid
                 if (prev && inquiries.find(i => i.id === prev)) {
                   return prev;
                 }
-                // 3. Fallback to the first (newest) inquiry
+                // Fallback to first inquiry
                 return inquiries[0].id;
               });
             } else {
@@ -196,59 +193,47 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           }
         );
       } else {
-        setRoomInquiries([]);
+        setRoomInquiries(prev => prev.length > 0 ? [] : prev);
       }
     } else {
-      setRoomInquiries([]);
+      setRoomInquiries(prev => prev.length > 0 ? [] : prev);
     }
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [activeConversation, threadType]);
+  }, [activeConversation?.conversationId, activeConversation?.conversationType, threadType, effectiveUserId, userRole, params?.itemId]);
 
-  // Loading  messages when active conversation changes
+  // Loading messages when active conversation changes
   useEffect(() => {
     let unsubscribe: any = null;
+    const conversationId = activeConversation?.conversationId;
+    const userSpoke = activeConversation?.userSpoke;
 
-    if (activeConversation) {
-      // unsubscribe = chatService.getMessages(activeConversation.conversationId, (messageList) => {
-      const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation.conversationType === 'trade';
+    if (conversationId && userSpoke) {
+      const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation?.conversationType === 'trade';
 
       if (isTradeType) {
         if (!activeInquiryId) {
-          // console.log('🔴 [ChatProvider] No activeInquiryId — messages cleared. threadType:', threadType, 'conversationId:', activeConversation.conversationId);
-          setMessages([]);
+          setMessages(prev => prev.length > 0 ? [] : prev);
           return;
         }
 
         if (!user) return;
 
-        const effectiveUserId = String(user.ownerUserId || user.id);
-        const conversationId = activeConversation.conversationId;
-
-        // console.log('🟢 [ChatProvider] Subscribing to messages:', {
-        //   conversationId,
-        //   activeInquiryId,
-        //   userSpoke: activeConversation.userSpoke,
-        //   firestorePath: `trade_rooms/${conversationId}/trades/${activeInquiryId}/threads/${activeConversation.userSpoke}/messages`,
-        // });
-
         setLoadingMessages(true);
         unsubscribe = customerTradeChatService.getSpokeMessages(
           String(conversationId),
           activeInquiryId,
-          activeConversation.userSpoke,
+          userSpoke,
           (messageList: any[]) => {
-            // console.log('🟡 [ChatProvider] Messages received:', messageList.length, 'for spoke:', activeConversation.userSpoke);
             setMessages(messageList);
             setLoadingMessages(false);
 
-            // Mark as read when messages load or active conversation changes
             customerTradeChatService.markSpokeAsRead(
               String(conversationId),
               activeInquiryId,
-              activeConversation.userSpoke,
+              userSpoke,
               String(user.id)
             );
           },
@@ -258,23 +243,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           }
         );
       } else {
-        unsubscribe = chatService.getMessages(activeConversation.conversationId, (messageList: Message[]) => {
+        unsubscribe = chatService.getMessages(conversationId, (messageList: Message[]) => {
           setMessages(messageList);
 
-          // Mark conversation as read if it has unread messages
           if (effectiveUserId && activeConversation.unreadCount > 0) {
-            chatService.markConversationAsRead(activeConversation.conversationId, effectiveUserId);
+            chatService.markConversationAsRead(conversationId, effectiveUserId);
           }
         });
       }
     } else {
-      setMessages([]);
+      setMessages(prev => prev.length > 0 ? [] : prev);
     }
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [activeConversation, user, router, threadType, effectiveUserId, activeInquiryId]);
+  }, [activeConversation?.conversationId, activeConversation?.userSpoke, activeConversation?.conversationType, user, threadType, effectiveUserId, activeInquiryId]);
 
   // In your conversation component
   useEffect(() => {
@@ -609,18 +593,19 @@ New Flow for for all roles to Admin
   }, [tradeConversations]);
 
   // Cleanup active conversation if it's no longer in the list (e.g. hidden/closed)
+  // BUT: never null it out when a threadId is in the URL — the sync effect will handle it.
   useEffect(() => {
+    if (threadId) return; // User is on a specific chat URL; do not interfere
     if (activeConversation && conversations.length > 0) {
-      const stillExists = conversations.some(c => c.conversationId === activeConversation.conversationId);
+      const stillExists = conversations.some(c =>
+        String(c.conversationId).trim().toLowerCase() === String(activeConversation.conversationId).trim().toLowerCase()
+      );
       if (!stillExists) {
-        // console.log('Active conversation no longer in list. Clearing state.');
         setActiveConversation(null);
         setActiveInquiryId(null);
-        // Optional: router.push('/dashboard/chat'); 
-        // But many components already handle null activeConversation by showing a placeholder.
       }
     }
-  }, [conversations, activeConversation]);
+  }, [conversations, activeConversation?.conversationId, threadId]);
 
 
 
@@ -631,56 +616,69 @@ New Flow for for all roles to Admin
     const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType);
     if (!isTradeType || !threadId) return;
 
-    const existing = conversations.find((c) => c.conversationId === threadId);
+    const existing = conversations.find((c) =>
+      String(c.conversationId).trim().toLowerCase() === String(threadId).trim().toLowerCase()
+    );
 
     if (existing) {
-      // Find the active cycle status from roomInquiries if possible
-      const activeCycle = roomInquiries.find(i => i.id === activeInquiryId);
+      const activeCycle = roomInquiries.find(i => String(i.id).trim().toLowerCase() === String(activeInquiryId).trim().toLowerCase());
       const cycleStatus = activeCycle?.status;
-
       const currentStatus = cycleStatus || existing.metadata?.status;
 
-      // Sync if status/metadata changed, or if switching to a new threadId
-      if (!activeConversation ||
-        activeConversation.conversationId !== existing.conversationId ||
-        activeConversation.metadata?.status !== currentStatus) {
-
-        setActiveConversation({
+      setActiveConversation(prev => {
+        if (
+          prev &&
+          String(prev.conversationId).trim().toLowerCase() === String(existing.conversationId).trim().toLowerCase() &&
+          prev.metadata?.status === currentStatus &&
+          prev.itemTitle === existing.itemTitle
+        ) {
+          return prev;
+        }
+        return {
           ...existing,
           metadata: {
             ...existing.metadata,
-            status: currentStatus // Sync with active cycle!
+            status: currentStatus
+          }
+        };
+      });
+    } else {
+      setActiveConversation(prev => {
+        if (prev && String(prev.conversationId).trim().toLowerCase() === String(threadId).trim().toLowerCase()) {
+          return prev;
+        }
+
+        const tempConversation: Conversation = {
+          conversationId: threadId,
+          conversationType: 'trade',
+          unreadCount: 0,
+          otherUserName: 'Min-meg Trade Desk',
+          otherCompanyName: 'Platform Admin',
+          itemTitle: 'Trade Inquiry',
+          itemType: 'product',
+          userSpoke: 'admin_buyer' as any
+        };
+
+        customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
+          if (metadata) {
+            setActiveConversation(current => {
+              if (current && current.conversationId === threadId) {
+                return {
+                  ...current,
+                  itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
+                  userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
+                  metadata: metadata
+                };
+              }
+              return current;
+            });
           }
         });
-      }
-    } else if (!activeConversation) {
-      // Build temporary conversation object until metadata loads
-      const tempConversation: Conversation = {
-        conversationId: threadId,
-        conversationType: 'trade',
-        unreadCount: 0,
-        otherUserName: 'Min-meg Trade Desk',
-        otherCompanyName: 'Platform Admin',
-        itemTitle: 'Trade Inquiry',
-        itemType: 'product', // Map to a visible category immediately
-        userSpoke: 'admin_buyer' as any
-      };
 
-      setActiveConversation(tempConversation);
-
-      // Fetch fallback metadata
-      customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
-        if (metadata) {
-          setActiveConversation({
-            ...tempConversation,
-            itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
-            userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
-            metadata: metadata
-          });
-        }
+        return tempConversation;
       });
     }
-  }, [threadType, threadId, activeConversation, conversations, effectiveUserId, activeInquiryId, roomInquiries]);
+  }, [threadType, threadId, conversations, effectiveUserId, activeInquiryId, roomInquiries]);
 
 
 

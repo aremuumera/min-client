@@ -14,6 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select } from "@/components/ui/select";
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
+import { getAvailablePermissions } from './InviteTeamMemberModal';
 import { PermissionKey } from '@/hooks/usePermission';
 
 interface EditTeamMemberModalProps {
@@ -34,27 +36,18 @@ const STATUSES = [
     { value: 'deactivated', label: 'Inactive' },
 ];
 
-const PERMISSIONS: { key: PermissionKey; label: string }[] = [
-    { key: 'products', label: 'Manage Products' },
-    { key: 'rfq', label: 'Manage RFQs' },
-    { key: 'chat', label: 'Access Chat' },
-    { key: 'enquiries', label: 'Handle Enquiries' },
-    { key: 'invoices', label: 'View Invoices' },
-    { key: 'inspectors', label: 'View Inspectors' },
-    { key: 'analytics', label: 'View Analytics' },
-    { key: 'settings', label: 'Manage Settings' },
-    { key: 'team_management', label: 'Manage Team' },
-];
-
 const DEFAULT_PERMISSIONS: Record<string, PermissionKey[]> = {
-    admin: ['products', 'rfq', 'chat', 'enquiries', 'invoices', 'inspectors', 'analytics', 'settings', 'team_management'],
+    admin: ['products', 'rfq', 'chat', 'enquiries', 'invoices', 'inspectors', 'analytics', 'settings', 'team_management', 'activity'],
     marketer: ['products', 'rfq', 'analytics'],
     customer_care: ['chat', 'enquiries'],
-    operations_manager: ['invoices', 'inspectors', 'analytics'],
+    operations_manager: ['invoices', 'inspectors', 'analytics', 'activity'],
 };
 
 export function EditTeamMemberModal({ isOpen, onClose, member }: EditTeamMemberModalProps) {
+    const { normalizedRole } = useAuthIdentity();
     const [updateTeamMember, { isLoading }] = useUpdateTeamMemberMutation();
+    const availablePermissions = getAvailablePermissions(normalizedRole);
+    const availableKeys = availablePermissions.map(p => p.key);
 
     const [formData, setFormData] = useState({
         team_role: '',
@@ -139,20 +132,26 @@ export function EditTeamMemberModal({ isOpen, onClose, member }: EditTeamMemberM
 
                     <div className="space-y-3 pt-2">
                         <label className="text-sm font-medium text-neutral-700">Permissions</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            {PERMISSIONS.map((perm) => (
-                                <div key={perm.key} className="flex items-start space-x-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {availablePermissions.map((perm) => (
+                                <div key={perm.key} className="flex items-start space-x-2.5 p-2.5 rounded-xl border border-neutral-200 bg-neutral-50/50 hover:bg-neutral-50 transition-colors">
                                     <Checkbox
                                         id={`edit-perm-${perm.key}`}
                                         checked={formData.permissions.includes(perm.key)}
                                         onChange={() => handlePermissionToggle(perm.key)}
+                                        className="mt-0.5"
                                     />
-                                    <label
-                                        htmlFor={`edit-perm-${perm.key}`}
-                                        className="text-sm cursor-pointer select-none text-neutral-600"
-                                    >
-                                        {perm.label}
-                                    </label>
+                                    <div className="flex flex-col space-y-0.5 cursor-pointer select-none" onClick={() => handlePermissionToggle(perm.key)}>
+                                        <label
+                                            htmlFor={`edit-perm-${perm.key}`}
+                                            className="text-xs font-bold text-neutral-900 cursor-pointer"
+                                        >
+                                            {perm.label}
+                                        </label>
+                                        <span className="text-[11px] text-neutral-500 font-medium leading-normal">
+                                            {perm.description}
+                                        </span>
+                                    </div>
                                 </div>
                             ))}
                         </div>

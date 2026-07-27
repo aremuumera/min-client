@@ -8,15 +8,19 @@ import { dayjs } from '@/lib/dayjs';
 import { useGetActivitiesQuery } from '@/redux/features/activity/activityApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-    Bell, MessageSquare, Briefcase, UserPlus, CreditCard,
-    ShoppingBag, LogIn, CheckCircle, XCircle, FileText, Send,
-    Search, ChevronDown, ChevronUp, Code2, ShieldAlert,
-    RefreshCw
+    Bell, ShoppingBag, CreditCard, ShieldAlert, FileText,
+    Search, ChevronDown, ChevronUp, Code2, RefreshCw
 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import { useAppSelector } from '@/redux/hooks';
-
-type CategoryFilter = 'ALL' | 'RFQ' | 'INVOICE' | 'PRODUCT' | 'DOCUMENT' | 'INQUIRY' | 'USER';
+import {
+    CategoryFilter,
+    parseMetadata,
+    getActivityIcon,
+    getActivityDescription,
+    getActivityActorName,
+    getCategoriesForRole
+} from '@/utils/activity-helpers';
 
 export default function ActivityLogPage() {
     const [page, setPage] = useState(1);
@@ -57,133 +61,11 @@ export default function ActivityLogPage() {
     const meta = data?.meta || data?.pagination || { total: 0, page: 1, limit: 20, lastPage: 1 };
     const totalPages = meta.lastPage || Math.max(1, Math.ceil((meta.total || 0) / limit));
 
-    const parseMetadata = (rawMeta: any) => {
-        if (!rawMeta) return {};
-        if (typeof rawMeta === 'string') {
-            try {
-                return JSON.parse(rawMeta);
-            } catch {
-                return { details: rawMeta };
-            }
-        }
-        return rawMeta;
-    };
-
-    const getIcon = (type: string) => {
-        switch (type) {
-            case 'USER_LOGGED_IN':
-            case 'USER_SIGNED_UP':
-                return <LogIn className="w-4 h-4 text-emerald-600" />;
-            case 'TEAM_MEMBER_INVITED':
-            case 'TEAM_MEMBER_UPDATED':
-                return <UserPlus className="w-4 h-4 text-blue-600" />;
-            case 'INVOICE_CREATED':
-            case 'INVOICE_APPROVED':
-            case 'INVOICE_REJECTED':
-            case 'INVOICE_CANCELLED':
-            case 'INVOICE_SUBMITTED_FOR_APPROVAL':
-                return <CreditCard className="w-4 h-4 text-purple-600" />;
-            case 'PRODUCT_CREATED':
-            case 'PRODUCT_UPDATED':
-            case 'PRODUCT_DELETED':
-                return <ShoppingBag className="w-4 h-4 text-amber-600" />;
-            case 'RFQ_CREATED':
-            case 'RFQ_UPDATED':
-            case 'RFQ_DELETED':
-            case 'OFFER_SUBMITTED':
-            case 'OFFER_SHORTLISTED':
-                return <FileText className="w-4 h-4 text-indigo-600" />;
-            case 'INQUIRY_CREATED':
-            case 'INQUIRY_UPDATED':
-            case 'INQUIRY_ACKNOWLEDGED':
-            case 'INQUIRY_REJECTED':
-                return <MessageSquare className="w-4 h-4 text-teal-600" />;
-            case 'OFFER_ACCEPTED_BY_ADMIN':
-                return <CheckCircle className="w-4 h-4 text-green-600" />;
-            case 'OFFER_REJECTED_BY_ADMIN':
-                return <XCircle className="w-4 h-4 text-rose-600" />;
-            case 'DOCUMENT_UPLOADED':
-            case 'DOCUMENT_SIGNED':
-            case 'DOCUMENT_FLAGGED':
-            case 'DOCUMENT_APPROVED':
-            case 'DOCUMENT_REJECTED':
-                return <FileText className="w-4 h-4 text-cyan-600" />;
-            case 'INSPECTOR_ASSIGNED':
-                return <Briefcase className="w-4 h-4 text-orange-600" />;
-            case 'INSPECTION_STATUS_UPDATED':
-                return <Send className="w-4 h-4 text-sky-600" />;
-            default:
-                return <Bell className="w-4 h-4 text-gray-600" />;
-        }
-    };
-
-    const getDescription = (activity: any) => {
-        const metadata = parseMetadata(activity.metadata);
-        switch (activity.action_type) {
-            case 'USER_SIGNED_UP': return 'joined the platform';
-            case 'USER_LOGGED_IN': return 'logged into business account';
-            case 'TEAM_MEMBER_INVITED': return `invited ${metadata.email || 'a new member'}`;
-            case 'TEAM_MEMBER_UPDATED': return `updated a team member (${metadata.email || 'details'})`;
-            case 'INVOICE_CREATED': return `created invoice ${metadata.invoiceNumber ? `#${metadata.invoiceNumber}` : ''}`;
-            case 'INVOICE_SUBMITTED_FOR_APPROVAL': return `submitted invoice ${metadata.invoiceNumber ? `#${metadata.invoiceNumber}` : ''} for approval`;
-            case 'INVOICE_APPROVED': return `approved invoice ${metadata.invoiceNumber ? `#${metadata.invoiceNumber}` : ''}`;
-            case 'INVOICE_REJECTED': return `rejected invoice ${metadata.invoiceNumber ? `#${metadata.invoiceNumber}` : ''}`;
-            case 'INVOICE_CANCELLED': return `cancelled invoice ${metadata.invoiceNumber ? `#${metadata.invoiceNumber}` : ''}`;
-            case 'PRODUCT_CREATED': return `published product "${metadata.productName || 'New Product'}"`;
-            case 'PRODUCT_UPDATED': return `updated product "${metadata.productName || 'Product'}"`;
-            case 'PRODUCT_DELETED': return `deleted product`;
-            case 'RFQ_CREATED': return `created RFQ "${metadata.productName || ''}"`;
-            case 'RFQ_UPDATED': return `updated RFQ "${metadata.productName || ''}"`;
-            case 'RFQ_DELETED': return `deleted an RFQ`;
-            case 'OFFER_SUBMITTED': return `submitted an offer`;
-            case 'OFFER_SHORTLISTED': return `shortlisted an offer`;
-            case 'INQUIRY_CREATED': return `started a new inquiry`;
-            case 'INQUIRY_UPDATED': return `updated inquiry (Status: ${metadata.newStatus || 'Updated'})`;
-            case 'INQUIRY_ACKNOWLEDGED': return `acknowledged an inquiry`;
-            case 'INQUIRY_REJECTED': return `rejected an inquiry`;
-            case 'OFFER_ACCEPTED_BY_ADMIN': return `accepted an offer`;
-            case 'OFFER_REJECTED_BY_ADMIN': return `rejected an offer`;
-            case 'DOCUMENT_UPLOADED': return `uploaded document "${metadata.documentTitle || metadata.title || 'Document'}"`;
-            case 'DOCUMENT_SIGNED': return `signed document "${metadata.documentTitle || metadata.title || 'Document'}"`;
-            case 'DOCUMENT_FLAGGED': return `flagged document "${metadata.documentTitle || metadata.title || 'Document'}"`;
-            case 'DOCUMENT_APPROVED': return `approved document "${metadata.documentTitle || metadata.title || 'Document'}"`;
-            case 'DOCUMENT_REJECTED': return `rejected document "${metadata.documentTitle || metadata.title || 'Document'}"`;
-            case 'INSPECTOR_ASSIGNED': return `assigned an inspector`;
-            case 'INSPECTION_STATUS_UPDATED': return `updated inspection status to ${metadata.newStatus || 'New Status'}`;
-            default: return activity.action_type ? activity.action_type.replace(/_/g, ' ').toLowerCase() : 'performed an action';
-        }
-    };
-
-    const getActorName = (activity: any) => {
-        const metadata = parseMetadata(activity.metadata);
-        const actorId = activity.userId || activity.user_id;
-
-        if (user && actorId && (actorId === user.id || actorId === user.external_id)) {
-            return "You";
-        }
-        if (metadata.actorName || metadata.name) {
-            return metadata.actorName || metadata.name;
-        }
-        if (metadata.actorEmail || metadata.email) {
-            const email = metadata.actorEmail || metadata.email;
-            return email.split('@')[0];
-        }
-        return "Team Member";
-    };
-
     const toggleMetadata = (id: number | string) => {
         setExpandedMetadata(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    const categories: { label: string; value: CategoryFilter }[] = [
-        { label: 'All Activities', value: 'ALL' },
-        { label: 'RFQs & Bids', value: 'RFQ' },
-        { label: 'Invoices & Agreements', value: 'INVOICE' },
-        { label: 'Products', value: 'PRODUCT' },
-        { label: 'Trade Documents', value: 'DOCUMENT' },
-        { label: 'Inquiries', value: 'INQUIRY' },
-        { label: 'Team & Auth', value: 'USER' },
-    ];
+    const categories = getCategoriesForRole(user?.role);
 
     return (
         <div className="space-y-6 pb-12">
@@ -221,8 +103,8 @@ export default function ActivityLogPage() {
                             key={cat.value}
                             onClick={() => handleCategoryChange(cat.value)}
                             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border ${activeCategory === cat.value
-                                    ? 'bg-gray-900 text-white border-gray-900'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900'
+                                ? 'bg-gray-900 text-white border-gray-900'
+                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900'
                                 }`}
                         >
                             {cat.label}
@@ -275,6 +157,7 @@ export default function ActivityLogPage() {
                             const metadata = parseMetadata(item.metadata);
                             const hasMetadata = Object.keys(metadata).length > 0;
                             const isExpanded = !!expandedMetadata[item.id || index];
+                            const currentActionType = item.action_type || item.actionType || item.action || '';
 
                             return (
                                 <div
@@ -283,30 +166,27 @@ export default function ActivityLogPage() {
                                 >
                                     {/* Action Icon Badge (Flat Border - No Shadow) */}
                                     <div className="absolute left-0 top-5 w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center z-10">
-                                        {getIcon(item.action_type)}
+                                        {getActivityIcon(currentActionType, "w-4 h-4")}
                                     </div>
 
                                     {/* Content Header */}
                                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                                         <div className="space-y-1 grow">
-                                            <div className="flex items-center flex-wrap gap-2">
-                                                <Typography variant="body1" className="font-bold text-gray-900 text-sm">
-                                                    {getActorName(item)}
-                                                </Typography>
-                                                <span className="text-gray-600 text-sm font-normal">
-                                                    {getDescription(item)}
-                                                </span>
-                                            </div>
+                                             <div className="flex items-center flex-wrap gap-2">
+                                                 <span className="text-gray-900 text-sm font-medium">
+                                                     {getActivityDescription(item)}
+                                                 </span>
+                                             </div>
 
                                             {/* Action Type Chip & Entity ID */}
                                             <div className="flex items-center flex-wrap gap-2 pt-0.5">
                                                 <span className="px-2 py-0.5 rounded bg-gray-100 border border-gray-200 text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
-                                                    {item.action_type.replace(/_/g, ' ')}
+                                                    {(currentActionType || 'ACTION').replace(/_/g, ' ')}
                                                 </span>
 
-                                                {item.entity_id && (
+                                                {(item.entity_id || item.entityId) && (
                                                     <span className="text-[11px] text-gray-400 font-mono">
-                                                        ID: {item.entity_id}
+                                                        ID: {item.entity_id || item.entityId}
                                                     </span>
                                                 )}
                                             </div>

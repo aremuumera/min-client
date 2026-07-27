@@ -84,7 +84,7 @@ export const dashboardConfig: DashboardConfig = {
             {
               key: "supplier-trade-inquiries",
               title: "Order Inquiries received",
-              href: "/dashboard/received-inquiries",
+              href: paths.dashboard.products.receivedInquiries,
               permission: "products",
             },
             {
@@ -98,8 +98,9 @@ export const dashboardConfig: DashboardConfig = {
         {
           key: "my-trade-inquiries",
           title: "My Trade Inquiries",
-          href: "/dashboard/my-trade-inquiries",
+          href: paths.dashboard.myTradeInquiries,
           icon: "receipt-long",
+          permission: "enquiries",
         },
       ],
     },
@@ -245,9 +246,33 @@ export const dashboardConfig: DashboardConfig = {
               permission: "settings",
             },
             {
+              key: "settings:notifications",
+              title: "Notifications",
+              href: paths.dashboard.settings.notifications,
+              permission: "settings",
+            },
+            {
+              key: "settings:security",
+              title: "Security",
+              href: paths.dashboard.settings.security,
+              permission: "settings",
+            },
+            {
+              key: "settings:business",
+              title: "Business",
+              href: paths.dashboard.settings.business,
+              permission: "team_management",
+            },
+            {
               key: "settings:team",
               title: "Team",
               href: paths.dashboard.settings.team,
+              permission: "team_management",
+            },
+            {
+              key: "settings:legals",
+              title: "Legals",
+              href: paths.dashboard.settings.legals,
               permission: "team_management",
             },
           ],
@@ -257,6 +282,13 @@ export const dashboardConfig: DashboardConfig = {
           title: "Calculator",
           href: paths.dashboard.calculator,
           icon: "calculator",
+        },
+        {
+          key: "activity-log",
+          title: "Activity Log",
+          href: paths.dashboard.activity,
+          icon: "receipt-long",
+          permission: "activity",
         },
       ],
     },

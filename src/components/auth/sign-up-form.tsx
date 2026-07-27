@@ -98,9 +98,10 @@ export function SignUpForm() {
 
   useEffect(() => {
     if (inviteToken && inviteData) {
+      const resolvedRole = (inviteData as any)?.data?.role || (inviteData as any)?.role || 'inspector';
       setPhoneData(prev => ({
         ...prev,
-        role: inviteData.role as 'buyer' | 'supplier' | 'inspector'
+        role: resolvedRole as 'buyer' | 'supplier' | 'inspector'
       }));
       // EMAIL PRE-FILL REMOVED FOR SECURITY: User must manually type their email to prove identity.
     }
@@ -162,12 +163,14 @@ export function SignUpForm() {
     );
   }
 
-  const roleMismatch = inviteToken && inviteData && inviteData.role !== phoneData.role;
+  const actualRole = (inviteData as any)?.data?.role || (inviteData as any)?.role;
+  const isInviteValid = (inviteData as any)?.data?.valid ?? (inviteData as any)?.valid ?? true;
+  const roleMismatch = inviteToken && inviteData && actualRole && actualRole !== phoneData.role;
 
-  if (inviteToken && (inviteError || roleMismatch)) {
+  if (inviteToken && (inviteError || !isInviteValid || roleMismatch)) {
     const errorMsg = roleMismatch
-      ? `This invitation is for a ${inviteData.role} account, but the link specified ${phoneData.role}.`
-      : (inviteError as any)?.data?.message || 'The invitation link is invalid or has expired.';
+      ? `This invitation is for a ${actualRole} account, but the link specified ${phoneData.role}.`
+      : (inviteError as any)?.data?.error?.message || (inviteError as any)?.data?.message || 'The invitation link is invalid or has expired.';
     return (
       <div className="w-full space-y-8 animate-in fade-in duration-700">
         <div className="bg-red-50 border border-red-200 p-6 rounded-2xl text-center space-y-4">
@@ -220,7 +223,7 @@ export function SignUpForm() {
             <div>
               <p className="text-sm font-semibold text-blue-900">You've been invited!</p>
               <p className="text-xs text-blue-700">
-                You are signing up as a verified {phoneData.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}.
+                You are signing up as {/^[aeiou]/i.test(phoneData?.role || 'inspector') ? 'an' : 'a'} {(phoneData?.role || 'inspector').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}.
               </p>
             </div>
           </div>
