@@ -679,6 +679,11 @@ export const customerTradeChatService = {
               data.created_at?.toDate?.() ||
               new Date();
 
+            const shortRef = String(tradeId).substring(0, 8).toUpperCase();
+            const isBuyer = String(data.buyer_id) === cleanUserId || String(data.user_id) === cleanUserId;
+            const isSupplier = String(data.supplier_id) === cleanUserId || String(data.matched_supplier_id) === cleanUserId;
+            const roleTag = isBuyer ? "Buying" : isSupplier ? "Selling" : "Trade";
+
             return {
               conversationId: tradeId,
               conversationType: "trade",
@@ -689,7 +694,7 @@ export const customerTradeChatService = {
                 data.mineral_tag?.replace(/_/g, " ") ||
                 "Trade Inquiry",
               otherUserId: "admin",
-              otherUserName: "Min-meg Trade Desk",
+              otherUserName: `${roleTag} · TRD-#${shortRef}`,
               otherCompanyName: "Platform Admin",
               lastMessageTime: lastMsgTime,
               unreadCount: 0,
