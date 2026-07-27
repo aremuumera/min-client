@@ -593,9 +593,7 @@ New Flow for for all roles to Admin
   }, [tradeConversations]);
 
   // Cleanup active conversation if it's no longer in the list (e.g. hidden/closed)
-  // BUT: never null it out when a threadId is in the URL — the sync effect will handle it.
   useEffect(() => {
-    if (threadId) return; // User is on a specific chat URL; do not interfere
     if (activeConversation && conversations.length > 0) {
       const stillExists = conversations.some(c =>
         String(c.conversationId).trim().toLowerCase() === String(activeConversation.conversationId).trim().toLowerCase()
@@ -603,9 +601,13 @@ New Flow for for all roles to Admin
       if (!stillExists) {
         setActiveConversation(null);
         setActiveInquiryId(null);
+        // If the user is on the specific chat URL, redirect to chat home
+        if (threadId) {
+          router.push('/dashboard/chat');
+        }
       }
     }
-  }, [conversations, activeConversation?.conversationId, threadId]);
+  }, [conversations, activeConversation?.conversationId, threadId, router]);
 
 
 
@@ -643,39 +645,40 @@ New Flow for for all roles to Admin
         };
       });
     } else {
-      setActiveConversation(prev => {
-        if (prev && String(prev.conversationId).trim().toLowerCase() === String(threadId).trim().toLowerCase()) {
-          return prev;
+      // Room not in conversations list — either loading or hidden.
+      // First check if room is explicitly hidden for this user before synthesizing.
+      customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
+        if (!metadata) return;
+        // If user is in hidden_for_user_ids, redirect away — don't show anything
+        if (Array.isArray(metadata.hidden_for_user_ids) && metadata.hidden_for_user_ids.includes(effectiveUserId)) {
+          setActiveConversation(null);
+          setActiveInquiryId(null);
+          router.push('/dashboard/chat');
+          return;
         }
-
-        const tempConversation: Conversation = {
-          conversationId: threadId,
-          conversationType: 'trade',
-          unreadCount: 0,
-          otherUserName: 'Min-meg Trade Desk',
-          otherCompanyName: 'Platform Admin',
-          itemTitle: 'Trade Inquiry',
-          itemType: 'product',
-          userSpoke: 'admin_buyer' as any
-        };
-
-        customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
-          if (metadata) {
-            setActiveConversation(current => {
-              if (current && current.conversationId === threadId) {
-                return {
-                  ...current,
-                  itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
-                  userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
-                  metadata: metadata
-                };
-              }
-              return current;
-            });
+        // Otherwise synthesize the temporary conversation
+        setActiveConversation(prev => {
+          if (prev && String(prev.conversationId).trim().toLowerCase() === String(threadId).trim().toLowerCase()) {
+            return {
+              ...prev,
+              itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
+              userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
+              metadata: metadata
+            };
           }
-        });
 
-        return tempConversation;
+          return {
+            conversationId: threadId,
+            conversationType: 'trade',
+            unreadCount: 0,
+            otherUserName: 'Min-meg Trade Desk',
+            otherCompanyName: 'Platform Admin',
+            itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
+            itemType: 'product',
+            userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
+            metadata: metadata
+          };
+        });
       });
     }
   }, [threadType, threadId, conversations, effectiveUserId, activeInquiryId, roomInquiries]);

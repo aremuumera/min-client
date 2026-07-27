@@ -640,6 +640,15 @@ export const customerTradeChatService = {
               return null;
             }
 
+            // Check if this user has been computed as having 0 visible trade cycles
+            // (set by backend recomputeHiddenUsers when admin hides/shows trade cycles)
+            if (Array.isArray(data.hidden_for_user_ids) && data.hidden_for_user_ids.includes(cleanUserId)) {
+              logger.info(
+                `[TradeChat] Room ${tradeId} has user ${cleanUserId} in hidden_for_user_ids. Hiding room from sidebar.`
+              );
+              return null;
+            }
+
             const threadDoc = await getDoc(
               doc(db, "trade_rooms", tradeId, "threads", spoke),
             );

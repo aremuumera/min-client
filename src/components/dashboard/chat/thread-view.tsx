@@ -224,7 +224,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
           {/* Transition to Message Input once acknowledged/started */}
           {(() => {
-            if (loading || loadingMessages) {
+            // Show skeleton while trade data (room inquiries) is still loading
+            const isTradeThread = thread?.conversationType === 'trade';
+            const inquiriesStillLoading = isTradeThread && roomInquiries.length === 0;
+            if (loading || loadingMessages || inquiriesStillLoading) {
               return (
                 <Box className="p-3 sm:p-4 border-t border-gray-100 bg-white">
                   <div className="flex items-center gap-3">
