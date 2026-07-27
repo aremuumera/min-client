@@ -110,7 +110,12 @@ export function ThreadToolbar({ thread }: any) {
           </Box>
         </Stack>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {roomInquiries && roomInquiries.length > 0 && (
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {roomInquiries.length} {roomInquiries.length === 1 ? 'Trade' : 'Trades'}
+            </span>
+          )}
           <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${displayStatus === 'completed' ? 'bg-green-100 text-green-700' :
             displayStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
               'bg-blue-100 text-blue-700'
