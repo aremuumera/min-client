@@ -19,12 +19,17 @@ This document provides a concise setup guide for seed accounts and core test sce
 
 ---
 
-## 🧪 2. Core Test Scenarios
+## 🧪 2. Core Product & Trade Room Scenarios
+
+> 💡 **Codebase Rule for Trade Room Creation**:
+> * **Same Buyer + Same Supplier + SAME Product (`product_id`)** $\rightarrow$ Reuses `firebase_room_id` $\rightarrow$ Groups into **1 Trade Room** with multiple trade cycles (tabs).
+> * **Same Buyer + Same Supplier + DIFFERENT Products** $\rightarrow$ Generates new `firebase_room_id` $\rightarrow$ Creates **Separate Trade Rooms** per product.
+> * **Different Buyers + Same Supplier** $\rightarrow$ Creates **Separate Trade Rooms** per buyer.
 
 ### Scenario A1: Single Buyer + Single Supplier + Single Trade Cycle (End-to-End)
 * **Parties Involved**: `Buyer Alpha` + `Supplier Floe` + `Inspector John` + `Admin`
 * **Flow**:
-  1. `Buyer Alpha` browses catalog and sends Product Inquiry for "High-Grade Lithium Ore" (1,000 MT).
+  1. `Buyer Alpha` browses catalog and sends Product Inquiry for "High-Grade Lithium Ore" (Product ID #1).
   2. `Supplier Floe` receives inquiry directly, clicks **Acknowledge Trade**.
   3. `Admin` opens Trade Room → Generates Contract Template → Customizes Clauses.
   4. `Buyer Alpha` and `Supplier Floe` review and **Sign Contract** in Document Vault.
@@ -33,29 +38,38 @@ This document provides a concise setup guide for seed accounts and core test sce
   7. `Admin` approves inspection certificate → Trade moves to Completed.
 * **Verification**: Verify audit timeline logs at every step.
 
-### Scenario A2: Single Buyer + Single Supplier + MULTIPLE Trade Cycles in Same Room
+### Scenario A2: Single Buyer + Single Supplier + MULTIPLE Inquiries on SAME Product (Multi-Cycle)
 * **Parties Involved**: `Buyer Alpha` + `Supplier Floe`
 * **Flow**:
-  1. `Buyer Alpha` creates Inquiry #1 for "High-Grade Lithium Ore" (1,000 MT) with `Supplier Floe`.
-  2. `Buyer Alpha` later creates Inquiry #2 for "Spodumene Concentrate" (500 MT) with the **same** `Supplier Floe`.
-  3. Both cycles group inside the same Firestore Trade Room (`trade_rooms/{roomId}/trades`).
+  1. `Buyer Alpha` creates Inquiry #1 for Product ID #1 ("High-Grade Lithium Ore", 1,000 MT) with `Supplier Floe`.
+  2. `Buyer Alpha` later creates Inquiry #2 for the **SAME Product ID #1** ("High-Grade Lithium Ore", additional 500 MT) with `Supplier Floe`.
+  3. Both cycles group inside the **SAME Firestore Trade Room** (`trade_rooms/{roomId}/trades`).
   4. Admin hides Trade Cycle #1 from users.
 * **Expected Result**:
   * `Buyer Alpha` & `Supplier Floe` **STILL SEE** the Trade Room in their sidebars because Trade Cycle #2 is still active.
   * Inside the room, Trade Cycle #1 tab vanishes, leaving only Trade Cycle #2.
 
-### Scenario A3: Multiple Different Buyers for the SAME Product / Supplier
+### Scenario A3: Single Buyer + Single Supplier + DIFFERENT Products (Separate Trade Rooms)
+* **Parties Involved**: `Buyer Alpha` + `Supplier Floe`
+* **Flow**:
+  1. `Buyer Alpha` sends Inquiry for Product ID #1 ("High-Grade Lithium Ore") to `Supplier Floe`.
+  2. `Buyer Alpha` sends a second Inquiry for Product ID #2 ("Spodumene Concentrate") to the **SAME** `Supplier Floe`.
+* **Expected Result**:
+  * Because Product ID #1 $\neq$ Product ID #2, the system creates **2 SEPARATE Trade Rooms** in both sidebars (one room per product).
+  * Each room operates independently with its own chat history and document vault.
+
+### Scenario A4: Multiple Different Buyers for the SAME Product / Supplier
 * **Parties Involved**: `Buyer Alpha` + `Buyer Beta` + `Supplier Floe`
 * **Flow**:
-  1. `Buyer Alpha` sends Inquiry for "High-Grade Lithium Ore".
-  2. `Buyer Beta` ALSO sends an Inquiry for the SAME "High-Grade Lithium Ore".
+  1. `Buyer Alpha` sends Inquiry for Product ID #1 ("High-Grade Lithium Ore").
+  2. `Buyer Beta` ALSO sends an Inquiry for the SAME Product ID #1 ("High-Grade Lithium Ore").
 * **Expected Result**:
   * `Supplier Floe` gets **2 separate Trade Rooms** in their sidebar (one with `Buyer Alpha`, one with `Buyer Beta`).
   * `Buyer Alpha` sees only their own room with `Supplier Floe`.
   * `Buyer Beta` sees only their own room with `Supplier Floe`.
   * Neither buyer can see or access the other buyer's trade room or chat.
 
-### Scenario A4: Trade Cycle Rejection & Auto-Hide
+### Scenario A5: Trade Cycle Rejection & Auto-Hide
 * **Parties Involved**: `Buyer Alpha` + `Supplier Floe`
 * **Flow**:
   1. `Buyer Alpha` sends Product Inquiry.
@@ -121,9 +135,10 @@ This document provides a concise setup guide for seed accounts and core test sce
 | Scenario ID | Scenario Name | Primary Persona | Verification Point | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **A1** | Single Product Trade E2E | Buyer + Supplier + Inspector | Full lifecycle + Inspection certificate | ⬜ |
-| **A2** | Multi-Cycle Same Room | Buyer + Supplier | Room stays active if 1 cycle remains visible | ⬜ |
-| **A3** | Multi-Buyer Same Product | Buyer A + Buyer B + Supplier | 2 isolated rooms; no cross-buyer leak | ⬜ |
-| **A4** | Inquiry Rejection | Buyer + Supplier | Rejection panel + 24h auto-hide | ⬜ |
+| **A2** | Multi-Cycle Same Product | Buyer + Supplier | 1 Room with sub-tabs for same product inquiries | ⬜ |
+| **A3** | Multi-Product Same Supplier | Buyer + Supplier | 2 Separate Rooms for different products | ⬜ |
+| **A4** | Multi-Buyer Same Product | Buyer A + Buyer B + Supplier | 2 isolated rooms; no cross-buyer leak | ⬜ |
+| **A5** | Inquiry Rejection | Buyer + Supplier | Rejection panel + 24h auto-hide | ⬜ |
 | **B1** | RFQ Multi-Supplier Bids | Buyer + 2 Suppliers + Admin | Admin evaluation + Trade room spawn | ⬜ |
 | **B2** | RFQ Multi-Cycle Auto-Hide | Buyer + Supplier | Room vanishes when 0 cycles remain | ⬜ |
 | **C1** | Activity Log Privacy | Team + Counterpart + Admin | Internal = Full Name; External = Role Only | ⬜ |

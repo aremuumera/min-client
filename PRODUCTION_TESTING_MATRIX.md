@@ -29,15 +29,24 @@ This document represents the complete, exhaustive test scenario matrix derived d
 > Backend: `product-inquiry.service.ts`, `product-inquiry.controller.ts`
 > Merchant: `/my-trade-inquiries`, `/received-inquiries`, `/chat/product/...`
 
+> 💡 **Codebase Rule for Trade Room Creation (`ProductInquiry.service.ts` line 88-121)**:
+> * **Same Buyer + Same Supplier + SAME Product (`product_id`)** $\rightarrow$ Reuses `firebase_room_id` $\rightarrow$ Groups into **1 Trade Room** with sub-tabs for each inquiry cycle.
+> * **Same Buyer + Same Supplier + DIFFERENT Products** $\rightarrow$ Generates new `firebase_room_id` $\rightarrow$ Creates **Separate Trade Rooms** per product.
+> * **Different Buyers + Same Supplier** $\rightarrow$ Creates **Separate Trade Rooms** per buyer.
+
 * **A1: Single-Cycle End-to-End Trade Success**
-  * Buyer Alpha inquires on listed Product → Supplier Floe Manager Acknowledges → Admin customizes contract clauses → Both parties sign contract → Admin assigns Inspector John → Inspector accepts, uploads report & certificate → Admin approves → Trade completed.
-* **A2: Multi-Cycle Same Room (Partial Hiding)**
-  * Buyer Alpha creates Inquiry #1 (Lithium) and Inquiry #2 (Spodumene) with Supplier Floe. Both group in same room. Admin hides Cycle #1 → Room remains active (Cycle #2 is still visible).
-* **A3: Multi-Cycle Same Room (Complete Hiding)**
-  * Admin hides Cycle #2 as well → 0 active cycles → Room **instantly vanishes** from sidebar and redirects to `/dashboard/chat`.
-* **A4: Multi-Buyer Inquiries on Same Product**
-  * Buyer Alpha and Buyer Beta both inquire on Supplier Floe's Lithium Ore → Supplier gets 2 isolated rooms. Neither buyer can see the other's room.
-* **A5: Supplier Inquiry Rejection**
+  * Buyer Alpha inquires on listed Product ID #1 → Supplier Floe Manager Acknowledges → Admin customizes contract clauses → Both parties sign contract → Admin assigns Inspector John → Inspector accepts, uploads report & certificate → Admin approves → Trade completed.
+* **A2: Multi-Cycle Inquiries on SAME Product (1 Trade Room)**
+  * Buyer Alpha creates Inquiry #1 for Product ID #1 ("High-Grade Lithium Ore") and later creates Inquiry #2 for the **SAME Product ID #1** with Supplier Floe → Both inquiries group into **1 Trade Room** with sub-tabs.
+* **A3: Multiple Products for SAME Supplier (Separate Trade Rooms)**
+  * Buyer Alpha creates Inquiry #1 for Product ID #1 ("High-Grade Lithium Ore") and Inquiry #2 for Product ID #2 ("Spodumene Concentrate") with Supplier Floe → System creates **2 SEPARATE Trade Rooms** in sidebars.
+* **A4: Multi-Cycle Same Room (Partial Hiding)**
+  * Buyer Alpha has 2 cycles inside the same room for Product ID #1. Admin hides Cycle #1 → Room remains active in sidebar (Cycle #2 is still visible).
+* **A5: Multi-Cycle Same Room (Complete Hiding)**
+  * Admin hides Cycle #2 as well → 0 active cycles remaining → Room **instantly vanishes** from sidebar and active view redirects to `/dashboard/chat`.
+* **A6: Multi-Buyer Inquiries on Same Product**
+  * Buyer Alpha and Buyer Beta both inquire on Supplier Floe's Product ID #1 → Supplier gets 2 isolated rooms. Neither buyer can see the other's room.
+* **A7: Supplier Inquiry Rejection**
   * Supplier Floe rejects with reason → Rejection card shows → Room auto-hides after 24h grace period.
 
 ---
@@ -328,7 +337,7 @@ This document represents the complete, exhaustive test scenario matrix derived d
 
 | Group | Scenarios | Domain Module | Status |
 | :---: | :--- | :--- | :---: |
-| **A** | A1–A5 (5) | Product Inquiry | 🟩 Ready |
+| **A** | A1–A7 (7) | Product Inquiry | 🟩 Ready |
 | **B** | B1–B4 (4) | RFQ & Offers | 🟩 Ready |
 | **C** | C1 (1) | Business Inquiry | 🟩 Ready |
 | **D** | D1–D3 (3) | Team Permissions | 🟩 Ready |
@@ -352,7 +361,7 @@ This document represents the complete, exhaustive test scenario matrix derived d
 | **V** | V1–V3 (3) | Analytics | 🟩 Ready |
 | **W** | W1 (1) | Role Upgrade | 🟩 Ready |
 | **X** | X1 (1) | Calculator | 🟩 Ready |
-| | **TOTAL: 62 Scenarios** | **24 Groups** | |
+| | **TOTAL: 64 Scenarios** | **24 Groups** | |
 
 ---
 *Generated from code inspection of 17 backend modules, 50+ merchant pages, and 40+ admin pages.*
