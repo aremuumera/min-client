@@ -139,53 +139,43 @@ export const customerTradeChatService = {
   },
 
   /**
+   * Compare two IDs flexibly, ignoring hyphens and case differences
+   */
+  isSameId(id1?: string | null, id2?: string | null): boolean {
+    if (!id1 || !id2) return false;
+    const clean1 = String(id1).replace(/-/g, '').toLowerCase();
+    const clean2 = String(id2).replace(/-/g, '').toLowerCase();
+    return clean1 === clean2;
+  },
+
+  /**
    * Determine which spoke thread a user should access based on their contextual
    * role in a specific trade (Inquirer = admin_buyer, Owner = admin_supplier).
    * This is the correct method to use for trade chat operations.
    */
   getSpokeByContext(userId: string, tradeMetadata: any): UserSpokeType | null {
-    const uId = this._sanitizeId(userId);
-
-    console.log("user id", uId);
-    console.log("trade metadata", tradeMetadata);
-
-    // 1. Explicit ID matches (Highest Security)
-    if (uId === this._sanitizeId(tradeMetadata?.inspector_id)) {
+    if (this.isSameId(userId, tradeMetadata?.inspector_id) || this.isSameId(userId, tradeMetadata?.matched_inspector_id)) {
       return "admin_inspector";
     }
 
-    if (uId === this._sanitizeId(tradeMetadata?.supplier_id)) {
+    if (this.isSameId(userId, tradeMetadata?.supplier_id) || this.isSameId(userId, tradeMetadata?.matched_supplier_id)) {
       return "admin_supplier";
     }
 
-    if (uId === this._sanitizeId(tradeMetadata?.buyer_id)) {
+    if (this.isSameId(userId, tradeMetadata?.buyer_id) || this.isSameId(userId, tradeMetadata?.user_id)) {
       return "admin_buyer";
     }
 
     // 2. Access Bridging for Team Members (Participants list check)
-    const participants = (tradeMetadata?.participant_ids || []).map(
-      (id: string) => this._sanitizeId(id),
-    );
-
-    if (participants.includes(uId) || participants.includes(userId)) {
-      /**
-       * If we are in the participants list but not the owner (not buyer_id/supplier_id),
-       * we must determine the spoke based on the intended side of the room.
-       * Since we don't have the user's login role here directly, we usually assume
-       * if they aren't the buyer, they are a supplier/inspector.
-       *
-       * NOTE: Return 'admin_buyer' ONLY if they are explicitly the buyer_id.
-       * Otherwise, if they are in participants, they are either a team member of the supplier
-       * or the inspector. We'll default to 'admin_supplier' here as a safe "non-managerial" spoke,
-       * but the IDEAL way is to pass the user's role from the auth context.
-       */
+    const participants = (tradeMetadata?.participant_ids || []);
+    if (participants.some((pId: string) => this.isSameId(userId, pId))) {
       return "admin_supplier";
     }
 
     // Default: Deny access if not found in metadata or participants
     console.warn(
       "[TradeChat] Access denied for user",
-      uId,
+      userId,
       "in room metadata",
       tradeMetadata,
     );
@@ -234,8 +224,9 @@ export const customerTradeChatService = {
             }))
             .filter((i: any) => i.isHiddenFromUsers !== true);
 
-          // Client-side filter: ONLY for RFQ rooms + supplier role
-          if (roomEntityType === "rfq" && userRole === "supplier") {
+          // Client-side filter: ONLY for RFQ rooms when acting as supplier
+          const isSupplierRole = userRole === "supplier" || userRole === "buyer_supplier" || userRole === "both";
+          if (roomEntityType === "rfq" && isSupplierRole) {
             inquiries = inquiries.filter(
               (trade: any) =>
                 String(trade.supplier_id || "") === uId,
@@ -573,31 +564,36 @@ export const customerTradeChatService = {
     errorCallback?: (error: any) => void,
   ) {
     const cleanUserId = String(userId || "");
+    const unhyphenatedId = cleanUserId.replace(/-/g, "");
+    const hyphenatedId = cleanUserId.includes("-")
+      ? cleanUserId
+      : `${cleanUserId.slice(0, 8)}-${cleanUserId.slice(8, 12)}-${cleanUserId.slice(12, 16)}-${cleanUserId.slice(16, 20)}-${cleanUserId.slice(20)}`;
+    const targetUserIds = Array.from(new Set([cleanUserId, unhyphenatedId, hyphenatedId])).filter(Boolean);
 
-    // Query for rooms where user is buyer
+    // Query for rooms where user is buyer (matches both hyphenated and unhyphenated IDs)
     const buyerQuery = query(
       collection(db, "trade_rooms"),
-      where("buyer_id", "==", cleanUserId),
+      where("buyer_id", "in", targetUserIds),
     );
-    // Query for rooms where user is supplier
+    // Query for rooms where user is supplier (matches both hyphenated and unhyphenated IDs)
     const supplierQuery = query(
       collection(db, "trade_rooms"),
-      where("supplier_id", "==", cleanUserId),
+      where("supplier_id", "in", targetUserIds),
     );
-    // Query for rooms where user is inspector
+    // Query for rooms where user is inspector (matches both hyphenated and unhyphenated IDs)
     const inspectorQuery = query(
       collection(db, "trade_rooms"),
-      where("inspector_id", "==", cleanUserId),
+      where("inspector_id", "in", targetUserIds),
     );
     // Query for rooms where user is manager
     const managerQuery = query(
       collection(db, "trade_rooms"),
-      where("assigned_manager_id", "==", cleanUserId),
+      where("assigned_manager_id", "in", targetUserIds),
     );
     // Query for rooms where user is admin
     const adminQuery = query(
       collection(db, "trade_rooms"),
-      where("assigned_admin_id", "==", cleanUserId),
+      where("assigned_admin_id", "in", targetUserIds),
     );
     // Query for rooms where user is in the participant list (Multi-RFQ support)
     const participantQuery = query(
@@ -679,10 +675,41 @@ export const customerTradeChatService = {
               data.created_at?.toDate?.() ||
               new Date();
 
-            const shortRef = String(tradeId).substring(0, 8).toUpperCase();
-            const isBuyer = String(data.buyer_id) === cleanUserId || String(data.user_id) === cleanUserId;
-            const isSupplier = String(data.supplier_id) === cleanUserId || String(data.matched_supplier_id) === cleanUserId;
-            const roleTag = isBuyer ? "Buying" : isSupplier ? "Selling" : "Trade";
+            const buyerIdStr = String(data.buyer_id || data.user_id || "");
+            const supplierIdStr = String(data.supplier_id || data.matched_supplier_id || "");
+            const inspectorIdStr = String(data.inspector_id || data.matched_inspector_id || "");
+
+            const isRoomBuyer = buyerIdStr === cleanUserId;
+            const isRoomSupplier = supplierIdStr === cleanUserId;
+            const isInspector = inspectorIdStr === cleanUserId;
+
+            const buyerCode = data.buyer_code || "B-1";
+            const supplierCode = data.supplier_code || "S-1";
+            const buyerAlias = data.buyer_alias || (data.buyer_code ? `Buyer #${data.buyer_code.replace(/[^0-9]/g, "")}` : "Buyer #1");
+            const supplierAlias = data.supplier_alias || (data.supplier_code ? `Supplier #${data.supplier_code.replace(/[^0-9]/g, "")}` : "Supplier #1");
+
+            const inspectorCode = data.inspector_code || "I-1";
+            const inspectorAlias = data.inspector_alias || "Inspection #1";
+
+            let aliasText = "";
+            let avatarText = "MD";
+
+            if (isRoomSupplier) {
+              // I am the Supplier in this room -> My counterpart is Buyer #1
+              aliasText = buyerAlias;
+              avatarText = buyerCode;
+            } else if (isRoomBuyer) {
+              // I am the Buyer in this room -> My counterpart is Supplier #1
+              aliasText = supplierAlias;
+              avatarText = supplierCode;
+            } else if (isInspector) {
+              // Inspector inspecting this trade -> I-1, I-2...
+              aliasText = inspectorAlias;
+              avatarText = inspectorCode;
+            }
+
+            const isDualRole = role === "buyer_supplier" || role === "both";
+            const roleTag = isDualRole ? (isRoomBuyer ? "PURCHASE" : isRoomSupplier ? "SALES" : "") : "";
 
             return {
               conversationId: tradeId,
@@ -694,8 +721,12 @@ export const customerTradeChatService = {
                 data.mineral_tag?.replace(/_/g, " ") ||
                 "Trade Inquiry",
               otherUserId: "admin",
-              otherUserName: `${roleTag} · TRD-#${shortRef}`,
+              otherUserName: "Min-meg Trade Desk",
               otherCompanyName: "Platform Admin",
+              tradeRef: data.trade_ref || `TRM-${tradeId}`,
+              aliasText: aliasText,
+              roleTag: roleTag,
+              avatarText: avatarText,
               lastMessageTime: lastMsgTime,
               unreadCount: 0,
               userSpoke: spoke,

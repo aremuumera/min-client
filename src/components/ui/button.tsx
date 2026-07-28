@@ -98,13 +98,11 @@ export interface ButtonProps
   loading?: boolean;
   /** As child - render as a different element */
   asChild?: boolean;
-  /** MUI-style system props */
   sx?: any;
 }
 
 /**
  * Button component
- * Replacement for MUI Button with matching variants and styling
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
