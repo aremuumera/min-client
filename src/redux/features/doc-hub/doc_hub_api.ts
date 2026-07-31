@@ -4,7 +4,7 @@ import { baseQueryWithReauth } from "../../api/baseApi";
 export const docHubApi = createApi({
   reducerPath: "docHubApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["TradeDocument", "DocumentTemplate", "SignatureSettings"],
+  tagTypes: ["TradeDocument", "DocumentTemplate", "SignatureSettings", "Activity"],
 
   endpoints: (builder) => ({
     // ... preexisting endpoints ...
@@ -64,7 +64,8 @@ export const docHubApi = createApi({
       }),
       invalidatesTags: (result, error, { documentId }) => [
         { type: "TradeDocument", id: documentId },
-        "TradeDocument", // Invalidate list to update stats
+        "TradeDocument",
+        "Activity",
       ],
     }),
 

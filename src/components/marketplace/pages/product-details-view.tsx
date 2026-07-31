@@ -56,7 +56,10 @@ const ProductDetailsView = ({ id }: ProductDetailsViewProps) => {
       <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12">
         {/* Left Column: Images & Company Info (Desktop) */}
         <div className="w-full lg:w-[55%] xl:w-[50%] flex flex-col gap-6">
-          <DetailImageWidget images={prodData?.images} />
+          <DetailImageWidget images={[
+            ...(Array.isArray(prodData?.images) ? prodData.images : []),
+            ...(Array.isArray(prodData?.attachments) ? prodData.attachments : []),
+          ]} />
           <div className="hidden lg:block">
             <CompanyDetailInfo products={prodData} />
           </div>

@@ -59,7 +59,7 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
 
     return (
         <div className='relative h-full w-full max-w-[250px]'>
-            <div className='group transition-all duration-300 hover:shadow-md border border-[#e5e7eb]   mb-[14px] bg-[#ffffff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full flex flex-col justify-between'>
+            <div className='group transition-all duration-300 border border-[#e5e7eb] hover:border-neutral-300 mb-[14px] bg-[#ffffff] pt-[10px] px-[10px] rounded-[15px] pb-[10px] h-full flex flex-col justify-between'>
                 {/* Delete button for saved items */}
                 {isSaved && (
                     <div className="absolute top-2 right-2 m-2 z-20">

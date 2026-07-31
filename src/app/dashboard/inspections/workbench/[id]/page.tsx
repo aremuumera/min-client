@@ -17,7 +17,7 @@ import { Chip } from '@/components/ui/chip';
 import {
     FileText, Camera, CheckCircle2, Clock, Upload, ArrowLeft,
     MapPin, Calendar, Beaker, ClipboardCheck, ArrowRight,
-    Loader2, Image as ImageIcon, ShieldCheck, ShieldAlert
+    Loader2, Image as ImageIcon, ShieldCheck, ShieldAlert, Video, Play
 } from 'lucide-react';
 
 const PHASES = [
@@ -147,13 +147,21 @@ export default function TradeWorkbenchPage() {
         }
     };
 
-    // Handle photo upload to backend (capped at 5 files per batch)
+    // Handle photo/video/pdf upload to backend (capped at 5 files per batch, max 20MB per file)
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
         if (files.length > 5) {
             toast.error('Maximum 5 files allowed per upload batch');
+            e.target.value = '';
+            return;
+        }
+
+        const maxSizeBytes = 20 * 1024 * 1024;
+        const oversizedFile = Array.from(files).find(f => f.size > maxSizeBytes);
+        if (oversizedFile) {
+            toast.error(`File "${oversizedFile.name}" exceeds the maximum 20MB size limit`);
             e.target.value = '';
             return;
         }
@@ -574,7 +582,7 @@ export default function TradeWorkbenchPage() {
                                     <input
                                         type="file"
                                         multiple
-                                        accept="image/*,.pdf,application/pdf"
+                                        accept="image/*,video/*,.pdf,application/pdf,.mp4,.webm,.mov,.avi"
                                         className="hidden"
                                         onChange={handlePhotoUpload}
                                         disabled={uploadingPhotos}
@@ -585,29 +593,44 @@ export default function TradeWorkbenchPage() {
                                         <Camera size={22} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
                                     )}
                                     <span className="text-[10px] text-gray-600 font-bold group-hover:text-emerald-700 text-center px-1">
-                                        {uploadingPhotos ? 'Uploading...' : '+ Add Photo / PDF'}
+                                        {uploadingPhotos ? 'Uploading...' : '+ Add Photo / Video / PDF'}
                                     </span>
                                 </label>
                             )}
 
-                            {/* Server Uploaded Site Photos & Documents */}
+                            {/* Server Uploaded Site Photos, Videos & Documents */}
                             {siteUploads.map((photo: any) => {
-                                const isPdf = photo.photoUrl?.toLowerCase().includes('.pdf') || photo.category === 'FIELD_REPORT_PDF' || photo.caption?.toLowerCase().endsWith('.pdf');
+                                const url = photo.photoUrl || photo.url || '';
+                                const isVideo = Boolean(url?.match(/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i) || url?.includes('/video/upload/'));
+                                const isPdf = Boolean(url?.match(/\.pdf(\?.*)?$/i) || photo.category === 'FIELD_REPORT_PDF' || photo.caption?.toLowerCase().endsWith('.pdf'));
+
                                 return (
                                     <a
                                         key={photo.id}
-                                        href={photo.photoUrl}
+                                        href={url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="w-28 h-28 rounded-xl bg-gray-100 relative overflow-hidden border border-gray-200 group block hover:ring-2 hover:ring-emerald-500 transition-all"
+                                        className="w-28 h-28 rounded-xl bg-gray-900 relative overflow-hidden border border-gray-200 group block hover:ring-2 hover:ring-emerald-500 transition-all"
                                     >
-                                        {isPdf ? (
+                                        {isVideo ? (
+                                            <div className="w-full h-full flex items-center justify-center relative bg-black">
+                                                <video src={url} className="w-full h-full object-cover opacity-80" preload="metadata" />
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="w-8 h-8 rounded-full bg-white/90 text-emerald-700 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                                        <Play size={14} className="ml-0.5" fill="currentColor" />
+                                                    </div>
+                                                </div>
+                                                <span className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded-md">
+                                                    <Video size={10} />
+                                                </span>
+                                            </div>
+                                        ) : isPdf ? (
                                             <div className="w-full h-full bg-red-50 flex flex-col items-center justify-center p-2 text-center">
                                                 <FileText size={28} className="text-red-500 mb-1" />
                                                 <span className="text-[9px] font-bold text-gray-800 line-clamp-2 leading-tight">{photo.caption || 'PDF Document'}</span>
                                             </div>
                                         ) : (
-                                            <img src={photo.photoUrl} className="w-full h-full object-cover" alt={photo.caption || 'inspection evidence'} />
+                                            <img src={url} className="w-full h-full object-cover" alt={photo.caption || 'inspection evidence'} />
                                         )}
                                         {photo.category && (
                                             <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1.5 py-0.5">

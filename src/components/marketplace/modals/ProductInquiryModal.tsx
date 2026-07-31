@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/select';
 import { MoqUnits } from '@/lib/marketplace-data';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
+import { getErrorMessage } from '@/utils/helper';
+
 const PACKAGING_OPTIONS = [
     { value: '50kg bags', label: '50kg Bags' },
     { value: '1 ton bags', label: '1 Ton Bags' },
@@ -95,6 +97,7 @@ const ProductInquiryModal = ({
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<any>(isRfqOffer ? offerInitialState : initialState);
     const [customPackaging, setCustomPackaging] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     const handleClose = () => {
         setStep(1);
@@ -111,6 +114,55 @@ const ProductInquiryModal = ({
     const loading = isRfqOffer ? isSubmittingOffer : (itemType === 'business' ? isCreatingBusinessInquiry : isLoading);
 
     if (!isOpen) return null;
+
+    // Prevent buyers from submitting RFQ offers
+    const userRole = (user?.role || '').toLowerCase();
+    const canSubmitOffer = userRole === 'supplier' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin';
+    if (isRfqOffer && !canSubmitOffer) {
+        return (
+            <div className="fixed inset-0 bg-black/60 z-11000 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-8 text-center">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertTriangle className="text-red-600 w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Not Authorized</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                        You are not authorized to submit an offer, Kindly contact support.
+                    </p>
+                    <button
+                        onClick={onClose}
+                        className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Prevent suppliers from submitting product inquiries or requesting quotes
+    const canSubmitInquiry = userRole === 'buyer' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin' || userRole === 'super_admin' || userRole === 'user';
+    if (!isRfqOffer && !canSubmitInquiry) {
+        return (
+            <div className="fixed inset-0 bg-black/60 z-11000 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-8 text-center">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertTriangle className="text-amber-600 w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Not Authorized</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                        You are not authorized to submit an inquiry, Kindly contact support.
+                    </p>
+                    <button
+                        onClick={onClose}
+                        className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     // Prevent self-inquiry: user cannot inquire about their own product
     const effectiveUserId = String(user?.ownerUserId || user?.id || '');
@@ -139,6 +191,8 @@ const ProductInquiryModal = ({
     }
 
     const handleSubmit = async () => {
+        if (submitting || loading) return;
+        setSubmitting(true);
         try {
             if (isRfqOffer) {
                 const offerData = formData as typeof offerInitialState;
@@ -158,9 +212,9 @@ const ProductInquiryModal = ({
                 formDataPayload.append('delivery_country', offerData.delivery_country);
                 formDataPayload.append('delivery_address', offerData.delivery_address);
                 formDataPayload.append('timeline_type', offerData.timeline_type);
-                if (isRecurring) {
+                if (isRecurring && offerData.recurring_duration) {
                     formDataPayload.append('recurring_frequency', offerData.recurring_frequency);
-                    formDataPayload.append('recurring_duration', String(offerData.recurring_duration || ''));
+                    formDataPayload.append('recurring_duration', String(Math.round(Number(offerData.recurring_duration))));
                 }
                 formDataPayload.append('description', offerData.description);
 
@@ -170,7 +224,13 @@ const ProductInquiryModal = ({
                     });
                 }
 
-                await submitOffer({ rfqId: product.rfqId, body: formDataPayload }).unwrap();
+                const targetRfqId = product.rfqId || product.id;
+                if (!targetRfqId) {
+                    showAlert('Target RFQ ID is missing', 'error');
+                    return;
+                }
+
+                await submitOffer({ rfqId: targetRfqId, body: formDataPayload }).unwrap();
             } else {
                 const inquiryData = formData as typeof initialState;
                 const isRecurring = inquiryData.timeline_type === 'recurring';
@@ -184,8 +244,8 @@ const ProductInquiryModal = ({
                         delivery_state: inquiryData.delivery_state,
                         delivery_country: inquiryData.delivery_country,
                         timeline_type: inquiryData.timeline_type,
-                        recurring_frequency: isRecurring ? inquiryData.recurring_frequency : null,
-                        recurring_duration: isRecurring ? (Number(inquiryData.recurring_duration) || null) : null,
+                        recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
+                        recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
                         urgency: inquiryData.urgency,
                         description: inquiryData.description,
                     };
@@ -202,8 +262,8 @@ const ProductInquiryModal = ({
                         delivery_state: inquiryData.delivery_state,
                         delivery_country: inquiryData.delivery_country,
                         timeline_type: inquiryData.timeline_type,
-                        recurring_frequency: isRecurring ? inquiryData.recurring_frequency : null,
-                        recurring_duration: isRecurring ? (Number(inquiryData.recurring_duration) || null) : null,
+                        recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
+                        recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
                         inspection_intent: inquiryData.inspection_intent,
                         preferred_grade: inquiryData.preferred_grade,
                         urgency: inquiryData.urgency,
@@ -219,7 +279,9 @@ const ProductInquiryModal = ({
             setStep(3);
         } catch (err: any) {
             console.error('Submit Error:', err);
-            showAlert(err?.data?.message || (isRfqOffer ? 'Failed to submit offer' : 'Failed to submit inquiry'), 'error');
+            showAlert(getErrorMessage(err, isRfqOffer ? 'Failed to submit offer' : 'Failed to submit inquiry'), 'error');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -297,7 +359,7 @@ const ProductInquiryModal = ({
                                             <label className="block text-sm font-bold text-gray-700 mb-2">Currency</label>
                                             <Select fullWidth value={(formData as any).currency}
                                                 onChange={(val: any) => { const v = typeof val === 'string' ? val : val.target.value; setFormData({ ...formData, currency: v } as any); }}
-                                                options={[{ value: 'NGN', label: '₦ NGN' }, { value: 'USD', label: '$ USD' }]} />
+                                                options={[{ value: 'NGN', label: '₦ NGN' } /* , { value: 'USD', label: '$ USD' } */]} />
                                         </div>
                                     </div>
 
@@ -799,10 +861,10 @@ const ProductInquiryModal = ({
                                 ) : (
                                     <button
                                         onClick={handleSubmit}
-                                        disabled={loading}
+                                        disabled={loading || submitting}
                                         className="bg-green-600 text-white min-w-[160px] py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-600/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70"
                                     >
-                                        {loading ? (
+                                        {loading || submitting ? (
                                             <Loader2 className="animate-spin" size={18} />
                                         ) : (
                                             <>

@@ -124,12 +124,18 @@ export function PortalPopover({
 
         let finalLeft = left;
         if (align === 'end') {
-            if (left - popoverWidth < padding) {
+            if (left > screenWidth - padding) {
+                finalLeft = screenWidth - padding;
+            }
+            if (finalLeft - popoverWidth < padding) {
                 finalLeft = padding + popoverWidth;
             }
         } else if (align === 'start') {
             if (left + popoverWidth > screenWidth - padding) {
-                finalLeft = screenWidth - padding - popoverWidth;
+                finalLeft = Math.max(padding, screenWidth - padding - popoverWidth);
+            }
+            if (finalLeft < padding) {
+                finalLeft = padding;
             }
         } else if (align === 'center') {
             if (left - popoverWidth / 2 < padding) {

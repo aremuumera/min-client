@@ -19,9 +19,35 @@ export default function DetailImageWidget({ images }: DetailImageWidgetProps) {
     const [verticalIndex, setVerticalIndex] = useState(0);
     const router = useRouter();
 
-    // Safe check and formatting for images
+    const isVideoUrl = (url?: string) => {
+        if (!url) return false;
+        const cleanUrl = url.split('?')[0].toLowerCase();
+        return (
+            /\.(mp4|webm|ogg|mov|mkv|avi|m4v)$/i.test(cleanUrl) ||
+            cleanUrl.includes('/video/upload/') ||
+            cleanUrl.includes('resource_type/video')
+        );
+    };
+
+    // Safe check and formatting for images and videos
     const validMedia: MediaItem[] = images?.length > 0
-        ? images.map(img => typeof img === 'string' ? { url: img, type: 'image' } : img)
+        ? images.map(img => {
+            if (typeof img === 'string') {
+                return {
+                    url: img,
+                    type: isVideoUrl(img) ? 'video' : 'image',
+                };
+            }
+            if (img && typeof img === 'object') {
+                const detectedType = img.type === 'video' || isVideoUrl(img.url) ? 'video' : 'image';
+                return {
+                    url: img.url,
+                    type: detectedType,
+                    position: img.position,
+                };
+            }
+            return { url: String(img), type: 'image' };
+        })
         : [{ url: '/assets/placeholder.png', type: 'image' }];
 
     const thumbnailHeight = 100;

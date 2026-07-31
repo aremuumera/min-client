@@ -12,6 +12,7 @@ import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
 import { ActionPanel } from './action-panel';
 import { InspectorActionPanel } from './inspector-action-panel';
+import { TradeInspectionsTab } from './trade-inspections-tab';
 import { DocumentVault } from './document-vault';
 import { TradeActivityTimeline } from './trade-activity-timeline';
 import { ChatContext } from '@/providers/chat-provider';
@@ -19,12 +20,42 @@ import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-
-import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
 
 interface ThreadViewProps {
   threadId: string;
+}
+
+function ChatMessageSkeleton() {
+  return (
+    <div className="space-y-4 p-2 animate-pulse w-full">
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
+        <div className="space-y-2 max-w-[65%]">
+          <div className="h-3 w-28 bg-gray-200 rounded" />
+          <div className="h-14 w-60 sm:w-72 bg-gray-200 rounded-2xl rounded-tl-none" />
+        </div>
+      </div>
+      <div className="flex items-end justify-end gap-3">
+        <div className="space-y-2 max-w-[65%] flex flex-col items-end">
+          <div className="h-10 w-48 sm:w-64 bg-emerald-100/70 rounded-2xl rounded-tr-none" />
+        </div>
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
+        <div className="space-y-2 max-w-[65%]">
+          <div className="h-3 w-20 bg-gray-200 rounded" />
+          <div className="h-16 w-52 sm:w-64 bg-gray-200 rounded-2xl rounded-tl-none" />
+        </div>
+      </div>
+      <div className="flex items-end justify-end gap-3">
+        <div className="space-y-2 max-w-[65%] flex flex-col items-end">
+          <div className="h-12 w-44 sm:w-56 bg-emerald-100/70 rounded-2xl rounded-tr-none" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function ThreadView({ threadId }: ThreadViewProps) {
@@ -177,6 +208,15 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           Document Vault
         </button>
         <button
+          onClick={() => setActiveTab('inspections')}
+          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'inspections'
+            ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+            : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          Inspections
+        </button>
+        <button
           onClick={() => setActiveTab('activity')}
           className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'activity'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
@@ -199,6 +239,17 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             })()}
           />
         </div>
+      ) : activeTab === 'inspections' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradeInspectionsTab
+            tradeId={activeInquiryId || roomInquiries[0]?.id || thread?.metadata?.inquiry_id || threadId}
+            itemType={(() => {
+              const inq = roomInquiries.find((i: any) => i.id === activeInquiryId) || roomInquiries[0];
+              return (inq?.type === 'rfq' || inq?.type === 'rfq_offer') ? 'rfq' : 'product';
+            })()}
+            isBuyer={Boolean(user?.id && thread?.metadata?.buyer_id && user.id === thread.metadata.buyer_id) || (!user?.id || user?.id !== thread?.metadata?.supplier_id && user?.id !== thread?.metadata?.inspector_id)}
+          />
+        </div>
       ) : activeTab === 'activity' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
           <TradeActivityTimeline inquiryId={activeInquiryId || ''} />
@@ -211,10 +262,8 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             className="flex-auto overflow-y-auto p-3 sm:p-6 relative bg-gray-50/30"
             style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {loadingMessages && messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <CircularProgress />
-              </div>
+            {loadingMessages ? (
+              <ChatMessageSkeleton />
             ) : (
               messages.map((message: any) => (
                 <MessageBox key={message.id} message={message} />
@@ -248,6 +297,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
             const _isSupplier = user?.id && (thread.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
             const _isInspector = user?.id && (thread.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
+            const _isBuyer = !_isSupplier && !_isInspector;
 
             // 1) If rejected, show the rejection card (ActionPanel handles this UI)
             if (isRejected) {
@@ -268,7 +318,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               return <ActionPanel thread={thread} />;
             }
 
-            // 3) If user is an inspector, check their specific assignment status
+            // 4) If user is an inspector, check their specific assignment status
             if (_isInspector) {
               const inspectorStatus = activeInq?.inspector_status || activeInq?.status || thread.metadata?.status;
 
@@ -280,7 +330,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               }
             }
 
-            // 4) Otherwise show message input
+            // 5) Otherwise show message input
             return <MessageAdd onSend={handleSendMessage} />;
           })()}
         </>

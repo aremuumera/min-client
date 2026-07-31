@@ -17,8 +17,10 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useAuthIdentity } from "@/hooks/use-auth-identity";
 import { useGetMainCategoryQuery } from "@/redux/features/categories/cat_api";
 import Link from "next/link";
+import { BsBoxSeam, BsCheckCircle, BsClockHistory, BsTags } from 'react-icons/bs';
+import { motion } from 'framer-motion';
 
-export const mockData = [
+const mockData = [
 
   {
     supplierProductId: 1,
@@ -464,88 +466,207 @@ const ListedProducts = () => {
   // Handle rows per page change
   const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to first page when rows per page changes
+    setPage(0);
   };
 
   // Handle Search Input
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setPage(0); // Reset to first page when search changes
+    setPage(0);
   };
 
   // Handle Category Filter
   const handleCategoryFilter = (e: { target: { value: string } }) => {
     setCategoryFilter(e.target.value);
-    setPage(0); // Reset to first page when filter changes
+    setPage(0);
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('');
+    setPage(0);
+  };
 
+  const productsList = data?.products || [];
+  const totalItems = data?.total_items || productsList.length;
+  const activeCount = productsList.filter((p: any) => p.status === 'Confirmed' || !p.status || p.status === 'ACTIVE').length;
+  const pendingCount = productsList.filter((p: any) => p.status === 'Pending').length;
+  const categoriesCount = Array.from(new Set(productsList.map((p: any) => p.product_category).filter(Boolean))).length;
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
-      <Stack direction={{ xs: 'column', sm: 'row' }} py='40px' spacing={3} sx={{ alignItems: 'flex-start' }}>
-        <Box sx={{ flex: '1 1 auto', }}>
-          <Typography variant="h4">My Product's</Typography>
-        </Box>
+    <div className=" bg-gray-50 min-h-screen font-sans space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200">
         <div>
-          <Link href={paths.dashboard.products.create} passHref>
-            <Button
-              startIcon={<PlusIcon />}
-              variant="contained"
-            >
-              Create Product
-            </Button>
-          </Link>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">My Products</h1>
+          <p className="text-xs font-medium text-gray-500 mt-1">
+            Manage your listed mineral catalog, inventory status, and storefront specifications
+          </p>
         </div>
-      </Stack>
-      {/* Search and Filter */}
-      <div className="flex flex-col gap-[20px] md:flex-row justify-between items-center my-8">
-        <TextField
-          label="Search Products"
-          variant="outlined"
-          value={searchTerm}
-          placeholder="Search for your listed products"
-          onChange={handleSearch}
-          className="w-full md:w-[30%] py-2 rounded-[60px]!"
-        />
-        <Select
-          value={categoryFilter}
-          onChange={handleCategoryFilter}
-          size="sm"
-          label="Category"
-          className="mt-2 md:mt-0 md:ml-4 w-full md:w-[20%]"
-        >
-          <MenuItem value="">All Categories</MenuItem>
-          {Array.isArray(mainCategories) && mainCategories.map((cat: any) => (
-            <MenuItem key={cat.id || cat.name} value={cat.name}>
-              {cat.name}
-            </MenuItem>
-          ))}
-          <MenuItem value="Metallic Minerals">Metallic Minerals</MenuItem>
-          <MenuItem value="Non-Metallic Minerals">Non-Metallic Minerals</MenuItem>
-          <MenuItem value="Energy Minerals">Energy Minerals</MenuItem>
-        </Select>
+        <Link href={paths.dashboard.products.create} passHref>
+          <Button variant="contained" className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl px-5 py-2.5 text-xs transition-all shadow-none flex items-center gap-2">
+            <PlusIcon size={16} />
+            <span>Create Product</span>
+          </Button>
+        </Link>
       </div>
 
+      {/* Stat Cards Grid (1:1 identical to AnalyticsCards design with matching icons) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          className="bg-green-50/60 rounded-xl border border-green-200/50 p-6 transition-all hover:border-green-400 hover:bg-green-50/80 group"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-700 group-hover:bg-green-200 transition-colors">
+              <BsBoxSeam size={18} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium text-gray-500">
+              Total Products
+            </h2>
+            <div className="text-3xl font-bold text-gray-900 tracking-tight">
+              {totalItems}
+            </div>
+            <p className="text-xs text-gray-400 font-medium">
+              Active products in your catalog
+            </p>
+          </div>
+        </motion.div>
 
+        <motion.div
+          className="bg-green-50/60 rounded-xl border border-green-200/50 p-6 transition-all hover:border-green-400 hover:bg-green-50/80 group"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-700 group-hover:bg-green-200 transition-colors">
+              <BsCheckCircle size={18} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium text-gray-500">
+              Active Listings
+            </h2>
+            <div className="text-3xl font-bold text-gray-900 tracking-tight">
+              {activeCount}
+            </div>
+            <p className="text-xs text-gray-400 font-medium">
+              Confirmed & active catalog
+            </p>
+          </div>
+        </motion.div>
 
-      <Box className='bg-white  rounded-[30px] '>
+        <motion.div
+          className="bg-green-50/60 rounded-xl border border-green-200/50 p-6 transition-all hover:border-green-400 hover:bg-green-50/80 group"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-700 group-hover:bg-green-200 transition-colors">
+              <BsClockHistory size={18} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium text-gray-500">
+              Pending Review
+            </h2>
+            <div className="text-3xl font-bold text-gray-900 tracking-tight">
+              {pendingCount}
+            </div>
+            <p className="text-xs text-gray-400 font-medium">
+              Awaiting verification
+            </p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="bg-green-50/60 rounded-xl border border-green-200/50 p-6 transition-all hover:border-green-400 hover:bg-green-50/80 group"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-700 group-hover:bg-green-200 transition-colors">
+              <BsTags size={18} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium text-gray-500">
+              Categories
+            </h2>
+            <div className="text-3xl font-bold text-gray-900 tracking-tight">
+              {categoriesCount || (Array.isArray(mainCategories) ? mainCategories.length : 0)}
+            </div>
+            <p className="text-xs text-gray-400 font-medium">
+              Distinct mineral categories
+            </p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto flex-1">
+          <div className="relative w-full md:w-80">
+            <TextField
+              label="Search Products"
+              variant="outlined"
+              value={searchTerm}
+              placeholder="Search for your listed products..."
+              onChange={handleSearch}
+              className="w-full text-xs font-medium rounded-xl"
+            />
+          </div>
+
+          <div className="w-full md:w-60">
+            <Select
+              value={categoryFilter}
+              onChange={handleCategoryFilter}
+              size="sm"
+              label="Category"
+              className="w-full text-xs font-medium rounded-xl"
+            >
+              <MenuItem value="">All Categories</MenuItem>
+              {Array.isArray(mainCategories) && mainCategories.map((cat: any) => (
+                <MenuItem key={cat.id || cat.name} value={cat.name}>
+                  {cat.name}
+                </MenuItem>
+              ))}
+              <MenuItem value="Metallic Minerals">Metallic Minerals</MenuItem>
+              <MenuItem value="Non-Metallic Minerals">Non-Metallic Minerals</MenuItem>
+              <MenuItem value="Energy Minerals">Energy Minerals</MenuItem>
+            </Select>
+          </div>
+
+          {(searchTerm || categoryFilter) && (
+            <Button
+              onClick={clearFilters}
+              variant="outlined"
+              className="text-xs font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-xl px-4 py-2"
+            >
+              Clear Filters
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Products Table Container */}
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <SupplierProductsTable
           isLoading={isLoading}
           isError={isError}
-          rows={data?.products || []}
+          rows={productsList}
           emptyMessage="No products found"
           errorMessage="Failed to load products"
         />
-        <Box className='py-[15px]  pr-[20px]'>
+        <div className="p-4 border-t border-gray-100 bg-white">
           <TablePagination
-            count={data?.total_items || 0}
+            count={totalItems}
             onPageChange={handlePageChange}
             onRowsPerPageChange={handleRowsPerPageChange}
             page={page}
-            rowsPerPage={rowsPerPage} />
-        </Box>
-      </Box>
+            rowsPerPage={rowsPerPage}
+          />
+        </div>
+      </div>
     </div>
   );
 };

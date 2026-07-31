@@ -630,7 +630,7 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
                 label="Unit Currency"
                 options={[
                   { value: 'NGN', label: 'NGN' },
-                  { value: 'USD', label: 'USD' },
+                  // { value: 'USD', label: 'USD' },
                 ]}
                 value={productDetailsFormData?.unitCurrency || 'NGN'}
                 onChange={(e: any) => handleInputChange({ target: { name: 'unitCurrency', value: e.target.value } })}

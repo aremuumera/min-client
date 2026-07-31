@@ -11,14 +11,33 @@ export const tradeApi = createApi({
       query: (id) => `/trade/inquiries/${id}`,
       providesTags: (result, error, id) => [{ type: "TradeInquiry", id }],
     }),
-    getMyTradeInquiries: builder.query<any, void>({
-      query: () => "/trade/my-inquiries",
+
+    getMyTradeInquiries: builder.query<any, { state?: string; status?: string; search?: string } | void>({
+      query: (params) => {
+        if (!params) return "/trade/my-inquiries";
+        const searchParams = new URLSearchParams();
+        if (params.state) searchParams.append("state", params.state);
+        if (params.status) searchParams.append("status", params.status);
+        if (params.search) searchParams.append("search", params.search);
+        const q = searchParams.toString();
+        return `/trade/my-inquiries${q ? `?${q}` : ""}`;
+      },
       providesTags: ["TradeInquiry"],
     }),
-    getReceivedInquiries: builder.query<any, void>({
-      query: () => "/trade/received-inquiries",
+
+    getReceivedInquiries: builder.query<any, { state?: string; status?: string; search?: string } | void>({
+      query: (params) => {
+        if (!params) return "/trade/received-inquiries";
+        const searchParams = new URLSearchParams();
+        if (params.state) searchParams.append("state", params.state);
+        if (params.status) searchParams.append("status", params.status);
+        if (params.search) searchParams.append("search", params.search);
+        const q = searchParams.toString();
+        return `/trade/received-inquiries${q ? `?${q}` : ""}`;
+      },
       providesTags: ["TradeInquiry"],
     }),
+
     acknowledgeInquiry: builder.mutation<any, string>({
       query: (id) => ({
         url: `/trade/inquiry/${id}/acknowledge`,
@@ -125,8 +144,53 @@ export const tradeApi = createApi({
       }),
       invalidatesTags: ["RfqOffer"],
     }),
+
+    // ============ REQUEST RE-INSPECTION ============
+    requestReinspection: builder.mutation<any, { tradeId: string; itemType?: string; reason: string }>({
+      query: ({ tradeId, itemType = 'product', reason }) => ({
+        url: `/inspector/trades/${tradeId}/re-inspection-request`,
+        method: "POST",
+        params: { itemType },
+        body: { reason },
+      }),
+      invalidatesTags: ["TradeInquiry", "RfqOffer"],
+    }),
+
+    // ============ APPROVE INSPECTION & PROCEED ============
+    approveInspectionAndProceed: builder.mutation<any, { tradeId: string; itemType?: string }>({
+      query: ({ tradeId, itemType = 'product' }) => ({
+        url: `/inspector/trades/${tradeId}/approve-and-proceed`,
+        method: "POST",
+        params: { itemType },
+      }),
+      invalidatesTags: ["TradeInquiry", "RfqOffer"],
+    }),
+
+
+    // ============ GET TRADE ASSIGNMENTS HISTORY ============
+    getTradeAssignmentsHistory: builder.query<any, { tradeId: string; itemType?: string }>({
+      query: ({ tradeId, itemType = 'product' }) => ({
+        url: `/inspector/trades/${tradeId}/history`,
+        params: { itemType },
+      }),
+      transformResponse: (res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])),
+      providesTags: ["TradeInquiry"],
+    }),
+
+
+
+    // ============ GET RELEASED INSPECTION REPORT ============
+    getReleasedReport: builder.query<any, string>({
+      query: (assignmentId) => `/inspector/assignments/${assignmentId}/released-report`,
+      providesTags: ["TradeInquiry"],
+    }),
+
+
+
   }),
 });
+
+
 
 export const {
   useGetTradeInquiryQuery,
@@ -146,6 +210,11 @@ export const {
   useGetOfferDetailQuery,
   useGetMyRfqOffersQuery,
   useShortlistRfqOfferMutation,
+  useRequestReinspectionMutation,
+  useApproveInspectionAndProceedMutation,
+  useGetTradeAssignmentsHistoryQuery,
+  useGetReleasedReportQuery,
 } = tradeApi;
 
 export default tradeApi;
+

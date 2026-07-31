@@ -20,12 +20,13 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
 
     const handleShortlist = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        const nextState = !isShortlisted;
         try {
             await shortlistOffer({
                 offerId: offer.external_id || offer.id,
-                is_shortlisted: !isShortlisted
+                is_shortlisted: nextState
             }).unwrap();
-            showAlert(isShortlisted ? 'Removed from shortlist' : 'Offer shortlisted successfully', 'success');
+            showAlert(nextState ? 'Offer shortlisted successfully' : 'Removed from shortlist', 'success');
         } catch (err: any) {
             showAlert(err?.data?.message || 'Failed to update shortlist status', 'error');
         }
@@ -33,13 +34,14 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
 
     return (
         <div
+            onClick={onToggleSelect}
             className={`
-                rounded-xl bg-white p-6 relative transition-all duration-200 border
-                ${isSelected ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-200'}
+                rounded-xl bg-white p-6 relative transition-all duration-200 border cursor-pointer select-none
+                ${isSelected ? 'border-green-500 ring-2 ring-green-100 shadow-md' : 'border-gray-200 hover:border-gray-300'}
             `}
         >
             {/* Selection Checkbox */}
-            <div className="absolute -top-3 -right-3 bg-white rounded-full z-10 p-1 border border-gray-200">
+            <div className="absolute -top-3 -right-3 bg-white rounded-full z-10 p-1 border border-gray-200" onClick={(e) => e.stopPropagation()}>
                 <Checkbox
                     checked={isSelected}
                     onChange={onToggleSelect}
@@ -116,7 +118,10 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
                 <Button
                     variant="contained"
                     className="flex-1 bg-gray-900"
-                    onClick={onViewDetails}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails();
+                    }}
                 >
                     View Details
                 </Button>

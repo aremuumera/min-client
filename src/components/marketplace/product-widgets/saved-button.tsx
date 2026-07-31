@@ -33,7 +33,6 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
   const { user, isAuth, effectiveUserId } = useAuthIdentity();
   const pathname = usePathname();
   const { id, rfqId } = products;
-  const effectiveId = id || rfqId || products?._id;
 
   const productPATHENMAE = ['/dashboard/products/all-mineral-cp', '/dashboard/products/details'];
   const rfqPATHENMAE = ['/dashboard/products/rfq-products', '/dashboard/rfqs/details'];
@@ -47,6 +46,7 @@ const ToggleSaveButton = ({ products, setShowLoginModal }: ToggleSaveButtonProps
   };
 
   const itemType = getItemType();
+  const effectiveId = itemType === 'rfq' ? (rfqId || id || products?._id) : (id || rfqId || products?._id);
 
   // 1. Check initial saved status
   const { data: savedStatus, refetch: refetchSavedStatus } = useCheckSavedStatusQuery(

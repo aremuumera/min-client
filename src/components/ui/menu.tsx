@@ -30,7 +30,7 @@ export interface MenuProps extends Omit<PopoverProps, 'children'> {
   usePortal?: boolean;
 }
 
-function Menu({ trigger, children, usePortal = false, open: controlledOpen, onOpenChange, ...props }: MenuProps) {
+function Menu({ trigger, children, usePortal = false, align = 'end', open: controlledOpen, onOpenChange, ...props }: MenuProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
   const setOpen = onOpenChange !== undefined ? onOpenChange : setUncontrolledOpen;
@@ -47,6 +47,7 @@ function Menu({ trigger, children, usePortal = false, open: controlledOpen, onOp
         trigger={trigger}
         open={open}
         onOpenChange={setOpen}
+        align={align}
         {...props}
       >
         <div className="py-1 min-w-[200px]" role="menu">

@@ -14,7 +14,6 @@ import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { IoIosArrowBack } from 'react-icons/io';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { mockData } from '../ListedProducts';
 import SupplierUpdateField from './SupplierUpdateField';
 import { MoqUnits as Moq } from '@/lib/marketplace-data';
 import { MdEdit, MdOutlineContentCopy, MdShare } from 'react-icons/md';

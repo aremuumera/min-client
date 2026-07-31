@@ -50,12 +50,25 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
       return;
     }
 
+    const userRole = (user?.role || '').toLowerCase();
+    const canSubmitInquiry = userRole === 'buyer' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin' || userRole === 'super_admin' || userRole === 'user';
+    if (isAuth && !canSubmitInquiry) {
+      showAlert('You are not authorized to submit an inquiry, Kindly contact support.', 'warning');
+      return;
+    }
+
     if (isAuth) {
       setShowQuoteModal(true);
     } else {
       setShowLoginModalForSave(true);
     }
   };
+
+  const [logoSrc, setLogoSrc] = React.useState(logo || '/assets/MINMEG 4.png');
+
+  React.useEffect(() => {
+    setLogoSrc(logo || '/assets/MINMEG 4.png');
+  }, [logo]);
 
   const countryDisplay = Array.isArray(selected_countryName) ? selected_countryName.join(', ') : selected_countryName;
   const heroDescription =
@@ -81,9 +94,10 @@ const CompanyProfileHero = ({ products }: { products: any }) => {
         <div className="absolute left-4 sm:left-8 md:left-12 bottom-0 transform translate-y-1/2 p-1.5 bg-white rounded-2xl border border-gray-200 z-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={logo || '/placeholder-logo.png'}
+            src={logoSrc}
             alt={`${company_name} logo`}
-            className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl object-cover bg-white"
+            onError={() => setLogoSrc('/assets/MINMEG 4.png')}
+            className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-xl object-contain p-1 bg-white"
           />
         </div>
       </div>

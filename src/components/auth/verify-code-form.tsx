@@ -101,25 +101,60 @@ export function VerifyCodeForm() {
 
   const currentOtp = otp.split('');
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    const digitsOnly = pastedData.replace(/\D/g, '').slice(0, 6);
+
+    if (digitsOnly.length > 0) {
+      setOtp(digitsOnly);
+      setOtpError('');
+
+      const nextFocusIndex = Math.min(digitsOnly.length - 1, 5);
+      const inputs = e.currentTarget.parentElement?.querySelectorAll('input');
+      if (inputs && inputs[nextFocusIndex]) {
+        inputs[nextFocusIndex].focus();
+      }
+    }
+  };
+
   const handleChange = (i: number, val: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!/^\d*$/.test(val)) return;
+    const cleaned = val.replace(/\D/g, '');
+    if (!cleaned && val !== '') return;
+
+    if (cleaned.length > 1) {
+      const newDigits = cleaned.slice(0, 6);
+      setOtp(newDigits);
+      setOtpError('');
+      const nextFocusIndex = Math.min(newDigits.length - 1, 5);
+      const inputs = e.currentTarget.parentElement?.querySelectorAll('input');
+      if (inputs && inputs[nextFocusIndex]) {
+        inputs[nextFocusIndex].focus();
+      }
+      return;
+    }
+
     const newOtp = [...currentOtp];
-    newOtp[i] = val;
-    const finalVal = newOtp.join('');
+    newOtp[i] = cleaned;
+    const finalVal = newOtp.slice(0, 6).join('');
     setOtp(finalVal);
     setOtpError('');
 
-    // Move focus
-    if (val && i < 5) {
-      (e.target.nextSibling as HTMLInputElement)?.focus();
+    // Move focus to next input
+    if (cleaned && i < 5) {
+      const inputs = e.currentTarget.parentElement?.querySelectorAll('input');
+      if (inputs && inputs[i + 1]) {
+        inputs[i + 1].focus();
+      }
     }
   };
 
   const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) {
-      // Need to target previous sibling accurately. 
-      // e.currentTarget is the input.
-      (e.currentTarget.previousSibling as HTMLInputElement)?.focus();
+      const inputs = e.currentTarget.parentElement?.querySelectorAll('input');
+      if (inputs && inputs[i - 1]) {
+        inputs[i - 1].focus();
+      }
     }
   };
 
@@ -150,7 +185,9 @@ export function VerifyCodeForm() {
               <input
                 key={i}
                 type="text"
-                maxLength={1}
+                maxLength={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 className={cn(
                   "w-12 h-14 text-center text-xl font-bold bg-gray-50 border rounded-xl outline-none transition-all",
                   otpError ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:border-green-600 focus:ring-2 focus:ring-green-500/20 focus:bg-white"
@@ -158,6 +195,7 @@ export function VerifyCodeForm() {
                 value={otp[i] || ''}
                 onChange={(e) => handleChange(i, e.target.value, e)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
+                onPaste={handlePaste}
               />
             ))}
           </div>

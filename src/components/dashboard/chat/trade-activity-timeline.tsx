@@ -14,8 +14,14 @@ export function TradeActivityTimeline({ inquiryId }: TradeActivityTimelineProps)
 
   const { data, isLoading, isError, refetch } = useGetActivitiesQuery(
     { inquiryId, limit: 50 },
-    { skip: !inquiryId }
+    { skip: !inquiryId, refetchOnMountOrArgChange: true }
   );
+
+  React.useEffect(() => {
+    if (inquiryId) {
+      refetch();
+    }
+  }, [inquiryId, refetch]);
 
   const activities = data?.data || [];
 

@@ -24,6 +24,7 @@ import {
   useUpdateSignaturePreferenceMutation
 } from '@/redux/features/doc-hub/doc_hub_api';
 import { SignatureModal, ActionConfirmModal } from './document-action-modals';
+import { OfferAttachmentsModal } from './modals/OfferAttachmentsModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateLocalPref } from '@/redux/features/doc-hub/signature_pref_slice';
 import { ChatContext, Message, useChat } from '@/providers/chat-provider';
@@ -53,6 +54,7 @@ export function MessageBox({ message }: { message: Message }) {
   const [selectedMedia, setSelectedMedia] = React.useState<{ url: string, type: 'image' | 'video' } | null>(null);
   const [signModalDoc, setSignModalDoc] = React.useState<any>(null);
   const [actionModalDoc, setActionModalDoc] = React.useState<{ doc: any; type: 'flag' | 'reject' } | null>(null);
+  const [showAttachmentsModal, setShowAttachmentsModal] = React.useState(false);
 
   const params = useParams();
   const threadId = params?.threadId as string;
@@ -68,6 +70,38 @@ export function MessageBox({ message }: { message: Message }) {
     { inquiryId: activeInquiryId as string },
     { skip: !activeInquiryId }
   );
+
+  const { displayText, attachments: activeAttachments } = React.useMemo(() => {
+    let text = message?.text || '';
+    let atts = Array.isArray(message?.attachments) && message.attachments.length > 0 ? [...message.attachments] : [];
+
+    if (/📎|\*\*Offer Attachments/.test(text)) {
+      const parts = text.split(/📎|\*\*Offer Attachments/);
+      text = parts[0].replace(/•\s*$/, '').trim();
+
+      if (atts.length === 0 && parts.length > 1) {
+        const rawAttText = parts.slice(1).join(' ');
+        const linkRegex = /\[(.*?)\]\((https?:\/\/[^\)]+)\)/g;
+        let match;
+        while ((match = linkRegex.exec(rawAttText)) !== null) {
+          const name = match[1];
+          const url = match[2];
+          const lowerUrl = url.toLowerCase();
+          const lowerName = name.toLowerCase();
+          let type = 'document';
+          if (/\.(jpg|jpeg|png|gif|webp|heic)$/i.test(lowerName) || /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(lowerUrl) || lowerUrl.includes('/image/upload/')) {
+            type = 'image';
+          } else if (/\.(mp4|webm|mov)$/i.test(lowerName) || /\.(mp4|webm|mov)$/i.test(lowerUrl) || lowerUrl.includes('/video/upload/')) {
+            type = 'video';
+          }
+          atts.push({ name, url, type });
+        }
+      }
+    }
+
+    text = text.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    return { displayText: text, attachments: atts };
+  }, [message]);
 
   const handleMediaClick = (attachment: any) => {
     if (attachment.type === 'image' || attachment.type === 'video') {
@@ -424,13 +458,14 @@ export function MessageBox({ message }: { message: Message }) {
               </div>
 
               {/* Handle text messages */}
-              <Typography color="inherit" variant="body1" className={`text-sm! ${position === 'right' ? 'text-white!' : 'text-black'}`}>
-                {message.text}
+              <Typography color="inherit" variant="body1" className={`text-sm! whitespace-pre-wrap ${position === 'right' ? 'text-white!' : 'text-black'}`}>
+                {displayText}
               </Typography>
-              {/* Handle attachments if they exist */}
-              {message.attachments?.length > 0 && (
-                <Stack spacing={1} style={{ position: 'relative' }}>
-                  {message.attachments.map((attachment: any, index: number) => {
+
+              {/* Inline Attachments Renderer */}
+              {activeAttachments?.length > 0 && (
+                <Stack spacing={1} style={{ position: 'relative' }} className="pt-2">
+                  {activeAttachments.map((attachment: any, index: number) => {
                     const attachmentKey = attachment.url
                       ? `${attachment.url}_${index}`
                       : `deleted_${index}_${attachment.name}`;
@@ -460,7 +495,7 @@ export function MessageBox({ message }: { message: Message }) {
 
                     const isImage = attachment.type === 'image' ||
                       (attachment.contentType && attachment.contentType.startsWith('image/')) ||
-                      /\.(jpg|jpeg|png|gif|webp|heic|jfif)$/i.test(attachment.name || '');
+                      /\.(jpg|jpeg|png|gif|webp|heic|jfif)$/i.test(attachment.name || attachment.url || '');
 
                     if (isImage) {
                       return (
@@ -475,12 +510,15 @@ export function MessageBox({ message }: { message: Message }) {
                             <div className="absolute top-1 right-1">
                               <Menu
                                 trigger={
-                                  <IconButton aria-label="Attachment options" size="sm" variant="default" className="bg-white/80 hover:bg-white border-0 shadow-sm">
+                                  <IconButton aria-label="Attachment options" size="sm" variant="default" className="bg-white/80 hover:bg-white border-0">
                                     <DotsThreeCircleVertical weight="bold" />
                                   </IconButton>
                                 }
                               >
-                                <MenuItem onClick={() => handleDeleteAttachment(attachment)}>Delete</MenuItem>
+                                <MenuItem onClick={() => {
+                                  const convId = (message as any).conversationId || activeInquiryId || threadId || '';
+                                  deleteAttachment && deleteAttachment(String(convId), String(message.id), index);
+                                }}>Delete</MenuItem>
                               </Menu>
                             </div>
                           )}
@@ -515,12 +553,15 @@ export function MessageBox({ message }: { message: Message }) {
                             <div className="absolute top-1 right-1">
                               <Menu
                                 trigger={
-                                  <IconButton aria-label="Attachment options" size="sm" variant="default" className="bg-white/80 hover:bg-white border-0 shadow-sm">
+                                  <IconButton aria-label="Attachment options" size="sm" variant="default" className="bg-white/80 hover:bg-white border-0">
                                     <DotsThreeCircleVertical weight="bold" />
                                   </IconButton>
                                 }
                               >
-                                <MenuItem onClick={() => handleDeleteAttachment(attachment)}>Delete</MenuItem>
+                                <MenuItem onClick={() => {
+                                  const convId = (message as any).conversationId || activeInquiryId || threadId || '';
+                                  deleteAttachment && deleteAttachment(String(convId), String(message.id), index);
+                                }}>Delete</MenuItem>
                               </Menu>
                             </div>
                           )}
@@ -535,7 +576,7 @@ export function MessageBox({ message }: { message: Message }) {
                           <Link href={attachment.url} target="_blank" rel="noopener">
                             {attachment.name || 'Download file'}
                           </Link>
-                          <Typography variant="caption">{formatFileSize(attachment.size)}</Typography>
+                          {attachment.size && <Typography variant="caption">{formatFileSize(attachment.size)}</Typography>}
                           {position === 'right' && (
                             <Menu
                               trigger={
@@ -544,13 +585,35 @@ export function MessageBox({ message }: { message: Message }) {
                                 </IconButton>
                               }
                             >
-                              <MenuItem onClick={() => handleDeleteAttachment(attachment)}>Delete</MenuItem>
+                              <MenuItem onClick={() => {
+                                const convId = (message as any).conversationId || activeInquiryId || threadId || '';
+                                deleteAttachment && deleteAttachment(String(convId), String(message.id), index);
+                              }}>Delete</MenuItem>
                             </Menu>
                           )}
                         </Stack>
                       </Card>
                     );
                   })}
+
+                  {/* Also offer Modal Preview Button if multiple attachments exist */}
+                  {activeAttachments.length > 1 && (
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setShowAttachmentsModal(true)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-all"
+                      >
+                        <PaperclipIcon size={14} className="text-emerald-600 shrink-0" />
+                        <span>View Offer Attachments ({activeAttachments.length} files)</span>
+                      </button>
+
+                      <OfferAttachmentsModal
+                        isOpen={showAttachmentsModal}
+                        onClose={() => setShowAttachmentsModal(false)}
+                        attachments={activeAttachments}
+                      />
+                    </div>
+                  )}
                 </Stack>
               )}
             </Stack>
@@ -566,9 +629,14 @@ export function MessageBox({ message }: { message: Message }) {
             }}
           >
             <Typography style={{ color: '#666' }} variant="caption">
-              {message.timestamp
-                ? dayjs(message.timestamp?.toDate ? message.timestamp.toDate() : message.timestamp).fromNow()
-                : 'Just now'}
+              {(() => {
+                if (!message.timestamp) return 'Just now';
+                const d = message.timestamp?.toDate ? message.timestamp.toDate() : new Date(message.timestamp);
+                if (isNaN(d.getTime())) return 'Just now';
+                const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                const relStr = dayjs(d).fromNow();
+                return `${timeStr} (${relStr})`;
+              })()}
             </Typography>
             {position === 'right' && renderStatusIndicator()}
           </Box>

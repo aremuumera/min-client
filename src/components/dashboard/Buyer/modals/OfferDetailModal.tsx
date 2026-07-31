@@ -48,12 +48,13 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
     const isShortlisted = offer.is_shortlisted;
 
     const handleShortlist = async () => {
+        const nextState = !isShortlisted;
         try {
             await shortlistOffer({
                 offerId: offer.external_id || offer.id,
-                is_shortlisted: !isShortlisted
+                is_shortlisted: nextState
             }).unwrap();
-            showAlert(isShortlisted ? 'Removed from shortlist' : 'Offer shortlisted successfully', 'success');
+            showAlert(nextState ? 'Offer shortlisted successfully' : 'Removed from shortlist', 'success');
         } catch (err: any) {
             showAlert(err?.data?.message || 'Failed to update shortlist status', 'error');
         }

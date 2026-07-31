@@ -75,7 +75,12 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
     );
   };
 
-  const companyLogo = storeProfile?.logo || supplier?.profile_picture || supplier?.logo || '/assets/logo5.png';
+  const initialLogo = storeProfile?.logo || supplier?.profile_picture || supplier?.logo || '/assets/MINMEG 4.png';
+  const [logoUrl, setLogoUrl] = React.useState(initialLogo);
+
+  React.useEffect(() => {
+    setLogoUrl(initialLogo);
+  }, [initialLogo]);
 
   return (
     <div className="w-full px-2 sm:px-0">
@@ -83,12 +88,13 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
       <div className="mt-5 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-6 md:gap-8 items-start">
         {/* Company logo */}
         <div className="w-full sm:w-auto flex flex-col items-center sm:items-start shrink-0">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm flex items-center justify-center bg-gray-50">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm flex items-center justify-center bg-white p-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={companyLogo}
-              alt={companyName || 'Company logo'}
-              className="w-full h-full object-cover"
+              src={logoUrl}
+              alt={companyName || 'Minmeg logo'}
+              onError={() => setLogoUrl('/assets/MINMEG 4.png')}
+              className="w-full h-full object-contain"
             />
           </div>
           {companyName && (

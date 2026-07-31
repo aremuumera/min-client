@@ -29,8 +29,8 @@ interface ChatContextType {
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
-  activeTab: 'chat' | 'vault' | 'activity';
-  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity'>>;
+  activeTab: 'chat' | 'vault' | 'activity' | 'inspections';
+  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity' | 'inspections'>>;
   loading: boolean;
   loadingMessages: boolean;
   loadingAttachments: boolean;
@@ -93,7 +93,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeInquiryId, setActiveInquiryId] = useState<string | null>(null);
   const [roomInquiries, setRoomInquiries] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity' | 'inspections'>('chat');
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -216,10 +216,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (isTradeType) {
         if (!activeInquiryId) {
           setMessages(prev => prev.length > 0 ? [] : prev);
+          setLoadingMessages(false);
           return;
         }
 
-        if (!user) return;
+        if (!user) {
+          setLoadingMessages(false);
+          return;
+        }
 
         setLoadingMessages(true);
         unsubscribe = customerTradeChatService.getSpokeMessages(
@@ -240,11 +244,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           (error: any) => {
             console.error('Error listening to messages:', error);
             toast.error('Failed to sync messages. Real-time updates may be delayed.');
+            setLoadingMessages(false);
           }
         );
       } else {
+        setLoadingMessages(true);
         unsubscribe = chatService.getMessages(conversationId, (messageList: Message[]) => {
           setMessages(messageList);
+          setLoadingMessages(false);
 
           if (effectiveUserId && activeConversation.unreadCount > 0) {
             chatService.markConversationAsRead(conversationId, effectiveUserId);
@@ -253,6 +260,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } else {
       setMessages(prev => prev.length > 0 ? [] : prev);
+      setLoadingMessages(false);
     }
 
     return () => {
@@ -658,11 +666,13 @@ New Flow for for all roles to Admin
         }
         // Otherwise synthesize the temporary conversation
         setActiveConversation(prev => {
+          const activeInq = roomInquiries.find(i => String(i.id).trim().toLowerCase() === String(activeInquiryId).trim().toLowerCase());
+          const resolvedSpoke = customerTradeChatService.getSpokeByContext(effectiveUserId, metadata, activeInq, userRole)
           if (prev && String(prev.conversationId).trim().toLowerCase() === String(threadId).trim().toLowerCase()) {
             return {
               ...prev,
               itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
-              userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
+              userSpoke: resolvedSpoke,
               metadata: metadata
             };
           }
@@ -675,7 +685,7 @@ New Flow for for all roles to Admin
             otherCompanyName: 'Platform Admin',
             itemTitle: metadata.mineral_tag?.replace(/_/g, ' ') || 'Trade Inquiry',
             itemType: 'product',
-            userSpoke: customerTradeChatService.getSpokeByContext(effectiveUserId, metadata),
+            userSpoke: resolvedSpoke,
             metadata: metadata
           };
         });

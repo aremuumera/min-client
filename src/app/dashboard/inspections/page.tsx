@@ -4,6 +4,8 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useGetInspectorAssignmentsQuery } from '@/redux/features/inspector/inspector_api';
 import AssignmentsTable from '@/components/dashboard/inspections/assignments-table';
+import MerchantInspectionsHub from '@/components/dashboard/inspections/MerchantInspectionsHub';
+import { useAppSelector } from '@/redux/hooks';
 import { Grid } from '@/components/ui/grid';
 import { Typography } from '@/components/ui/typography';
 import { Box } from '@/components/ui/box';
@@ -12,6 +14,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { List, Calendar, Search, Filter } from 'lucide-react';
 
 export default function MyAssignmentsPage() {
+    const { user } = useAppSelector((state: any) => state.auth || {});
+    const isInspector = user?.role === 'inspector' || user?.user_type === 'inspector';
+
+    // If logged-in user is a Merchant (Buyer / Supplier), render Merchant Inspections Hub
+    if (!isInspector) {
+        return <MerchantInspectionsHub />;
+    }
+
     const { data: assignmentsRes, isLoading, isError } = useGetInspectorAssignmentsQuery();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');

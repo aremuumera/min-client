@@ -90,9 +90,32 @@ export function InspectorActionPanel({ thread }: InspectorActionPanelProps) {
         );
     }
 
-    if (status === 'ACCEPTED' || status === 'SITE_VISIT' || status === 'COMPLETED') {
-        return null; // Don't block the chat after acceptance
+    if (status === 'COMPLETED') {
+        const roundNumber = activeCycle.round_number || thread.metadata?.round_number || 1;
+        return (
+            <Box className="p-3 sm:p-4 border-t border-emerald-100 bg-emerald-50/50">
+                <div className="bg-emerald-600 text-white p-3 rounded-xl flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2">
+                        <CheckCircleIcon size={18} weight="fill" />
+                        <span className="text-xs font-bold uppercase tracking-wider">
+                            Inspection Report Submitted (Round {roundNumber})
+                        </span>
+                    </div>
+                    <span className="text-[10px] font-bold bg-emerald-700 px-2 py-0.5 rounded text-emerald-100 uppercase">
+                        Awaiting Admin Release
+                    </span>
+                </div>
+            </Box>
+        );
     }
+
+    if (status === 'ACCEPTED' || status === 'SITE_VISIT') {
+        return null; // Don't block the chat during active inspection execution
+    }
+
+    const roundNumber = activeCycle.round_number || thread.metadata?.round_number || 1;
+    const reinspectionReason = activeCycle.reinspection_reason || thread.metadata?.reinspection_reason;
+    const isReinspection = roundNumber > 1 || Boolean(reinspectionReason);
 
     return (
         <Box className="p-3 sm:p-6 border-t border-emerald-100 bg-emerald-50/30">
@@ -102,11 +125,17 @@ export function InspectorActionPanel({ thread }: InspectorActionPanelProps) {
                         <div className="flex items-center gap-2">
                             <MagnifyingGlassIcon size={16} weight="fill" className="shrink-0" />
                             <Typography variant="subtitle2" className="font-bold uppercase tracking-wider text-[10px] text-white!">
-                                New Inspection Assignment
+                                {isReinspection ? `Re-Inspection Assignment (Round ${roundNumber})` : 'New Inspection Assignment'}
                             </Typography>
                         </div>
                     </Box>
                     <Box className="p-4 sm:p-6 space-y-4 bg-white">
+                        {reinspectionReason && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 font-medium">
+                                <strong className="block text-amber-900 mb-0.5">Re-Inspection Request Scope:</strong>
+                                &quot;{reinspectionReason}&quot;
+                            </div>
+                        )}
                         <div className="flex justify-between items-start gap-4">
                             <Stack spacing={0.5} className="flex-1">
                                 <Typography variant="subtitle1" className="font-black text-gray-900 leading-tight break-words">

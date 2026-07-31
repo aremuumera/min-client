@@ -13,26 +13,14 @@ import {
   MdEdit as EditIcon,
   MdShare as ShareIcon,
 } from 'react-icons/md';
-// import {
-//   FaFacebook as Facebook,
-//   FaLinkedin as LinkedIn,
-//   FaTwitter as Twitter,
-//   FaWhatsapp as WhatsApp,
-// } from 'react-icons/fa';
 
-
-// import { IconButton } from '@/components/ui/icon-button';
-// import { Modal } from '@/components/ui/modal';
-// import { Tooltip } from '@/components/ui/tooltip';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 // import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { IoIosArrowBack } from 'react-icons/io';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { Country, State } from "country-state-city";
-import { Option } from '@/components/core/option';
 
-import { mockData } from '../ListedRfqs';
+
 import RfqInputEditModal from './InpputEditModal';
 import { MoqUnits as Moq } from '@/lib/marketplace-data';
 import { paymentTerms, shippingTerms as shippingTermsFields } from '@/components/dashboard/Supplier/CreateProducts/paymentTerms';

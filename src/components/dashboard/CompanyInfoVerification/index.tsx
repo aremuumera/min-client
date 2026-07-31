@@ -707,7 +707,7 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
 
         // Set selected state and load LGAs for Nigeria
         if (country.isoCode === 'NG' && stateValue) {
-          const state = nigerianStates.find((s: any) => s.value === stateValue);
+          const state = nigerianStates.find((s: any) => s.value === stateValue || s.label.toLowerCase() === stateValue.toLowerCase());
           if (state) {
             setSelectedState(state);
             setLgas((nigerianLgas as any)[state.value] || []);
@@ -716,6 +716,95 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
       }
     }
   }, [verificationData, allCountries, nigerianStates, nigerianLgas]);
+
+  // Reactive Auto-Synchronizer for Country, State, and LGA options
+  useEffect(() => {
+    if (!formData.country) {
+      setSelectedCountry(null);
+      setSelectedState(null);
+      setStates([]);
+      setLgas([]);
+      return;
+    }
+
+    // 1. Resolve Country
+    const country = allCountries.find(
+      (c) =>
+        c.isoCode === formData.country ||
+        c.name.toLowerCase() === formData.country.toLowerCase()
+    );
+
+    if (country) {
+      if (selectedCountry?.isoCode !== country.isoCode) {
+        setSelectedCountry(country);
+      }
+
+      // 2. Load States for Country
+      let availableStates: any[] = [];
+      if (country.isoCode === 'NG') {
+        availableStates = nigerianStates || [];
+      } else {
+        const countryStates = State.getStatesOfCountry(country.isoCode) || [];
+        availableStates = countryStates.map((s) => ({
+          ...s,
+          label: s.name,
+          value: s.isoCode,
+        }));
+      }
+
+      setStates((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(availableStates)) {
+          return availableStates;
+        }
+        return prev;
+      });
+
+      // 3. Auto-Select State if formData.state is set
+      if (formData.state && availableStates.length > 0) {
+        const cleanState = formData.state.trim().toLowerCase().replace(/ state$/i, '');
+        const matchedState = availableStates.find((s: any) => {
+          const val = String(s.value || '').toLowerCase();
+          const lbl = String(s.label || s.name || '').toLowerCase().replace(/ state$/i, '');
+          return val === cleanState || lbl === cleanState;
+        });
+
+        if (matchedState) {
+          setSelectedState(matchedState);
+
+          // Auto-normalize formData.state to option value (e.g., "LA" instead of "Lagos")
+          if (formData.state !== matchedState.value) {
+            setFormData((prev) => ({ ...prev, state: matchedState.value }));
+          }
+
+          // 4. Auto-Select LGA if Nigeria
+          if (country.isoCode === 'NG') {
+            const availableLgas = (nigerianLgas as any)[matchedState.value] || [];
+            setLgas((prev) => {
+              if (JSON.stringify(prev) !== JSON.stringify(availableLgas)) {
+                return availableLgas;
+              }
+              return prev;
+            });
+
+            if (formData.lga && availableLgas.length > 0) {
+              const cleanLga = formData.lga.trim().toLowerCase();
+              const matchedLga = availableLgas.find((l: any) => {
+                const lgaVal = typeof l === 'string' ? l.toLowerCase() : String(l.value || l.label || '').toLowerCase();
+                return lgaVal === cleanLga;
+              });
+
+              if (matchedLga) {
+                const targetLgaVal = typeof matchedLga === 'string' ? matchedLga : matchedLga.value || matchedLga.label;
+                if (formData.lga !== targetLgaVal) {
+                  setFormData((prev) => ({ ...prev, lga: targetLgaVal }));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, [formData.country, formData.state, formData.lga, allCountries, nigerianStates, nigerianLgas]);
 
   const handleCountryChange = (e: any) => {
     const countryCode = e.target.value;

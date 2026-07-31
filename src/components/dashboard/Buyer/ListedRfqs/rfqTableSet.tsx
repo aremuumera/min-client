@@ -49,7 +49,7 @@ const RfqDataTable = ({ columns = [], rows = [] }: any) => {
 
 
   return (
-    <div className="shadow-md rounded-lg bg-white overflow-x-auto">
+    <div className="bg-white border-0 overflow-x-auto">
       <Table>
         {/* Table Head */}
         <TableHeader>

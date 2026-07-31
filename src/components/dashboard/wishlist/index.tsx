@@ -131,7 +131,7 @@ const SavedItemsDashboard = () => {
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,250px)] gap-4 sm:gap-5"
                 >
                   {products.map((product: any) => (
                     <motion.div variants={itemVariants} key={product.id} className="min-w-0">
@@ -159,7 +159,7 @@ const SavedItemsDashboard = () => {
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,250px)] gap-4 sm:gap-5"
                 >
                   {rfqs.map((rfq: any) => (
                     <motion.div variants={itemVariants} key={rfq.id} className="min-w-0">

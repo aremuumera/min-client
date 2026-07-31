@@ -46,12 +46,29 @@ export function TradeDocumentCard({ document, position, currentUserRole, onSign,
 
     // Check if the current user is an intended recipient
     const isTargetRecipient = React.useMemo(() => {
-        if (!currentUserRole || !document.target_roles) return true; // Fallback to showing if info missing
-        const roles = Array.isArray(document.target_roles) ? document.target_roles : [document.target_roles];
-        return roles.some(r => r.toLowerCase() === currentUserRole.toLowerCase());
-    }, [currentUserRole, document.target_roles]);
+        if (!currentUserRole || !document?.target_roles) return false;
+        const roles = (Array.isArray(document.target_roles) ? document.target_roles : [document.target_roles]).map(r => String(r).toLowerCase());
+        const userRole = String(currentUserRole).toLowerCase();
 
-    const canPerformAction = (document.status === 'sent' || document.status === 'pending_review') && isTargetRecipient;
+        // Direct match
+        if (roles.includes(userRole)) return true;
+
+        // Dual-role user matching (buyer_supplier or both)
+        if (userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin_buyer' || userRole === 'admin_supplier') {
+            if (roles.includes('buyer') || roles.includes('supplier')) {
+                return true;
+            }
+        }
+
+        return false;
+    }, [currentUserRole, document]);
+
+    const canPerformAction = (
+        document.status === 'sent' ||
+        document.status === 'pending_review' ||
+        document.status === 'awaiting_action' ||
+        document.status === 'pending'
+    ) && isTargetRecipient;
 
     console.log('document', document);
 

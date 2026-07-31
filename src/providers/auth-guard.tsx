@@ -193,12 +193,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       paths.dashboard.rfqs.list, // /dashboard/rfq-list
       paths.dashboard.rfqs.create, // /dashboard/rfq-list/create
       '/dashboard/rfq-list/update',
-      '/dashboard/rfq',
+      '/dashboard/rfq/offers',
       '/dashboard/my-trade-inquiries'
     ];
 
     const inspectorOnlyRoutes = [
-      '/dashboard/inspections'
+      '/dashboard/inspections/workbench',
+      '/dashboard/inspections/services',
+      '/dashboard/inspections/analytics'
     ];
 
     const isSupplierRoute = supplierOnlyRoutes.some(route => pathname.startsWith(route));

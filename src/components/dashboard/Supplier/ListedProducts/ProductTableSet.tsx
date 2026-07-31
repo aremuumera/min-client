@@ -48,7 +48,7 @@ const ProductTableSet = ({ columns = [], rows = [] }: any) => {
 
 
   return (
-    <div className="shadow-[0px_4px_6px_rgba(0,0,0,0.1)] rounded-lg bg-white overflow-x-auto">
+    <div className="bg-white border-0 overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>

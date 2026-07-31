@@ -82,6 +82,13 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
       return;
     }
 
+    const userRole = (user?.role || '').toLowerCase();
+    const canSubmitInquiry = userRole === 'buyer' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin' || userRole === 'super_admin' || userRole === 'user';
+    if (isAuth && !canSubmitInquiry) {
+      showAlert('You are not authorized to submit an inquiry, Kindly contact support.', 'warning');
+      return;
+    }
+
     if (!isAuth) {
       setShowLoginModal(true);
     } else {

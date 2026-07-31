@@ -144,24 +144,23 @@ export const dashboardConfig: DashboardConfig = {
       ],
     },
 
-    // section inspections (Inspector)
+    // section inspections
     {
       key: "inspections",
       title: "INSPECTIONS",
       items: [
-        {
-          key: "inspections:list",
-          title: "Assignments",
-          href: paths.dashboard.inspections.list,
-          icon: "receipt-long",
-          permission: "inspectors",
-        },
         {
           key: "inspections:analytics",
           title: "Analytics",
           href: paths.dashboard.inspections.analytics,
           icon: "chart-pie",
           permission: "inspectors",
+        },
+        {
+          key: "merchant-inspections",
+          title: "Inspections Hub",
+          href: "/dashboard/inspections",
+          icon: "receipt-long",
         },
       ],
     },

@@ -153,33 +153,54 @@ export const customerTradeChatService = {
    * role in a specific trade (Inquirer = admin_buyer, Owner = admin_supplier).
    * This is the correct method to use for trade chat operations.
    */
-  getSpokeByContext(userId: string, tradeMetadata: any): UserSpokeType | null {
+
+
+
+  getSpokeByContext(userId: string, tradeMetadata: any, activeInquiry?: any, userRole?: string): UserSpokeType | null {
     if (this.isSameId(userId, tradeMetadata?.inspector_id) || this.isSameId(userId, tradeMetadata?.matched_inspector_id)) {
       return "admin_inspector";
     }
 
-    if (this.isSameId(userId, tradeMetadata?.supplier_id) || this.isSameId(userId, tradeMetadata?.matched_supplier_id)) {
+    if (
+      this.isSameId(userId, tradeMetadata?.supplier_id) ||
+      this.isSameId(userId, tradeMetadata?.matched_supplier_id) ||
+      this.isSameId(userId, activeInquiry?.supplier_id)
+    ) {
       return "admin_supplier";
     }
 
-    if (this.isSameId(userId, tradeMetadata?.buyer_id) || this.isSameId(userId, tradeMetadata?.user_id)) {
+    if (
+      this.isSameId(userId, tradeMetadata?.buyer_id) ||
+      this.isSameId(userId, tradeMetadata?.user_id) ||
+      this.isSameId(userId, activeInquiry?.buyer_id)
+    ) {
       return "admin_buyer";
     }
 
     // 2. Access Bridging for Team Members (Participants list check)
-    const participants = (tradeMetadata?.participant_ids || []);
+    const participants = tradeMetadata?.participant_ids || [];
     if (participants.some((pId: string) => this.isSameId(userId, pId))) {
       return "admin_supplier";
     }
 
-    // Default: Deny access if not found in metadata or participants
-    console.warn(
-      "[TradeChat] Access denied for user",
-      userId,
-      "in room metadata",
-      tradeMetadata,
-    );
-    return null;
+    // 3. RFQ context fallback: If room is an RFQ, non-buyer user is interacting as a supplier (admin_supplier)
+    const entityType = tradeMetadata?.entity_type || tradeMetadata?.type;
+    if (entityType === "rfq") {
+      if (!this.isSameId(userId, tradeMetadata?.buyer_id)) {
+        return "admin_supplier";
+      }
+      return "admin_buyer";
+    }
+
+    // 4. Role-based fallback
+    if (userRole === "supplier" || userRole === "both" || userRole === "buyer_supplier") {
+      return "admin_supplier";
+    }
+    if (userRole === "inspector") {
+      return "admin_inspector";
+    }
+
+    return "admin_buyer";
   },
 
   /**
@@ -229,7 +250,10 @@ export const customerTradeChatService = {
           if (roomEntityType === "rfq" && isSupplierRole) {
             inquiries = inquiries.filter(
               (trade: any) =>
-                String(trade.supplier_id || "") === uId,
+                this.isSameId(trade.supplier_id, userId) ||
+                this.isSameId(trade.matched_supplier_id, userId) ||
+                this.isSameId(trade.buyer_id, userId) ||
+                this.isSameId(trade.user_id, userId)
             );
           }
 
@@ -237,9 +261,8 @@ export const customerTradeChatService = {
           if (userRole === "inspector") {
             inquiries = inquiries.filter(
               (trade: any) =>
-                String(
-                  trade.inspector_id || trade.matched_inspector_id || "",
-                ) === uId,
+                this.isSameId(trade.inspector_id, userId) ||
+                this.isSameId(trade.matched_inspector_id, userId)
             );
           }
           // For product/business rooms OR buyer role → no filtering, show all
@@ -275,7 +298,7 @@ export const customerTradeChatService = {
         inquiryId,
         spoke,
       });
-      return () => {};
+      return () => { };
     }
     const id = this._sanitizeId(tradeId);
     const messagesRef = collection(
@@ -462,17 +485,20 @@ export const customerTradeChatService = {
       );
       const q = query(
         messagesRef,
-        where("isRead", "==", false),
-        where("sender_id", "!=", uId),
+        where("isRead", "==", false)
       );
       const snapshot = await getDocs(q);
 
       const batch = writeBatch(db);
+      let hasUpdates = false;
       snapshot.docs.forEach((d) => {
-        batch.update(d.ref, { isRead: true, readAt: serverTimestamp() });
+        if (d.data()?.sender_id !== uId) {
+          batch.update(d.ref, { isRead: true, readAt: serverTimestamp() });
+          hasUpdates = true;
+        }
       });
 
-      if (snapshot.docs.length > 0) {
+      if (hasUpdates) {
         await batch.commit();
       }
     } catch (error) {

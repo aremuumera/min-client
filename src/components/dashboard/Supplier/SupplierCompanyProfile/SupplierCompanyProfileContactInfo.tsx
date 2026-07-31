@@ -17,8 +17,7 @@ const contactSchema = z.object({
   instagram: z.string().optional().nullable().or(z.literal('')),
   xSocial: z.string().optional().nullable().or(z.literal('')),
   zipCode: z.string().optional().nullable().or(z.literal('')),
-  streetNo: z.string().min(1, 'Street number is required'),
-  fullAddress: z.string().min(1, 'Full address is required'),
+  streetNo: z.string().optional().nullable().or(z.literal('')),
 });
 
 const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeStep, handleBack }: {
@@ -188,22 +187,6 @@ const SupplierCompanyProfileContactInfo = ({ handleNext, setActiveStep, activeSt
                 helperText={errors.streetNo}
               />
             </div>
-          </div>
-
-          {/* Full Address */}
-          <div className="pt-[20px]">
-            <TextField
-              label="Full Address *"
-              name="fullAddress"
-              fullWidth
-              multiline
-              placeholder="Enter your Company Full Address"
-              rows={4}
-              value={supplierMediaInfo?.fullAddress || ""}
-              onChange={handleInputChange}
-              error={!!errors.fullAddress}
-              helperText={errors.fullAddress}
-            />
           </div>
         </div>
 

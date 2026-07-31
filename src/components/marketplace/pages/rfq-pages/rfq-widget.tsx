@@ -130,9 +130,17 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
 
     if (!isAuth) {
       setShowLoginModalForSave(true);
-    } else {
-      setShowQuoteModal(true);
+      return;
     }
+
+    const userRole = (user?.role || '').toLowerCase();
+    const canSubmitOffer = userRole === 'supplier' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin';
+    if (!canSubmitOffer) {
+      showAlert('You are not authorized to submit an offer, Kindly contact support', 'error');
+      return;
+    }
+
+    setShowQuoteModal(true);
   };
 
   return (

@@ -22,6 +22,7 @@ import {
     DialogContent,
     DialogTitle,
 } from "@/components/ui";
+import { getErrorMessage } from '@/utils/helper';
 
 const DAYS_OF_WEEK = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const STATUS_OPTIONS = ['AVAILABLE', 'AWAY', 'ON_LEAVE', 'AT_CAPACITY'] as const;
@@ -125,8 +126,7 @@ export default function OperationalLimitsPage() {
             toast.success('Operational limits updated');
         } catch (error: any) {
             console.error("Save error:", error);
-            const errorMsg = error?.data?.errors?.join('\n') || error?.data?.message || 'Failed to update limits.';
-            toast.error(errorMsg);
+            toast.error(getErrorMessage(error, 'Failed to update operational limits.'));
         }
     };
 

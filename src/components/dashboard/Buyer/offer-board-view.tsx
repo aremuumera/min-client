@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { MdCompareArrows } from 'react-icons/md';
 import SupplierOfferCard from './SupplierOfferCard';
-// import OfferComparisonModal from './modals/OfferComparisonModal';
+import OfferComparisonModal from './modals/OfferComparisonModal';
 
 import { Select } from '@/components/ui/select';
 import { MenuItem } from '@/components/ui/menu';
@@ -73,21 +73,23 @@ const OfferBoardView = () => {
     }, []);
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-semibold">
-                    Offer Management Board
-                </h1>
+        <div className="p-4 sm:p-4 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                        Offer Management Board
+                    </h1>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">Evaluate and compare submitted supplier offers.</p>
+                </div>
 
                 {selectedOffersForProps.length > 1 && (
-                    <Button
-                        variant="contained"
-                        color="primary"
+                    <button
                         onClick={() => setIsCompareModalOpen(true)}
-                        className="rounded-full flex items-center"
+                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white font-bold px-5 py-3 rounded-full flex items-center justify-center gap-2 text-xs transition-all shadow-md shrink-0 whitespace-nowrap"
                     >
-                        <MdCompareArrows className="mr-2" /> Compare Selected ({selectedOffersForProps.length})
-                    </Button>
+                        <MdCompareArrows size={18} />
+                        <span>Compare Selected ({selectedOffersForProps.length})</span>
+                    </button>
                 )}
             </div>
 
@@ -212,17 +214,35 @@ const OfferBoardView = () => {
                 </div>
             )}
 
-            {/* <OfferComparisonModal 
-                open={isCompareModalOpen}
+            <OfferComparisonModal
+                isOpen={isCompareModalOpen}
                 onClose={() => setIsCompareModalOpen(false)}
-                offers={offers.filter((o: any) => selectedOffersForProps.includes(o.external_id))}
-            /> */}
+                offers={offers.filter((o: any) => selectedOffersForProps.includes(o.external_id) || selectedOffersForProps.includes(o.id))}
+                rfq={selectedRfq}
+            />
 
             <OfferDetailModal
                 isOpen={isDetailModalOpen}
                 onClose={() => setIsDetailModalOpen(false)}
                 offer={selectedOfferForDetail}
             />
+
+            {/* Floating Mobile Comparison Bar */}
+            {selectedOffersForProps.length > 1 && (
+                <div className="sm:hidden fixed bottom-4 left-4 right-4 z-40 bg-white/95 backdrop-blur-md border border-gray-200 p-3.5 rounded-2xl shadow-xl flex items-center justify-between animate-in slide-in-from-bottom duration-300">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-900">{selectedOffersForProps.length} Offers Selected</span>
+                        <span className="text-[10px] text-gray-500 font-medium">Tap to view side-by-side specs</span>
+                    </div>
+                    <button
+                        onClick={() => setIsCompareModalOpen(true)}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs shadow-sm active:scale-[0.98] transition-all"
+                    >
+                        <MdCompareArrows size={16} />
+                        <span>Compare Now</span>
+                    </button>
+                </div>
+            )}
 
             <RfqDetailModal
                 isOpen={isRfqDetailModalOpen}

@@ -189,11 +189,9 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
             .filter(section => {
                 // Remove section if it has no items
                 if (section.items.length === 0) return false;
-
-                // Explicitly block Inspections for non-inspectors/admin
-                if (section.key === 'inspections' && !isInspectorRole) {
-                    return false;
-                }
+                //  if (section.key === 'inspections' && !isInspectorRole) {
+                //     return false;
+                // }
 
                 // Explicitly block Services for non-inspectors/admin
                 if (section.key === 'services' && !isInspectorRole) {
