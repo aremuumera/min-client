@@ -82,6 +82,7 @@ export const paths = {
     becomeASupplier: "/dashboard/become-a-supplier",
     companyInfoVerification: "/dashboard/company-info-verification",
     invoices: "/dashboard/invoices",
+    wallet: "/dashboard/wallet",
     settings: {
       account: "/dashboard/settings/account",
       notifications: "/dashboard/settings/notifications",
@@ -187,6 +188,7 @@ export const routeAccess = {
   // Routes that require BOTH auth AND business verification
   verified: [
     paths.dashboard.invoices,
+    paths.dashboard.wallet,
     // paths.dashboard.invoices.concat('/:invoiceId'), // Can't easily concat string to string[] unless I change logic. keeping simple for now.
     // products
     paths.dashboard.products.list,

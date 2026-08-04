@@ -120,7 +120,14 @@ function NavItem({
                     <Icon size={20} strokeWidth={active ? 2.5 : 2} />
                 </div>
             )}
-            <span className="grow text-sm">{item.title}</span>
+            <div className="grow flex items-center justify-between min-w-0 gap-1">
+                <span className="text-sm truncate">{item.title}</span>
+                {item.badge && (
+                    <span className="shrink-0 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                        {item.badge}
+                    </span>
+                )}
+            </div>
             {item.external && <ExternalLink size={14} className="opacity-50" />}
             {hasChildren && (
                 <div className={cn("transition-transform duration-200", isOpen && "rotate-180")}>

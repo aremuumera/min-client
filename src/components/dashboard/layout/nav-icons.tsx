@@ -27,6 +27,7 @@ import {
   UserPlus,
   Sparkles,
   Search,
+  Wallet,
 } from 'lucide-react';
 
 export const icons = {
@@ -69,6 +70,7 @@ export const icons = {
   'become-supplier': UserPlus,
   sparkles: Sparkles,
   search: Search,
+  wallet: Wallet,
 };
 
 export type IconName = keyof typeof icons;

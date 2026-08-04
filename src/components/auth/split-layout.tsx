@@ -14,24 +14,24 @@ interface SplitLayoutProps {
 
 const slides = [
   {
-    image: '/assets/im1.jpg', // Assuming these are in public/assets
-    title: 'Welcome to MinMeg',
-    description: 'Explore, Buy, and Sell Minerals with MinMeg'
+    image: '/assets/im1.jpg',
+    title: 'Verified Mineral Infrastructure',
+    description: 'The trade infrastructure for verified, traceable African minerals and gemstones from mine to market.'
   },
   {
     image: '/assets/im5.jpg',
-    title: 'Secured Escrow Services',
-    description: 'Safeguard your transactions with trusted escrow services for peace of mind.'
+    title: 'Digital Product Passports',
+    description: 'Unalterable origin proof, accredited chemical lab assays, and OECD compliance records for every mineral lot.'
   },
   {
     image: '/assets/im1.jpg',
-    title: 'Real-time Tracking',
-    description: 'Track your mineral shipments and product status in real-time, from source to destination.'
+    title: 'Mine-to-Port GPS Telemetry',
+    description: 'Track freight continuously from African mine sites to ocean shipping vessels with live GPS and AIS tracking.'
   },
   {
     image: '/assets/im4.jpg',
-    title: 'Digital Payments',
-    description: 'Seamless and secure digital payment solutions for your mineral transactions.'
+    title: 'Role-Aware Trade Execution',
+    description: 'Encrypted trade rooms, structured document templates, electronic signatures, and milestone verification.'
   }
 ];
 

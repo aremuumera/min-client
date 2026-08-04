@@ -17,6 +17,7 @@ import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatTradeStatusLabel } from '@/config/trade-stepper-config';
 
 const typeColorMap: Record<string, string> = {
   product: 'bg-blue-50 text-blue-600 border-blue-100',
@@ -190,22 +191,25 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
           </Typography>
 
           {/* Row 4: Category Tag + Status Badge (Left) | Timestamp (Right) */}
-          <div className="flex items-center justify-between gap-1.5 min-w-0 pt-0.5">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2 min-w-0 pt-0.5">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
               <span className={`text-[8px] font-bold uppercase px-1 py-0.5 rounded border shrink-0 ${typeColorMap[itemType] || typeColorMap.product}`}>
                 {itemType}
               </span>
               {displayStatus && (
-                <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border leading-none shrink-0
-                  ${displayStatus === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                    displayStatus === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
-                      'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                  {displayStatus}
+                <span
+                  title={formatTradeStatusLabel(displayStatus)}
+                  className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border leading-none shrink min-w-0 truncate max-w-[120px]
+                  ${String(displayStatus).toLowerCase().includes('pending') ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                    String(displayStatus).toLowerCase().includes('reject') || String(displayStatus).toLowerCase().includes('cancel') ? 'bg-red-50 text-red-600 border-red-100' :
+                      'bg-emerald-50 text-emerald-600 border-emerald-100'}`}
+                >
+                  {formatTradeStatusLabel(displayStatus)}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1 shrink-0 ml-auto">
               <Typography color="text.secondary" className="text-[10px] whitespace-nowrap" variant="caption">
                 {formattedTime}
               </Typography>

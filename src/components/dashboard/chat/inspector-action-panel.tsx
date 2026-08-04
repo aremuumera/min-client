@@ -34,8 +34,7 @@ export function InspectorActionPanel({ thread }: InspectorActionPanelProps) {
         try {
             await updateStatus({
                 id: assignmentId,
-                status: 'ACCEPTED',
-                notes: 'Accepted via chat dashboard.'
+                status: 'ACCEPTED'
             }).unwrap();
             toast.success("Assignment accepted successfully");
         } catch (error: any) {

@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
+import { TradeStatusStepper } from './trade-status-stepper';
 import { ActionPanel } from './action-panel';
 import { InspectorActionPanel } from './inspector-action-panel';
 import { TradeInspectionsTab } from './trade-inspections-tab';
@@ -154,6 +155,15 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         <ThreadToolbar thread={thread} />
       </div>
 
+      {/* Trade Status Stepper */}
+      {thread && (
+        <TradeStatusStepper
+          inquiryId={activeInquiryId || thread?.metadata?.inquiry_id || threadId}
+          itemType={threadType || thread?.itemType || 'product'}
+          currentStatus={thread?.metadata?.status}
+        />
+      )}
+
       {/* Inquiry Sub-Tabs (Cycles) */}
       {roomInquiries && roomInquiries.length > 1 && (
         <div className="flex-none flex bg-gray-50 border-b border-gray-200 px-2 sm:px-4 pt-2 gap-2 overflow-x-auto no-scrollbar">
@@ -188,10 +198,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       )}
 
       {/* Main Mode Tabs */}
-      <div className="flex bg-white border-b border-gray-100 flex-none px-3 sm:px-6 pt-2 select-none shadow-sm z-10 relative">
+      <div className="flex items-center bg-white border-b border-gray-200 flex-none px-2 sm:px-6 pt-1 select-none z-10 relative overflow-x-auto no-scrollbar flex-nowrap gap-1">
         <button
           onClick={() => setActiveTab('chat')}
-          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all ${activeTab === 'chat'
+          className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${activeTab === 'chat'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
             : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
             }`}
@@ -200,7 +210,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         </button>
         <button
           onClick={() => setActiveTab('vault')}
-          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'vault'
+          className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'vault'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
             : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
             }`}
@@ -209,7 +219,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         </button>
         <button
           onClick={() => setActiveTab('inspections')}
-          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'inspections'
+          className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'inspections'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
             : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
             }`}
@@ -218,7 +228,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         </button>
         <button
           onClick={() => setActiveTab('activity')}
-          className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'activity'
+          className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'activity'
             ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
             : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
             }`}

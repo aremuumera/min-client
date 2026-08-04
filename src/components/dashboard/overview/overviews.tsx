@@ -83,7 +83,7 @@ export function Overviews() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Hero & Greeting */}
                     <div className="lg:col-span-8 space-y-2">
-                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+                        <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
                             Welcome back, {user?.firstName} 👋
                         </h2>
                         <p className="text-gray-500 font-medium">

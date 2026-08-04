@@ -454,6 +454,14 @@ export function MessageBox({ message }: { message: Message }) {
                   {isSystemOrAdmin
                     ? `${TRADE_DESK_IDENTITY.DISPLAY_NAME} - (${TRADE_DESK_IDENTITY.COMPANY_NAME})`
                     : `${rawDisplayName} - (${message?.senderCompanyName || message?.sender_company_name || 'Individual'})`}
+
+                  {/* (() => {
+                        const company = message?.senderCompanyName || message?.sender_company_name;
+                        if (!company || company.toLowerCase() === rawDisplayName.toLowerCase()) {
+                          return rawDisplayName;
+                        }
+                        return `${rawDisplayName} - (${company})`;
+                      })()} */}
                 </Typography>
               </div>
 

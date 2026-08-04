@@ -19,7 +19,7 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
   const params = useParams();
   const threadId = params?.threadId as string;
 
-  console.log('params in chat', params);
+  // console.log('params in chat', params);
   const {
     conversations,
     activeConversation,
@@ -54,6 +54,13 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
       }
     }
   }, [threadId, conversations, activeConversation?.conversationId, setActiveConversation]);
+
+  // Auto-open mobile sidebar on mobile if no active thread is selected
+  useEffect(() => {
+    if (mdDown && !threadId) {
+      setOpenMobileSidebar(true);
+    }
+  }, [mdDown, threadId, setOpenMobileSidebar]);
 
   // Handle conversation selection
   const handleContactSelect = useCallback(
@@ -118,11 +125,11 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
           threads={conversations}
         />
         <Box className="flex flex-[1_1_auto] flex-col overflow-hidden">
-          <Box className="border-b border-neutral-200 flex flex-[0_0_auto]">
+          {/* <Box className="border-b border-neutral-200 flex flex-[0_0_auto]">
             <IconButton onClick={handleSidebarToggle} aria-label='Toggle Sidebar'>
               <ListIcon />
             </IconButton>
-          </Box>
+          </Box> */}
           {children}
         </Box>
       </Box>

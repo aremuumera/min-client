@@ -2,10 +2,8 @@
 
 import * as React from 'react';
 import {
-  Avatar,
   IconButton,
   Stack,
-  Input,
   Tooltip,
   CircularProgress
 } from '@/components/ui';
@@ -13,10 +11,8 @@ import { toast } from 'sonner';
 
 import { Paperclip as PaperclipIcon } from '@phosphor-icons/react/dist/ssr/Paperclip';
 import { PaperPlaneTilt as PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr/PaperPlaneTilt';
-import { useSelector } from 'react-redux';
 
 import { ChatContext } from '@/providers/chat-provider';
-import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
 
 interface MessageAddProps {
   disabled?: boolean;
@@ -25,28 +21,30 @@ interface MessageAddProps {
 
 export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
   const [content, setContent] = React.useState('');
-  const [rows, setRows] = React.useState(1); // Start with single line
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const { user } = useSelector((state: any) => state.auth);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
   const { uploadAttachment, loadingMessages, loadingAttachments } = React.useContext(ChatContext);
   const [isUploading, setIsUploading] = React.useState(false);
-  const userName = `${user?.businessName || ''}`;
-
-  const avatarBgColor = stringToColor(userName || '');
-  const textAvatar = generateTextAvatar(userName);
 
   const handleAttach = React.useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const handleChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = event.target.value;
-    setContent(value);
-
-    // Calculate number of rows needed
-    const lineCount = value.split('\n').length;
-    setRows(Math.min(Math.max(lineCount, 1), 4)); // Limit to 4 rows max
+  const adjustTextareaHeight = React.useCallback(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      const calculatedHeight = Math.min(el.scrollHeight, 100);
+      el.style.height = `${Math.max(calculatedHeight, 36)}px`;
+    }
   }, []);
+
+  const handleChange = React.useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = event.target.value;
+    setContent(val);
+    adjustTextareaHeight();
+  }, [adjustTextareaHeight]);
 
   const handleFileChange = React.useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,31 +78,16 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
 
     onSend?.('text', content);
     setContent('');
-    setRows(1); // Reset to single line after send
-  }, [content, onSend]);
-
-  const handleKeyUp = React.useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.code === 'Enter' && !event.shiftKey) {
-        event.preventDefault(); // Prevent default line break
-        handleSend();
-      }
-      // Shift+Enter will allow line breaks
-    },
-    [handleSend]
-  );
-
-  const handleKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.code === 'Enter' && !event.shiftKey) {
-      event.preventDefault(); // Prevent default behavior
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '36px';
     }
-  }, []);
+  }, [content, onSend]);
 
   return (
     <Stack
       direction="row"
-      spacing={1.5}
-      className="items-end flex-none px-4 py-2 min-h-[72px] bg-white border-t border-gray-100"
+      spacing={1}
+      className="items-end flex-none px-2.5 sm:px-4 py-1.5 min-h-[48px] bg-white border-t border-gray-200"
     >
       <Tooltip content="Attach file">
         <span>
@@ -112,39 +95,35 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
             aria-label="Attach file"
             disabled={disabled || isUploading || (loadingMessages && loadingAttachments)}
             onClick={handleAttach}
-            className="mb-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"
+            className="mb-0.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 shrink-0"
           >
             {isUploading || (loadingMessages && loadingAttachments) ? (
-              <CircularProgress size={20} />
+              <CircularProgress size={18} />
             ) : (
-              <PaperclipIcon size={22} weight="bold" />
+              <PaperclipIcon size={20} weight="bold" />
             )}
           </IconButton>
         </span>
       </Tooltip>
 
-      <Input
-        multiline
-        rows={rows}
+      <textarea
+        ref={textareaRef}
+        rows={1}
         disabled={disabled}
-        onChange={handleChange}
-        onKeyUp={handleKeyUp}
-        onKeyDown={handleKeyDown}
-        placeholder="Type your message here..."
-        className="flex-auto text-[13px] py-2.5 bg-gray-50 border-none focus:ring-1 focus:ring-emerald-500 rounded-xl"
-        style={{
-          // Custom styles for the textarea
-          // @ts-ignore
-          '& textarea': {
-            resize: 'none',
-            maxHeight: '120px',
-            overflowY: 'auto !important',
-          },
-        }}
         value={content}
+        onChange={handleChange}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
+        placeholder="Type your message here..."
+        className="flex-auto text-xs sm:text-sm py-2 px-3 bg-gray-50 border border-gray-200 focus:border-emerald-500 focus:outline-none rounded-xl resize-none min-h-[36px] max-h-[100px] overflow-y-auto leading-relaxed transition-all duration-100"
+        style={{ height: '36px' }}
       />
 
-      <Stack direction="row" spacing={1} className="items-center mb-1">
+      <Stack direction="row" spacing={1} className="items-center mb-0.5 shrink-0">
         <Tooltip content="Send">
           <span>
             <IconButton
@@ -152,9 +131,9 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
               variant="contained"
               disabled={!content.trim() || disabled}
               onClick={handleSend}
-              className="bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all rounded-xl h-[38px] w-[38px]"
+              className="bg-emerald-600 text-white hover:bg-emerald-700 transition-all rounded-xl h-[36px] w-[36px] shrink-0"
             >
-              <PaperPlaneTiltIcon weight="fill" />
+              <PaperPlaneTiltIcon weight="fill" size={16} />
             </IconButton>
           </span>
         </Tooltip>
@@ -171,3 +150,5 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
     </Stack>
   );
 }
+
+export default MessageAdd;

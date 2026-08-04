@@ -54,6 +54,7 @@ import {
     useUpdateSignaturePreferenceMutation,
     useGetSignatureSettingsQuery
 } from '@/redux/features/doc-hub/doc_hub_api';
+import { cn } from '@/utils/helper';
 
 export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
     const [statusFilter, setStatusFilter] = React.useState('');
@@ -92,9 +93,6 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
             refetch();
         }
     }, [inquiryId, refetch]);
-
-
-    console.log('apiResponse', apiResponse, inquiryId)
 
     const handleSign = async (signatureType: 'typed_name' | 'svg_drawing', signatureData: string) => {
         if (!signModalDoc) return;
@@ -181,38 +179,40 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
     ];
 
     return (
-        <Box style={{ padding: '1rem' }}>
+        <Box className="p-3 sm:p-5 select-none">
             {/* Header */}
-            <Stack direction="row" spacing={1} style={{ alignItems: 'center', marginBottom: '1rem' }}>
-                <FolderOpen size={20} color="#3b82f6" />
-                <Typography variant="subtitle1" style={{ fontWeight: 700, color: '#111827' }}>
+            <div className="flex items-center gap-2 mb-3">
+                <FolderOpen size={20} className="text-blue-500 shrink-0" />
+                <h3 className="font-bold text-sm sm:text-base text-gray-900">
                     Document Vault
-                </Typography>
-            </Stack>
+                </h3>
+            </div>
 
-            {/* Stat Cards */}
-            <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+            {/* Stat Cards Container — Horizontally Scrollable on Mobile to prevent text truncation */}
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar flex-nowrap pb-1">
                 {statCards.map((stat) => (
-                    <Card key={stat.label} style={{ borderRadius: '0.75rem', border: `1px solid ${stat.bg}`, overflow: 'hidden' }}>
-                        <CardContent style={{ padding: '0.75rem', textAlign: 'center' }}>
-                            <Typography variant="h5" style={{ fontWeight: 800, color: stat.color }}>
-                                {stat.value}
-                            </Typography>
-                            <Typography variant="caption" style={{ color: '#6b7280', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                                {stat.label}
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                    <div
+                        key={stat.label}
+                        className="flex-1 min-w-[72px] sm:min-w-[90px] p-2.5 rounded-xl border bg-white text-center shrink-0 transition-all"
+                        style={{ borderColor: `${stat.color}40`, backgroundColor: stat.bg }}
+                    >
+                        <p className="text-base sm:text-lg font-black" style={{ color: stat.color }}>
+                            {stat.value}
+                        </p>
+                        <p className="text-[9px] font-black uppercase text-gray-600 tracking-wider whitespace-nowrap">
+                            {stat.label}
+                        </p>
+                    </div>
                 ))}
-            </Box>
+            </div>
 
             {/* Filter */}
-            <Box style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Filter size={14} color="#9ca3af" />
+            <div className="mb-3 flex items-center gap-2">
+                <Filter size={14} className="text-gray-400 shrink-0" />
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #e5e7eb', background: '#f9fafb', fontSize: '0.75rem', outline: 'none', cursor: 'pointer' }}
+                    className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-700 outline-none cursor-pointer focus:ring-1 focus:ring-emerald-500"
                 >
                     <option value="">All Statuses</option>
                     <option value="sent">Pending</option>
@@ -221,293 +221,243 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
                     <option value="rejected">Rejected</option>
                     <option value="superseded">Superseded</option>
                 </select>
-            </Box>
+            </div>
 
             {/* Content */}
             {isLoading ? (
-                <Box style={{ textAlign: 'center', padding: '2rem' }}>
+                <Box className="text-center py-8">
                     <Spinner size={24} />
                 </Box>
             ) : isError ? (
-                <Box style={{ textAlign: 'center', padding: '2rem', background: '#fef2f2', borderRadius: '1rem', border: '1px solid #ef4444' }}>
-                    <AlertTriangle size={32} color="#ef4444" style={{ margin: '0 auto 1rem' }} />
-                    <Typography variant="body2" style={{ color: '#b91c1c', fontWeight: 600 }}>
-                        Failed to load documents.
-                    </Typography>
-                    <Typography variant="caption" style={{ color: '#ef4444', display: 'block', marginTop: '0.5rem' }}>
+                <div className="text-center p-6 bg-red-50 rounded-2xl border border-red-200 space-y-2">
+                    <AlertTriangle size={32} className="text-red-500 mx-auto" />
+                    <p className="text-sm font-bold text-red-700">Failed to load documents.</p>
+                    <p className="text-xs text-red-500">
                         {String((apiError as any)?.data?.message || (apiError as any)?.message || 'Unknown error occurred')}
-                    </Typography>
+                    </p>
                     <button
                         onClick={() => refetch()}
-                        style={{ marginTop: '1rem', padding: '0.5rem 1rem', borderRadius: '0.375rem', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                        className="px-4 py-2 rounded-xl bg-red-600 text-white font-bold text-xs"
                     >
                         Retry
                     </button>
-                </Box>
+                </div>
             ) : documents.length > 0 ? (
-                <Box style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="space-y-4">
                     {Object.entries(grouped).map(([stage, docs]) => (
-                        <Box key={stage}>
+                        <div key={stage} className="space-y-2">
                             {/* Stage Header */}
-                            <Typography
-                                variant="caption"
-                                style={{ fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.7rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                                <FolderOpen size={14} /> {stage}
-                            </Typography>
+                            <div className="flex items-center gap-1.5 text-emerald-600 font-extrabold uppercase text-[10px] sm:text-xs tracking-wider">
+                                <FolderOpen size={14} /> <span>{stage}</span>
+                            </div>
 
                             {/* Documents List */}
-                            <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                            <div className="space-y-2">
                                 {(docs as any[]).map((doc: any) => {
                                     const config = statusConfig[doc.status] || statusConfig.sent;
                                     const isSelected = selectedDocId === doc.id;
                                     return (
-                                        <Card
+                                        <div
                                             key={doc.id}
-                                            style={{
-                                                borderRadius: '0.5rem',
-                                                border: `1px solid ${isSelected ? config.color : '#e5e7eb'}`,
-                                                overflow: 'hidden',
-                                                opacity: doc.status === 'superseded' ? 0.6 : 1,
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s',
-                                                background: isSelected ? `${config.bg}40` : 'white',
-                                            }}
                                             onClick={() => setSelectedDocId(isSelected ? null : doc.id)}
+                                            className={cn(
+                                                'p-3 rounded-xl border transition-all cursor-pointer bg-white',
+                                                isSelected ? 'border-emerald-500 bg-emerald-50/20' : 'border-gray-200 hover:border-gray-300',
+                                                doc.status === 'superseded' && 'opacity-60'
+                                            )}
                                         >
-                                            <CardContent style={{ padding: '0.625rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                {/* Document Row */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', width: '100%' }}>
-                                                    <Stack direction="row" spacing={1} style={{ alignItems: 'center', flex: 1 }}>
-                                                        <Box style={{ width: '24px', height: '24px', borderRadius: '4px', background: config.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                            <FileText size={12} color={config.color} />
-                                                        </Box>
-                                                        <Box style={{ minWidth: 0 }}>
-                                                            <Typography variant="body2" style={{ fontWeight: 700, color: '#111827', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                {doc.title}
-                                                            </Typography>
-                                                            <Typography variant="caption" style={{ color: config.color, fontSize: '0.65rem', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                                                {/* <span style={{ color: '#3b82f6', fontWeight: 600 }}>{doc.template?.name || 'Manual Upload'}</span> */}
-                                                                {/* <span>•</span> */}
-                                                                <span>v{doc.version_number}</span>
-                                                                <span>•</span>
-                                                                <span>{dayjs(doc.createdAt).format('MMM D, YYYY • h:mm A')}</span>
-                                                            </Typography>
-                                                            {doc.template?.description && (
-                                                                <Typography variant="caption" style={{ color: '#6b7280', fontSize: '0.65rem', fontStyle: 'italic', marginTop: '4px', borderLeft: '2px solid #e5e7eb', paddingLeft: '8px' }}>
-                                                                    {doc.template.description}
-                                                                </Typography>
-                                                            )}
-                                                        </Box>
-                                                    </Stack>
-
-                                                    <Stack direction="row" spacing={1} style={{ alignItems: 'center', flexShrink: 0 }}>
-                                                        {/* Status Badge */}
-                                                        <Box style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 6px', borderRadius: '999px', background: config.bg, color: config.color, fontSize: '0.6rem', fontWeight: 700 }}>
-                                                            {config.icon}
-                                                            {statusLabel[doc.status] || doc.status}
-                                                        </Box>
-                                                        {/* Sigs Badge */}
-                                                        <Box style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 6px', borderRadius: '999px', background: '#f3f4f6', color: '#4b5563', fontSize: '0.6rem', fontWeight: 700 }}>
-                                                            <CheckCircle size={10} color="#9ca3af" />
-                                                            {(doc.signatures || []).filter((s: any) => s.action === 'signed' || s.action === 'accepted').length} SIGS
-                                                        </Box>
-                                                        {/* Recipient Role Chips with defensive parsing */}
-                                                        {/* {(() => {
-                                                            let roles: string[] = [];
-                                                            if (Array.isArray(doc.target_roles)) {
-                                                                roles = doc.target_roles;
-                                                            } else if (typeof doc.target_roles === 'string' && doc.target_roles.trim()) {
-                                                                try {
-                                                                    const parsed = JSON.parse(doc.target_roles);
-                                                                    roles = Array.isArray(parsed) ? parsed : [String(parsed)];
-                                                                } catch (e) {
-                                                                    roles = [doc.target_roles];
-                                                                }
-                                                            }
-
-                                                            return roles.map((role: string) => {
-                                                                const roleLower = role.toLowerCase();
-                                                                const roleStyles: Record<string, { bg: string, color: string, border: string }> = {
-                                                                    buyer: { bg: '#eef2ff', color: '#4f46e5', border: '#e0e7ff' },
-                                                                    supplier: { bg: '#fffbeb', color: '#d97706', border: '#fef3c7' },
-                                                                    inspector: { bg: '#faf5ff', color: '#9333ea', border: '#f3e8ff' }
-                                                                };
-                                                                const theme = roleStyles[roleLower] || { bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' };
-                                                                return (
-                                                                    <Box key={role} style={{
-                                                                        padding: '2px 8px',
-                                                                        borderRadius: '6px',
-                                                                        background: theme.bg,
-                                                                        color: theme.color,
-                                                                        fontSize: '0.65rem',
-                                                                        fontWeight: 800,
-                                                                        textTransform: 'uppercase',
-                                                                        border: `1px solid ${theme.border}`,
-                                                                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                                                                    }}>
-                                                                        {role}
-                                                                    </Box>
-                                                                );
-                                                            });
-                                                        })()} */}
-                                                        {/* View Button */}
-                                                        {doc.file_url && (
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); window.open(doc.file_url, '_blank'); }}
-                                                                style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #e5e7eb', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                                                title="View PDF"
-                                                            >
-                                                                <Eye size={12} color="#6b7280" />
-                                                            </button>
+                                            {/* Responsive Document Main Header Row */}
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                                    <div
+                                                        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                                                        style={{ backgroundColor: config.bg }}
+                                                    >
+                                                        <FileText size={14} color={config.color} />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <h4 className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                                                            {doc.title}
+                                                        </h4>
+                                                        <div className="flex items-center gap-1 text-[10px] text-gray-500 font-medium flex-wrap mt-0.5">
+                                                            <span>v{doc.version_number}</span>
+                                                            <span>•</span>
+                                                            <span>{dayjs(doc.createdAt).format('MMM D, YYYY • h:mm A')}</span>
+                                                        </div>
+                                                        {doc.template?.description && (
+                                                            <p className="text-[10px] text-gray-500 italic mt-1 border-l-2 border-gray-200 pl-2">
+                                                                {doc.template.description}
+                                                            </p>
                                                         )}
-                                                        {/* Dropdown Arrow Indicator */}
-                                                        <Box style={{ padding: '0.25rem', display: 'flex', alignItems: 'center', color: '#9ca3af' }}>
-                                                            {isSelected ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                                        </Box>
-                                                    </Stack>
+                                                    </div>
                                                 </div>
 
-                                                {/* Expanded Details (Audit Trail + Actions) */}
-                                                {isSelected && (
-                                                    <>
-                                                        {/* Audit Trail */}
-                                                        <Box style={{ borderTop: '1px solid #f3f4f6', paddingTop: '0.75rem', marginTop: '0.25rem' }}>
-                                                            <Typography variant="caption" style={{ fontWeight: 800, color: '#4b5563', fontSize: '0.65rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>
-                                                                Audit Trail &amp; Signatures
-                                                            </Typography>
-                                                            <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                                {(() => {
-                                                                    const history = Array.isArray(doc.audit_trail) && doc.audit_trail.length > 0
-                                                                        ? doc.audit_trail
-                                                                        : Array.isArray(doc.signatures)
-                                                                            ? doc.signatures
-                                                                            : [];
+                                                {/* Action & Status Badges Row (Fully responsive, wrapping gracefully) */}
+                                                <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                                                    {/* Status Badge */}
+                                                    <span
+                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shrink-0"
+                                                        style={{ backgroundColor: config.bg, color: config.color }}
+                                                    >
+                                                        {config.icon}
+                                                        {statusLabel[doc.status] || doc.status}
+                                                    </span>
 
-                                                                    if (history.length === 0) {
-                                                                        return (
-                                                                            <Typography variant="caption" style={{ color: '#9ca3af', fontStyle: 'italic', padding: '0.5rem' }}>
-                                                                                No actions recorded yet.
-                                                                            </Typography>
-                                                                        );
-                                                                    }
+                                                    {/* Sigs Badge */}
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gray-100 text-gray-600 border border-gray-200 shrink-0">
+                                                        <CheckCircle size={10} className="text-gray-400" />
+                                                        {(doc.signatures || []).filter((s: any) => s.action === 'signed' || s.action === 'accepted').length} SIGS
+                                                    </span>
 
-                                                                    return history.map((sig: any, idx: number) => {
-                                                                        if (!sig) return null;
-                                                                        const sigAction = (sig.action || '').toLowerCase() || 'sent';
-                                                                        const sigConfig = statusConfig[sigAction === 'accepted' ? 'signed' : sigAction === 'flagged' ? 'flagged' : sigAction === 'rejected' ? 'rejected' : 'sent'] || statusConfig.sent;
-                                                                        return (
-                                                                            <Box key={idx} style={{ padding: '0.5rem', background: '#f9fafb', borderRadius: '0.375rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                                                                                <Box style={{ marginTop: '0.125rem' }}>{sigConfig.icon}</Box>
-                                                                                <Box style={{ flex: 1 }}>
-                                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                                                        <div>
-                                                                                            <Typography variant="caption" style={{ fontWeight: 700, color: '#374151', fontSize: '0.7rem' }}>
-                                                                                                {(sig.signer_role || 'Unknown').replace(/_/g, ' ').toUpperCase()}
-                                                                                                {sig.version_number && (
-                                                                                                    <span style={{ marginLeft: '6px', color: '#9ca3af', fontWeight: 400 }}>v{sig.version_number}</span>
-                                                                                                )}
-                                                                                            </Typography>
-                                                                                            <Typography variant="caption" style={{ color: sigConfig.color, fontWeight: 600, fontSize: '0.65rem', display: 'block' }}>
-                                                                                                {(sig?.action || 'PENDING').toUpperCase()}
-                                                                                            </Typography>
-                                                                                        </div>
-                                                                                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                                                                            <Typography variant="caption" style={{ color: '#9ca3af', fontSize: '0.6rem' }}>
-                                                                                                {sig?.createdAt ? dayjs(sig.createdAt).format('MMM D, h:mm A') : 'N/A'}
-                                                                                            </Typography>
-                                                                                            {sig.file_url && (
-                                                                                                <button
-                                                                                                    onClick={(e) => { e.stopPropagation(); window.open(sig.file_url, '_blank'); }}
-                                                                                                    style={{ fontSize: '9px', background: '#eff6ff', color: '#3b82f6', border: '1px solid #dbeafe', borderRadius: '4px', padding: '1px 4px', cursor: 'pointer', fontWeight: 700 }}
-                                                                                                >
-                                                                                                    View Ver.
-                                                                                                </button>
+                                                    {/* View Button */}
+                                                    {doc.file_url && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); window.open(doc.file_url, '_blank'); }}
+                                                            className="p-1 rounded bg-white hover:bg-gray-50 border border-gray-200 text-gray-600 transition-colors shrink-0"
+                                                            title="View PDF"
+                                                        >
+                                                            <Eye size={13} />
+                                                        </button>
+                                                    )}
+
+                                                    {/* Dropdown Indicator */}
+                                                    <div className="p-0.5 text-gray-400 shrink-0">
+                                                        {isSelected ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Expanded Details (Audit Trail + Actions) */}
+                                            {isSelected && (
+                                                <div className="border-t border-gray-100 pt-3 mt-3 space-y-3">
+                                                    {/* Audit Trail */}
+                                                    <div>
+                                                        <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-wider mb-2">
+                                                            Audit Trail &amp; Signatures
+                                                        </h5>
+                                                        <div className="space-y-1.5">
+                                                            {(() => {
+                                                                const history = Array.isArray(doc.audit_trail) && doc.audit_trail.length > 0
+                                                                    ? doc.audit_trail
+                                                                    : Array.isArray(doc.signatures)
+                                                                        ? doc.signatures
+                                                                        : [];
+
+                                                                if (history.length === 0) {
+                                                                    return (
+                                                                        <p className="text-xs text-gray-400 italic p-2 bg-gray-50 rounded-lg">
+                                                                            No actions recorded yet.
+                                                                        </p>
+                                                                    );
+                                                                }
+
+                                                                return history.map((sig: any, idx: number) => {
+                                                                    if (!sig) return null;
+                                                                    const sigAction = (sig.action || '').toLowerCase() || 'sent';
+                                                                    const sigConfig = statusConfig[sigAction === 'accepted' ? 'signed' : sigAction === 'flagged' ? 'flagged' : sigAction === 'rejected' ? 'rejected' : 'sent'] || statusConfig.sent;
+                                                                    return (
+                                                                        <div key={idx} className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-2 text-xs">
+                                                                            <div className="mt-0.5">{sigConfig.icon}</div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-start justify-between gap-2">
+                                                                                    <div>
+                                                                                        <p className="font-bold text-gray-800 text-[11px]">
+                                                                                            {(sig.signer_role || 'Unknown').replace(/_/g, ' ').toUpperCase()}
+                                                                                            {sig.version_number && (
+                                                                                                <span className="ml-1 text-gray-400 font-normal text-[10px]">v{sig.version_number}</span>
                                                                                             )}
-                                                                                        </div>
+                                                                                        </p>
+                                                                                        <p className="font-extrabold text-[10px]" style={{ color: sigConfig.color }}>
+                                                                                            {(sig?.action || 'PENDING').toUpperCase()}
+                                                                                        </p>
                                                                                     </div>
-                                                                                    {sig.flag_reason && (
-                                                                                        <Box style={{ marginTop: '0.25rem', padding: '0.375rem', background: 'white', borderRadius: '0.25rem', borderLeft: `2px solid ${sigConfig.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                                                                            <Typography variant="caption" style={{ color: '#4b5563', fontStyle: 'italic', fontSize: '0.65rem', flex: 1 }}>
-                                                                                                &quot;{sig.flag_reason}&quot;
-                                                                                            </Typography>
-                                                                                            {sig.flag_reason.length > 50 && (
-                                                                                                <button
-                                                                                                    onClick={(e) => { e.stopPropagation(); setViewFullText({ title: `${sig.signer_role?.toUpperCase()} FLAG REASON`, content: sig.flag_reason }); }}
-                                                                                                    style={{ padding: '0.125rem', color: '#3b82f6', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                                                                                                >
-                                                                                                    <Eye size={10} />
-                                                                                                </button>
-                                                                                            )}
-                                                                                        </Box>
-                                                                                    )}
-                                                                                </Box>
-                                                                            </Box>
-                                                                        );
-                                                                    });
-                                                                })()}
-                                                            </Box>
-                                                        </Box>
+                                                                                    <div className="text-right flex flex-col items-end gap-1">
+                                                                                        <span className="text-[10px] text-gray-400 font-medium">
+                                                                                            {sig?.createdAt ? dayjs(sig.createdAt).format('MMM D, h:mm A') : 'N/A'}
+                                                                                        </span>
+                                                                                        {sig.file_url && (
+                                                                                            <button
+                                                                                                onClick={(e) => { e.stopPropagation(); window.open(sig.file_url, '_blank'); }}
+                                                                                                className="text-[9px] bg-blue-50 text-blue-600 border border-blue-200 rounded px-1.5 py-0.5 font-bold hover:bg-blue-100 transition-colors"
+                                                                                            >
+                                                                                                View Ver.
+                                                                                            </button>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                                {sig.flag_reason && (
+                                                                                    <div className="mt-1.5 p-2 bg-white rounded-lg border-l-2 border-emerald-500 flex justify-between items-start gap-2">
+                                                                                        <p className="text-[10px] text-gray-600 italic flex-1">
+                                                                                            &quot;{sig.flag_reason}&quot;
+                                                                                        </p>
+                                                                                        {sig.flag_reason.length > 50 && (
+                                                                                            <button
+                                                                                                onClick={(e) => { e.stopPropagation(); setViewFullText({ title: `${sig.signer_role?.toUpperCase()} FLAG REASON`, content: sig.flag_reason }); }}
+                                                                                                className="text-blue-600 hover:text-blue-700 p-0.5"
+                                                                                            >
+                                                                                                <Eye size={12} />
+                                                                                            </button>
+                                                                                        )}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                });
+                                                            })()}
+                                                        </div>
+                                                    </div>
 
-                                                        {/* Action Buttons — open modals */}
-                                                        {(doc.status === 'sent' || doc.status === 'pending_review') && (
-                                                            <Box style={{ borderTop: '1px solid #e5e7eb', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
-                                                                <Typography variant="caption" style={{ fontWeight: 800, color: '#4b5563', fontSize: '0.65rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>
-                                                                    Actions
-                                                                </Typography>
-                                                                <Box style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); setSignModalDoc(doc); }}
-                                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.375rem 0.75rem', borderRadius: '0.375rem', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 }}
-                                                                    >
-                                                                        <PenTool size={12} /> Accept
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); setActionModalDoc({ doc, type: 'flag' }); }}
-                                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.375rem 0.75rem', borderRadius: '0.375rem', background: '#fffbeb', color: '#f59e0b', border: '1px solid #fde68a', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 }}
-                                                                    >
-                                                                        <Flag size={12} /> Flag
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); setActionModalDoc({ doc, type: 'reject' }); }}
-                                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.375rem 0.75rem', borderRadius: '0.375rem', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 }}
-                                                                    >
-                                                                        <XCircle size={12} /> Reject
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); window.open(doc.file_url, '_blank'); }}
-                                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.375rem 0.75rem', borderRadius: '0.375rem', background: '#eff6ff', color: '#3b82f6', border: '1px solid #c7d2fe', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 }}
-                                                                    >
-                                                                        <Eye size={12} /> View
-                                                                    </button>
-                                                                    {/* {doc.file_url && (
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); window.open(doc.file_url, '_blank'); }}
-                                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.375rem 0.75rem', borderRadius: '0.375rem', background: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 }}
-                                                                        >
-                                                                            <Download size={12} /> Download
-                                                                        </button>
-                                                                    )} */}
-                                                                </Box>
-                                                            </Box>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </CardContent>
-                                        </Card>
+                                                    {/* Action Buttons — open modals */}
+                                                    {(doc.status === 'sent' || doc.status === 'pending_review') && (
+                                                        <div className="border-t border-gray-100 pt-2 space-y-1.5">
+                                                            <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-wider">
+                                                                Actions
+                                                            </h5>
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setSignModalDoc(doc); }}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors"
+                                                                >
+                                                                    <PenTool size={12} /> Accept
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setActionModalDoc({ doc, type: 'flag' }); }}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold hover:bg-amber-100 transition-colors"
+                                                                >
+                                                                    <Flag size={12} /> Flag
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setActionModalDoc({ doc, type: 'reject' }); }}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 border border-red-200 text-xs font-bold hover:bg-red-100 transition-colors"
+                                                                >
+                                                                    <XCircle size={12} /> Reject
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); window.open(doc.file_url, '_blank'); }}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold hover:bg-blue-100 transition-colors"
+                                                                >
+                                                                    <Eye size={12} /> View
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
-                            </Box>
-                        </Box>
+                            </div>
+                        </div>
                     ))}
-                </Box>
+                </div>
             ) : (
-                <Box style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f9fafb', borderRadius: '1rem', border: '2px dashed #e5e7eb' }}>
-                    <FileText size={40} color="#d1d5db" style={{ margin: '0 auto 1rem' }} />
-                    <Typography variant="body2" style={{ color: '#6b7280', fontWeight: 500 }}>
+                <div className="text-center py-10 px-4 bg-gray-50/70 rounded-2xl border-2 border-dashed border-gray-200 space-y-2">
+                    <FileText size={36} className="text-gray-300 mx-auto" />
+                    <p className="text-xs font-bold text-gray-500">
                         No documents found in this vault.
-                    </Typography>
-                </Box>
+                    </p>
+                </div>
             )}
 
             {/* ── MODALS ── */}

@@ -6,42 +6,46 @@ import { CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/utils/helper';
 import { motion } from 'framer-motion';
 
-export const TradeStageTracker = ({ inquiryId, currentStatus }: { inquiryId: string; currentStatus: string }) => {
-    const { data, isLoading } = useGetClientStagesQuery({ inquiryId });
-    const stages = data?.data || [];
+import { MAIN_TRADE_PHASES } from '@/config/trade-stepper-config';
 
-    if (isLoading) {
+export const TradeStageTracker = ({ inquiryId, currentStatus }: { inquiryId: string; currentStatus: string }) => {
+    const { data, isLoading } = useGetClientStagesQuery({ inquiryId: inquiryId || '' }, { skip: !inquiryId });
+    const fetchedStages = data?.data || [];
+
+    const stages = (fetchedStages && fetchedStages.length > 0) ? fetchedStages : MAIN_TRADE_PHASES.map((p) => ({
+        id: p.slug,
+        name: p.name,
+        slug: p.slug,
+        stage_order: p.order,
+        generates_document: false,
+    }));
+
+    if (isLoading && (!stages || stages.length === 0)) {
         return (
-            <div className="flex items-center justify-center p-10 bg-white rounded-[32px] border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-center p-10 bg-white rounded-[32px] border border-gray-200">
                 <Loader2 className="animate-spin text-emerald-500" size={24} />
                 <span className="ml-3 text-sm font-bold text-gray-500">Loading Tracking Data...</span>
             </div>
         );
     }
 
-    if (!stages || stages.length === 0) {
-        return null; // Return null if there's no stages configured to avoid breaking UI layout
-    }
-
-    // Determine current index based on the inquiry's "currentStatus" matching a stage slug. 
-    // In our system, inquiry status typically matches or maps to a stage slug, or we can just show the sequential flow
-    // By default, if the current status isn't matched easily, we'll try to find the matching stage
-    let currentStepIndex = stages.findIndex((s: any) =>
-        currentStatus.toLowerCase().includes(s.slug.toLowerCase().replace(/_/g, '')) ||
-        s.slug.toLowerCase().includes(currentStatus.toLowerCase().replace(/_/g, ''))
-    );
-
-    // Fallback if no exact string match is found
+    let currentStepIndex = stages.findIndex((s: any) => s.is_current_stage);
     if (currentStepIndex === -1) {
-        if (currentStatus === 'PENDING' || currentStatus === 'pending') currentStepIndex = 0;
-        else if (currentStatus === 'SUPPLIER_MATCHED' || currentStatus === 'ACKNOWLEDGED') currentStepIndex = 1;
-        else currentStepIndex = 2; // Default show some progress
+        currentStepIndex = stages.findIndex((s: any) =>
+            currentStatus && (
+                currentStatus.toLowerCase().includes(s.slug.toLowerCase().replace(/_/g, '')) ||
+                s.slug.toLowerCase().includes(currentStatus.toLowerCase().replace(/_/g, ''))
+            )
+        );
     }
+    if (currentStepIndex === -1) currentStepIndex = 0;
+
+    const activeStage = stages[currentStepIndex];
 
     return (
-        <div className="relative flex items-center justify-between py-10 px-8 bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden group">
+        <div className="relative flex items-center justify-between py-10 px-8 bg-white rounded-[32px] border border-gray-200 overflow-x-auto no-scrollbar group">
             {/* Connecting Lines Background */}
-            <div className="absolute top-[64px] left-[10%] right-[10%] h-[2px] bg-gray-50 -translate-y-1/2" />
+            <div className="absolute top-[64px] left-[10%] right-[10%] h-[2px] bg-gray-100 -translate-y-1/2" />
 
             {/* Active Connecting Line */}
             <div

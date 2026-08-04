@@ -11,6 +11,7 @@ export interface NavItemConfig {
   disabled?: boolean;
   external?: boolean;
   label?: string;
+  badge?: string;
   matcher?: { type: "startsWith" | "equals"; href: string };
   items?: NavItemConfig[];
   permission?: PermissionKey;
@@ -47,6 +48,13 @@ export const dashboardConfig: DashboardConfig = {
           href: paths.dashboard.invoices,
           icon: "receipt-long",
           permission: "invoices",
+        },
+        {
+          key: "wallet",
+          title: "Wallet",
+          href: paths.dashboard.wallet,
+          icon: "wallet",
+          badge: "Coming Soon",
         },
         {
           key: "marketplace",

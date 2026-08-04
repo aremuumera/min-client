@@ -131,7 +131,16 @@ function NavItem({
                     <Icon size={18} strokeWidth={active ? 2.5 : 2} />
                 </div>
             )}
-            {!isCollapsed && <span className="grow text-xs font-medium tracking-wide truncate">{item.title}</span>}
+            {!isCollapsed && (
+                <div className="grow flex items-center justify-between min-w-0 gap-1">
+                    <span className="text-xs font-medium tracking-wide truncate">{item.title}</span>
+                    {item.badge && (
+                        <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-semibold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                            {item.badge}
+                        </span>
+                    )}
+                </div>
+            )}
             {!isCollapsed && item.external && <ExternalLink size={12} className="opacity-30 group-hover:opacity-100" />}
             {hasChildren && !isCollapsed && (
                 <div className={cn("transition-transform duration-200 text-neutral-700 group-hover:text-white", isOpen && "rotate-180")}>
@@ -141,8 +150,13 @@ function NavItem({
 
             {/* Tooltip for collapsed mode */}
             {isCollapsed && (
-                <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-neutral-900 text-white text-[10px] py-1 px-2 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[200] whitespace-nowrap font-bold border border-white/10">
-                    {item.title}
+                <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-neutral-900 text-white text-[10px] py-1 px-2 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-[200] whitespace-nowrap font-bold border border-white/10 flex items-center gap-1.5">
+                    <span>{item.title}</span>
+                    {item.badge && (
+                        <span className="text-[8px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase font-semibold">
+                            {item.badge}
+                        </span>
+                    )}
                 </div>
             )}
         </div>
