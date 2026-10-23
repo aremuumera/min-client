@@ -36,17 +36,19 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
 
     return (
         <header className={cn(
-            "sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300 ease-in-out",
-            finalRelease && (isCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")
+            // the layout's column already sits beside the sidebar
+            "sticky top-0 z-50 w-full bg-canvas border-b border-hairline"
         )}>
-            <div className="h-20 px-4 sm:px-6 lg:px-10 flex items-center justify-between w-full">
+            <div className="h-16 px-4 md:px-6 lg:px-8 flex items-center justify-between w-full">
                 {/* Mobile Menu & Left section */}
                 <div className="flex items-center gap-4">
-                    {finalRelease && (
+                    {/* the phone menu is always reachable (the layout always shows the sidebar on larger screens) */}
+                    {(
                         <button
+                            type="button"
                             onClick={() => setOpenNav(true)}
-                            className="lg:hidden p-2.5 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
-                            aria-label="Open Mobile Menu"
+                            className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-full text-slate hover:bg-surface-soft transition-colors"
+                            aria-label="Open menu"
                         >
                             <Menu size={20} />
                         </button>
@@ -62,11 +64,12 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                     <button
                                         ref={notificationPopover.anchorRef}
                                         onClick={notificationPopover.handleOpen}
-                                        className="p-2.5 rounded-xl bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-all relative group"
+                                        aria-label={unreadNotificationsCount > 0 ? `Notifications (${unreadNotificationsCount} unread)` : 'Notifications'}
+                                        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate hover:bg-brand-green-soft hover:text-primary-pressed transition-colors relative group"
                                     >
                                         <Bell size={20} strokeWidth={2.5} />
                                         {unreadNotificationsCount > 0 && (
-                                            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-subtle">
+                                            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-semantic-error text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-subtle">
                                                 {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
                                             </span>
                                         )}
@@ -78,7 +81,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                         </div>
                     )}
 
-                    <div className="w-px h-8 bg-gray-100 hidden sm:block" />
+                    <div className="w-px h-8 bg-hairline hidden sm:block" />
 
                     <div className="relative" >
                         <UserPopover
@@ -86,17 +89,18 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                 <button
                                     ref={userPopover.anchorRef}
                                     onClick={userPopover.handleOpen}
-                                    className="flex items-center gap-3 p-1 rounded-full bg-gray-50 lg:bg-transparent lg:hover:bg-gray-50 transition-all group"
+                                    className="flex min-h-11 items-center gap-3 p-1 rounded-full hover:bg-surface-soft transition-colors group"
                                 >
                                     <Avatar className="h-6 w-6 ring-2 ring-white transition-transform group-hover:scale-105">
-                                        <AvatarImage src={user?.profilePicture || user?.avatar || '/profile.svg'} />
+                                        <AvatarImage src={user?.profilePicture || user?.avatar || '/profile.svg'} alt="" />
+                                        <span className="sr-only">Account menu</span>
                                         {/* <AvatarFallback className="bg-green-600 text-white font-bold text-xs uppercase">
                                             {user?.firstName?.[0]}{user?.lastName?.[0]}
                                         </AvatarFallback> */}
                                     </Avatar>
                                     <div className="hidden lg:block text-left mr-2">
                                         <div className="flex items-center gap-2">
-                                            <p className="text-sm font-bold text-gray-900 leading-none">
+                                            <p className="text-sm font-semibold text-ink leading-none">
                                                 {user?.firstName} {user?.lastName}
                                             </p>
                                             {user?.team_role && (
@@ -109,7 +113,7 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                                 />
                                             )}
                                         </div>
-                                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">
+                                        <p className="text-[11px] font-semibold text-steel uppercase tracking-[1px] mt-1">
                                             {user?.companyName} {user?.role ? `• ${roleLabel}` : ''}
                                         </p>
                                     </div>

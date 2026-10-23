@@ -121,7 +121,6 @@ const AuthSlice = createSlice({
       initialStateFromLocalStorage();
     },
     loginSuccess: (state, action: PayloadAction<any>) => {
-      console.log("loginSuccess", action.payload);
       state.user = action.payload?.user;
       state.token = action.payload?.ac;
       state.numb = action.payload?.fc;

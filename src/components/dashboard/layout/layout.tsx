@@ -8,6 +8,7 @@ import { dashboardConfig } from '@/config/dashboard-config';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { cn } from '@/utils/helper';
 import { usePathname } from '@/hooks/use-pathname';
+import { useBreakpoint } from '@/lib/ui/use-breakpoint';
 
 interface VerticalLayoutProps {
     children: React.ReactNode;
@@ -26,6 +27,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
             setIsCollapsed(saved === 'true');
         }
     }, []);
+
+    const bp = useBreakpoint();
 
     const handleToggleCollapse = () => {
         const newState = !isCollapsed;
@@ -217,19 +220,20 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50/50">
+        <div className="min-h-screen bg-surface">
             {finalRelease && (
                 <SideNav
                     items={finalItems}
                     isCollapsed={isCollapsed}
                     onToggle={handleToggleCollapse}
+                    rail={bp === 'tablet'}
                 />
             )}
 
             <div
                 className={cn(
                     "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-                    finalRelease && (isCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")
+                    finalRelease && (isCollapsed ? "md:pl-[72px]" : "md:pl-[72px] lg:pl-[264px]")
                 )}
             >
                 <MainNav items={finalItems} isCollapsed={isCollapsed} />
@@ -238,7 +242,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                     <div className={cn(
                         "px-4 py-2 sm:px-6 lg:p-6 max-w-[1600px] mx-auto",
                         pathname?.includes('/dashboard/products') || pathname?.includes('/dashboard/rfqs') || pathname?.includes('/dashboard/chat') ? "p-0 max-w-none" : "",
-                        pathname?.includes('/dashboard/chat') ? "h-[calc(100vh-80px)]" : ""
+                        pathname?.includes('/dashboard/chat') ? "h-[calc(100vh-64px)]" : ""
                     )}>
                         {children}
                     </div>

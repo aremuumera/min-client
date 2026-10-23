@@ -27,13 +27,13 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps) {
         <Portal>
             <AnimatePresence>
                 {open && (
-                    <div className="fixed inset-0 z-200 lg:hidden">
+                    <div className="fixed inset-0 z-200 md:hidden">
                         {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-201"
+                            className="absolute inset-0 bg-overlay z-201"
                             onClick={onClose}
                         />
 
@@ -43,11 +43,11 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps) {
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="absolute left-0 top-0 bottom-0 w-80 bg-black text-white flex flex-col shadow-2xl z-202"
+                            className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-brand-dark text-on-dark flex flex-col border-r border-hairline-dark z-202" role="dialog" aria-modal="true" aria-label="Main menu"
                         >
-                            <div className="flex items-center justify-between p-6 border-b border-white/10">
+                            <div className="flex h-16 items-center justify-between px-4 border-b border-hairline-dark">
                                 <Logo color="light" height={40} />
-                                <button onClick={onClose} className="p-2 text-white/60 hover:text-white transition-colors">
+                                <button type="button" onClick={onClose} aria-label="Close menu" className="inline-flex h-11 w-11 items-center justify-center rounded-full text-on-dark-muted hover:text-on-dark hover:bg-brand-dark-hover transition-colors">
                                     <X size={24} />
                                 </button>
                             </div>
@@ -56,7 +56,7 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps) {
                                 {items.map((group) => (
                                     <div key={group.key} className="space-y-3">
                                         {group.title && (
-                                            <h3 className="px-4 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                                            <h3 className="px-4 text-[11px] font-semibold text-stone uppercase tracking-[1px]">
                                                 {group.title}
                                             </h3>
                                         )}
@@ -106,16 +106,16 @@ function NavItem({
 
     const content = (
         <div className={cn(
-            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
+            "flex items-center gap-3 px-3 min-h-11 rounded-md transition-colors duration-150 group relative",
             active
-                ? "bg-green-600 text-white font-semibold shadow-lg shadow-green-600/20"
-                : "text-neutral-400 hover:text-white hover:bg-white/5",
+                ? "bg-primary text-on-primary font-semibold"
+                : "text-on-dark-muted hover:text-on-dark hover:bg-brand-dark-hover",
             item.disabled && "opacity-50 cursor-not-allowed"
         )}>
             {Icon && (
                 <div className={cn(
                     "shrink-0 transition-transform duration-200",
-                    active ? "scale-110" : "group-hover:scale-110"
+                    ""
                 )}>
                     <Icon size={20} strokeWidth={active ? 2.5 : 2} />
                 </div>
@@ -148,7 +148,7 @@ function NavItem({
                     {content}
                 </button>
                 {isOpen && (
-                    <ul className="ml-4 pl-4 border-l border-white/10 mt-1 space-y-1">
+                    <ul className="ml-4 pl-4 border-l border-hairline-dark mt-1 space-y-1">
                         {item.items?.map((child) => (
                             <NavItem
                                 key={child.key}
