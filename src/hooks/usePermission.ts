@@ -1,16 +1,9 @@
 import { useAppSelector } from "@/redux/hooks";
 
-export type PermissionKey =
-    | 'products'
-    | 'rfq'
-    | 'chat'
-    | 'enquiries'
-    | 'invoices'
-    | 'inspectors'
-    | 'analytics'
-    | 'settings'
-    | 'team_management'
-    | 'activity';
+import type { TeamPermission } from "@/lib/permissions/team-permissions";
+
+/** The team keys (the backend's catalogue, lib/permissions/team-permissions.ts) */
+export type PermissionKey = TeamPermission;
 
 export const usePermission = (permission: PermissionKey): boolean => {
     const { isTeamMember, permissions, user } = useAppSelector((state) => state.auth);
