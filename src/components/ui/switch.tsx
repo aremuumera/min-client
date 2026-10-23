@@ -68,7 +68,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
           >
             <div
               className={cn(
-                'rounded-full bg-white shadow-sm transition-transform',
+                'rounded-full bg-white border border-hairline-strong transition-transform',
                 sizes.thumb,
                 'absolute top-1/2 -translate-y-1/2 left-0.5',
                 checked && sizes.translate

@@ -22,7 +22,7 @@ const Backdrop = React.forwardRef<HTMLDivElement, BackdropProps>(
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className={cn(
-              'fixed inset-0 z-[1200] flex items-center justify-center bg-black/50 backdrop-blur-sm',
+              'fixed inset-0 z-[1200] flex items-center justify-center bg-overlay',
               className
             )}
             {...props}

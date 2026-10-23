@@ -162,8 +162,8 @@ export function MultiCheckboxSelect({
                             width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
                         }}
                         className={cn(
-                            'z-50 overflow-hidden rounded-lg border border-neutral-200',
-                            'bg-white shadow-lg'
+                            'z-50 overflow-hidden rounded-lg border border-hairline',
+                            'bg-canvas'
                         )}
                     >
                         <Box className="sticky top-0 z-10 bg-white border-b border-neutral-200 p-2">

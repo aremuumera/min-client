@@ -11,5 +11,5 @@ Full specs: the `components:` block in design.md. Each component is built once i
 - top-bar: white, 64px, bottom hairline
 - modal / side sheet: white on `rgba(10, 31, 26, 0.7)` overlay, no shadow
 - toast / tooltip: `#0a1f1a`, white text
-- badges: success `#e6f4ea`/`#145a2c`, neutral, warning `#fff8e0`/`#946f3f`, error `#fef3f2`/`#b42318`
+- badges: success `#e6f4ea`/`#145a2c`, neutral, warning `#fff8e0`/`#7a5a2f`, error `#fef3f2`/`#b42318`
 - table: hairline border, surface header, rows ≥ 44px; rows become cards below 768px

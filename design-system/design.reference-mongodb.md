@@ -20,7 +20,7 @@ colors:
   accent-pink: "#f06bb8"
   accent-blue: "#3d4f9f"
   semantic-warning-bg: "#fff8e0"
-  semantic-warning-text: "#946f3f"
+  semantic-warning-text: "#7a5a2f"
   canvas: "#ffffff"
   canvas-dark: "#001e2b"
   surface: "#f9fbfa"

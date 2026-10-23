@@ -94,7 +94,7 @@ function Popover({
             exit={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -5 : 5 }}
             transition={{ duration: 0.1 }}
             className={cn(
-              'absolute z-50 min-w-[150px] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg',
+              'absolute z-50 min-w-[150px] overflow-hidden rounded-lg border border-hairline bg-canvas p-1',
               positionClasses[position],
               alignClasses[align][position],
               className

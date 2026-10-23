@@ -50,7 +50,7 @@ export function Drawer({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-overlay"
               onClick={onClose}
             />
 
@@ -61,12 +61,12 @@ export function Drawer({
               exit={anchorVariants[anchor]}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className={cn(
-                'relative z-50 bg-white shadow-xl flex flex-col',
+                'relative z-50 bg-canvas border-hairline flex flex-col',
                 {
-                  'h-full w-80 mr-auto': anchor === 'left',
-                  'h-full w-80 ml-auto': anchor === 'right',
-                  'w-full h-80 mb-auto': anchor === 'top',
-                  'w-full h-80 mt-auto': anchor === 'bottom',
+                  'h-full w-80 max-w-full mr-auto border-r': anchor === 'left',
+                  'h-full w-80 max-w-full ml-auto border-l': anchor === 'right',
+                  'w-full h-80 mb-auto border-b': anchor === 'top',
+                  'w-full h-80 mt-auto border-t': anchor === 'bottom',
                 },
                 className
               )}

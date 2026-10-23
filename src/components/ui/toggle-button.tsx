@@ -28,8 +28,8 @@ const ToggleButton = React.forwardRef<HTMLButtonElement, ToggleButtonProps>(
           'hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500',
           selected ? 'bg-neutral-100 text-neutral-900 border-neutral-300 z-10' : 'bg-white text-neutral-600',
           color === 'primary' && selected && 'bg-primary-50 text-primary-600 border-primary-200',
-          size === 'sm' && 'h-8 px-3 text-xs',
-          size === 'md' && 'h-10 px-4 text-sm',
+          size === 'sm' && 'h-11 md:h-8 px-3 text-xs',
+          size === 'md' && 'h-11 px-4 text-sm',
           size === 'lg' && 'h-12 px-6 text-base',
           'first:rounded-l-lg last:rounded-r-lg border-y border-x -ml-px first:ml-0',
           className

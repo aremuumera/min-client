@@ -24,7 +24,7 @@ colors:
   semantic-error-text: "#b42318"
   semantic-warning: "#f5a524"
   semantic-warning-bg: "#fff8e0"
-  semantic-warning-text: "#946f3f"
+  semantic-warning-text: "#7a5a2f"
   # ---- surfaces ----
   canvas: "#ffffff"
   surface: "#f9fbfa"

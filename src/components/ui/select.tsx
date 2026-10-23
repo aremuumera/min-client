@@ -57,8 +57,8 @@ export interface SelectProps {
 }
 
 const sizeClasses = {
-  sm: 'h-8 text-xs',
-  md: 'h-10 text-sm',
+  sm: 'h-11 md:h-9 text-base md:text-xs',
+  md: 'h-11 text-base md:text-sm',
   lg: 'h-12 text-base',
 };
 
@@ -253,8 +253,8 @@ function Select({
               zIndex: 15000,
             }}
             className={cn(
-              'overflow-auto rounded-lg border border-neutral-200',
-              'bg-white shadow-lg',
+              'overflow-auto rounded-lg border border-hairline',
+              'bg-canvas',
               'max-h-[250px]'
             )}
           >

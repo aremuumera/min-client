@@ -171,7 +171,7 @@ export function PortalPopover({
                             transition={{ duration: 0.1 }}
                             style={getPopPos()}
                             className={cn(
-                                'min-w-[150px] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg',
+                                'min-w-[150px] overflow-hidden rounded-lg border border-hairline bg-canvas p-1',
                                 align === 'end' && '-translate-x-full',
                                 className
                             )}

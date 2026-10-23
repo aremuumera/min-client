@@ -107,7 +107,7 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
               color={page === p ? color : undefined}
               size={size === 'sm' ? 'sm' : 'md'}
               className={cn(
-                'min-w-[32px] p-0 h-8',
+                'min-w-11 h-11 md:min-w-8 md:h-8 p-0',
                 shape === 'circular' && 'rounded-full',
                 page !== p && 'text-neutral-700 hover:bg-neutral-100'
               )}

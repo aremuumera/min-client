@@ -135,7 +135,7 @@ const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
             disabled={disabled}
             className={cn(
               'flex-shrink-0 -mr-0.5 rounded-full p-0.5',
-              'hover:bg-black/10 focus:outline-none',
+              'hover:bg-ink/10 focus:outline-none',
               disabled && 'pointer-events-none'
             )}
           >

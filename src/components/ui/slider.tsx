@@ -104,7 +104,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         {!isRange ? (
           <div
             className={cn(
-              'absolute h-4 w-4 rounded-full border-2 border-primary-500 bg-white shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50',
+              'absolute h-4 w-4 rounded-full border-2 border-primary-500 bg-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50',
               size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'
             )}
             style={{ left: `calc(${calculatePercentage(value as number)}% - ${size === 'sm' ? '6px' : '8px'})` }}
@@ -113,14 +113,14 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           <>
             <div
               className={cn(
-                'absolute h-4 w-4 rounded-full border-2 border-primary-500 bg-white shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50',
+                'absolute h-4 w-4 rounded-full border-2 border-primary-500 bg-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50',
                 size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'
               )}
               style={{ left: `calc(${calculatePercentage(value[0])}% - ${size === 'sm' ? '6px' : '8px'})` }}
             />
             <div
               className={cn(
-                'absolute h-4 w-4 rounded-full border-2 border-primary-500 bg-white shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50',
+                'absolute h-4 w-4 rounded-full border-2 border-primary-500 bg-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50',
                 size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'
               )}
               style={{ left: `calc(${calculatePercentage(value[1])}% - ${size === 'sm' ? '6px' : '8px'})` }}

@@ -11,22 +11,24 @@ interface ThemeContextType {
 
 const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
 
+/*
+ * MINMEG is light mode only (frontend decision F-02). The provider keeps its API for existing
+ * callers, but always stays light and clears any dark preference saved earlier.
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [colorScheme, setColorScheme] = React.useState<ColorScheme>('light');
+  const colorScheme: ColorScheme = 'light';
 
   React.useEffect(() => {
-    // Handle system preference or persisted theme
-    const savedTheme = localStorage.getItem('theme') as ColorScheme;
-    if (savedTheme) {
-      setColorScheme(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    try {
+      localStorage.removeItem('theme');
+    } catch {
+      /* storage blocked: nothing to clear */
     }
+    document.documentElement.classList.remove('dark');
   }, []);
 
-  const changeColorScheme = (scheme: ColorScheme) => {
-    setColorScheme(scheme);
-    localStorage.setItem('theme', scheme);
-    document.documentElement.classList.toggle('dark', scheme === 'dark');
+  const changeColorScheme = () => {
+    /* light only */
   };
 
   return (

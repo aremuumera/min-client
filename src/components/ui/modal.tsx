@@ -53,6 +53,8 @@ export interface ModalProps {
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Props for the paper element */
   PaperProps?: { sx?: any; className?: string };
+  /** Phones: full screen (design rule). false = a centred card on every device (short confirmations) */
+  mobileFullScreen?: boolean;
 }
 
 const sizeClasses = {
@@ -76,6 +78,7 @@ function Modal({
   fullWidth,
   maxWidth,
   PaperProps,
+  mobileFullScreen = true,
   ...props
 }: ModalProps) {
   const actualSize = maxWidth || size;
@@ -111,14 +114,14 @@ function Modal({
       <AnimatePresence>
         {open && (
           <Portal>
-            <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 py-8 sm:p-6 overflow-y-auto">
+            <div className={cn("fixed inset-0 z-9999 flex items-center justify-center overflow-y-auto md:p-6 md:py-8", mobileFullScreen ? "p-0" : "p-4")}>
               {/* Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+                className="absolute inset-0 bg-overlay"
                 onClick={closeOnBackdropClick ? onClose : undefined}
               />
 
@@ -129,13 +132,16 @@ function Modal({
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.2 }}
                 className={cn(
-                  'relative w-full bg-white rounded-xl shadow-xl max-h-[85vh] flex flex-col overflow-hidden my-auto',
+                  'relative w-full bg-canvas flex flex-col overflow-hidden md:my-auto md:max-h-[85vh] md:rounded-xl md:border md:border-hairline',
+                  mobileFullScreen ? 'h-full md:h-auto' : 'max-h-[85vh] my-auto rounded-xl border border-hairline',
                   actualFullWidth ? 'max-w-none' : sizeClasses[actualSize],
                   className,
                   PaperProps?.className
                 )}
                 style={{ ...(sx || {}), ...(PaperProps?.sx || {}) }}
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
               >
                 {children}
               </motion.div>
@@ -172,7 +178,7 @@ function ModalHeader({
       )}
       {...props}
     >
-      <h2 className="text-lg font-semibold text-neutral-900">{children}</h2>
+      <h2 className="text-lg font-semibold text-ink">{children}</h2>
       {showCloseButton && (
         <IconButton
           aria-label="Close modal"

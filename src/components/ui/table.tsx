@@ -5,7 +5,7 @@ import { cn } from '@/utils/helper';
    TABLE
    ============================================ */
 
-export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> { }
+export type TableProps = React.TableHTMLAttributes<HTMLTableElement>;
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, ...props }, ref) => {
@@ -27,15 +27,14 @@ Table.displayName = 'Table';
    TABLE HEADER
    ============================================ */
 
-export interface TableHeaderProps
-  extends React.HTMLAttributes<HTMLTableSectionElement> { }
+export type TableHeaderProps = React.HTMLAttributes<HTMLTableSectionElement>;
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
   ({ className, ...props }, ref) => {
     return (
       <thead
         ref={ref}
-        className={cn('bg-neutral-50 [&_tr]:border-b', className)}
+        className={cn('bg-surface [&_tr]:border-b', className)}
         {...props}
       />
     );
@@ -48,8 +47,7 @@ TableHeader.displayName = 'TableHeader';
    TABLE BODY
    ============================================ */
 
-export interface TableBodyProps
-  extends React.HTMLAttributes<HTMLTableSectionElement> { }
+export type TableBodyProps = React.HTMLAttributes<HTMLTableSectionElement>;
 
 const TableBody = React.forwardRef<HTMLTableSectionElement, TableBodyProps>(
   ({ className, ...props }, ref) => {
@@ -69,8 +67,7 @@ TableBody.displayName = 'TableBody';
    TABLE FOOTER
    ============================================ */
 
-export interface TableFooterProps
-  extends React.HTMLAttributes<HTMLTableSectionElement> { }
+export type TableFooterProps = React.HTMLAttributes<HTMLTableSectionElement>;
 
 const TableFooter = React.forwardRef<HTMLTableSectionElement, TableFooterProps>(
   ({ className, ...props }, ref) => {
@@ -78,7 +75,7 @@ const TableFooter = React.forwardRef<HTMLTableSectionElement, TableFooterProps>(
       <tfoot
         ref={ref}
         className={cn(
-          'border-t bg-neutral-50 font-medium [&>tr]:last:border-b-0',
+          'border-t border-hairline bg-surface font-medium [&>tr]:last:border-b-0',
           className
         )}
         {...props}
@@ -104,9 +101,9 @@ const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
       <tr
         ref={ref}
         className={cn(
-          'border-b border-neutral-200 transition-colors',
-          'hover:bg-neutral-50',
-          selected && 'bg-primary-50',
+          'border-b border-hairline-soft transition-colors',
+          'hover:bg-surface',
+          selected && 'bg-brand-green-soft',
           className
         )}
         {...props}
@@ -121,8 +118,7 @@ TableRow.displayName = 'TableRow';
    TABLE HEAD (th)
    ============================================ */
 
-export interface TableHeadProps
-  extends React.ThHTMLAttributes<HTMLTableCellElement> { }
+export type TableHeadProps = React.ThHTMLAttributes<HTMLTableCellElement>;
 
 const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
   ({ className, ...props }, ref) => {
@@ -130,7 +126,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
       <th
         ref={ref}
         className={cn(
-          'h-12 px-4 text-left align-middle font-semibold text-neutral-700',
+          'h-11 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-[1px] text-steel',
           '[&:has([role=checkbox])]:pr-0',
           className
         )}
@@ -146,8 +142,7 @@ TableHead.displayName = 'TableHead';
    TABLE CELL (td)
    ============================================ */
 
-export interface TableCellProps
-  extends React.TdHTMLAttributes<HTMLTableCellElement> { }
+export type TableCellProps = React.TdHTMLAttributes<HTMLTableCellElement>;
 
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
   ({ className, ...props }, ref) => {
@@ -155,7 +150,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
       <td
         ref={ref}
         className={cn(
-          'px-4 py-3 align-middle text-neutral-900',
+          'px-4 py-3 align-middle text-ink',
           '[&:has([role=checkbox])]:pr-0',
           className
         )}
@@ -171,15 +166,14 @@ TableCell.displayName = 'TableCell';
    TABLE CAPTION
    ============================================ */
 
-export interface TableCaptionProps
-  extends React.HTMLAttributes<HTMLTableCaptionElement> { }
+export type TableCaptionProps = React.HTMLAttributes<HTMLTableCaptionElement>;
 
 const TableCaption = React.forwardRef<HTMLTableCaptionElement, TableCaptionProps>(
   ({ className, ...props }, ref) => {
     return (
       <caption
         ref={ref}
-        className={cn('mt-4 text-sm text-neutral-500', className)}
+        className={cn('mt-4 text-sm text-steel', className)}
         {...props}
       />
     );
