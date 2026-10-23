@@ -50,7 +50,7 @@ export const VerifiedBadges = ({ label, color = 'default', className }: BadgePro
 
 export const NormalBadges = ({ label, color = 'default', className }: BadgeProps) => {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[0.8em] bg-[#16b364] text-white h-8 gap-1 ${className}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[0.8em] bg-primary text-white h-8 gap-1 ${className}`}>
       <GiMining className="w-4 h-4" />
       {label}
     </span>

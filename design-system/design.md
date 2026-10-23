@@ -392,6 +392,9 @@ MINMEG is a supply-chain traceability, trade and certification platform used by 
 - **Green Soft** ({colors.brand-green-soft}, #e6f4ea): success badges, selected rows.
 - **Surface Feature** ({colors.surface-feature}, #f1f9f3): light green panels.
 
+### Green scale
+`primary-50` … `primary-950` (#f1f9f3 → #1e8742 at 500 → #0a1f1a at 950) for tints, charts and legacy classes. 500 = `primary`, 600 = `primary-deep`, 700 = `primary-pressed`, 950 = `brand-dark`. White text only on 500 and darker.
+
 ### Brand dark (from the MINMEG website)
 - **Brand Dark** ({colors.brand-dark}, #0a1f1a): main text (`ink`), the admin sidebar, toasts, tooltips, dark highlight cards, the login panel.
 - **Brand Dark Hover** ({colors.brand-dark-hover}, #132f28): a hovered sidebar item.

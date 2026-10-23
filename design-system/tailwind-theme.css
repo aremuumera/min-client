@@ -1,10 +1,9 @@
 /**
- * MINMEG Design System — Tailwind CSS v4 theme (import into globals.css).
+ * MINMEG Design System — Tailwind CSS v4 theme.
+ * In globals.css:  @import "tailwindcss";  then  @import "../../design-system/tailwind-theme.css";
  * Light mode only. No shadows: every shadow token is reset to none.
  * Font files: euclid-circular-a/ in each app (declared with @font-face in globals.css).
  */
-
-@import "tailwindcss";
 
 @theme {
   --font-sans: "Euclid Circular A", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -45,6 +44,19 @@
   --color-on-dark: #ffffff;
   --color-on-dark-muted: #a8b3bc;
 
+  /* brand green scale (500 = primary, 950 = brand dark) */
+  --color-primary-50: #f1f9f3;
+  --color-primary-100: #e6f4ea;
+  --color-primary-200: #c7e1d0;
+  --color-primary-300: #9ac9aa;
+  --color-primary-400: #61ab7b;
+  --color-primary-500: #1e8742;
+  --color-primary-600: #196f37;
+  --color-primary-700: #145a2c;
+  --color-primary-800: #114824;
+  --color-primary-900: #0e3a1e;
+  --color-primary-950: #0a1f1a;
+
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -58,4 +70,9 @@
   --shadow-*: initial;
   --inset-shadow-*: initial;
   --drop-shadow-*: initial;
+  --text-shadow-*: initial;
 }
+
+/* light mode only: the dark: variant never applies */
+@custom-variant dark (&:where(.minmeg-never-dark, .minmeg-never-dark *));
+

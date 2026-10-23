@@ -24,7 +24,7 @@ export const config = {
     name: 'MinMeg',
     description: '',
     colorScheme: 'light',
-    themeColor: '#16b364',
+    themeColor: '#1e8742',
     primaryColor: 'chateauGreen',
     // palette: {
     //   primary:  palettes.chateauGreen,
