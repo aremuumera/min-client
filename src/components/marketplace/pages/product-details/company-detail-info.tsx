@@ -31,9 +31,37 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
   const companyName = storeProfile?.company_name || supplier?.business_name || supplier?.company_name || '';
   const companySlug = formatCompanyNameForUrl(companyName) || 'company';
 
+  const isVideoUrl = (url?: string) => {
+    if (!url) return false;
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    return (
+      /\.(mp4|webm|ogg|mov|mkv|avi|m4v)$/i.test(cleanUrl) ||
+      cleanUrl.includes('/video/upload/') ||
+      cleanUrl.includes('resource_type/video')
+    );
+  };
+
+  // Combine images and attachments for media view
+  const allMediaRaw = [
+    ...(Array.isArray(images) ? images : []),
+    ...(Array.isArray(products?.attachments) ? products.attachments : []),
+  ];
+
   // Normalize media items to {url, type} objects
-  const validMedia: MediaItem[] = images?.length > 0
-    ? images.map((img: any) => typeof img === 'string' ? { url: img, type: 'image' as const } : { url: img.url, type: img.type || 'image' })
+  const validMedia: MediaItem[] = allMediaRaw.length > 0
+    ? allMediaRaw.map((img: any) => {
+        if (typeof img === 'string') {
+          return {
+            url: img,
+            type: isVideoUrl(img) ? ('video' as const) : ('image' as const),
+          };
+        }
+        const detectedType = img?.type === 'video' || isVideoUrl(img?.url) ? ('video' as const) : ('image' as const);
+        return {
+          url: img?.url || '',
+          type: detectedType,
+        };
+      }).filter((m: MediaItem) => Boolean(m.url))
     : [{ url: '/assets/logo5.png', type: 'image' as const }];
 
   const handleOpenModal = () => {

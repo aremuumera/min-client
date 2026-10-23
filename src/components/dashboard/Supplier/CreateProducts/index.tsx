@@ -1,11 +1,15 @@
-'use client'
-import React, { useEffect, useState } from 'react'
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { IoIosArrowBack } from "react-icons/io";
 import ProgressBar from '@/utils/progress_tracker';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
+import { UnsavedChangesModal } from '@/components/ui';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { useAppSelector } from '@/redux/hooks';
 import SupplierProductDetails from './productDetails';
 import SupplierProductLocation from './productsLocation';
 import SupplierPaymentTerms from './paymentTerms';
@@ -16,12 +20,34 @@ const SupplierListing = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [progress, setProgress] = useState(10);
+
+  const { productDetailsFormData } = useAppSelector((state) => state.product || {});
 
   // RAW FILE STATE (Lifted from children to replace IndexedDB)
   const [productImages, setProductImages] = useState<File[]>([]);
   const [productAttachments, setProductAttachments] = useState<File[]>([]);
+
+  const isDirty = useMemo(() => {
+    if (activeStep >= 4) return false;
+    if (activeStep > 0) return true;
+    if (productImages.length > 0 || productAttachments.length > 0) return true;
+    if (
+      productDetailsFormData?.productName?.trim() ||
+      productDetailsFormData?.productCategory ||
+      productDetailsFormData?.productHeaderDescription?.trim()
+    ) {
+      return true;
+    }
+    return false;
+  }, [activeStep, productImages.length, productAttachments.length, productDetailsFormData]);
+
+  const { showPrompt, stayOnPage, confirmLeave } = useUnsavedChanges({
+    isDirty,
+    isSubmitting,
+  });
 
   const steps = [
     "Product Details",
@@ -204,6 +230,7 @@ const SupplierListing = () => {
                   setProductImages={setProductImages}
                   setProductAttachments={setProductAttachments}
                   steps={steps}
+                  setIsSubmitting={setIsSubmitting}
                 />
               )
             }
@@ -219,8 +246,21 @@ const SupplierListing = () => {
           </div>
         </div>
       </div>
+
+      <UnsavedChangesModal
+        open={showPrompt}
+        isSubmitting={isSubmitting}
+        onStay={stayOnPage}
+        onLeave={confirmLeave}
+        title={isSubmitting ? 'Product Upload in Progress' : 'Unsaved Product Details'}
+        description={
+          isSubmitting
+            ? 'Your product is currently being uploaded. Please wait until the upload completes to avoid losing data.'
+            : 'You have entered details for this product. If you leave or reload now, all entered information will be discarded.'
+        }
+      />
     </div>
   )
 }
 
-export default SupplierListing
+export default SupplierListing;

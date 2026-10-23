@@ -84,8 +84,22 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
           id: id?.toString() || '',
           rfqId: id?.toString() || '',
           name: product_name || '',
-          mineral_tag: 'general',
-          supplier_id: supplierId?.toString() || ''
+          mineral_tag: products?.mineral_tag || 'general',
+          supplier_id: supplierId?.toString() || '',
+          purity_grade: products?.purity_grade,
+          moisture_max: products?.moisture_max,
+          packaging: products?.packaging,
+          sampling_method: products?.sampling_method,
+          quantity: products?.quantity,
+          measure: products?.measure,
+        }}
+        productData={{
+          purity_grade: products?.purity_grade,
+          moisture_max: products?.moisture_max,
+          packaging: products?.packaging,
+          sampling_method: products?.sampling_method,
+          quantity: products?.quantity,
+          measure: products?.measure,
         }}
       />
 

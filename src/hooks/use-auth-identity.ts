@@ -29,6 +29,7 @@ export function useAuthIdentity() {
     ownerUserId,
     permissions,
     team_role,
+    phone: authPhone,
   } = useAppSelector((state) => state.auth);
 
   // === Normalized Role ===
@@ -71,6 +72,7 @@ export function useAuthIdentity() {
     user,
     token,
     appData,
+    authPhone,
 
     // Team / Owner delegation
     isTeamMember,

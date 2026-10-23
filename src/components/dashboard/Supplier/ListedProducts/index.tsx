@@ -489,9 +489,15 @@ const ListedProducts = () => {
 
   const productsList = data?.products || [];
   const totalItems = data?.total_items || productsList.length;
-  const activeCount = productsList.filter((p: any) => p.status === 'Confirmed' || !p.status || p.status === 'ACTIVE').length;
-  const pendingCount = productsList.filter((p: any) => p.status === 'Pending').length;
-  const categoriesCount = Array.from(new Set(productsList.map((p: any) => p.product_category).filter(Boolean))).length;
+  const activeCount = productsList.filter(
+    (p: any) => p.status === 'published' || p.status === 'ACTIVE' || p.status === 'Confirmed' || (!p.status && p.isVerified !== false)
+  ).length;
+  const pendingCount = productsList.filter(
+    (p: any) => p.status === 'draft' || p.status === 'Pending' || p.status === 'pending' || p.isVerified === false
+  ).length;
+  const categoriesCount = Array.from(
+    new Set(productsList.map((p: any) => p.product_main_category || p.product_category).filter(Boolean))
+  ).length;
 
   return (
     <div className=" bg-gray-50 min-h-screen font-sans space-y-6">
@@ -625,14 +631,19 @@ const ListedProducts = () => {
               className="w-full text-xs font-medium rounded-xl"
             >
               <MenuItem value="">All Categories</MenuItem>
-              {Array.isArray(mainCategories) && mainCategories.map((cat: any) => (
-                <MenuItem key={cat.id || cat.name} value={cat.name}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-              <MenuItem value="Metallic Minerals">Metallic Minerals</MenuItem>
-              <MenuItem value="Non-Metallic Minerals">Non-Metallic Minerals</MenuItem>
-              <MenuItem value="Energy Minerals">Energy Minerals</MenuItem>
+              {Array.isArray(mainCategories) && mainCategories.length > 0 ? (
+                mainCategories.map((cat: any) => (
+                  <MenuItem key={cat.id || cat.name || cat.tag} value={cat.name}>
+                    {cat.name}
+                  </MenuItem>
+                ))
+              ) : (
+                <>
+                  <MenuItem value="Metallic Minerals">Metallic Minerals</MenuItem>
+                  <MenuItem value="Non-Metallic Minerals">Non-Metallic Minerals</MenuItem>
+                  <MenuItem value="Energy Minerals">Energy Minerals</MenuItem>
+                </>
+              )}
             </Select>
           </div>
 

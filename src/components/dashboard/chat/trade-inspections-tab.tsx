@@ -14,6 +14,22 @@ interface TradeInspectionsTabProps {
     isBuyer?: boolean;
 }
 
+const formatScheduledTime = (dateStr?: string, timeStr?: string) => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    const dateFormatted = d.toLocaleDateString();
+    if (!timeStr) return dateFormatted;
+    const parts = timeStr.trim().split(':');
+    if (parts.length >= 2) {
+        const h = parseInt(parts[0], 10);
+        const m = parts[1];
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${dateFormatted} at ${h12}:${m} ${ampm}`;
+    }
+    return `${dateFormatted} at ${timeStr}`;
+};
+
 // ─── Photo & Video Lightbox ─────────────────────────────────────
 function PhotoLightbox({ url, caption, onClose }: { url: string; caption?: string | null; onClose: () => void }) {
     const isVideo = Boolean(url?.match(/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i) || url?.includes('/video/upload/'));
@@ -70,22 +86,6 @@ function InspectionReportPanel({ assignmentId, onClose }: { assignmentId: string
     }
 
     const photos = report.photos || [];
-
-    const formatScheduledTime = (dateStr?: string, timeStr?: string) => {
-        if (!dateStr) return 'N/A';
-        const d = new Date(dateStr);
-        const dateFormatted = d.toLocaleDateString();
-        if (!timeStr) return dateFormatted;
-        const parts = timeStr.trim().split(':');
-        if (parts.length >= 2) {
-            const h = parseInt(parts[0], 10);
-            const m = parts[1];
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            const h12 = h % 12 || 12;
-            return `${dateFormatted} at ${h12}:${m} ${ampm}`;
-        }
-        return `${dateFormatted} at ${timeStr}`;
-    };
 
     return (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden space-y-0">
@@ -377,12 +377,11 @@ export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = f
                                             Accredited Min-meg Inspector
                                         </td>
                                         <td className="py-3.5 px-4">
-                                            <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
-                                                isCompleted ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                                                assignment.status === 'ASSIGNED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                                                isCancelled ? 'bg-gray-100 text-gray-600 border border-gray-200' :
-                                                'bg-amber-50 text-amber-700 border border-amber-200'
-                                            }`}>
+                                            <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase ${isCompleted ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                                                    assignment.status === 'ASSIGNED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                                        isCancelled ? 'bg-gray-100 text-gray-600 border border-gray-200' :
+                                                            'bg-amber-50 text-amber-700 border border-amber-200'
+                                                }`}>
                                                 {assignment.status?.replace(/_/g, ' ') || 'Assigned'}
                                             </span>
                                         </td>
@@ -400,7 +399,7 @@ export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = f
                                             )}
                                         </td>
                                         <td className="py-3.5 px-4 text-gray-500 text-[11px]">
-                                            {assignment.scheduledDate ? new Date(assignment.scheduledDate).toLocaleDateString() : (assignment.createdAt ? new Date(assignment.createdAt).toLocaleDateString() : 'N/A')}
+                                            {formatScheduledTime(assignment.scheduledDate || assignment.createdAt, assignment.scheduledTime)}
                                         </td>
                                         <td className="py-3.5 px-4 text-right">
                                             {isCancelled ? (

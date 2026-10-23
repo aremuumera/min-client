@@ -126,6 +126,10 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
         formDataToSend.append('selectedState', productLocation.selectedState || '');
         formDataToSend.append('streetNo', productLocation.streetNo || '');
         formDataToSend.append('zipCode', productLocation.zipCode || '');
+        if (productLocation?.location_type) {
+          formDataToSend.append('location_type', productLocation.location_type);
+        }
+
 
         // Send the FormData to the API
         const response = await validateProductStep({

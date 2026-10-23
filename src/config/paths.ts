@@ -123,19 +123,27 @@ export const paths = {
     products: {
       list: "/dashboard/supplier-list",
       create: "/dashboard/supplier-list/create",
-      update: "/dashboard/supplier-list/update",
+      update: (listedSupplierProductId?: string | number) =>
+        listedSupplierProductId ? `/dashboard/supplier-list/update/${listedSupplierProductId}` : "/dashboard/supplier-list/update",
       companyProfile: "/dashboard/supplier-list/company-profile/create",
       receivedInquiries: "/dashboard/received-inquiries",
     },
     myTradeInquiries: "/dashboard/my-trade-inquiries",
+    receivedInquiries: "/dashboard/received-inquiries",
     // rfq listing
     rfqs: {
       list: "/dashboard/rfq-list",
       create: "/dashboard/rfq-list/create",
-      update: (listedRfqId: string | number) =>
-        `/dashboard/rfq-list/update/${listedRfqId}`,
+      update: (listedRfqId?: string | number) =>
+        listedRfqId ? `/dashboard/rfq-list/update/${listedRfqId}` : "/dashboard/rfq-list/update",
       submittedOffers: "/dashboard/my-submitted-offers",
+      offers: "/dashboard/rfq/offers",
     },
+    mySubmittedOffers: "/dashboard/my-submitted-offers",
+    trade: {
+      details: (tradeId: string | number) => `/dashboard/trade/details/${tradeId}`,
+    },
+    compare: "/dashboard/marketplace/compare",
     calculator: "/dashboard/calculator",
     activity: "/dashboard/activity",
   },

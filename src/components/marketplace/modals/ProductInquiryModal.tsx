@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Loader2, CheckCircle, X, MapPin, Calendar, Scale, AlertTriangle, Box, Check, ChevronRight, DollarSign, Upload, FileText } from 'lucide-react';
+import { Loader2, CheckCircle, X, MapPin, Calendar, Scale, AlertTriangle, Box, Check, ChevronRight, ChevronDown, DollarSign, Upload, FileText } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useAlert } from '@/providers';
@@ -32,6 +32,13 @@ interface ProductInquiryModalProps {
         name: string;
         mineral_tag: string;
         supplier_id?: string;
+        purity_grade?: string;
+        moisture_max?: number | string;
+        packaging?: string;
+        sampling_method?: string;
+        quantity?: number | string;
+        measure?: string;
+        product_category?: string;
     };
     itemType?: 'product' | 'rfq' | 'business';
     rfqData?: {
@@ -43,6 +50,14 @@ interface ProductInquiryModalProps {
         sampling_method?: string;
         productDestination?: string;
         rfqDescription?: string;
+    };
+    productData?: {
+        purity_grade?: string;
+        moisture_max?: number | string;
+        packaging?: string;
+        sampling_method?: string;
+        quantity?: number | string;
+        measure?: string;
     };
 }
 
@@ -56,7 +71,7 @@ const initialState = {
     timeline_type: 'immediate',
     recurring_duration: '',
     recurring_frequency: 'monthly',
-    inspection_intent: false,
+    inspection_intent: true,
     description: '',
     urgency: 'standard',
     preferred_grade: '',
@@ -92,17 +107,90 @@ const ProductInquiryModal = ({
     product,
     itemType = 'product',
     rfqData,
+    productData,
 }: ProductInquiryModalProps) => {
     const isRfqOffer = itemType === 'rfq';
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<any>(isRfqOffer ? offerInitialState : initialState);
     const [customPackaging, setCustomPackaging] = useState(false);
+    const [showSpecsPopover, setShowSpecsPopover] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const handleClose = () => {
         setStep(1);
+        setShowSpecsPopover(false);
         setFormData(isRfqOffer ? offerInitialState : initialState);
         onClose();
+    };
+
+    const effectiveProductData = {
+        purity_grade: productData?.purity_grade || (product as any)?.purity_grade || '',
+        moisture_max: productData?.moisture_max !== undefined && productData?.moisture_max !== null
+            ? productData.moisture_max
+            : ((product as any)?.moisture_max !== undefined && (product as any)?.moisture_max !== null ? (product as any).moisture_max : ''),
+        packaging: productData?.packaging || (product as any)?.packaging || '',
+        sampling_method: productData?.sampling_method || (product as any)?.sampling_method || '',
+    };
+
+    const hasProductSpecs = Boolean(
+        effectiveProductData.purity_grade ||
+        (effectiveProductData.moisture_max !== '' && effectiveProductData.moisture_max !== undefined && effectiveProductData.moisture_max !== null) ||
+        effectiveProductData.packaging ||
+        effectiveProductData.sampling_method
+    );
+
+    const handleApplyGrade = (grade: string) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            purity_grade: grade,
+            preferred_grade: grade,
+        }));
+        showAlert(`Applied Grade: ${grade}`, 'success');
+    };
+
+    const handleApplyMoisture = (moisture: number | string) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            moisture_max: String(moisture),
+        }));
+        showAlert(`Applied Moisture: ${moisture}%`, 'success');
+    };
+
+    const handleApplyPackaging = (pkg: string) => {
+        const isStandard = PACKAGING_OPTIONS.some(opt => opt.value.toLowerCase() === pkg.toLowerCase());
+        setCustomPackaging(!isStandard);
+        setFormData((prev: any) => ({ ...prev, packaging: pkg }));
+        showAlert(`Applied Packaging: ${pkg}`, 'success');
+    };
+
+    const handleApplySampling = (sampling: string) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            sampling_method: sampling,
+        }));
+        showAlert(`Applied Sampling Protocol: ${sampling}`, 'success');
+    };
+
+    const handlePrefillAllProductSpecs = () => {
+        const updates: any = {};
+        if (effectiveProductData.purity_grade) {
+            updates.purity_grade = effectiveProductData.purity_grade;
+            updates.preferred_grade = effectiveProductData.purity_grade;
+        }
+        if (effectiveProductData.moisture_max !== '' && effectiveProductData.moisture_max !== undefined && effectiveProductData.moisture_max !== null) {
+            updates.moisture_max = String(effectiveProductData.moisture_max);
+        }
+        if (effectiveProductData.packaging) {
+            updates.packaging = effectiveProductData.packaging;
+            const isStandard = PACKAGING_OPTIONS.some(opt => opt.value.toLowerCase() === effectiveProductData.packaging.toLowerCase());
+            setCustomPackaging(!isStandard);
+        }
+        if (effectiveProductData.sampling_method) {
+            updates.sampling_method = effectiveProductData.sampling_method;
+        }
+        setFormData((prev: any) => ({ ...prev, ...updates }));
+        setShowSpecsPopover(false);
+        showAlert('Applied all supplier specifications', 'success');
     };
 
     const [createInquiry, { isLoading }] = useCreateProductInquiryMutation();
@@ -305,7 +393,7 @@ const ProductInquiryModal = ({
 
     return (
         <div className="fixed inset-0 bg-black/60 z-11000 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-xl border border-gray-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
                 <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
@@ -493,7 +581,7 @@ const ProductInquiryModal = ({
                                     {/* Quantity & Measure */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Quantity Required</label>
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">Quantity Required *</label>
                                             <input
                                                 type="text"
                                                 className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
@@ -519,99 +607,217 @@ const ProductInquiryModal = ({
                                         </div>
                                     </div>
 
-                                    {/* Preferred Grade */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Grade</label>
-                                            <input
-                                                type="text"
-                                                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                                placeholder="enter grade value"
-                                                value={formData.purity_grade}
-                                                onChange={e => setFormData({ ...formData, purity_grade: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Max Moisture (%)</label>
-                                            <input
-                                                type="number"
-                                                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                                placeholder="e.g. 5.0"
-                                                value={formData.moisture_max}
-                                                onChange={e => setFormData({ ...formData, moisture_max: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
+                                    {/* Mineral Specifications */}
+                                    <div className="space-y-4 pt-1">
+                                        <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                                            <div className="pr-2">
+                                                <h4 className="text-sm font-bold text-gray-900">Mineral Specifications</h4>
+                                                <p className="text-xs text-gray-500">
+                                                    Specify your requirements, or apply supplier's listed specifications if satisfied.
+                                                </p>
+                                            </div>
+                                            {itemType === 'product' && hasProductSpecs && (
+                                                <div className="relative shrink-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowSpecsPopover(!showSpecsPopover)}
+                                                        className="text-xs font-semibold text-green-700 hover:text-green-800 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                                                    >
+                                                        <span>Supplier Specs</span>
+                                                        <ChevronDown size={14} className={`transition-transform duration-200 ${showSpecsPopover ? 'rotate-180' : ''}`} />
+                                                    </button>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Packaging</label>
-                                            <Select
-                                                fullWidth
-                                                value={customPackaging ? 'Custom' : (formData.packaging || '')}
-                                                onChange={(val: any) => {
-                                                    const v = typeof val === 'string' ? val : val.target.value;
-                                                    if (v === 'Custom') {
-                                                        setCustomPackaging(true);
-                                                        setFormData({ ...formData, packaging: '' });
-                                                    } else {
-                                                        setCustomPackaging(false);
-                                                        setFormData({ ...formData, packaging: v });
-                                                    }
-                                                }}
-                                                options={PACKAGING_OPTIONS}
-                                            />
-                                            {customPackaging && (
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all mt-2"
-                                                    placeholder="Enter custom packaging"
-                                                    value={formData.packaging}
-                                                    onChange={e => setFormData({ ...formData, packaging: e.target.value })}
-                                                />
+                                                    {showSpecsPopover && (
+                                                        <>
+                                                            <div
+                                                                className="fixed inset-0 z-30"
+                                                                onClick={() => setShowSpecsPopover(false)}
+                                                            />
+                                                            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl p-3.5 z-40 space-y-3">
+                                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                                                    <span className="text-xs font-bold text-gray-900">Supplier Listed Specifications</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setShowSpecsPopover(false)}
+                                                                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                                                                    >
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                </div>
+
+                                                                <div className="space-y-2 text-xs">
+                                                                    {effectiveProductData.purity_grade && (
+                                                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors">
+                                                                            <div className="min-w-0 pr-2">
+                                                                                <span className="text-[10px] text-gray-400 uppercase font-bold block">Grade</span>
+                                                                                <span className="font-semibold text-gray-800 truncate block">{effectiveProductData.purity_grade}</span>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleApplyGrade(effectiveProductData.purity_grade)}
+                                                                                className="text-[11px] font-bold text-green-700 bg-white hover:bg-green-50 border border-green-200 px-2.5 py-1 rounded cursor-pointer transition-colors shrink-0"
+                                                                            >
+                                                                                {formData.purity_grade === effectiveProductData.purity_grade ? 'Applied' : 'Apply'}
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {effectiveProductData.moisture_max !== '' && effectiveProductData.moisture_max !== undefined && effectiveProductData.moisture_max !== null && (
+                                                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors">
+                                                                            <div className="min-w-0 pr-2">
+                                                                                <span className="text-[10px] text-gray-400 uppercase font-bold block">Max Moisture</span>
+                                                                                <span className="font-semibold text-gray-800 truncate block">{effectiveProductData.moisture_max}%</span>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleApplyMoisture(effectiveProductData.moisture_max)}
+                                                                                className="text-[11px] font-bold text-green-700 bg-white hover:bg-green-50 border border-green-200 px-2.5 py-1 rounded cursor-pointer transition-colors shrink-0"
+                                                                            >
+                                                                                {formData.moisture_max === String(effectiveProductData.moisture_max) ? 'Applied' : 'Apply'}
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {effectiveProductData.packaging && (
+                                                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors">
+                                                                            <div className="min-w-0 pr-2">
+                                                                                <span className="text-[10px] text-gray-400 uppercase font-bold block">Packaging</span>
+                                                                                <span className="font-semibold text-gray-800 truncate block">{effectiveProductData.packaging}</span>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleApplyPackaging(effectiveProductData.packaging)}
+                                                                                className="text-[11px] font-bold text-green-700 bg-white hover:bg-green-50 border border-green-200 px-2.5 py-1 rounded cursor-pointer transition-colors shrink-0"
+                                                                            >
+                                                                                {formData.packaging === effectiveProductData.packaging ? 'Applied' : 'Apply'}
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {effectiveProductData.sampling_method && (
+                                                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors">
+                                                                            <div className="min-w-0 pr-2">
+                                                                                <span className="text-[10px] text-gray-400 uppercase font-bold block">Sampling Protocol</span>
+                                                                                <span className="font-semibold text-gray-800 truncate block">{effectiveProductData.sampling_method}</span>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleApplySampling(effectiveProductData.sampling_method)}
+                                                                                className="text-[11px] font-bold text-green-700 bg-white hover:bg-green-50 border border-green-200 px-2.5 py-1 rounded cursor-pointer transition-colors shrink-0"
+                                                                            >
+                                                                                {formData.sampling_method === effectiveProductData.sampling_method ? 'Applied' : 'Apply'}
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handlePrefillAllProductSpecs}
+                                                                    className="w-full text-xs font-bold text-white bg-green-600 hover:bg-green-700 py-2 rounded-lg transition-colors cursor-pointer"
+                                                                >
+                                                                    Apply All Specifications
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Sampling Protocol</label>
-                                            <input
-                                                type="text"
-                                                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                                placeholder="e.g. ASTM Standard"
-                                                value={formData.sampling_method}
-                                                onChange={e => setFormData({ ...formData, sampling_method: e.target.value })}
-                                            />
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Grade</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                                    placeholder={effectiveProductData.purity_grade ? `e.g. ${effectiveProductData.purity_grade}` : "enter grade value"}
+                                                    value={formData.purity_grade}
+                                                    onChange={e => setFormData({ ...formData, purity_grade: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Max Moisture (%)</label>
+                                                <input
+                                                    type="number"
+                                                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                                    placeholder={effectiveProductData.moisture_max !== '' && effectiveProductData.moisture_max !== undefined && effectiveProductData.moisture_max !== null ? `e.g. ${effectiveProductData.moisture_max}` : "e.g. 5.0"}
+                                                    value={formData.moisture_max}
+                                                    onChange={e => setFormData({ ...formData, moisture_max: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Packaging</label>
+                                                <Select
+                                                    fullWidth
+                                                    value={customPackaging ? 'Custom' : (formData.packaging || '')}
+                                                    onChange={(val: any) => {
+                                                        const v = typeof val === 'string' ? val : val.target.value;
+                                                        if (v === 'Custom') {
+                                                            setCustomPackaging(true);
+                                                            setFormData({ ...formData, packaging: '' });
+                                                        } else {
+                                                            setCustomPackaging(false);
+                                                            setFormData({ ...formData, packaging: v });
+                                                        }
+                                                    }}
+                                                    options={PACKAGING_OPTIONS}
+                                                />
+                                                {customPackaging && (
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all mt-2"
+                                                        placeholder="Enter custom packaging"
+                                                        value={formData.packaging}
+                                                        onChange={e => setFormData({ ...formData, packaging: e.target.value })}
+                                                    />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Sampling Protocol</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                                    placeholder={effectiveProductData.sampling_method ? `e.g. ${effectiveProductData.sampling_method}` : "e.g. ASTM Standard"}
+                                                    value={formData.sampling_method}
+                                                    onChange={e => setFormData({ ...formData, sampling_method: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Location */}
                                     <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Delivery Destination</label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Delivery Destination *</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             <input
                                                 type="text"
                                                 className="col-span-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                                                placeholder="Country"
+                                                placeholder="Country *"
                                                 value={formData.delivery_country}
                                                 onChange={e => setFormData({ ...formData, delivery_country: e.target.value })}
                                             />
                                             <input
                                                 type="text"
                                                 className="col-span-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                                                placeholder="State"
+                                                placeholder="State *"
                                                 value={formData.delivery_state}
                                                 onChange={e => setFormData({ ...formData, delivery_state: e.target.value })}
                                             />
                                             <input
                                                 type="text"
                                                 className="col-span-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                                                placeholder="LGA / Transit Hub"
+                                                placeholder="LGA / Transit Hub *"
                                                 value={formData.delivery_location}
                                                 onChange={e => setFormData({ ...formData, delivery_location: e.target.value })}
                                             />
                                             <input
                                                 type="text"
                                                 className="col-span-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                                                placeholder="Detailed Address"
+                                                placeholder="Detailed Address *"
                                                 value={formData.delivery_address}
                                                 onChange={e => setFormData({ ...formData, delivery_address: e.target.value })}
                                             />
@@ -705,19 +911,19 @@ const ProductInquiryModal = ({
                                         </div>
                                     </div>
 
-                                    {/* Inspection Toggle */}
-                                    <div
-                                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${(formData as any).inspection_intent ? 'border-amber-200 bg-amber-50/50' : 'border-gray-100 bg-gray-50/20'}`}
-                                        onClick={() => setFormData({ ...formData, inspection_intent: !(formData as any).inspection_intent } as any)}
-                                    >
+                                    {/* Inspection - Fixed Mandatory for All Trades */}
+                                    <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70">
                                         <div className="flex items-start gap-3">
-                                            <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${(formData as any).inspection_intent ? 'bg-green-600 border-green-600' : 'bg-white border-gray-300'}`}>
-                                                {(formData as any).inspection_intent && <Check size={14} className="text-white" />}
+                                            <div className="mt-0.5 w-5 h-5 rounded border border-green-600 bg-green-600 flex items-center justify-center shrink-0">
+                                                <Check size={13} className="text-white stroke-[3]" />
                                             </div>
                                             <div className="flex-1">
-                                                <span className="block text-sm font-bold text-gray-900">Include Independent Inspection</span>
-                                                <span className="block text-[11px] text-gray-500 mt-1 leading-relaxed">
-                                                    Min-meg certified inspectors will verify quality, quantity and container loading protocols at source.
+                                                <div className="flex items-center gap-2">
+                                                    <span className="block text-sm font-bold text-gray-900">Independent Inspection Included</span>
+                                                    <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Mandatory</span>
+                                                </div>
+                                                <span className="block text-xs text-gray-500 mt-1 leading-relaxed">
+                                                    Minmeg certified inspectors verify quality, quantity, and loading protocols at source for every trade.
                                                 </span>
                                             </div>
                                         </div>
@@ -783,8 +989,8 @@ const ProductInquiryModal = ({
                                     </div>
                                     <div className="flex justify-between items-center py-1">
                                         <span className="text-gray-500">Inspection:</span>
-                                        <span className={`font-bold px-2 py-0.5 rounded ${formData.inspection_intent ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                            {formData.inspection_intent ? 'Requested' : 'Not included'}
+                                        <span className="font-bold text-xs px-2.5 py-0.5 rounded bg-green-100 text-green-700">
+                                            Included (Mandatory)
                                         </span>
                                     </div>
                                 </div>
@@ -825,7 +1031,7 @@ const ProductInquiryModal = ({
                                         router.push('/dashboard/chat');
                                     }
                                 }}
-                                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98]"
+                                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all active:scale-[0.98]"
                             >
                                 {isRfqOffer ? 'View in Trade Desk' : 'Return to Marketplace'}
                             </button>
@@ -854,7 +1060,7 @@ const ProductInquiryModal = ({
                                 {step === 1 ? (
                                     <button
                                         onClick={handleNext}
-                                        className="bg-green-600 text-white min-w-[140px] p-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-600/20 active:scale-[0.98]"
+                                        className="bg-green-600 text-white min-w-[140px] p-3 rounded-xl font-bold hover:bg-green-700 transition active:scale-[0.98]"
                                     >
                                         Proceed to Review
                                     </button>
@@ -862,7 +1068,7 @@ const ProductInquiryModal = ({
                                     <button
                                         onClick={handleSubmit}
                                         disabled={loading || submitting}
-                                        className="bg-green-600 text-white min-w-[160px] py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-600/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70"
+                                        className="bg-green-600 text-white min-w-[160px] py-3 rounded-xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70"
                                     >
                                         {loading || submitting ? (
                                             <Loader2 className="animate-spin" size={18} />

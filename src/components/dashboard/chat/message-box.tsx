@@ -18,6 +18,7 @@ import { usePathname } from '@/hooks/use-pathname';
 
 import { InvoiceMessageCard } from '../invoice/message_card';
 import { TradeDocumentCard } from './trade-document-card';
+import { VoiceNotePlayer } from './voice-note-player';
 import {
   useSignDocumentMutation,
   useGetSignatureSettingsQuery,
@@ -573,6 +574,22 @@ export function MessageBox({ message }: { message: Message }) {
                               </Menu>
                             </div>
                           )}
+                        </div>
+                      );
+                    }
+
+                    const isAudio = attachment.type === 'audio' ||
+                      (attachment.contentType && attachment.contentType.startsWith('audio/')) ||
+                      /\.(mp3|wav|ogg|webm|m4a|aac)$/i.test(attachment.name || attachment.url || '');
+
+                    if (isAudio) {
+                      return (
+                        <div key={attachmentKey} className="pt-1">
+                          <VoiceNotePlayer
+                            src={attachment.url}
+                            duration={attachment.duration}
+                            isOwn={position === 'right'}
+                          />
                         </div>
                       );
                     }

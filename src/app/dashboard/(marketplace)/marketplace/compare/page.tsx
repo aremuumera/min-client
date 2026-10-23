@@ -3,11 +3,13 @@
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/redux';
 import { clearComparison, removeFromComparison } from '@/redux/features/comparison/comparison-slice';
+import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { X, ArrowLeft, Heart, ShoppingCart, Info } from 'lucide-react';
 import Link from 'next/link';
 
 const ComparisonPage = () => {
     const { comparisonList } = useAppSelector((state) => state.comparison);
+    const { hasBuyerAccess } = useAuthIdentity();
     const dispatch = useAppDispatch();
 
     const getCurrencySymbol = (currency: string | undefined) => {
@@ -182,18 +184,20 @@ const ComparisonPage = () => {
                 </table>
             </div>
 
-            <div className="mt-12 bg-green-50 rounded-3xl p-8 border border-green-100 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="max-w-xl text-center md:text-left">
-                    <h2 className="text-2xl font-extrabold text-green-900 mb-2">Need project-specific quotes?</h2>
-                    <p className="text-green-700 font-medium">Create a Request for Quotation (RFQ) and let suppliers submit their best offers.</p>
+            {hasBuyerAccess && (
+                <div className="mt-12 bg-green-50 rounded-3xl p-8 border border-green-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="max-w-xl text-center md:text-left">
+                        <h2 className="text-2xl font-extrabold text-green-900 mb-2">Need project-specific quotes?</h2>
+                        <p className="text-green-700 font-medium">Create a Request for Quotation (RFQ) and let suppliers submit their best offers.</p>
+                    </div>
+                    <Link
+                        href="/dashboard/rfq-list/create"
+                        className="bg-green-700 text-white px-10 py-4 rounded-2xl font-black hover:bg-green-800 transition-all active:scale-95 whitespace-nowrap"
+                    >
+                        Create Multi-Product RFQ
+                    </Link>
                 </div>
-                <Link
-                    href="/dashboard/rfqs/create"
-                    className="bg-green-700 text-white px-10 py-4 rounded-2xl font-black hover:bg-green-800 transition-all shadow-xl shadow-green-200 active:scale-95 whitespace-nowrap"
-                >
-                    Create Multi-Product RFQ
-                </Link>
-            </div>
+            )}
         </div>
     );
 };

@@ -221,7 +221,7 @@ export const dashboardConfig: DashboardConfig = {
       items: [
         {
           key: "chat",
-          title: "Chat",
+          title: "Trade Chat",
           href: paths.dashboard.chat.base,
           icon: "chats-circle",
           matcher: { type: "startsWith", href: "/dashboard/chat" },

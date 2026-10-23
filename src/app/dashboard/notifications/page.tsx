@@ -69,13 +69,26 @@ const NotificationsPage = () => {
         }
     };
 
-    const handleNotificationClick = async (notification: Notification) => {
+    const handleNotificationClick = async (notification: any) => {
         try {
             if (!notification.isRead) {
                 await clearSingleNotification?.(notification.id);
             }
-            if (notification.conversationId) {
-                router.push(`/dashboard/chat/${notification.itemType}/${notification.conversationId}/${notification?.itemId}`);
+            
+            const conversationId = notification.conversationId || notification.roomId || notification.tradeId || notification.inquiryId;
+            const itemType = notification.itemType || notification.entityType || (notification.rfqId ? 'rfq' : 'product');
+            const itemId = notification.itemId || notification.inquiryId || notification.cycleId;
+
+            if (conversationId) {
+                if (itemId && itemId !== conversationId) {
+                    router.push(`/dashboard/chat/${itemType}/${conversationId}/${itemId}`);
+                } else {
+                    router.push(`/dashboard/chat/${itemType}/${conversationId}`);
+                }
+            } else if (itemId) {
+                router.push(`/dashboard/chat/${itemType}/${itemId}`);
+            } else if (notification.link || notification.url) {
+                router.push(notification.link || notification.url);
             }
         } catch (error) {
             console.error('Error handling notification click:', error);

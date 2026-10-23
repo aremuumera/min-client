@@ -24,12 +24,12 @@ const PHASES = [
     { id: 'ASSIGNED', label: 'Invitation', description: 'Assignment received. Review details and respond.', icon: ClipboardCheck },
     { id: 'ACCEPTED', label: 'Accepted', description: 'Terms agreed. Prepare for site visit.', icon: CheckCircle2 },
     { id: 'SITE_VISIT', label: 'On-Site Audit', description: 'Conduct physical inspection and collect samples.', icon: MapPin },
-    { id: 'LAB_ANALYSIS', label: 'Lab Analysis', description: 'Test mineral samples and verify grade.', icon: Beaker },
-    { id: 'REPORT_WRITING', label: 'Report Writing', description: 'Compile findings and draft official report.', icon: FileText },
+    { id: 'LAB_ANALYSIS', label: 'Lab Analysis & Report', description: 'Test mineral samples, verify grade, and compile final inspection report.', icon: Beaker },
     { id: 'COMPLETED', label: 'Completed', description: 'Report submitted. Assignment finalized.', icon: CheckCircle2 },
 ] as const;
 
-type PhaseId = typeof PHASES[number]['id'];
+// REPORT_WRITING can still come from backend but maps to the combined LAB_ANALYSIS phase in the stepper
+type PhaseId = typeof PHASES[number]['id'] | 'REPORT_WRITING';
 
 export default function TradeWorkbenchPage() {
     const { id: assignmentId } = useParams();
@@ -82,7 +82,9 @@ export default function TradeWorkbenchPage() {
     // Compute current phase index and next phase
     const currentPhaseIndex = useMemo(() => {
         if (!currentPhase || isCancelledOrRejected) return -1;
-        return PHASES.findIndex(p => p.id === currentPhase);
+        // REPORT_WRITING maps to the combined LAB_ANALYSIS phase
+        const effectivePhase = currentPhase === 'REPORT_WRITING' ? 'LAB_ANALYSIS' : currentPhase;
+        return PHASES.findIndex(p => p.id === effectivePhase);
     }, [currentPhase, isCancelledOrRejected]);
 
     const nextPhase = useMemo(() => {
@@ -244,7 +246,7 @@ export default function TradeWorkbenchPage() {
                 refetchPhotos();
             }
 
-            const targetStatus = isCompleted ? 'COMPLETED' : currentPhase === 'REPORT_WRITING' ? 'COMPLETED' : currentPhase;
+            const targetStatus = (isCompleted || currentPhase === 'LAB_ANALYSIS' || currentPhase === 'REPORT_WRITING') ? 'COMPLETED' : currentPhase;
 
             await completeInspection({
                 id: assignmentId,
@@ -512,15 +514,6 @@ export default function TradeWorkbenchPage() {
                                 </Button>
                             )}
 
-                            {(currentPhase === 'REPORT_WRITING' || currentPhase === 'LAB_ANALYSIS') && (
-                                <Button
-                                    onClick={() => setIsSubmitModalOpen(true)}
-                                    className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-xl py-3 font-bold flex items-center justify-center gap-2 text-sm mt-2"
-                                >
-                                    <FileText size={16} />
-                                    Submit Final Inspection Report
-                                </Button>
-                            )}
 
                             {currentPhase === 'ASSIGNED' && !showRejectForm && (
                                 <button
@@ -562,95 +555,184 @@ export default function TradeWorkbenchPage() {
                     )}
                 </div>
 
-                {/* Right Column: Evidence & Documentation */}
+                {/* Right Column: Phase Workspaces & Documentation */}
                 <div className="lg:col-span-2 space-y-5">
 
-                    {/* Site Inspection Evidence & Photos */}
-                    <div className="rounded-2xl border border-gray-200 p-5 space-y-4">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                            <div>
-                                <h3 className="text-base font-black text-gray-900">Site Inspection Evidence & Documents</h3>
-                                <p className="text-xs text-gray-400 font-medium mt-0.5">Upload geotagged field photos & lab PDF documents for verification.</p>
+                    {/* Phase 1: Assignment Invitation Card */}
+                    {currentPhase === 'ASSIGNED' && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 space-y-4">
+                            <div className="flex items-center justify-between border-b border-amber-100 pb-3">
+                                <div>
+                                    <h3 className="text-base font-black text-amber-950">Assignment Invitation & Scope Review</h3>
+                                    <p className="text-xs text-amber-800/80 font-medium mt-0.5">Review inspection specifications and accept the assignment invitation.</p>
+                                </div>
+                                <Chip label="Invitation Received" size="sm" color="warning" variant="outlined" />
                             </div>
-                            <Chip label={`${siteUploads.length} Files Uploaded`} size="sm" color="primary" variant="outlined" />
-                        </div>
-
-                        <div className="flex flex-wrap gap-4 items-start min-h-[140px]">
-                            {/* File Upload Card */}
-                            {!isCancelledOrRejected && !isCompleted && (
-                                <label className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:border-emerald-500 hover:bg-emerald-50/20 transition-all cursor-pointer group bg-gray-50/50">
-                                    <input
-                                        type="file"
-                                        multiple
-                                        accept="image/*,video/*,.pdf,application/pdf,.mp4,.webm,.mov,.avi"
-                                        className="hidden"
-                                        onChange={handlePhotoUpload}
-                                        disabled={uploadingPhotos}
-                                    />
-                                    {uploadingPhotos ? (
-                                        <Loader2 size={20} className="text-emerald-500 animate-spin" />
-                                    ) : (
-                                        <Camera size={22} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
-                                    )}
-                                    <span className="text-[10px] text-gray-600 font-bold group-hover:text-emerald-700 text-center px-1">
-                                        {uploadingPhotos ? 'Uploading...' : '+ Add Photo / Video / PDF'}
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Server Uploaded Site Photos, Videos & Documents */}
-                            {siteUploads.map((photo: any) => {
-                                const url = photo.photoUrl || photo.url || '';
-                                const isVideo = Boolean(url?.match(/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i) || url?.includes('/video/upload/'));
-                                const isPdf = Boolean(url?.match(/\.pdf(\?.*)?$/i) || photo.category === 'FIELD_REPORT_PDF' || photo.caption?.toLowerCase().endsWith('.pdf'));
-
-                                return (
-                                    <a
-                                        key={photo.id}
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-28 h-28 rounded-xl bg-gray-900 relative overflow-hidden border border-gray-200 group block hover:ring-2 hover:ring-emerald-500 transition-all"
+                            <div className="p-4 rounded-xl bg-white border border-amber-200/80 space-y-3">
+                                <p className="text-xs text-gray-700 leading-relaxed font-medium">
+                                    You have been selected to perform an accredited physical inspection for this trade. Please review the assignment specifications on the left, then click below to accept and confirm your participation.
+                                </p>
+                                {nextPhase && (
+                                    <Button
+                                        onClick={handleAdvancePhase}
+                                        disabled={updatingStatus}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 px-4 font-bold flex items-center gap-2 text-xs"
                                     >
-                                        {isVideo ? (
-                                            <div className="w-full h-full flex items-center justify-center relative bg-black">
-                                                <video src={url} className="w-full h-full object-cover opacity-80" preload="metadata" />
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="w-8 h-8 rounded-full bg-white/90 text-emerald-700 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                                        <Play size={14} className="ml-0.5" fill="currentColor" />
-                                                    </div>
-                                                </div>
-                                                <span className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded-md">
-                                                    <Video size={10} />
-                                                </span>
-                                            </div>
-                                        ) : isPdf ? (
-                                            <div className="w-full h-full bg-red-50 flex flex-col items-center justify-center p-2 text-center">
-                                                <FileText size={28} className="text-red-500 mb-1" />
-                                                <span className="text-[9px] font-bold text-gray-800 line-clamp-2 leading-tight">{photo.caption || 'PDF Document'}</span>
-                                            </div>
-                                        ) : (
-                                            <img src={url} className="w-full h-full object-cover" alt={photo.caption || 'inspection evidence'} />
-                                        )}
-                                        {photo.category && (
-                                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1.5 py-0.5">
-                                                <span className="text-[8px] text-white font-bold uppercase block truncate">{photo.category.replace(/_/g, ' ')}</span>
-                                            </div>
-                                        )}
-                                    </a>
-                                );
-                            })}
+                                        {updatingStatus ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                                        Accept Assignment &amp; Advance
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-                            {siteUploads.length === 0 && !uploadingPhotos && (
-                                <div className="flex-1 flex items-center justify-center min-h-[100px] border border-dashed border-gray-100 rounded-xl">
-                                    <div className="text-center py-2">
-                                        <ImageIcon size={28} className="text-gray-300 mx-auto mb-1" />
-                                        <p className="text-xs text-gray-400 font-medium">Click "+ Add Photo / PDF" to upload field evidence</p>
+                    {/* Phase 2: Assignment Acceptance & Pre-Audit Setup Card */}
+                    {currentPhase === 'ACCEPTED' && (
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 space-y-4">
+                            <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
+                                <div>
+                                    <h3 className="text-base font-black text-emerald-950">Assignment Acceptance & Pre-Audit Setup</h3>
+                                    <p className="text-xs text-emerald-800/80 font-medium mt-0.5">Terms agreed. Prepare sampling equipment and coordinate site visit.</p>
+                                </div>
+                                <Chip label="Terms Accepted" size="sm" color="success" variant="outlined" />
+                            </div>
+                            <div className="p-4 rounded-xl bg-white border border-emerald-200/80 space-y-4">
+                                <div className="flex items-start gap-3">
+                                    <CheckCircle2 size={22} className="text-emerald-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <h4 className="text-xs font-bold text-gray-900">Assignment Confirmed & Registered</h4>
+                                        <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                                            Your acceptance has been logged in the trade audit timeline. Please coordinate with the site contact person and click <strong>&quot;Advance to On-Site Audit&quot;</strong> when arriving on site to begin fieldwork and upload geotagged photos &amp; evidence.
+                                        </p>
                                     </div>
                                 </div>
-                            )}
+                                {nextPhase && (
+                                    <Button
+                                        onClick={handleAdvancePhase}
+                                        disabled={updatingStatus}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 px-4 font-bold flex items-center gap-2 text-xs"
+                                    >
+                                        {updatingStatus ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                                        Advance to On-Site Audit
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+
+                    {/* Phase 6: Inspection Completed Card */}
+                    {isCompleted && (
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 space-y-4">
+                            <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
+                                <div>
+                                    <h3 className="text-base font-black text-emerald-950">Inspection Report Finalized & Submitted</h3>
+                                    <p className="text-xs text-emerald-800/80 font-medium mt-0.5">Report submitted successfully. Awaiting Minmeg Admin review & release.</p>
+                                </div>
+                                <Chip label="Report Submitted" size="sm" color="success" variant="outlined" />
+                            </div>
+                            <div className="p-4 rounded-xl bg-white border border-emerald-200/80 space-y-2">
+                                <div className="flex items-start gap-3">
+                                    <CheckCircle2 size={22} className="text-emerald-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <h4 className="text-xs font-bold text-gray-900">Inspection Round Finalized</h4>
+                                        <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                                            Your findings, physical evidence, and laboratory test reports have been submitted. Minmeg Admin will review and release the accredited report to the buyer and supplier.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Phase 3+: Site Inspection Evidence & Photos */}
+                    {currentPhaseIndex >= 2 && (
+                        <div className="rounded-2xl border border-gray-200 p-5 space-y-4">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div>
+                                    <h3 className="text-base font-black text-gray-900">Site Inspection Evidence & Documents</h3>
+                                    <p className="text-xs text-gray-400 font-medium mt-0.5">Upload geotagged field photos & lab PDF documents for verification.</p>
+                                </div>
+                                <Chip label={`${siteUploads.length} Files Uploaded`} size="sm" color="primary" variant="outlined" />
+                            </div>
+
+                            <div className="flex flex-wrap gap-4 items-start min-h-[140px]">
+                                {/* File Upload Card (Unlocked at On-Site Audit phase) */}
+                                {!isCancelledOrRejected && !isCompleted && currentPhaseIndex >= 2 && (
+                                    <label className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:border-emerald-500 hover:bg-emerald-50/20 transition-all cursor-pointer group bg-gray-50/50">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*,video/*,.pdf,application/pdf,.mp4,.webm,.mov,.avi"
+                                            className="hidden"
+                                            onChange={handlePhotoUpload}
+                                            disabled={uploadingPhotos}
+                                        />
+                                        {uploadingPhotos ? (
+                                            <Loader2 size={20} className="text-emerald-500 animate-spin" />
+                                        ) : (
+                                            <Camera size={22} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                                        )}
+                                        <span className="text-[10px] text-gray-600 font-bold group-hover:text-emerald-700 text-center px-1">
+                                            {uploadingPhotos ? 'Uploading...' : '+ Add Photo / Video / PDF'}
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* Server Uploaded Site Photos, Videos & Documents */}
+                                {siteUploads.map((photo: any) => {
+                                    const url = photo.photoUrl || photo.url || '';
+                                    const isVideo = Boolean(url?.match(/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i) || url?.includes('/video/upload/'));
+                                    const isPdf = Boolean(url?.match(/\.pdf(\?.*)?$/i) || photo.category === 'FIELD_REPORT_PDF' || photo.caption?.toLowerCase().endsWith('.pdf'));
+
+                                    return (
+                                        <a
+                                            key={photo.id}
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-28 h-28 rounded-xl bg-gray-900 relative overflow-hidden border border-gray-200 group block hover:ring-2 hover:ring-emerald-500 transition-all"
+                                        >
+                                            {isVideo ? (
+                                                <div className="w-full h-full flex items-center justify-center relative bg-black">
+                                                    <video src={url} className="w-full h-full object-cover opacity-80" preload="metadata" />
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="w-8 h-8 rounded-full bg-white/90 text-emerald-700 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                                            <Play size={14} className="ml-0.5" fill="currentColor" />
+                                                        </div>
+                                                    </div>
+                                                    <span className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded-md">
+                                                        <Video size={10} />
+                                                    </span>
+                                                </div>
+                                            ) : isPdf ? (
+                                                <div className="w-full h-full bg-red-50 flex flex-col items-center justify-center p-2 text-center">
+                                                    <FileText size={28} className="text-red-500 mb-1" />
+                                                    <span className="text-[9px] font-bold text-gray-800 line-clamp-2 leading-tight">{photo.caption || 'PDF Document'}</span>
+                                                </div>
+                                            ) : (
+                                                <img src={url} className="w-full h-full object-cover" alt={photo.caption || 'inspection evidence'} />
+                                            )}
+                                            {photo.category && (
+                                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1.5 py-0.5">
+                                                    <span className="text-[8px] text-white font-bold uppercase block truncate">{photo.category.replace(/_/g, ' ')}</span>
+                                                </div>
+                                            )}
+                                        </a>
+                                    );
+                                })}
+
+                                {siteUploads.length === 0 && !uploadingPhotos && (
+                                    <div className="flex-1 flex items-center justify-center min-h-[100px] border border-dashed border-gray-100 rounded-xl">
+                                        <div className="text-center py-2">
+                                            <ImageIcon size={28} className="text-gray-300 mx-auto mb-1" />
+                                            <p className="text-xs text-gray-400 font-medium">Click &quot;+ Add Photo / PDF&quot; to upload field evidence</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Lab Test Results Summary */}
                     {(currentPhaseIndex >= 3 || isCompleted) && (

@@ -300,10 +300,12 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
           {/* Column 1 */}
           <div className="space-y-6">
             <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+              <User className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm text-gray-500 mb-1">Contact Person:</p>
-                <p className="font-semibold text-gray-800">{buyer?.first_name} {buyer?.last_name}</p>
+                <p className="text-sm text-gray-500 mb-1">Buyer Profile:</p>
+                <p className="font-semibold text-gray-800">
+                  {buyer?.name || 'Verified Buyer'} {productDestination ? `(${productDestination})` : ''}
+                </p>
               </div>
             </div>
 

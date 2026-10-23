@@ -2,12 +2,18 @@
 export const formatCompanyNameForUrl = (
   companyName: string | undefined,
 ): string => {
-  return companyName?.replace(/\s+/g, "-") || "";
+  if (!companyName) return "";
+  return companyName
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 };
 
 // Function to decode company name (hyphens back to spaces) for matching in data
 export const decodeCompanyNameFromUrl = (
   companyName: string | undefined,
 ): string => {
-  return companyName?.replace(/-/g, " ") || "";
+  if (!companyName) return "";
+  return companyName.replace(/-/g, " ");
 };

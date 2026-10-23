@@ -107,6 +107,9 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
 
         formDataToSend.append('paymentsTermsDescribed', pd?.paymentTermsDescribed || '');
         formDataToSend.append('shippingTermsDescribed', pd?.shippingTermsDescribed || '');
+        if (pd?.fulfillment_type) {
+          formDataToSend.append('fulfillment_type', pd.fulfillment_type);
+        }
 
         // Send the FormData to the API
         const response = await validateProductStep({

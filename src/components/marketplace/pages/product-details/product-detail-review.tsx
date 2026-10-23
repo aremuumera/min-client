@@ -299,7 +299,21 @@ const ProductDetailReview = ({ products }: { products: any }) => {
           rfqId: productId?.toString() || '',
           name: product_name,
           mineral_tag: products?.mineral_tag || 'mineral',
-          supplier_id: supplierId?.toString()
+          supplier_id: supplierId?.toString(),
+          purity_grade: products?.purity_grade,
+          moisture_max: products?.moisture_max,
+          packaging: products?.packaging,
+          sampling_method: products?.sampling_method,
+          quantity: products?.quantity,
+          measure: products?.measure,
+        }}
+        productData={{
+          purity_grade: products?.purity_grade,
+          moisture_max: products?.moisture_max,
+          packaging: products?.packaging,
+          sampling_method: products?.sampling_method,
+          quantity: products?.quantity,
+          measure: products?.measure,
         }}
       />
 

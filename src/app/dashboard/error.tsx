@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Typography } from '@/components/ui/typography';
@@ -15,7 +16,9 @@ export default function Error({
 }) {
     useEffect(() => {
         console.error(error);
+        Sentry.captureException(error);
     }, [error]);
+
 
     return (
         <Box className="flex h-[50vh] flex-col items-center justify-center p-8 text-center">

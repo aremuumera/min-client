@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { RootState } from '@/redux/store';
 import { clearAllFilesFromIndexedDB, getAllFilesFromIndexedDBForServer } from '@/utils/indexDb';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
+import { getErrorMessage } from '@/utils/helper';
 import { z } from 'zod';
 
 interface SupplierLocationInfo {
@@ -174,7 +175,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
       const response = await createStoreProfile({
         profileData: formData,
-        supplierId: user?.id,
+        supplierId: user?.id || user?.external_id,
       }).unwrap();
 
       setResponseData(response.data);
@@ -189,7 +190,7 @@ const SupplierCompanyProfileLocation = ({ handleNext, setActiveStep, activeStep,
 
       setShowSuccessModal(true);
     } catch (error: any) {
-      const errMsg = error?.data?.message || error?.data?.error || error?.message || 'Profile creation failed';
+      const errMsg = getErrorMessage(error, 'Profile creation failed');
       toast.error(errMsg);
       console.error('Submission failed details:', { status: error?.status, data: error?.data, error });
     }
@@ -315,7 +316,7 @@ const SuccessModal = ({ onEdit, onClose, responseData }: any) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 px-4"
       style={{ zIndex: 2900 }}
     >
       <motion.div

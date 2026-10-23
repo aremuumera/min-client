@@ -46,7 +46,9 @@ import {
   ListItemText,
   FormHelperText,
   Chip,
+  UnsavedChangesModal,
 } from '@/components/ui';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { Loader2 } from 'lucide-react';
 import {
   MdCheckCircle as CheckCircle,
@@ -93,6 +95,8 @@ const rfqSchema = z.object({
   is_inspection_required: z.boolean().optional().default(false),
   is_shipment_included: z.boolean().optional().default(false),
   urgency_level: z.string().optional().default('standard'),
+  fulfillment_type: z.string().optional().nullable(),
+  location_type: z.string().optional().nullable(),
 });
 
 
@@ -141,6 +145,8 @@ interface RfqFormData {
   is_inspection_required?: boolean;
   is_shipment_included?: boolean;
   urgency_level?: string;
+  fulfillment_type?: string;
+  location_type?: string;
   [key: string]: any;
 }
 
@@ -155,7 +161,7 @@ const RfqDetails = ({
   handleNext: () => void;
   setActiveStep: (step: number) => void;
   activeStep: number;
-  handleBack: () => void;
+  handleBack?: () => void;
 }) => {
   const dispatch = useAppDispatch();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -182,6 +188,26 @@ const RfqDetails = ({
   });
 
   const [createRFQ, { isLoading: isCreatingRfq }] = useCreateRFQMutation();
+
+  const isDirty = React.useMemo(() => {
+    if (successModalOpen) return false;
+    if (uploadedFiles.length > 0) return true;
+    if (
+      rfqProductDetailsFormData?.rfqProductName?.trim() ||
+      rfqProductDetailsFormData?.rfqDescription?.trim() ||
+      rfqProductDetailsFormData?.quantityRequired ||
+      rfqProductDetailsFormData?.rfqProductMainCategory ||
+      selectedCategories.mainCategory.id
+    ) {
+      return true;
+    }
+    return false;
+  }, [successModalOpen, uploadedFiles.length, rfqProductDetailsFormData, selectedCategories.mainCategory.id]);
+
+  const { showPrompt, stayOnPage, confirmLeave } = useUnsavedChanges({
+    isDirty,
+    isSubmitting: isCreatingRfq,
+  });
 
   const { data: mainCatData, isLoading: isMainCatLoading } = useGetMainCategoryQuery();
 
@@ -500,6 +526,8 @@ const RfqDetails = ({
       formData.append('is_inspection_required', String(typedFormData.is_inspection_required || false));
       formData.append('is_shipment_included', String(typedFormData.is_shipment_included || false));
       formData.append('urgency_level', typedFormData.urgency_level || 'standard');
+      if (typedFormData.fulfillment_type) formData.append('fulfillment_type', typedFormData.fulfillment_type);
+      if (typedFormData.location_type) formData.append('location_type', typedFormData.location_type);
       formData.append('status', 'published');
 
       if (typedFormData.selectedShippings && typedFormData.selectedShippings.length > 0) {
@@ -1014,7 +1042,16 @@ const RfqDetails = ({
             </div>
 
             <div className="flex pt-[30px] gap-[20px] justify-between mt-4">
-              <Button disabled={isCreatingRfq} variant="contained" color="primary" className="w-full" type="submit">
+              <Button
+                disabled={isCreatingRfq}
+                variant="outlined"
+                type="button"
+                onClick={handleBack}
+                className="w-1/3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl"
+              >
+                Back
+              </Button>
+              <Button disabled={isCreatingRfq} variant="contained" color="primary" className="w-2/3" type="submit">
                 {isCreatingRfq ? (
                   <Loader2 className="animate-spin text-white" size={18} />
                 ) : (
@@ -1030,6 +1067,19 @@ const RfqDetails = ({
           onClose={() => setSuccessModalOpen(false)}
           rfqLink={`${viewCopyLink}`}
           onViewRfq={handleViewRfq}
+        />
+
+        <UnsavedChangesModal
+          open={showPrompt}
+          isSubmitting={isCreatingRfq}
+          onStay={stayOnPage}
+          onLeave={confirmLeave}
+          title={isCreatingRfq ? 'RFQ Submission in Progress' : 'Unsaved RFQ Details'}
+          description={
+            isCreatingRfq
+              ? 'Your RFQ is currently being published. Please wait for the process to complete to avoid loss of data.'
+              : 'You have entered details for this RFQ. If you leave or reload the page now, all entered information will be discarded.'
+          }
         />
       </div>
     </div>

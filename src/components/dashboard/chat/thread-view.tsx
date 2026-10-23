@@ -11,7 +11,7 @@ import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
 import { TradeStatusStepper } from './trade-status-stepper';
-import { ActionPanel } from './action-panel';
+import { ActionPanel, SupplierPendingActionBanner } from './action-panel';
 import { InspectorActionPanel } from './inspector-action-panel';
 import { TradeInspectionsTab } from './trade-inspections-tab';
 import { DocumentVault } from './document-vault';
@@ -23,6 +23,7 @@ import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
+import { VoiceNoteWaveSkeleton } from './voice-note-player';
 
 interface ThreadViewProps {
   threadId: string;
@@ -60,7 +61,7 @@ function ChatMessageSkeleton() {
 }
 
 export function ThreadView({ threadId }: ThreadViewProps) {
-  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab } = React.useContext(ChatContext);
+  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, loadingAttachments, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab } = React.useContext(ChatContext);
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const params = useParams();
@@ -92,6 +93,8 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           await sendMessage?.(content, [], 'text');
         } else if (type === 'file' && content) {
           await sendMessage?.('', [content], 'file');
+        } else if (type === 'audio' && content) {
+          await sendMessage?.('', [content], 'audio');
         }
       } catch (error: any) {
         console.error('Failed to send message:', error);
@@ -110,19 +113,19 @@ export function ThreadView({ threadId }: ThreadViewProps) {
   // Check if initial room sync is still in progress
   const isSyncing = loading || (conversations.length === 0 && (!activeConversation || activeConversation.conversationId !== threadId));
 
-  if (isSyncing && !thread) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full flex-1 p-8 text-center bg-gray-50/50">
-        <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-emerald-600 mb-3 animate-pulse">
-          <MessageSquare size={22} />
-        </div>
-        <p className="text-sm font-bold text-gray-900">Connecting to Min-meg Trade Desk...</p>
-        <p className="text-xs text-gray-400 font-medium mt-0.5">Synchronizing trade room history</p>
-      </div>
-    );
-  }
-
   if (!thread) {
+    if (isSyncing) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full flex-1 p-8 text-center bg-gray-50/50">
+          <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-emerald-600 mb-3 animate-pulse">
+            <MessageSquare size={22} />
+          </div>
+          <p className="text-sm font-bold text-gray-900">Connecting to Min-meg Trade Desk...</p>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Synchronizing trade room history</p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center h-full flex-1 p-6 text-center bg-white">
         <div className="max-w-md w-full p-8 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-4">
@@ -156,13 +159,19 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       </div>
 
       {/* Trade Status Stepper */}
-      {thread && (
-        <TradeStatusStepper
-          inquiryId={activeInquiryId || thread?.metadata?.inquiry_id || threadId}
-          itemType={threadType || thread?.itemType || 'product'}
-          currentStatus={thread?.metadata?.status}
-        />
-      )}
+      {thread && (() => {
+        const activeCycle = roomInquiries?.find((i: any) => isMatch(i.id || undefined, activeInquiryId || undefined) || isMatch(i.inquiry_id || undefined, activeInquiryId || undefined) || isMatch(i.inquiryId || undefined, activeInquiryId || undefined)) || thread?.metadata;
+        const resolvedCurrentStatus = activeCycle?.status || activeCycle?.trade_status || activeCycle?.current_sub_status || thread?.metadata?.status || thread?.status;
+
+        return (
+          <TradeStatusStepper
+            inquiryId={activeInquiryId || thread?.metadata?.inquiry_id || threadId}
+            itemType={threadType || thread?.itemType || 'product'}
+            currentStatus={resolvedCurrentStatus}
+            userRole={isInspector ? 'inspector' : (isSupplier ? 'supplier' : (user?.role || 'buyer'))}
+          />
+        );
+      })()}
 
       {/* Inquiry Sub-Tabs (Cycles) */}
       {roomInquiries && roomInquiries.length > 1 && (
@@ -266,27 +275,63 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         </div>
       ) : (
         <>
+          {/* Docked Action Banners at top of chat (Supplier Pending or Inspector Assignment Pending) */}
+          {(() => {
+            const isTradeThread = thread?.conversationType === 'trade';
+            const inquiriesStillLoading = isTradeThread && roomInquiries.length === 0;
+            if (loading || loadingMessages || inquiriesStillLoading) {
+              return null;
+            }
+
+            const activeInq = roomInquiries.find((i: any) => isMatch(i.id || undefined, activeInquiryId || undefined)) || roomInquiries[0];
+            const currentStatus = activeInq?.status || thread?.metadata?.status || null;
+            const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
+            const _isSupplier = user?.id && (thread?.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
+            const _isInspector = user?.id && (thread?.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
+
+            if (isPending && _isSupplier && thread?.metadata?.entity_type !== 'rfq') {
+              return <SupplierPendingActionBanner thread={thread} activeInquiry={activeInq} />;
+            }
+
+            if (_isInspector) {
+              const inspectorStatus = activeInq?.inspector_status || activeInq?.status || thread?.metadata?.status;
+              const isAccepted = ['ACCEPTED', 'SCHEDULED', 'INSPECTION_SCHEDULED', 'INSPECTION_IN_PROGRESS', 'SITE_VISIT', 'LAB_ANALYSIS', 'REPORT_WRITING', 'COMPLETED', 'DECLINED', 'REPLACED', 'REVOKED'].includes(inspectorStatus);
+              if (!isAccepted) {
+                return <InspectorActionPanel thread={thread} />;
+              }
+            }
+
+            return null;
+          })()}
+
           <Stack
             ref={messagesRef}
             spacing={2}
             className="flex-auto overflow-y-auto p-3 sm:p-6 relative bg-gray-50/30"
-            style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {loadingMessages ? (
+            {loadingMessages && messages.length === 0 ? (
               <ChatMessageSkeleton />
             ) : (
-              messages.map((message: any) => (
-                <MessageBox key={message.id} message={message} />
-              ))
+              <>
+                {messages.map((message: any) => (
+                  <MessageBox key={message.id} message={message} />
+                ))}
+                {loadingAttachments && (
+                  <div className="flex justify-end mb-2">
+                    <VoiceNoteWaveSkeleton isOwn={true} />
+                  </div>
+                )}
+              </>
             )}
           </Stack>
 
           {/* Transition to Message Input once acknowledged/started */}
           {(() => {
-            // Show skeleton while trade data (room inquiries) is still loading
+            // Show skeleton only while trade room is first connecting
             const isTradeThread = thread?.conversationType === 'trade';
             const inquiriesStillLoading = isTradeThread && roomInquiries.length === 0;
-            if (loading || loadingMessages || inquiriesStillLoading) {
+            if (loading || (loadingMessages && messages.length === 0) || inquiriesStillLoading) {
               return (
                 <Box className="p-3 sm:p-4 border-t border-gray-100 bg-white">
                   <div className="flex items-center gap-3">
@@ -304,43 +349,21 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             const activeInq = roomInquiries.find((i: any) => i.id === activeInquiryId);
             const currentStatus = activeInq?.status || thread?.metadata?.status || null;
             const isRejected = currentStatus === 'REJECTED' || currentStatus === 'rejected';
-            const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
-            const _isSupplier = user?.id && (thread.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
-            const _isInspector = user?.id && (thread.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
-            const _isBuyer = !_isSupplier && !_isInspector;
 
-            // 1) If rejected, show the rejection card (ActionPanel handles this UI)
+            // 1) If rejected, show the rejection card
             if (isRejected) {
-              // Merge metadata so ActionPanel gets the correct status and reason
               const rejectedThread = {
                 ...thread,
                 metadata: {
-                  ...thread.metadata,
+                  ...thread?.metadata,
                   status: 'rejected',
-                  rejection_reason: activeInq?.rejection_reason || thread.metadata?.rejection_reason
+                  rejection_reason: activeInq?.rejection_reason || thread?.metadata?.rejection_reason
                 }
               };
               return <ActionPanel thread={rejectedThread} />;
             }
 
-            // 2) If pending and user is the supplier, show action buttons (Product Inquiry only, NOT RFQ offers)
-            if (isPending && _isSupplier && thread.metadata?.entity_type !== 'rfq') {
-              return <ActionPanel thread={thread} />;
-            }
-
-            // 4) If user is an inspector, check their specific assignment status
-            if (_isInspector) {
-              const inspectorStatus = activeInq?.inspector_status || activeInq?.status || thread.metadata?.status;
-
-              // Transition to chat ONLY if they have officially ACCEPTED or progressed further
-              const isAccepted = ['ACCEPTED', 'SITE_VISIT', 'COMPLETED'].includes(inspectorStatus);
-
-              if (!isAccepted) {
-                return <InspectorActionPanel thread={thread} />;
-              }
-            }
-
-            // 5) Otherwise show message input
+            // 2) Message input is available for all active participants
             return <MessageAdd onSend={handleSendMessage} />;
           })()}
         </>

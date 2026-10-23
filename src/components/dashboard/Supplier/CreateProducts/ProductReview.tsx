@@ -1,5 +1,6 @@
-'use client'
+'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { PiWarningLight } from "react-icons/pi";
@@ -12,7 +13,6 @@ import { useAppSelector } from '@/redux/hooks';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import Link from 'next/link';
 import { CircularProgress, Typography } from '@/components/ui';
-import { useState } from 'react';
 
 interface SupplierProductReviewProps {
   handleNext: () => void;
@@ -24,6 +24,7 @@ interface SupplierProductReviewProps {
   setProductImages: (files: File[]) => void;
   setProductAttachments: (files: File[]) => void;
   steps: string[];
+  setIsSubmitting?: (isSubmitting: boolean) => void;
 }
 
 const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
@@ -35,7 +36,8 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
   productAttachments,
   setProductImages,
   setProductAttachments,
-  steps
+  steps,
+  setIsSubmitting,
 }) => {
   const {
     productPaymentData,
@@ -65,6 +67,10 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
   const dispatch = useDispatch();
 
   const [createProduct, { isLoading }] = useCreateProductMutation();
+
+  React.useEffect(() => {
+    setIsSubmitting?.(isLoading);
+  }, [isLoading, setIsSubmitting]);
 
   const handleNextImage = () => {
     setCurrentIndex((prev) => (prev + 1) % (uploadedFiles?.length || 1));
@@ -155,6 +161,12 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
       }
       formData.append('paymentsTermsDescribed', productPaymentData.paymentTermsDescribed || '');
       formData.append('shippingTermsDescribed', productPaymentData.shippingTermsDescribed || '');
+      if (productLocation?.location_type || (serverReadyData as any)?.location_type) {
+        formData.append('location_type', productLocation?.location_type || (serverReadyData as any)?.location_type);
+      }
+      if (productPaymentData?.fulfillment_type || (serverReadyData as any)?.fulfillment_type) {
+        formData.append('fulfillment_type', productPaymentData?.fulfillment_type || (serverReadyData as any)?.fulfillment_type);
+      }
 
       // Description Data
       formData.append('productHeaderDescription', productHeaderDescription || "Product Description");

@@ -29,6 +29,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   const isBusinessVerified = appData?.businessVerification?.isVerified;
   const [showProfileModal, setShowProfileModal] = React.useState(false);
+  const [showKycModal, setShowKycModal] = React.useState(false);
+  const [kycDismissedPath, setKycDismissedPath] = React.useState<string | null>(null);
 
   // Sign into Firebase Auth when custom token is available
   const firebaseSignedIn = React.useRef(false);
@@ -107,6 +109,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleGoToKyc = () => {
+    setShowKycModal(false);
+    router.push(paths.dashboard.companyInfoVerification);
+  };
+
+  const handleDismissKycModal = () => {
+    setKycDismissedPath(pathname);
+    setShowKycModal(false);
+  };
+
   React.useEffect(() => {
     // Not authenticated or user data missing
     if (!isAuth || !user) {
@@ -122,10 +134,22 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Authenticated but NOT verified trying to access verified route
-    if (requiresVerification(pathname) && !isBusinessVerified) {
-      router.replace(paths.errors.notFound);
-      return;
+    // --- KYC Business Verification Guard Modal ---
+    const isKycVerificationPage = pathname === paths.dashboard.companyInfoVerification;
+
+    if (!isBusinessVerified) {
+      // If user is unverified and not already on the KYC verification page
+      if (!isKycVerificationPage && requiresVerification(pathname)) {
+        if (pathname !== kycDismissedPath) {
+          setShowKycModal(true);
+        } else {
+          setShowKycModal(false);
+        }
+      } else {
+        setShowKycModal(false);
+      }
+    } else {
+      setShowKycModal(false);
     }
 
     // --- Profile Creation Guard ---
@@ -160,19 +184,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         setShowProfileModal(true);
       } else {
         setShowProfileModal(false);
-      }
-
-      const isOnAllowedRoute = config.allowed.some((route) => {
-        // Overview must be an exact match to prevent it from catching all /dashboard/* sub-routes
-        if (route === paths.dashboard.overview) {
-          return pathname === paths.dashboard.overview;
-        }
-        return pathname.startsWith(route);
-      });
-
-      if (!isOnAllowedRoute) {
-        router.replace(paths.dashboard.overview);
-        return;
       }
     } else {
       setShowProfileModal(false);
@@ -239,6 +250,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     isBusinessVerified,
     isLoading,
     isError,
+    kycDismissedPath,
   ]);
 
   // console.log('AuthGuard State:', { isAuth, user: !!user, isInitialized, isLoading, isUninitialized });
@@ -259,6 +271,54 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isAuth) {
     return (
       <>
+        {/* Business Verification (KYC) Prompt Modal */}
+        <Modal
+          open={showKycModal}
+          onClose={handleDismissKycModal}
+          closeOnBackdropClick={true}
+          closeOnEscape={true}
+        >
+          <ModalHeader showCloseButton={true}>
+            Business Verification (KYC) Required
+          </ModalHeader>
+          <ModalBody>
+            <Box className="py-2">
+              <div className="mb-3 text-base font-semibold text-neutral-900">
+                Complete your business verification to perform trade actions
+              </div>
+              <div className="text-sm text-neutral-600 mb-4 leading-relaxed">
+                You can browse and explore the platform, but submitting product inquiries, posting RFQs, executing contracts, or creating listings requires an approved Business Verification (KYC).
+              </div>
+              <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3.5 mb-4 text-xs text-amber-900 space-y-1.5">
+                <div className="font-semibold text-amber-900">Why verify your business?</div>
+                <div className="flex items-center gap-2">
+                  <span>✓</span> Access verified buyer & supplier trade queues
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>✓</span> Unlock contract signing & Trade Document Hub
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>✓</span> Get verified merchant badge on public listings
+                </div>
+              </div>
+            </Box>
+            <div className="mt-4 space-y-2.5">
+              <Button onClick={handleGoToKyc} variant="contained" color="primary" className="w-full py-3 text-base font-medium">
+                Complete Verification Now
+              </Button>
+              <Button
+                onClick={handleDismissKycModal}
+                variant="outlined"
+                color="secondary"
+                className="w-full py-2 text-sm text-neutral-600 hover:bg-neutral-50 transition-colors"
+              >
+                Continue Browsing
+              </Button>
+            </div>
+          </ModalBody>
+        </Modal>
+
+        {/* Profile Setup Modal */}
         <Modal
           open={showProfileModal}
           onClose={() => { }} // Disable closing

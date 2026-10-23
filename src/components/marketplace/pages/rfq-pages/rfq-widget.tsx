@@ -153,14 +153,14 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
                 <p className="text-sm font-black text-gray-900 leading-tight">
                   {buyer?.name || 'Buyer'}
                 </p>
-                {buyer?.verified && (
+                {buyer?.verified !== false && (
                   <span className="shrink-0 bg-blue-50 text-blue-600 px-1 rounded text-[9px] font-bold border border-blue-100 uppercase tracking-tighter">
                     Verified
                   </span>
                 )}
               </div>
               <p className="text-[11px] text-gray-500 font-medium truncate max-w-[150px]">
-                {buyer?.company_name || 'Individual Buyer'}
+                {productDestination ? `Buyer • ${productDestination}` : (buyer?.company_name || 'Buyer')}
               </p>
             </div>
 

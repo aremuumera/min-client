@@ -14,6 +14,9 @@ import { PaperPlaneTilt as PaperPlaneTiltIcon } from '@phosphor-icons/react/dist
 
 import { ChatContext } from '@/providers/chat-provider';
 
+import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { VoiceNoteRecorder } from './voice-note-recorder';
+
 interface MessageAddProps {
   disabled?: boolean;
   onSend?: (type: string, content: any) => void;
@@ -21,6 +24,7 @@ interface MessageAddProps {
 
 export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
   const [content, setContent] = React.useState('');
+  const [isRecordingVoice, setIsRecordingVoice] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -73,6 +77,27 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
     [onSend, uploadAttachment]
   );
 
+  const handleSendVoiceNote = async (audioFile: File, durationSeconds: number) => {
+    try {
+      setIsUploading(true);
+      const attachment = await uploadAttachment?.(audioFile);
+      if (attachment) {
+        onSend?.('audio', {
+          ...attachment,
+          type: 'audio',
+          duration: durationSeconds,
+          name: 'Voice message',
+        });
+      }
+    } catch (err: any) {
+      console.error('Failed to upload voice note:', err);
+      toast.error('Failed to upload voice note');
+    } finally {
+      setIsUploading(false);
+      setIsRecordingVoice(false);
+    }
+  };
+
   const handleSend = React.useCallback(() => {
     if (!content.trim()) return;
 
@@ -89,55 +114,79 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
       spacing={1}
       className="items-end flex-none px-2.5 sm:px-4 py-1.5 min-h-[48px] bg-white border-t border-gray-200"
     >
-      <Tooltip content="Attach file">
-        <span>
-          <IconButton
-            aria-label="Attach file"
-            disabled={disabled || isUploading || (loadingMessages && loadingAttachments)}
-            onClick={handleAttach}
-            className="mb-0.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 shrink-0"
-          >
-            {isUploading || (loadingMessages && loadingAttachments) ? (
-              <CircularProgress size={18} />
+      {isRecordingVoice ? (
+        <VoiceNoteRecorder
+          onSend={handleSendVoiceNote}
+          onCancel={() => setIsRecordingVoice(false)}
+        />
+      ) : (
+        <>
+          <Tooltip content="Attach file">
+            <span>
+              <IconButton
+                aria-label="Attach file"
+                disabled={disabled || isUploading || (loadingMessages && loadingAttachments)}
+                onClick={handleAttach}
+                className="mb-0.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 shrink-0"
+              >
+                {isUploading || (loadingMessages && loadingAttachments) ? (
+                  <CircularProgress size={18} />
+                ) : (
+                  <PaperclipIcon size={20} weight="bold" />
+                )}
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            disabled={disabled}
+            value={content}
+            onChange={handleChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Type your message here..."
+            className="flex-auto text-xs sm:text-sm py-2 px-3 bg-gray-50 border border-gray-200 focus:border-emerald-500 focus:outline-none rounded-xl resize-none min-h-[36px] max-h-[100px] overflow-y-auto leading-relaxed transition-all duration-100"
+            style={{ height: '36px' }}
+          />
+
+          <Stack direction="row" spacing={1} className="items-center mb-0.5 shrink-0">
+            {content.trim() ? (
+              <Tooltip content="Send">
+                <span>
+                  <IconButton
+                    aria-label="Send message"
+                    variant="contained"
+                    disabled={disabled}
+                    onClick={handleSend}
+                    className="bg-emerald-600 text-white hover:bg-emerald-700 transition-all rounded-xl h-[36px] w-[36px] shrink-0"
+                  >
+                    <PaperPlaneTiltIcon weight="fill" size={16} />
+                  </IconButton>
+                </span>
+              </Tooltip>
             ) : (
-              <PaperclipIcon size={20} weight="bold" />
+              <Tooltip content="Record voice note">
+                <span>
+                  <IconButton
+                    aria-label="Record voice note"
+                    disabled={disabled || isUploading}
+                    onClick={() => setIsRecordingVoice(true)}
+                    className="text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all rounded-xl h-[36px] w-[36px] shrink-0 border border-gray-200 bg-gray-50"
+                  >
+                    <MicrophoneIcon size={18} weight="bold" />
+                  </IconButton>
+                </span>
+              </Tooltip>
             )}
-          </IconButton>
-        </span>
-      </Tooltip>
-
-      <textarea
-        ref={textareaRef}
-        rows={1}
-        disabled={disabled}
-        value={content}
-        onChange={handleChange}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-          }
-        }}
-        placeholder="Type your message here..."
-        className="flex-auto text-xs sm:text-sm py-2 px-3 bg-gray-50 border border-gray-200 focus:border-emerald-500 focus:outline-none rounded-xl resize-none min-h-[36px] max-h-[100px] overflow-y-auto leading-relaxed transition-all duration-100"
-        style={{ height: '36px' }}
-      />
-
-      <Stack direction="row" spacing={1} className="items-center mb-0.5 shrink-0">
-        <Tooltip content="Send">
-          <span>
-            <IconButton
-              aria-label="Send message"
-              variant="contained"
-              disabled={!content.trim() || disabled}
-              onClick={handleSend}
-              className="bg-emerald-600 text-white hover:bg-emerald-700 transition-all rounded-xl h-[36px] w-[36px] shrink-0"
-            >
-              <PaperPlaneTiltIcon weight="fill" size={16} />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </Stack>
+          </Stack>
+        </>
+      )}
 
       <input
         hidden

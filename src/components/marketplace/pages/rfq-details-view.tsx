@@ -23,7 +23,13 @@ const RfqDetailsView = ({ id }: { id: string }) => {
     }
   );
 
-  const rfqProduct = data?.data || {};
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+      router.back();
+    } else {
+      router.push('/dashboard/products/rfq-products');
+    }
+  };
 
   if (isLoading) {
     // Temporary skeleton approach
@@ -34,12 +40,14 @@ const RfqDetailsView = ({ id }: { id: string }) => {
     );
   }
 
+  const rfqProduct = data?.data || {};
+
   if (isError || !rfqProduct || Object.keys(rfqProduct).length === 0) {
     return (
       <div className="text-center py-20 mt-[100px]">
         <h2 className="text-xl font-semibold text-gray-700">RFQ Not Found</h2>
         <button
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="mt-4 text-green-600 font-medium hover:underline"
         >
           Go Back
@@ -54,8 +62,8 @@ const RfqDetailsView = ({ id }: { id: string }) => {
         <div className="max-w-[1280px] mx-auto ">
           <div className="mb-6">
             <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium"
+              onClick={handleBack}
+              className="flex items-center gap-2 text-green-700 bg-white border border-green-200 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors shadow-sm font-medium cursor-pointer"
             >
               <ArrowLeft size={16} />
               Back

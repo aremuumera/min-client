@@ -30,6 +30,7 @@ export {
 } from "./autocomplete";
 export { SearchableSelect } from "./searchable-select";
 export { MultiCheckboxSelect } from "./multi-checkbox-select";
+export { FieldNotice, type FieldNoticeProps } from "./field-notice";
 export {
   FormLabel,
   FormGroup,
@@ -88,6 +89,7 @@ export {
   type ModalBodyProps,
   type ModalFooterProps,
 } from "./modal";
+export { UnsavedChangesModal } from "./unsaved-changes-modal";
 export { Popover, type PopoverProps } from "./popover";
 export {
   Pagination,

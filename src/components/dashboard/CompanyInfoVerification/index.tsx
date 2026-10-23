@@ -57,6 +57,8 @@ import { StepLabel } from '@/components/ui/stepper';
 import { Stepper } from '@/components/ui/stepper';
 import { TextField } from '@/components/ui/input';
 import { Typography } from '@/components/ui/typography';
+import { FieldNotice } from '@/components/ui/field-notice';
+import { BUSINESS_TYPES, getCountryVerificationConfig } from '@/config/business-verification-config';
 import { cn, getErrorMessage } from '@/utils/helper';
 import { Country, State } from 'country-state-city';
 import { motion } from 'framer-motion';
@@ -195,7 +197,15 @@ const directorSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone_number: z.string().min(1, 'Phone number is required'),
   nationality: z.string().min(1, 'Nationality is required'),
-  date_of_birth: z.string().min(1, 'Date of birth is required'),
+  date_of_birth: z
+    .string()
+    .min(1, 'Date of birth is required')
+    .refine((val) => {
+      const dob = new Date(val);
+      const eighteenYearsAgo = new Date();
+      eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+      return !isNaN(dob.getTime()) && dob <= eighteenYearsAgo;
+    }, 'Director must be at least 18 years old'),
   gender: z.string().min(1, 'Gender is required'),
   identity_type: z.string().min(1, 'Identity type is required'),
   identity_number: z.string().min(1, 'Identity number is required'),
@@ -495,15 +505,24 @@ const FileUploadField = ({
   required = false,
   disabled = false,
   error = '',
+  multiple = false,
 }: any) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const replaceInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      onChange(name, e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      if (multiple) {
+        const fileList = Array.from(e.target.files);
+        onChange(name, fileList);
+      } else {
+        onChange(name, e.target.files[0]);
+      }
     }
   };
+
+  const hasSingleFile = file && !Array.isArray(file);
+  const hasMultipleFiles = Array.isArray(file) && file.length > 0;
 
   return (
     <Box>
@@ -511,7 +530,7 @@ const FileUploadField = ({
         {label} {required && <span style={{ color: 'red' }}>*</span>}
       </Typography>
 
-      {fileUrl && !file ? (
+      {fileUrl && !hasSingleFile && !hasMultipleFiles ? (
         <Box className="flex gap-1 items-center">
           <Chip label="Document Uploaded" color="success" size="sm" icon={<CheckCircle />} className="flex-1" />
           <Button variant="outlined" size="sm" onClick={() => window.open(fileUrl, '_blank')} type="button">
@@ -523,6 +542,7 @@ const FileUploadField = ({
                 type="file"
                 hidden
                 accept={accept}
+                multiple={multiple}
                 ref={replaceInputRef}
                 onChange={handleFileChange}
               />
@@ -544,6 +564,7 @@ const FileUploadField = ({
             type="file"
             hidden
             accept={accept}
+            multiple={multiple}
             ref={inputRef}
             onChange={handleFileChange}
             disabled={disabled}
@@ -558,9 +579,30 @@ const FileUploadField = ({
             onClick={() => inputRef.current?.click()}
             type="button"
           >
-            {file ? file.name : 'Choose File'}
+            {hasSingleFile
+              ? file.name
+              : hasMultipleFiles
+                ? `${file.length} file(s) selected`
+                : 'Choose File'}
           </Button>
-          {file && <Chip label={file.name} onDelete={() => onChange(name, null)} size="sm" className="mt-1" />}
+          {hasSingleFile && (
+            <Chip label={file.name} onDelete={() => onChange(name, null)} size="sm" className="mt-1" />
+          )}
+          {hasMultipleFiles && (
+            <Box className="mt-1 flex flex-wrap gap-1">
+              {file.map((f: File, idx: number) => (
+                <Chip
+                  key={idx}
+                  label={f.name}
+                  onDelete={() => {
+                    const updated = file.filter((_: any, i: number) => i !== idx);
+                    onChange(name, updated);
+                  }}
+                  size="sm"
+                />
+              ))}
+            </Box>
+          )}
         </>
       )}
       {error && (
@@ -573,6 +615,7 @@ const FileUploadField = ({
 };
 
 const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusData }: any) => {
+  const { user, appData, authPhone } = useAuthIdentity();
   const [formData, setFormData] = useState({
     company_name: '',
     business_email: '',
@@ -657,34 +700,72 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
     }
   }, [location, formData.country, verificationData?.country, allCountries]);
 
-  // Prefill data if exists - Refined to prevent infinite loops
+  // Prefill data if exists or fallback to user account info
   useEffect(() => {
-    if (verificationData) {
-      const countryCode = verificationData.country || '';
-      const stateValue = verificationData.state || '';
+    const countryCode = verificationData?.country || '';
+    const stateValue = verificationData?.state || '';
 
-      const newData = {
-        company_name: verificationData.company_name || '',
-        business_email: verificationData.business_email || '',
-        phone_number: verificationData.phone_number || '',
-        business_description: verificationData.business_description || '',
-        country: countryCode,
-        state: stateValue,
-        lga: verificationData.lga || '',
-        full_address: verificationData.full_address || '',
-        zip_code: verificationData.zip_code || '',
-        country_name: verificationData.country_name || '',
-        phone_dial_code: verificationData.phone_dial_code || '',
-      };
+    const companyName =
+      verificationData?.company_name ||
+      user?.company_name ||
+      user?.companyName ||
+      user?.business_name ||
+      user?.businessName ||
+      (appData as any)?.supplierProfile?.company_name ||
+      (appData as any)?.supplierProfile?.store_name ||
+      '';
 
-      // Only update if data actually changed
-      setFormData((prev) => {
-        const hasChanged = Object.keys(newData).some(
-          (key) => (newData as any)[key] !== (prev as any)[key]
-        );
-        if (!hasChanged) return prev;
-        return { ...prev, ...newData };
-      });
+    const businessEmail =
+      verificationData?.business_email ||
+      user?.business_email ||
+      user?.businessEmail ||
+      user?.email ||
+      '';
+
+    const rawPhone =
+      verificationData?.phone_number ||
+      user?.phone_number ||
+      user?.phoneNumber ||
+      user?.phone ||
+      user?.mobile ||
+      (appData as any)?.supplierProfile?.phone_number ||
+      (appData as any)?.supplierProfile?.phone ||
+      authPhone ||
+      '';
+
+    let phoneNumber = rawPhone ? String(rawPhone).trim() : '';
+    if (phoneNumber.startsWith('+234')) {
+      phoneNumber = phoneNumber.replace('+234', '').trim();
+    } else if (phoneNumber.startsWith('234') && phoneNumber.length > 10) {
+      phoneNumber = phoneNumber.replace(/^234/, '').trim();
+    }
+
+    const businessDescription = verificationData?.business_description || '';
+
+    const newData = {
+      company_name: companyName,
+      business_email: businessEmail,
+      phone_number: phoneNumber,
+      business_description: businessDescription,
+      country: countryCode,
+      state: stateValue,
+      lga: verificationData?.lga || '',
+      full_address: verificationData?.full_address || '',
+      zip_code: verificationData?.zip_code || '',
+      country_name: verificationData?.country_name || '',
+      phone_dial_code: verificationData?.phone_dial_code || '',
+    };
+
+    // Only update if data actually changed
+    setFormData((prev) => {
+      const hasChanged = Object.keys(newData).some(
+        (key) => (newData as any)[key] !== (prev as any)[key]
+      );
+      if (!hasChanged) return prev;
+      return { ...prev, ...newData };
+    });
+
+    if (countryCode) {
 
       // Set selected country
       const country = allCountries.find((c) => c.isoCode === countryCode);
@@ -715,7 +796,7 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
         }
       }
     }
-  }, [verificationData, allCountries, nigerianStates, nigerianLgas]);
+  }, [verificationData, user, appData, authPhone, allCountries, nigerianStates, nigerianLgas]);
 
   // Reactive Auto-Synchronizer for Country, State, and LGA options
   useEffect(() => {
@@ -1005,10 +1086,16 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
 
       <Grid container spacing={2}>
         <Grid item xs={12}>
+          <FieldNotice
+            label="Registered Company / Business Name"
+            required
+            noticeTitle="Registered Company Name Notice"
+            noticeContent="Must match your official Certificate of Incorporation (CAC / RC / Tax ID). Trading under a mismatched or unregistered name will delay trade contract & escrow verification."
+          />
           <TextField
             required
             fullWidth
-            label="Company Name"
+            placeholder="e.g. Minmeg Global Resources"
             name="company_name"
             value={formData.company_name}
             onChange={handleChange}
@@ -1075,8 +1162,13 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
 
         {/* Country Select */}
         <Grid item xs={12} sm={6}>
+          <FieldNotice
+            label="Country / Business Jurisdiction"
+            required
+            noticeTitle="Business Jurisdiction Notice"
+            noticeContent="Select the physical or legal operating location of your registered entity. International trade contracts, escrow verification, and inspector assignments depend on this jurisdiction."
+          />
           <SearchableSelect
-            label="Country"
             value={formData.country}
             onChange={handleCountryChange}
             options={allCountries}
@@ -1145,9 +1237,16 @@ const BusinessProfileStep = ({ userId, onNext, onBack, verificationData, statusD
         </Grid>
 
         <Grid item xs={12}>
+          <FieldNotice
+            label="Registered Business/Company Address"
+            required
+            noticeTitle="Registered Business/Company Address Notice"
+            noticeContent="Enter your registered business/company address."
+          />
           <TextField
+            required
             fullWidth
-            label="Full Address"
+            placeholder="e.g. Plot 123, Mineral Commercial Zone, Industrial Estate"
             name="full_address"
             value={formData.full_address}
             onChange={handleChange}
@@ -1321,6 +1420,10 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
   const isCompleted = stepStatus === 'completed' && !isRejected;
   const needsCorrection = stepStatus === 'needs_correction';
 
+  const userCountry = verificationData?.country || '';
+  const countryConfig = getCountryVerificationConfig(userCountry);
+  const isCorporateEntity = formData.business_type !== 'sole_proprietorship';
+
   return (
     <form onSubmit={handleSubmit}>
       <Box className="flex items-center justify-between mb-2">
@@ -1336,7 +1439,7 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
       </Box>
 
       <Typography variant="body2" color="text.secondary" className="mb-3">
-        Provide your business registration documents
+        Provide your official business registration details and incorporation documents
       </Typography>
 
       {needsCorrection && verificationData?.required_corrections?.step_2_message && (
@@ -1355,8 +1458,11 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
         <Grid item xs={12}>
           <FormControl fullWidth required disabled={!isEditable} error={!!errors.business_type}>
             <Select name="business_type" value={formData.business_type} onChange={handleChange} label="Business Type">
-              <MenuItem value="registered_company">Registered Company</MenuItem>
-              <MenuItem value="business">Business</MenuItem>
+              {BUSINESS_TYPES.map((bt) => (
+                <MenuItem key={bt.value} value={bt.value}>
+                  {bt.label}
+                </MenuItem>
+              ))}
             </Select>
             {errors.business_type && <FormHelperText>{errors.business_type}</FormHelperText>}
           </FormControl>
@@ -1365,7 +1471,8 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
-            label="Registration Number"
+            label={countryConfig.registrationNumberLabel}
+            placeholder={countryConfig.registrationNumberPlaceholder}
             name="registration_number"
             value={formData.registration_number}
             onChange={handleChange}
@@ -1410,13 +1517,13 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
         <Grid item xs={12}>
           <Divider className="my-2" />
           <Typography variant="h6" gutterBottom>
-            Upload Documents
+            Upload Corporate Documents ({countryConfig.isNigeria ? 'Nigeria Jurisdiction' : 'International Jurisdiction'})
           </Typography>
         </Grid>
 
         <Grid item xs={12} sm={6}>
           <FileUploadField
-            label="CAC Certificate"
+            label={countryConfig.cacCertificateLabel}
             name="cac_certificate"
             file={files.cac_certificate}
             fileUrl={verificationData?.cac_certificate_url}
@@ -1427,11 +1534,11 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
           />
         </Grid>
 
-        {formData.business_type === 'registered_company' && (
+        {isCorporateEntity && (
           <>
             <Grid item xs={12} sm={6}>
               <FileUploadField
-                label="Certificate of Incorporation"
+                label={countryConfig.incorporationCertLabel}
                 name="certificate_of_incorporation"
                 file={files.certificate_of_incorporation}
                 fileUrl={verificationData?.certificate_of_incorporation_url}
@@ -1443,7 +1550,7 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
 
             <Grid item xs={12} sm={6}>
               <FileUploadField
-                label="Memorandum & Articles"
+                label={countryConfig.memartLabel}
                 name="memorandum_and_articles"
                 file={files.memorandum_and_articles}
                 fileUrl={verificationData?.memorandum_and_articles_url}
@@ -1456,7 +1563,7 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
 
             <Grid item xs={12} sm={6}>
               <FileUploadField
-                label="Form 2/CO7"
+                label={countryConfig.directorsDocumentLabel}
                 name="form_2_co7"
                 file={files.form_2_co7}
                 fileUrl={verificationData?.form_2_co7_url}
@@ -1630,6 +1737,9 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
   const isPending = stepStatus === 'pending';
   const needsCorrection = stepStatus === 'needs_correction';
 
+  const userCountry = verificationData?.country || '';
+  const countryConfig = getCountryVerificationConfig(userCountry);
+
   return (
     <form onSubmit={handleSubmit}>
       <Box className="flex items-center justify-between mb-2">
@@ -1645,7 +1755,7 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
       </Box>
 
       <Typography variant="body2" color="text.secondary" className="mb-3">
-        Provide your tax information and certificates
+        Provide your tax compliance information and registration certificates
       </Typography>
 
       {needsCorrection && verificationData?.required_corrections?.step_3_message && (
@@ -1664,7 +1774,8 @@ const TaxComplianceStep = ({ userId, onNext, onBack, verificationData, statusDat
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
-            label="TIN Number"
+            label={countryConfig.taxIdLabel}
+            placeholder={countryConfig.taxIdPlaceholder}
             name="tin_number"
             value={formData.tin_number}
             onChange={handleChange}
@@ -1801,15 +1912,11 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
     }
   };
 
-  const handleFileChange = (name: string, file: File | null) => {
-    if (name === 'other_regulatory_permits') {
-      setFiles((prevFiles) => ({
-        ...prevFiles,
-        [name]: [...(prevFiles[name] as File[]), file as File],
-      }));
-    } else {
-      setFiles({ ...files, [name]: file });
-    }
+  const handleFileChange = (name: string, file: File | File[] | null) => {
+    setFiles((prevFiles) => ({
+      ...prevFiles,
+      [name]: file,
+    }));
     if (fileErrors[name]) {
       setFileErrors({ ...fileErrors, [name]: '' });
     }
@@ -2064,7 +2171,7 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
 
         <Grid item xs={12} sm={6}>
           <FileUploadField
-            label="Board Resolution"
+            label="Board Resolution & Authorized Signatories"
             name="board_resolution"
             file={files.board_resolution}
             fileUrl={verificationData?.board_resolution_url}
@@ -2076,13 +2183,18 @@ const BusinessAuthorizationStep = ({ userId, onNext, onBack, verificationData, s
 
         <Grid item xs={12} sm={6}>
           <FileUploadField
-            label="Authorized Signatories"
-            name="authorized_signatories"
-            file={files.authorized_signatories}
-            fileUrl={verificationData?.authorized_signatories_url}
+            label="Other Supporting Documents & Permits"
+            name="other_regulatory_permits"
+            file={files.other_regulatory_permits as any}
+            fileUrl={
+              Array.isArray(verificationData?.other_regulatory_permits_url)
+                ? verificationData.other_regulatory_permits_url[0]
+                : verificationData?.other_regulatory_permits_url
+            }
             onChange={handleFileChange}
             disabled={!isEditable}
-            error={fileErrors.authorized_signatories}
+            multiple
+            error={fileErrors.other_regulatory_permits}
           />
         </Grid>
 
@@ -2603,58 +2715,58 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
         const directorsList = Array.isArray(directorsData?.data)
           ? directorsData.data
           : directorsData?.data?.directors || [];
-        
+
         return directorsList.length > 0 ? (
           <List>
             {directorsList.map((director: any) => (
-            <Card key={director.id} className="mb-2">
-              <CardContent>
-                <Box className="flex items-center justify-between">
-                  <Box
-                    className='flex-1'
-                  >
-                    <Typography variant="h6">
-                      {director.first_name} {director.last_name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {director.email}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {director.phone_number}
-                    </Typography>
-                    <Box className="mt-1 flex gap-1 flex-wrap">
-                      <Chip
-                        label={director.status?.toUpperCase()}
-                        size="sm"
-                        color={
-                          director.status === 'verified'
-                            ? 'success'
-                            : director.status === 'rejected'
-                              ? 'error'
-                              : 'primary'
-                        }
-                      />
-                      {director.identity_verified && (
-                        <Chip label="ID Verified" size="sm" color="success" icon={<CheckCircle />} />
-                      )}
+              <Card key={director.id} className="mb-2">
+                <CardContent>
+                  <Box className="flex items-center justify-between">
+                    <Box
+                      className='flex-1'
+                    >
+                      <Typography variant="h6">
+                        {director.first_name} {director.last_name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {director.email}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {director.phone_number}
+                      </Typography>
+                      <Box className="mt-1 flex gap-1 flex-wrap">
+                        <Chip
+                          label={director.status?.toUpperCase()}
+                          size="sm"
+                          color={
+                            director.status === 'verified'
+                              ? 'success'
+                              : director.status === 'rejected'
+                                ? 'error'
+                                : 'primary'
+                          }
+                        />
+                        {director.identity_verified && (
+                          <Chip label="ID Verified" size="sm" color="success" icon={<CheckCircle />} />
+                        )}
+                      </Box>
+                    </Box>
+                    <Box className="flex gap-1">
+                      <IconButton aria-label="View Director Details" onClick={() => handleViewClick(director)} title="View Details" className="text-blue-600 hover:bg-blue-50">
+                        <Eye size={20} />
+                      </IconButton>
+                      <IconButton aria-label="Edit Director" onClick={() => handleEditClick(director)} title="Edit Director" className="text-green-600 hover:bg-green-50">
+                        <Plus size={20} />
+                      </IconButton>
+                      <IconButton aria-label="Delete Director" onClick={() => handleDeleteClick(director)} title="Delete Director" className="text-red-600 hover:bg-red-50">
+                        <Trash2 size={20} />
+                      </IconButton>
                     </Box>
                   </Box>
-                  <Box className="flex gap-1">
-                    <IconButton aria-label="View Director Details" onClick={() => handleViewClick(director)} title="View Details" className="text-blue-600 hover:bg-blue-50">
-                      <Eye size={20} />
-                    </IconButton>
-                    <IconButton aria-label="Edit Director" onClick={() => handleEditClick(director)} title="Edit Director" className="text-green-600 hover:bg-green-50">
-                      <Plus size={20} />
-                    </IconButton>
-                    <IconButton aria-label="Delete Director" onClick={() => handleDeleteClick(director)} title="Delete Director" className="text-red-600 hover:bg-red-50">
-                      <Trash2 size={20} />
-                    </IconButton>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </List>
+                </CardContent>
+              </Card>
+            ))}
+          </List>
         ) : (
           <Alert severity="info" className="mb-3">
             No directors added yet. Click the button below to add a director.
@@ -3037,7 +3149,7 @@ const DirectorsStep = ({ userId, onBack, onSubmit }: any) => {
                   name="date_of_birth"
                   value={formData.date_of_birth}
                   onChange={handleChange}
-
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                   error={!!errors.date_of_birth}
                   helperText={errors.date_of_birth}
                 />

@@ -7,6 +7,7 @@ import { IoIosArrowBack } from "react-icons/io";
 import ProgressBar from '@/utils/progress_tracker';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
+import { paths } from '@/config/paths';
 import RfqDetails from './rfqDetails';
 import BuyerAddressDetails from './BuyerAddressDetails';
 import RfqConfirmDetails from './rfqConfirmDetails';
@@ -37,8 +38,10 @@ const BuyerRfQs = () => {
     if (from) {
       router.push(from);
       window.scrollTo(0, 0);
-    } else {
+    } else if (typeof window !== 'undefined' && window.history.length > 1) {
       router.back();
+    } else {
+      router.push(paths.dashboard.rfqs.list);
     }
   };
 
@@ -71,19 +74,22 @@ const BuyerRfQs = () => {
       setProgress((prev) => (prev > 0 ? prev - 25 : 0)); // Increment progress
       window.scrollTo(0, 0)
 
+    } else {
+      handleBack();
     }
   };
 
   return (
     <div>
       <div>
-        <div className=' flex justify-start'>
-          {activeStep !== 0 &&
-            (
-              <button type="button" onClick={handleBacks} className='flex gap-[5px] justify-center items-center cursor-pointer hover:underline'>
-                <IoIosArrowBack className='text-[15px]' /> Back
-              </button>
-            )}
+        <div className='flex justify-start'>
+          <button
+            type="button"
+            onClick={handleBacks}
+            className='flex gap-[5px] justify-center items-center cursor-pointer hover:underline text-gray-700 font-medium'
+          >
+            <IoIosArrowBack className='text-[15px]' /> Back
+          </button>
         </div>
 
         <div className='bg-bgSecondary w-full h-full p-[15px] rounded-[20px] mt-[16px]'>

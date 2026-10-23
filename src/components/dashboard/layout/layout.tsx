@@ -33,8 +33,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
         localStorage.setItem('dashboard-sidebar-collapsed', String(newState));
     };
 
-    // Sidebar navigation release state: ensure desktop and mobile share identical release logic
-    const finalRelease = isBusinessVerified && (!isSupplier || isProfileCreated);
+    // Sidebar navigation release state: always render sidebar for authenticated users
+    const finalRelease = true;
 
     // Helper to check if a user has permission
     const hasPermission = React.useCallback((permission?: string) => {

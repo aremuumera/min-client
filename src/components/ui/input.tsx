@@ -144,7 +144,7 @@ const Input = React.forwardRef<HTMLInputElement & HTMLTextAreaElement & HTMLSele
                 inputVariants({ variant, inputSize, error: hasError }),
                 startAdornment && 'pl-10',
                 endAdornment && 'pr-10',
-                multiline && 'min-h-[38px] py-2 resize-none',
+                multiline && 'h-auto min-h-[96px] py-2.5 resize-y',
                 select && 'appearance-none pr-8 bg-no-repeat bg-position-[right_0.5rem_center] bg-size-[1.5em_1.5em]',
                 className
               )}

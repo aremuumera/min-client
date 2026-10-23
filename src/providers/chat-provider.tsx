@@ -302,11 +302,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (!user || !activeConversation) return false;
 
       if (!text && attachments.length === 0) return false; // No content to send
-      if (type !== 'text' && type !== 'file') return false; // Invalid message type
+      if (type !== 'text' && type !== 'file' && type !== 'audio') return false; // Invalid message type
 
       try {
-        setLoadingMessages(true);
-
         const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) ||
           activeConversation.conversationType === 'trade' ||
           activeConversation.itemType === 'trade';
@@ -347,12 +345,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         return true;
       } catch (error: any) {
-        setLoadingMessages(false);
         console.error('Error sending message:', error);
         toast.error(error?.message || 'Failed to send message');
         return false;
-      } finally {
-        setLoadingMessages(false);
       }
     },
     [user, activeConversation, setLoadingMessages, setLoading, threadType, fullName, activeInquiryId]
@@ -364,7 +359,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (!activeConversation) return null;
 
       try {
-        setLoadingMessages(true);
         setLoadingAttachments(true); // Set loading state for attachments
         // const attachment = await chatService.uploadAttachment(file, activeConversation.conversationId);
         let attachment: any;
@@ -397,6 +391,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           type = "image";
         } else if (mimeType.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(fileName)) {
           type = "video";
+        } else if (mimeType.startsWith("audio/") || /\.(mp3|wav|ogg|webm|m4a|aac)$/i.test(fileName)) {
+          type = "audio";
         }
 
         // Return complete attachment object with metadata
@@ -412,7 +408,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         toast.error(error?.message || 'Error uploading attachment');
         return null;
       } finally {
-        setLoadingMessages(false);
         setLoadingAttachments(false); // Reset loading state for attachments
       }
     },
@@ -654,13 +649,24 @@ New Flow for for all roles to Admin
       });
     } else {
       // Room not in conversations list — either loading or hidden.
-      // First check if room is explicitly hidden for this user before synthesizing.
+      // First check if user is a valid participant and room is not hidden before synthesizing
       customerTradeChatService.getTradeRoomMetadata(threadId).then(metadata => {
         if (!metadata) return;
-        // If user is in hidden_for_user_ids, redirect away — don't show anything
-        if (Array.isArray(metadata.hidden_for_user_ids) && metadata.hidden_for_user_ids.includes(effectiveUserId)) {
+        // if (!metadata || !effectiveUserId) return;
+
+        const participantIds = Array.isArray(metadata.participant_ids)
+          ? metadata.participant_ids.map((id: any) => String(id).toLowerCase())
+          : [];
+        const normalizedUserId = String(effectiveUserId || '').toLowerCase();
+        const isAdmin = ['admin', 'super_admin'].includes(String(userRole || '').toLowerCase());
+        const isParticipant = isAdmin || participantIds.includes(normalizedUserId);
+        const isHidden = Array.isArray(metadata.hidden_for_user_ids) && metadata.hidden_for_user_ids.map((id: any) => String(id).toLowerCase()).includes(normalizedUserId);
+
+        // If user is not an active participant or room is explicitly hidden, redirect away — do not synthesize
+        if (!isParticipant || isHidden) {
           setActiveConversation(null);
           setActiveInquiryId(null);
+          toast.error('You are not authorized to access this trade room.');
           router.push('/dashboard/chat');
           return;
         }
