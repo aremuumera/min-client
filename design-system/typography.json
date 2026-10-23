@@ -1,0 +1,22 @@
+{
+  "fontFamily": "Euclid Circular A, sans-serif",
+  "fontMono": "Source Code Pro, monospace",
+  "weights": {
+    "light": 300,
+    "regular": 400,
+    "medium": 500,
+    "semibold": 600,
+    "bold": 700
+  },
+  "scale": {
+    "micro": "11px",
+    "xs": "12px",
+    "caption": "13px",
+    "sm": "14px",
+    "base": "16px",
+    "lg": "18px",
+    "xl": "22px",
+    "2xl": "28px",
+    "3xl": "36px"
+  }
+}
