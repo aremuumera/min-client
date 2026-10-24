@@ -16,13 +16,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <SettingsProvider>
           <AlertProvider>
             {children}
+            {/* design.md toast: brand dark, white text, flat; red / amber edge only for errors / warnings */}
             <Toaster
               position="top-right"
-              richColors
               closeButton
               toastOptions={{
-                style: {
-                  borderRadius: '12px',
+                classNames: {
+                  toast: '!bg-brand-dark !text-on-dark !border !border-hairline-dark !rounded-md !font-sans',
+                  description: '!text-on-dark-muted',
+                  success: '!border-l-4 !border-l-primary',
+                  error: '!border-l-4 !border-l-semantic-error',
+                  warning: '!border-l-4 !border-l-semantic-warning',
+                  closeButton: '!bg-brand-dark !text-on-dark !border-hairline-dark',
                 },
               }}
             />

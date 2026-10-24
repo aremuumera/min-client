@@ -23,6 +23,7 @@ import {
   FilterBar,
 } from '@/components/ui';
 import { formatQuantity, formatDateTime } from '@/lib/format';
+import { toast } from '@/components/core/toaster';
 
 interface Row {
   id: string;
@@ -191,6 +192,8 @@ export function Gallery() {
         <div className="flex flex-wrap gap-3">
           <Button color="error" onClick={() => setConfirm(true)}>Quarantine device…</Button>
           <Button variant="outlined" color="secondary" onClick={() => setSheet(ROWS[0])}>Open side sheet</Button>
+          <Button variant="outlined" color="secondary" onClick={() => toast.success('Batch MB-2026-000004 registered')}>Success toast</Button>
+          <Button variant="outlined" color="secondary" onClick={() => toast.error('Batch MB-2026-000001 has only 2.5 MT available')}>Error toast</Button>
         </div>
       </Section>
 

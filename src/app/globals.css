@@ -175,6 +175,11 @@ html {
   color-scheme: light;
 }
 
+/* flat: toasts carry no shadow */
+[data-sonner-toast] {
+  box-shadow: none !important;
+}
+
 body {
   height: 100%;
   font-family: var(--font-sans);
