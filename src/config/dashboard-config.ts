@@ -1,7 +1,6 @@
 import { paths } from "@/config/paths";
 import { IconName } from "@/components/dashboard/layout/nav-icons";
 import { PermissionKey } from "@/hooks/usePermission";
-import { permission } from "process";
 
 export interface NavItemConfig {
   key: string;

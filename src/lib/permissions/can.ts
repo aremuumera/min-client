@@ -4,7 +4,7 @@ import type { TeamPermission } from './team-permissions';
  * One access check for the whole app (docs/new/frontend/rules/frontend-access-rules.md §4).
  * The backend decides; this only keeps the UI from offering what it would refuse.
  *
- *   can(actor, { permission: 'devices:manage' })      staff holding the permission (super_admin: '*')
+ *   can(actor, { permission: 'devices:manage' })      staff holding the permission ('*' / 'devices:*' count)
  *   can(actor, { role: ['supplier'] })                merchant role (buyer_supplier counts as both)
  *   can(actor, { teamKey: 'inventory' })              team member holding the key; owners hold all
  * Several conditions in one rule must all pass.
@@ -40,12 +40,18 @@ export function normalizeRole(role: unknown): string | null {
   return r === 'both' ? 'buyer_supplier' : r;
 }
 
+/** Does a grant list cover one permission? '*' and 'resource:*' count (the backend's permission.matcher) */
+export function grants(granted: readonly string[], required: string): boolean {
+  if (granted.includes('*') || granted.includes(required)) return true;
+  return granted.includes(`${required.split(':')[0]}:*`);
+}
+
 export function can(actor: Actor, rule: AccessRule): boolean {
   const perms = list(rule.permission);
   if (perms.length) {
     if (!actor.isStaff) return false;
     if (!actor.permissions.includes('*')) {
-      const held = (p: string) => actor.permissions.includes(p);
+      const held = (p: string) => grants(actor.permissions, p);
       if (rule.mode === 'any' ? !perms.some(held) : !perms.every(held)) return false;
     }
   }

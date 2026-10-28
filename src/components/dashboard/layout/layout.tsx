@@ -9,13 +9,14 @@ import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { cn } from '@/utils/helper';
 import { usePathname } from '@/hooks/use-pathname';
 import { useBreakpoint } from '@/lib/ui/use-breakpoint';
+import { canOpenArea, useActor } from '@/lib/permissions';
 
 interface VerticalLayoutProps {
     children: React.ReactNode;
 }
 
 export function DynamicLayout({ children }: VerticalLayoutProps) {
-    const { user, appData, isTeamMember, permissions, isBusinessVerified, isProfileCreated, isBuyer, isSupplier, isDualRole, isInspector, isAdmin, hasInspectorAccess, normalizedRole } = useAuthIdentity();
+    const { isBuyer, isSupplier, isDualRole, hasInspectorAccess, normalizedRole } = useAuthIdentity();
     const [isCollapsed, setIsCollapsed] = React.useState(false);
     const [isMounted, setIsMounted] = React.useState(false);
     const pathname = usePathname()
@@ -39,21 +40,9 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     // Sidebar navigation release state: always render sidebar for authenticated users
     const finalRelease = true;
 
-    // Helper to check if a user has permission
-    const hasPermission = React.useCallback((permission?: string) => {
-        if (!permission) return true;
-        if (isTeamMember) return permissions.includes(permission);
-        switch (permission) {
-            case 'products':
-                return isSupplier || isDualRole || isAdmin;
-            case 'rfq':
-                return isBuyer || isDualRole || isAdmin;
-            case 'inspectors':
-                return isInspector || isAdmin;
-            default:
-                return true;
-        }
-    }, [isTeamMember, permissions, isSupplier, isBuyer, isDualRole, isInspector, isAdmin]);
+    // Menu areas: one rule for the menu, pages and buttons (lib/permissions canOpenArea)
+    const actor = useActor();
+    const hasPermission = React.useCallback((permission?: string) => canOpenArea(actor, permission), [actor]);
 
     // Recursive filtering function
     const filterNavItems = React.useCallback((items: any[]) => {

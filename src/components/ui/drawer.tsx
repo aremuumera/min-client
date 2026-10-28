@@ -13,6 +13,8 @@ export interface DrawerProps {
   children: React.ReactNode;
   anchor?: 'left' | 'right' | 'top' | 'bottom';
   className?: string;
+  /** For content that draws its own close button (SideSheet) */
+  hideCloseButton?: boolean;
 }
 
 const anchorVariants = {
@@ -28,6 +30,7 @@ export function Drawer({
   children,
   anchor = 'left',
   className,
+  hideCloseButton,
 }: DrawerProps) {
   React.useEffect(() => {
     if (open) {
@@ -39,6 +42,13 @@ export function Drawer({
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
 
   return (
     <Portal>
@@ -71,11 +81,13 @@ export function Drawer({
                 className
               )}
             >
-              <div className="absolute top-4 right-4 z-10">
-                <IconButton onClick={onClose} aria-label="Close drawer" size="sm">
-                  <X className="h-5 w-5" />
-                </IconButton>
-              </div>
+              {!hideCloseButton && (
+                <div className="absolute top-4 right-4 z-10">
+                  <IconButton onClick={onClose} aria-label="Close drawer" size="sm">
+                    <X className="h-5 w-5" />
+                  </IconButton>
+                </div>
+              )}
               {children}
             </motion.div>
           </div>
