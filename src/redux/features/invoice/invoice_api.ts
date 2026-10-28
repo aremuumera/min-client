@@ -101,13 +101,6 @@ export const invoiceApi = createApi({
             providesTags: ['InvoiceAgreement'],
         }),
 
-        exportInvoice: builder.query<Blob, string>({
-            query: (userId) => ({
-                url: `/invoice/export/${userId}`,
-                responseHandler: (response) => response.blob(),
-            }),
-            providesTags: (result, error, userId) => [{ type: 'InvoiceAgreement', id: userId }],
-        }),
     }),
 });
 
@@ -123,7 +116,6 @@ export const {
     useGetApprovalStatusQuery,
     useGetAdminInvoiceAgreementsQuery,
     useSearchInvoiceAgreementsQuery,
-    useLazyExportInvoiceQuery,
 } = invoiceApi;
 
 export default invoiceApi;

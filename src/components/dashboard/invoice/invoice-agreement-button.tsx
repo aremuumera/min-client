@@ -21,11 +21,10 @@ interface InvoiceAgreementButtonProps {
   onOpenModal: () => void;
 }
 
-export const InvoiceAgreementButton = ({ thread, hasExistingInvoice, onOpenModal }: InvoiceAgreementButtonProps) => {
+export const InvoiceAgreementButton = ({ hasExistingInvoice, onOpenModal }: InvoiceAgreementButtonProps) => {
   const { messages, conversations } = useContext(ChatContext);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  console.log('thread in button', thread);
 
   const open = Boolean(anchorEl);
   const handleOpen = (e: React.MouseEvent<HTMLButtonElement>) => setAnchorEl(e.currentTarget);

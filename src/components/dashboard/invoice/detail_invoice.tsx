@@ -75,7 +75,6 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: { invoiceId?: st
 
   const invoice = invoiceData?.data;
 
-  console.log('params', params);
 
   // ============ DETERMINE ROLES ============
 
@@ -162,7 +161,6 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: { invoiceId?: st
         },
       }).unwrap();
 
-      console.log('Reject result:', result);
 
       if (result?.data && invoice.chatId) {
         try {

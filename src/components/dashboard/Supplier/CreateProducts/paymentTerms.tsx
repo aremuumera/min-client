@@ -28,7 +28,7 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
   activeStep: number;
   handleBack: () => void;
 }) => {
-  const { productPaymentData, serverReadyData, serverReadyImagesData, serverReadyAttachmentData } = useAppSelector((state) => state?.product);
+  const { productPaymentData } = useAppSelector((state) => state?.product);
   const { user, effectiveUserId } = useAuthIdentity();
   const dispatch = useDispatch();
 
@@ -117,7 +117,6 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
           body: formDataToSend,
         }).unwrap();
 
-        console.log('Step 3 validation response:', response);
 
         toast.success(`${response?.message || 'Payment terms submitted successfully!'}`);
 
@@ -146,9 +145,6 @@ const SupplierPaymentTerms = ({ handleNext, setActiveStep, activeStep, handleBac
     }
   };
 
-  console.log('ServerReadyData:', serverReadyData);
-  console.log('serverReadyImagesData:', serverReadyImagesData);
-  console.log('serverReadyAttachmentData:', serverReadyAttachmentData);
 
   return (
     <div>

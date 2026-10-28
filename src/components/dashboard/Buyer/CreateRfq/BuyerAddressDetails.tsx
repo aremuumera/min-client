@@ -84,7 +84,6 @@ const BuyerAddressDetails = ({ handleNext, setActiveStep, activeStep, handleBack
   }
 
 
-  console.log('states list:', Object.values(states).length);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -94,7 +93,6 @@ const BuyerAddressDetails = ({ handleNext, setActiveStep, activeStep, handleBack
     handleNext();
   };
 
-  console.log('formdata: ', rfqProductDetailsFormData,)
 
   return (
     <div className="lg:px-6 py-2">

@@ -12,13 +12,12 @@ import { CircularProgress } from '@/components/ui/progress';
 
 const DeleteSupProducts = ({ open, rows, onClose }: any) => {
 
-  const [deleteProduct, { data, isLoading, isError }] = useDeleteProductMutation();
+  const [deleteProduct, { isLoading, isError }] = useDeleteProductMutation();
   const { user, effectiveUserId } = useAuthIdentity();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    console.log('data:', data);
     try {
       const response = await deleteProduct({
         productId: rows?.id,

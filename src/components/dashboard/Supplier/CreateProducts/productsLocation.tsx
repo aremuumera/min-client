@@ -137,7 +137,6 @@ const SupplierProductLocation = ({ handleNext, setActiveStep, activeStep, handle
           body: formDataToSend,
         }).unwrap();
 
-        console.log('Step 2 validation response:', response);
 
         toast.success(`${response?.message || 'Product location submitted successfully!'}`);
 

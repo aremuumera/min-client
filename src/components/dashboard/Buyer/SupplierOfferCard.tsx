@@ -16,7 +16,6 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
     const [shortlistOffer, { isLoading }] = useShortlistRfqOfferMutation();
     const { showAlert } = useAlert();
     const isShortlisted = offer.is_shortlisted;
-    console.log('offer', offer);
 
     const handleShortlist = async (e: React.MouseEvent) => {
         e.stopPropagation();

@@ -42,18 +42,13 @@ export const blogApi = createApi({
             providesTags: ['blogs'],
         }),
 
-        getBlogCategoriesById: builder.query<any, string>({
-            query: (id) => `/admin/why/blogcategory/${id}`,
-            providesTags: (result, error, id) => [{ type: 'blogs', id }],
-        }),
     }),
 });
 
 export const {
     useGetAllBlogsQuery,
     useGetBlogByIdQuery,
-    useGetBlogCategoriesQuery,
-    useGetBlogCategoriesByIdQuery
+    useGetBlogCategoriesQuery
 } = blogApi;
 
 export default blogApi;

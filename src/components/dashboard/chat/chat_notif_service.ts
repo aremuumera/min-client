@@ -46,7 +46,6 @@ const chatApiService = new ChatApiService();
 
 class ChatNotificationService {
     async sendMessageNotification(notificationData: any) {
-        console.log('Sending message notification:', notificationData);
         try {
             // Validate required fields
             const requiredFields = ['recipientId', 'senderName', 'conversationId', 'itemTitle', 'contentType'];

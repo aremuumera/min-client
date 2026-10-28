@@ -17,16 +17,13 @@ export default function MyAssignmentsPage() {
     const { user } = useAppSelector((state: any) => state.auth || {});
     const isInspector = user?.role === 'inspector' || user?.user_type === 'inspector';
 
-    // If logged-in user is a Merchant (Buyer / Supplier), render Merchant Inspections Hub
-    if (!isInspector) {
-        return <MerchantInspectionsHub />;
-    }
-
-    const { data: assignmentsRes, isLoading, isError } = useGetInspectorAssignmentsQuery();
+    // Hooks first, on every render (the user loads a moment after a refresh; an early return
+    // before them changed the hook count and crashed the page). Merchants don't fetch assignments.
+    const { data: assignmentsRes, isLoading, isError } = useGetInspectorAssignmentsQuery(undefined, { skip: !isInspector });
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
 
-    const assignments = assignmentsRes?.data || [];
+    const assignments = useMemo(() => assignmentsRes?.data || [], [assignmentsRes]);
 
     const filteredAssignments = useMemo(() => {
         return assignments.filter((a: any) => {
@@ -41,6 +38,11 @@ export default function MyAssignmentsPage() {
             return matchesStatus && matchesSearch;
         });
     }, [assignments, search, statusFilter]);
+
+    // A merchant (buyer / supplier) sees the Merchant Inspections Hub
+    if (!isInspector) {
+        return <MerchantInspectionsHub />;
+    }
 
     if (isLoading) {
         return (

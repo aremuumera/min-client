@@ -57,11 +57,9 @@ const initialStateFromLocalStorage = () => {
   // Ported from original logic
   if (typeof window !== "undefined") {
     clearAllFilesFromIndexedDB("ProductImages")
-      .then((data) => console.log("all indexdb data cleared:", data))
       .catch((error) => console.error("Error:", error));
 
     clearAllFilesFromIndexedDB("ProductAttachment")
-      .then((data) => console.log("all indexdb data cleared:", data))
       .catch((error) => console.error("Error:", error));
   }
 };
@@ -317,7 +315,6 @@ export const logoutAndCleanup = () => (dispatch: any) => {
     require("../savedFeature/saved_api").default,
     require("../reviewFeature/review_api").default,
     require("../chatFeature/chatApi").default,
-    require("../business_verification_feature/bv_api").default,
     require("../blogs/blog_api").default,
     require("../business_verification_feature/bv_v1_api").default,
     require("../inspector/inspector_api").default,

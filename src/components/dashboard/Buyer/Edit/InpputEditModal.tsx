@@ -401,7 +401,6 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
 
 
 
-      console.log('payload', payload);
       await editRFQ({
         buyerId,
         rfqId,

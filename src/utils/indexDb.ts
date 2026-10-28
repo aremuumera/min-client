@@ -12,7 +12,6 @@ export const openDB = (): Promise<IDBDatabase> => {
 
         request.onupgradeneeded = (event: any) => {
             const db = event.target.result;
-            console.log('Database upgrade needed, creating stores...');
 
             const stores = [
                 'ProductImages',
@@ -24,7 +23,6 @@ export const openDB = (): Promise<IDBDatabase> => {
             stores.forEach(storeName => {
                 if (!db.objectStoreNames.contains(storeName)) {
                     db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
-                    console.log(`Created object store: ${storeName}`);
                 }
             });
         };
@@ -93,7 +91,6 @@ export const storeFileInIndexedDB = async (files: File[], dbTable: string): Prom
         });
 
         await Promise.all(filePromises);
-        console.log(`${files.length} files stored successfully in ${dbTable}`);
         return fileDataForRedux;
     } catch (error) {
         console.error('Error storing files:', error);
@@ -187,7 +184,6 @@ export const logAllDataFromIndexedDB = async (dbTable: string): Promise<any[]> =
             const getAllRequest = store.getAll();
             getAllRequest.onsuccess = () => {
                 const data = getAllRequest.result;
-                console.log(`Data in ${dbTable}:`, data);
                 resolve(data);
             };
             getAllRequest.onerror = (error) => reject(error);

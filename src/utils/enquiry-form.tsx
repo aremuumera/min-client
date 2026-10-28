@@ -128,11 +128,9 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({ isOpen, onClose }) =
         tags: [],
       };
 
-      console.log('Submitting payload:', payload);
 
-      const response = await submitEnquiryForm(payload).unwrap();
+      await submitEnquiryForm(payload).unwrap();
 
-      console.log('Response:', response);
 
       // Show success message
       toast.success('Enquiry submitted successfully! We will get back to you soon.', {

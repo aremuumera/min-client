@@ -67,9 +67,7 @@ export const firebaseAuthService = {
 export const updateFirebaseAuth = (user) => {
   if (user) {
     // User is signed in, Firebase operations will work
-    console.log("Firebase user authenticated:", user.uid);
   } else {
-    console.log("Firebase user signed out");
   }
 };
 

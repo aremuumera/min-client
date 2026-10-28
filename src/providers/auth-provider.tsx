@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (response) => response,
       async (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
-          console.log('Session expired or unauthorized');
           // Original logic only logged this to console
         }
         return Promise.reject(error);

@@ -38,8 +38,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (firebaseToken && !firebaseSignedIn.current) {
       firebaseSignedIn.current = true;
       firebaseAuthService.signInWithCustomToken(firebaseToken)
-        .then((user) => {
-          console.log(' Firebase Auth signed in:', user?.uid);
+        .then(() => {
         })
         .catch((err) => {
           console.error(' Firebase Auth sign-in failed:', err);

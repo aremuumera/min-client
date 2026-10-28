@@ -1340,7 +1340,6 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
       setFileErrors({ ...fileErrors, [name]: '' });
     }
   };
-  console.log('Submitting Step 2 with data:', formData);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1372,7 +1371,6 @@ const BusinessRegistrationStep = ({ userId, onNext, onBack, verificationData, st
           formDataToSend.append(key, files[key] as File);
         }
       });
-      console.log('Submitting Step 2 with data:', formDataToSend, formData);
 
       await submitStep2({ userId, formData: formDataToSend }).unwrap();
       onNext();

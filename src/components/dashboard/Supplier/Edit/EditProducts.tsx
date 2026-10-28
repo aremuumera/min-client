@@ -81,9 +81,6 @@ const EditSupProduct = ({ open, rows, onClose }: any) => {
 
 
 
-  const exampleRoute = 'http://localhost:3000/products/details/2/High-Purity-Limestone-for-Industrial-Use'
-
-  console.log("SUP DETAIL data", data?.product);
 
   useEffect(() => {
     if (data?.product) {

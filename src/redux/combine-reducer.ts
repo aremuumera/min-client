@@ -4,7 +4,6 @@ import storage from "redux-persist/lib/storage";
 
 import AuthReducer from "./features/AuthFeature/auth_slice";
 import blogApi from "./features/blogs/blog_api";
-import businessVerificationApi from "./features/business_verification_feature/bv_api";
 import businessCompanyInfoReducer from "./features/business_verification_feature/bv_slice";
 import businessVerificationApiV1 from "./features/business_verification_feature/bv_v1_api";
 import rfqApi from "./features/buyer-rfq/rfq-api";
@@ -21,7 +20,6 @@ import supplierProductApi from "./features/supplier-products/products_api";
 import productReducer from "./features/supplier-products/products_slice";
 import supplierProfileApi from "./features/supplier-profile/supplier_profile_api";
 import supplierProfileReducer from "./features/supplier-profile/supplier_profile_slice";
-import waitlistReducer from "./features/waitlist/waitlist_slice";
 import { authApi } from "./features/AuthFeature/auth_api_rtk";
 import { teamApi } from "./features/team/teamApi";
 import activityApi from "./features/activity/activityApi";
@@ -53,7 +51,6 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, AuthReducer),
-  waitlist: waitlistReducer,
   product: productReducer,
   businessCompanyInfo: businessCompanyInfoReducer,
   [supplierProductApi.reducerPath]: supplierProductApi.reducer,
@@ -67,7 +64,6 @@ const rootReducer = combineReducers({
   [savedItemsApi.reducerPath]: savedItemsApi.reducer,
   [reviewApi.reducerPath]: reviewApi.reducer,
   [chatApi.reducerPath]: chatApi.reducer,
-  [businessVerificationApi.reducerPath]: businessVerificationApi.reducer,
   [blogApi.reducerPath]: blogApi.reducer,
   [businessVerificationApiV1.reducerPath]: businessVerificationApiV1.reducer,
   [inspectorApi.reducerPath]: inspectorApi.reducer,

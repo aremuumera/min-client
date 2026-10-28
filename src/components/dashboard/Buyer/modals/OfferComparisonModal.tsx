@@ -12,7 +12,7 @@ import {
     Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useShortlistOfferMutation } from '@/redux/features/trade/trade_api';
+import { useShortlistRfqOfferMutation } from '@/redux/features/trade/trade_api';
 import { toast } from '@/components/core/toaster';
 import { formatNumberWithCommas } from '@/lib/number-format';
 
@@ -27,7 +27,8 @@ interface OfferComparisonModalProps {
 const OfferComparisonModal = ({ isOpen: isOpenProp, open: openProp, onClose, offers = [], rfq }: OfferComparisonModalProps) => {
     const isOpen = typeof isOpenProp === 'boolean' ? isOpenProp : Boolean(openProp);
     const [mounted, setMounted] = useState(false);
-    const [shortlist, { isLoading: isShortlisting }] = useShortlistOfferMutation();
+    // the same shortlist as the offer card: PUT /rfq/offers/:offerId/shortlist
+    const [shortlist, { isLoading: isShortlisting }] = useShortlistRfqOfferMutation();
     const [activeMediaIndices, setActiveMediaIndices] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -48,10 +49,10 @@ const OfferComparisonModal = ({ isOpen: isOpenProp, open: openProp, onClose, off
     };
 
     const handleShortlist = async (offer: any, index: number) => {
-        const inquiryId = offer.external_id || offer.id;
+        const offerId = offer.external_id || offer.id;
         const { company } = resolveSupplierInfo(offer, index);
         try {
-            await shortlist({ inquiryId, is_shortlisted: !offer.is_shortlisted }).unwrap();
+            await shortlist({ offerId, is_shortlisted: !offer.is_shortlisted }).unwrap();
             toast.success(`${company} ${offer.is_shortlisted ? 'un-shortlisted' : 'shortlisted'} successfully`);
         } catch (err) {
             toast.error('Failed to update shortlist status');

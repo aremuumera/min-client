@@ -19,14 +19,12 @@ import { useAppSelector } from '@/redux';
 
 const RfQProductReview = ({ handleNext, setActiveStep, activeStep, handleBack }: { handleNext: () => void, setActiveStep: (step: number) => void, activeStep: number, handleBack: () => void }) => {
     const { rfqProductDetailsFormData } = useAppSelector((state) => state?.rfqProduct);
-    const { rfqProductCategory, rfqProductSubCategory, selectedShippings, selectedPayments,
+    const { rfqProductCategory, selectedShippings, selectedPayments,
         quantityMeasure, deliveryPeriod, durationOfSupply, paymentTermsDescribed,
         quantityRequired, rfqDescription, rfqProductName, selectedCountry,
-        selectedCountryName, selectedState, selectedStateName, shippingTermsDescribed, streetNo,
-        zipCode
+        selectedCountryName, selectedState, selectedStateName, shippingTermsDescribed,
     } = rfqProductDetailsFormData;
 
-    console.log(rfqProductSubCategory, selectedCountryName, streetNo, zipCode);
 
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

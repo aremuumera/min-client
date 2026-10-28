@@ -80,7 +80,6 @@ export const chatService = {
 
           isRead: false,
         };
-        console.log('Creating new conversation with data:', conversationData);
 
         const conversationRef = await addDoc(collection(db, 'conversations'), conversationData);
         conversationId = conversationRef.id;
@@ -88,7 +87,6 @@ export const chatService = {
         const cp = itemData.companyName ? itemData.companyName : '';
         const cp2 = itemData.senderCompanyName ? itemData.senderCompanyName : '';
 
-        console.log('New conversation created with ID:', conversationId, initiatorId, recipientId, cp, cp2, itemData);
 
         // Update user conversations for quick access
         const r = await updateUserConversations(
@@ -389,7 +387,6 @@ export const chatService = {
       const snapshot = await getDocs(notificationsQuery);
       const batch = writeBatch(db);
 
-      console.log(`Deleting ${snapshot.size} notifications for user: ${userId}`);
 
       // Delete all notifications
       snapshot.forEach((doc) => {
@@ -794,7 +791,6 @@ const createNotification = async (
     } else {
       console.warn(`No email found for user ${userId}`);
     }
-    console.log('Email notification would be sent here');
   } catch (error) {
     console.error('Error creating notification:', error);
   }
@@ -1288,7 +1284,6 @@ export const updateInvoiceStatusInChats = async (
       updatedAt: serverTimestamp(),
     });
 
-    console.log(`Successfully updated status for invoice ${invoiceId} to ${status}`);
     return {
       success: true,
       updatedCount: messagesSnap.size,

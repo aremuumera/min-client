@@ -58,7 +58,6 @@ export function SignInForm() {
 
       dispatch(loginSuccess(response));
 
-      console.log('response', response);
 
       showAlert(response?.message || 'Welcome back!', 'success');
       router.push(paths.dashboard.overview);

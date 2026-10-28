@@ -31,23 +31,6 @@ export const inspectorApi = createApi({
         "AvailableInspectors",
       ],
     }),
-    getAvailableInspectors: builder.query<any, void>({
-      query: () => "/inspector/all-neel-inspectors",
-      providesTags: ["AvailableInspectors"],
-    }),
-    updateInspectorCompany: builder.mutation({
-      query: ({ userId, ...data }) => ({
-        url: `/inspector/${userId}/edit`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: (result, error, { userId }) => [
-        { type: "InspectorCompany", id: userId },
-        "InspectorCompanies",
-        "AvailableInspectors",
-        "AdminInspectors",
-      ],
-    }),
     toggleInspectorStatus: builder.mutation({
       query: (userId) => ({
         url: `/inspector/status/${userId}/edit`,
@@ -61,15 +44,6 @@ export const inspectorApi = createApi({
       ],
     }),
 
-    // ============ INSPECTOR ASSIGNMENT ENDPOINTS ============
-    assignInspection: builder.mutation({
-      query: ({ userId, assignmentData }) => ({
-        url: `/inspector/assign-inspection/${userId}`,
-        method: "POST",
-        body: assignmentData,
-      }),
-      invalidatesTags: ["InspectorAssignments", "InspectorAssignment"],
-    }),
     updateAssignmentStatus: builder.mutation({
       query: ({ id, ...statusData }) => ({
         url: `/inspector/assignments/${id}/status`,
@@ -92,20 +66,6 @@ export const inspectorApi = createApi({
       ],
     }),
 
-    // ============ UTILITY ENDPOINTS ============
-    getInspectorCompanyById: builder.query<any, string>({
-      query: (userId) => `/inspector/${userId}`,
-      providesTags: (result, error, userId) => [
-        { type: "InspectorCompany", id: userId },
-      ],
-    }),
-    searchInspectors: builder.query<any, any>({
-      query: (params) => ({
-        url: "/inspector/search",
-        params,
-      }),
-      providesTags: ["InspectorCompanies"],
-    }),
     getInspectorStats: builder.query<any, void>({
       query: () => "/inspector/dashboard/stats",
     }),
@@ -284,17 +244,10 @@ export const inspectorApi = createApi({
 export const {
   useGetAllInspectorsQuery,
   useCreateInspectorCompanyMutation,
-  useGetAvailableInspectorsQuery,
-  useUpdateInspectorCompanyMutation,
   useToggleInspectorStatusMutation,
-  useGetInspectorCompanyByIdQuery,
-  useLazyGetInspectorCompanyByIdQuery,
-  useAssignInspectionMutation,
   useUpdateAssignmentStatusMutation,
   useGetInspectorAssignmentsQuery,
   useGetWorkbenchDetailQuery,
-  useSearchInspectorsQuery,
-  useLazySearchInspectorsQuery,
   useGetInspectorStatsQuery,
   useGetInspectorCapabilitiesQuery,
   useUpdateInspectorCapabilitiesMutation,
