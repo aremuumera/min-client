@@ -45,6 +45,6 @@ export function ErrorState({ title = 'Something went wrong', description, onRetr
 }
 
 /** A 403, or can() said no */
-export function NoAccess({ title = "You don't have access to this", description = 'Ask your account owner or a MINMEG administrator if you need it.', className }: Partial<StateProps>) {
-  return <StateFrame icon={<Lock className="h-6 w-6" aria-hidden />} tone="neutral" title={title} description={description} className={className} />;
+export function NoAccess({ title = "You don't have access to this", description = 'Ask your account owner or a MINMEG administrator if you need it.', action, className }: Partial<StateProps>) {
+  return <StateFrame icon={<Lock className="h-6 w-6" aria-hidden />} tone="neutral" title={title} description={description} action={action} className={className} />;
 }
