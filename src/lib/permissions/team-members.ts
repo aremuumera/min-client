@@ -57,6 +57,8 @@ export function memberLockReason(actor: Actor, meId: string | null | undefined, 
  */
 export function canOpenArea(actor: Actor, key: string | undefined): boolean {
   if (!key) return true;
+  // Batches: only supply companies own them, and a team member also needs the inventory key
+  if (key === 'batches') return actor.isStaff || ((actor.role === 'supplier' || actor.role === 'buyer_supplier') && (!actor.isTeamMember || actor.teamKeys.includes('inventory')));
   if (actor.isTeamMember) return actor.teamKeys.includes(key);
   if (actor.isStaff) return true;
   const r = actor.role;

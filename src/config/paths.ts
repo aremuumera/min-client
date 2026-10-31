@@ -83,6 +83,7 @@ export const paths = {
     companyInfoVerification: "/dashboard/company-info-verification",
     invoices: "/dashboard/invoices",
     sites: "/dashboard/sites",
+    batches: "/dashboard/batches",
     documents: { list: "/dashboard/documents", shared: "/dashboard/documents/shared", evidence: "/dashboard/documents/evidence" },
     wallet: "/dashboard/wallet",
     settings: {
@@ -222,6 +223,8 @@ export const routeAccess = {
     paths.dashboard.settings.team,
     // sites (step 2.4)
     paths.dashboard.sites,
+    // inventory (step 2.5)
+    paths.dashboard.batches,
     // documents (step 2.3)
     paths.dashboard.documents.list,
     paths.dashboard.documents.shared,

@@ -14,7 +14,7 @@ export const sitesHelp: PageHelpContent = {
     ],
   },
   links: [
-    { label: 'Batches', why: 'A batch names where it came from and where it is now.', note: 'Coming in step 2.5' },
+    { label: 'Inventory', href: '/dashboard/batches', why: 'A batch names where it came from and where it is now.' },
     { label: 'Shipments', why: "A shipment goes from one site to another, through checkpoints.", note: 'Coming in step 2.7' },
   ],
   goodToKnow: [

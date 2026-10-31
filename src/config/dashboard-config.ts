@@ -13,7 +13,7 @@ export interface NavItemConfig {
   badge?: string;
   matcher?: { type: "startsWith" | "equals"; href: string };
   items?: NavItemConfig[];
-  permission?: PermissionKey;
+  permission?: PermissionKey | 'batches';
 }
 
 export interface DashboardConfig {
@@ -225,6 +225,14 @@ export const dashboardConfig: DashboardConfig = {
           icon: "chats-circle",
           matcher: { type: "startsWith", href: "/dashboard/chat" },
           permission: "chat",
+        },
+        {
+          key: "inventory",
+          title: "Inventory",
+          href: paths.dashboard.batches,
+          icon: "package",
+          matcher: { type: "startsWith", href: "/dashboard/batches" },
+          permission: "batches",
         },
         {
           key: "sites",
