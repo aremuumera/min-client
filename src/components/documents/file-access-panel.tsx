@@ -7,9 +7,10 @@ import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, FormField, Input, N
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDate } from '@/lib/format';
-import { GRANT_PERMISSIONS, GRANTEE_TYPES, label, OWNER_ACCESS_MODES, type Grant, type GranteeType, type GrantPermission, type VaultFile } from '@/lib/vault';
+import { GRANT_PERMISSIONS, GRANTEE_TYPES, label, OWNER_ACCESS_MODES, type Grant, type GrantPermission, type VaultFile } from '@/lib/vault';
 import {
   useCreateGrantMutation,
+  useCreateShareLinkMutation,
   useGetGrantsQuery,
   useGetVisibilityPoliciesQuery,
   useGetVisibilityQuery,
@@ -19,15 +20,20 @@ import {
 } from '@/redux/features/vault/vaultApi';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ID_HELP: Record<GranteeType, string> = {
-  ORGANIZATION: "The company's MINMEG ID, shown on its profile",
-  USER: "The person's MINMEG ID",
-  TRADE_PARTICIPANT: 'The trade ID: its buyer, supplier and inspectors get access',
+const ID_HELP: Record<string, string> = {
+  ORGANIZATION: "The company's MINMEG ID: ask them for it, or use their email instead",
+  USER: "The person's MINMEG ID: ask them for it, or use their email instead",
 };
+const DAY = 24 * 3600_000;
+const toDateInput = (d: Date) => d.toISOString().slice(0, 10);
+/** A company or person by ID, or anyone by email (an emailed link with a code; no MINMEG account needed) */
+type GranteeChoice = (typeof GRANTEE_TYPES)[number] | 'EMAIL';
+const CHOICES: GranteeChoice[] = ['EMAIL', ...GRANTEE_TYPES];
 
 /**
  * Who can see one vault file (Group 02 on FILE_ASSET): the file's access mode, the visibility rule
- * when it follows one, and access given to specific companies, people or trades.
+ * when it follows one, access given to specific companies or people by ID, and access by email,
+ * which is an emailed share link (it shows under Share links).
  */
 export function FileAccessPanel({ file }: { file: VaultFile }) {
   const [updateFile, updateState] = useUpdateFileMutation();
@@ -36,6 +42,7 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
   const [setVisibility, visibilityState] = useSetVisibilityMutation();
   const grants = useGetGrantsQuery({ resourceType: 'FILE_ASSET', resourceId: file.id, limit: 100 });
   const [createGrant, grantState] = useCreateGrantMutation();
+  const [createShareLink, shareState] = useCreateShareLinkMutation();
   const [revokeGrant, revokeState] = useRevokeGrantMutation();
   const { key, done } = useIdempotencyKey();
   const { confirm, dialog } = useConfirm();
@@ -43,7 +50,12 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
   const [mode, setMode] = React.useState<string>(file.accessMode);
   const [policyId, setPolicyId] = React.useState('');
   const [adding, setAdding] = React.useState(false);
-  const [granteeType, setGranteeType] = React.useState<GranteeType>('ORGANIZATION');
+  const [granteeType, setGranteeType] = React.useState<GranteeChoice>('EMAIL');
+  const [email, setEmail] = React.useState('');
+  const [canDownload, setCanDownload] = React.useState(false);
+  const [emailUntil, setEmailUntil] = React.useState(() => toDateInput(new Date(Date.now() + 7 * DAY)));
+  // an emailed link lasts at most 30 days; fixed when the panel opens
+  const [range] = React.useState(() => ({ min: toDateInput(new Date(Date.now() + DAY)), max: toDateInput(new Date(Date.now() + 30 * DAY)) }));
   const [granteeId, setGranteeId] = React.useState('');
   const [perms, setPerms] = React.useState<GrantPermission[]>(['READ']);
   const [expiresAt, setExpiresAt] = React.useState('');
@@ -83,8 +95,36 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
     }
   };
 
+  const addByEmail = async () => {
+    const next: Record<string, string> = {};
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) next.email = 'Enter the email address';
+    const until = new Date(`${emailUntil}T23:59:00`);
+    if (!(until.getTime() > Date.now() + 60_000 && until.getTime() <= Date.now() + 30 * DAY)) next.emailUntil = 'Choose a date within the next 30 days';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+    const ok = await confirm({
+      title: `Share with ${email.trim()}?`,
+      description: `We email them a link. They enter a 6-digit code each time they open it, and don't need a MINMEG account. ${canDownload ? 'They can view and download' : 'They can only view'} until ${until.toLocaleDateString()}.`,
+      confirmLabel: 'Send link',
+    });
+    if (!ok) return;
+    try {
+      const res = await createShareLink({ fileId: file.id, accessScope: 'SPECIFIC_EMAIL', targetEmail: email.trim(), permission: canDownload ? 'DOWNLOAD' : 'VIEW', expiresAt: until.toISOString(), idempotencyKey: key }).unwrap();
+      done();
+      if (res.data.emailSent === false) toast.error(`The link was created, but the email to ${email.trim()} could not be sent. Revoke it under Share links and try again.`);
+      else toast.success(`Sent to ${email.trim()}. It's listed under Share links.`);
+      setAdding(false);
+      setEmail('');
+      setCanDownload(false);
+    } catch (err) {
+      const apiError = toApiError(err);
+      setErrors(apiError.fields.targetEmail ? { email: apiError.fields.targetEmail } : apiError.fields.expiresAt ? { emailUntil: apiError.fields.expiresAt } : { form: apiError.message });
+    }
+  };
+
   const addGrant = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (granteeType === 'EMAIL') return addByEmail();
     const next: Record<string, string> = {};
     if (!UUID.test(granteeId.trim())) next.granteeId = 'Paste the full ID';
     if (!perms.length) next.permissions = 'Tick at least one';
@@ -202,32 +242,54 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
           <form onSubmit={addGrant} noValidate aria-label="Give access" className="flex flex-col gap-3 rounded-xl border border-hairline p-4">
             {errors.form && <Alert severity="error">{errors.form}</Alert>}
             <FormField label="To" htmlFor="grant-type">
-              <NativeSelect id="grant-type" value={granteeType} onValueChange={(v) => setGranteeType(v as GranteeType)} options={GRANTEE_TYPES.map((t) => ({ value: t, label: label(t) }))} />
+              <NativeSelect
+                id="grant-type"
+                value={granteeType}
+                onValueChange={(v) => {
+                  setGranteeType(v as GranteeChoice);
+                  setErrors({});
+                }}
+                options={CHOICES.map((t) => ({ value: t, label: label(t) }))}
+              />
             </FormField>
-            <FormField label="ID" htmlFor="grant-id" required help={ID_HELP[granteeType]} error={errors.granteeId}>
-              <Input id="grant-id" value={granteeId} onChange={(e) => setGranteeId(e.target.value)} error={!!errors.granteeId} className="font-mono" autoComplete="off" />
-            </FormField>
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-sm font-medium text-ink">They can</legend>
-              {GRANT_PERMISSIONS.map((p) => (
-                <Checkbox key={p} label={label(p)} checked={perms.includes(p)} onChange={(e) => setPerms((prev) => (e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)))} />
-              ))}
-              {errors.permissions && <p className="text-xs text-semantic-error-text">{errors.permissions}</p>}
-            </fieldset>
-            <div className="grid gap-3 md:grid-cols-2">
-              <FormField label="Until" htmlFor="grant-expiry" help="Empty: until you remove it" error={errors.expiresAt}>
-                <Input id="grant-expiry" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} error={!!errors.expiresAt} />
-              </FormField>
-              <FormField label="Reason" htmlFor="grant-reason">
-                <Input id="grant-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. due diligence for Lot 12" />
-              </FormField>
-            </div>
+            {granteeType === 'EMAIL' ? (
+              <>
+                <FormField label="Email address" htmlFor="grant-email" required help="On MINMEG or not: they get a link and enter a 6-digit code to open it" error={errors.email}>
+                  <Input id="grant-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!errors.email} autoComplete="off" />
+                </FormField>
+                <Checkbox label="They can also download it" checked={canDownload} onChange={(e) => setCanDownload(e.target.checked)} />
+                <FormField label="Until" htmlFor="grant-email-until" required help="At most 30 days ahead" error={errors.emailUntil}>
+                  <Input id="grant-email-until" type="date" value={emailUntil} min={range.min} max={range.max} onChange={(e) => setEmailUntil(e.target.value)} error={!!errors.emailUntil} />
+                </FormField>
+              </>
+            ) : (
+              <>
+                <FormField label="ID" htmlFor="grant-id" required help={ID_HELP[granteeType]} error={errors.granteeId}>
+                  <Input id="grant-id" value={granteeId} onChange={(e) => setGranteeId(e.target.value)} error={!!errors.granteeId} className="font-mono" autoComplete="off" />
+                </FormField>
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-sm font-medium text-ink">They can</legend>
+                  {GRANT_PERMISSIONS.map((p) => (
+                    <Checkbox key={p} label={label(p)} checked={perms.includes(p)} onChange={(e) => setPerms((prev) => (e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)))} />
+                  ))}
+                  {errors.permissions && <p className="text-xs text-semantic-error-text">{errors.permissions}</p>}
+                </fieldset>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FormField label="Until" htmlFor="grant-expiry" help="Empty: until you remove it" error={errors.expiresAt}>
+                    <Input id="grant-expiry" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} error={!!errors.expiresAt} />
+                  </FormField>
+                  <FormField label="Reason" htmlFor="grant-reason">
+                    <Input id="grant-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. due diligence for Lot 12" />
+                  </FormField>
+                </div>
+              </>
+            )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outlined" color="secondary" onClick={() => setAdding(false)} disabled={grantState.isLoading}>
+              <Button type="button" variant="outlined" color="secondary" onClick={() => setAdding(false)} disabled={grantState.isLoading || shareState.isLoading}>
                 Cancel
               </Button>
-              <Button type="submit" loading={grantState.isLoading}>
-                Give access
+              <Button type="submit" loading={grantState.isLoading || shareState.isLoading}>
+                {granteeType === 'EMAIL' ? 'Send link' : 'Give access'}
               </Button>
             </div>
           </form>

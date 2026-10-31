@@ -11,13 +11,12 @@ export const documentsHelp: PageHelpContent = {
     steps: [
       'Make a folder "Lot 12 – cassiterite" and upload the mining licence, the export permit and the lab assay (PDF).',
       'The buyer in Rotterdam asks for the assay: open it, choose "Share links", and send a link to their compliance officer\'s email. They get a 6-digit code each time they open it.',
-      'Their bank needs the contract for a week: give their company access until a date, view only.',
+      'Their bank needs the contract for a week: give access by email or by company ID, until a date, view only.',
       'The access log shows exactly when the bank opened it. When the deal closes, revoke the link.',
     ],
   },
   links: [
     { label: 'Shared with me', href: '/dashboard/documents/shared', why: 'Documents other companies have given you access to.' },
-    { label: 'Trades', why: "Documents can be shared with a trade's buyer, supplier and inspectors at once.", href: '/dashboard/my-trade-inquiries' },
     { label: 'Batches and passports', why: 'Evidence from your vault will be attached to batches and passports.', note: 'Coming in steps 2.5 and 2.9' },
   ],
   goodToKnow: [

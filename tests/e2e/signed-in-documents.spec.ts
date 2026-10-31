@@ -119,13 +119,41 @@ test('details: preview is logged; a share link is shown once, then revoked', asy
   await shot('access-log');
 });
 
-test('who can see it: access mode and the give-access form check their fields', async () => {
-  const sheet = page.getByRole('dialog').filter({ hasText: 'assay-lot-12.pdf' });
+test('who can see it: email and ID are offered, trade participants are not; email sends a link', async () => {
+  const sheet = page.getByRole('dialog').filter({ has: page.getByRole('tablist', { name: 'File' }) });
   await sheet.getByRole('tab', { name: 'Who can see it' }).click();
-  await expect(sheet.getByLabel('Access')).toHaveValue('PRIVATE');
+  await expect(sheet.getByLabel('Access', { exact: true })).toHaveValue('PRIVATE');
   await sheet.getByRole('button', { name: 'Give access' }).click();
-  await sheet.getByRole('form', { name: 'Give access' }).getByRole('button', { name: 'Give access' }).click();
-  await expect(sheet.getByText('Paste the full ID')).toBeVisible();
+  const form = sheet.getByRole('form', { name: 'Give access' });
+  expect(await form.getByLabel('To').locator('option').allTextContents()).toEqual(['An email address', 'A company', 'A person']);
+
+  await form.getByRole('button', { name: 'Send link' }).click();
+  await expect(form.getByText('Enter the email address')).toBeVisible();
+
+  // the buyer's own mailbox, so nothing goes to a stranger
+  const [local, domain] = env.E2E_BUYER.split('@');
+  const email = `${local}+e2e-share@${domain}`;
+  await form.getByLabel('Email address').fill(email);
+  await form.getByRole('button', { name: 'Send link' }).click();
+  await confirmIn(`Share with ${email}?`, 'Send link');
+  // either message is right here: a local run can hit the email provider's daily limit, and the link still exists
+  await expect(page.locator('[data-sonner-toast]').getByText(/Sent to|could not be sent/).first()).toBeVisible({ timeout: 30_000 });
+
+  await sheet.getByRole('tab', { name: /Share links/ }).click();
+  const row = sheet.getByRole('list', { name: 'Share links' }).getByRole('listitem').filter({ hasText: email });
+  await expect(row.getByText('Active')).toBeVisible({ timeout: 15_000 });
+  await row.getByRole('button', { name: 'Revoke' }).click();
+  const revoke = page.getByRole('dialog').filter({ hasText: 'Revoke this link?' });
+  await revoke.getByLabel('Reason').fill('E2E test finished');
+  await revoke.getByRole('button', { name: 'Revoke link' }).click();
+  await expect(row.getByText('Revoked')).toBeVisible({ timeout: 15_000 });
+
+  // a company by ID is still there
+  await sheet.getByRole('tab', { name: 'Who can see it' }).click();
+  await sheet.getByRole('button', { name: 'Give access' }).click();
+  await form.getByLabel('To').selectOption('ORGANIZATION');
+  await form.getByRole('button', { name: 'Give access' }).click();
+  await expect(form.getByText('Paste the full ID')).toBeVisible();
   await shot('access');
 });
 

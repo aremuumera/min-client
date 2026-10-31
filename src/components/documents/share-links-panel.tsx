@@ -134,7 +134,7 @@ export function ShareLinksPanel({ fileId, fileName }: { fileId: string; fileName
             </FormField>
           )}
           {scope === 'SPECIFIC_ORGANIZATION' && (
-            <FormField label="Company's MINMEG ID" htmlFor="share-org" required help="Shown on their company profile" error={errors.targetOrganizationId}>
+            <FormField label="Company's MINMEG ID" htmlFor="share-org" required help="Ask them for it, or use their email instead" error={errors.targetOrganizationId}>
               <Input id="share-org" value={orgId} onChange={(e) => setOrgId(e.target.value)} error={!!errors.targetOrganizationId} className="font-mono" autoComplete="off" />
             </FormField>
           )}

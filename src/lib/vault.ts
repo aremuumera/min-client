@@ -121,8 +121,9 @@ export interface ResourceVisibility {
   assignments?: { id: string; visibilityPolicyId: string; contextType: string; active: boolean; policy: Pick<VisibilityPolicy, 'id' | 'name' | 'code'> }[];
 }
 
-export const GRANTEE_TYPES = ['ORGANIZATION', 'USER', 'TRADE_PARTICIPANT'] as const;
-export type GranteeType = (typeof GRANTEE_TYPES)[number];
+/** What merchants can choose. TRADE_PARTICIPANT stays readable on older grants, but isn't offered (owner, 2026-10-31). */
+export const GRANTEE_TYPES = ['ORGANIZATION', 'USER'] as const;
+export type GranteeType = (typeof GRANTEE_TYPES)[number] | 'TRADE_PARTICIPANT';
 export const GRANT_PERMISSIONS = ['READ', 'VIEW_EVIDENCE', 'DOWNLOAD'] as const;
 export type GrantPermission = (typeof GRANT_PERMISSIONS)[number] | 'VIEW_PRIVATE_DATA' | 'SHARE' | 'MANAGE_ACCESS';
 
@@ -207,6 +208,7 @@ export const LABELS: Record<string, string> = {
   DOWNLOAD: 'View and download',
   ORGANIZATION: 'A company',
   USER: 'A person',
+  EMAIL: 'An email address',
   TRADE_PARTICIPANT: "A trade's buyer, supplier and inspectors",
   COMPLIANCE_EVIDENCE: 'Compliance evidence',
   ORIGIN_EVIDENCE: 'Origin evidence',
