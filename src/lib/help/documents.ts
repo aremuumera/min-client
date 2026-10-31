@@ -1,0 +1,58 @@
+import type { PageHelpContent } from '@/components/ui';
+
+/* "About this page" for the documents pages (step 2.3). Keep in step with what the pages do. */
+
+export const documentsHelp: PageHelpContent = {
+  title: 'Documents',
+  purpose:
+    "Your company's secure document vault: licences, contracts, assay reports, certificates and evidence. Files are stored exactly as uploaded, with a fingerprint (SHA-256) that proves they were never changed. Only your company can open them until you share them, and every open is logged.",
+  example: {
+    title: 'proving a tin shipment to a buyer',
+    steps: [
+      'Make a folder "Lot 12 – cassiterite" and upload the mining licence, the export permit and the lab assay (PDF).',
+      'The buyer in Rotterdam asks for the assay: open it, choose "Share links", and send a link to their compliance officer\'s email. They get a 6-digit code each time they open it.',
+      'Their bank needs the contract for a week: give access by email or by company ID, until a date, view only.',
+      'The access log shows exactly when the bank opened it. When the deal closes, revoke the link.',
+    ],
+  },
+  links: [
+    { label: 'Shared with me', href: '/dashboard/documents/shared', why: 'Documents other companies have given you access to.' },
+    { label: 'Batches and passports', why: 'Evidence from your vault will be attached to batches and passports.', note: 'Coming in steps 2.5 and 2.9' },
+  ],
+  goodToKnow: [
+    'PDF, pictures, Word, Excel, CSV and text, up to 20 MB each.',
+    'Files are never compressed or changed, so they can serve as evidence.',
+    'Preview and download links last 10 minutes; share links at most 30 days, unless a public link has no end date.',
+    'Files under legal hold, or attached as evidence, cannot be deleted.',
+  ],
+};
+
+export const sharedWithMeHelp: PageHelpContent = {
+  title: 'Shared with me',
+  purpose: 'Documents and records other companies on MINMEG have given your company access to, and until when. You can open what they allowed; they can take access back at any time.',
+  example: {
+    title: "a supplier's export permit",
+    steps: [
+      'Your supplier in Jos gives your company access to their export permit for Lot 12.',
+      'It appears here with what you may do (see it, download it) and the end date.',
+      'Open it to check before you pay the deposit. The supplier sees in their access log that you opened it.',
+    ],
+  },
+  links: [{ label: 'Documents', href: '/dashboard/documents', why: "Your own company's vault." }],
+  goodToKnow: ['Access ends on its end date, or as soon as the owner removes it.'],
+};
+
+export const companyEvidenceHelp: PageHelpContent = {
+  title: 'Company evidence',
+  purpose: 'Documents that prove something about your company, such as a mining licence or tax clearance, attached from your vault for MINMEG to check. Each one shows whether it has been verified. The labels and tags MINMEG or you have put on your company are listed too.',
+  example: {
+    title: 'your mining licence',
+    steps: [
+      'Upload the licence to Documents, then attach it here as a Licence, with the expiry date printed on it.',
+      'MINMEG compares it with the ministry register and marks it Verified.',
+      'You are warned 30 and 7 days before the expiry date, so you can upload the renewal in time.',
+    ],
+  },
+  links: [{ label: 'Documents', href: '/dashboard/documents', why: 'Where the files themselves are kept.' }],
+  goodToKnow: ['Removing evidence here keeps the file in your vault.', 'You cannot delete a file from the vault while it is attached as evidence.', 'Only MINMEG can verify evidence.'],
+};

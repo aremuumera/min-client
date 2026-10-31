@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { quietLogins } from './quiet-login';
 import { test, expect, type Browser, type Page } from '@playwright/test';
 
 /*
@@ -28,7 +29,9 @@ test.describe.configure({ mode: 'serial', timeout: 90_000 });
 const shot = (page: Page, name: string) => page.screenshot({ path: `tests/e2e/.results/signed-in-${name}.png` });
 
 async function signIn(browser: Browser, email: string): Promise<Page> {
-  const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await quietLogins(context, env.E2E_RUN_SECRET);
+  const page = await context.newPage();
   await page.goto('/auth/sign-in');
   await page.getByPlaceholder('Enter your email').fill(email);
   await page.getByPlaceholder('Enter your password').fill(password);

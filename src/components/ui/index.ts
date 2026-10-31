@@ -189,3 +189,8 @@ export { StatTile, type StatTileProps } from "./stat-tile";
 export { QuantityInput, QUANTITY_PATTERN, type QuantityInputProps } from "./quantity-input";
 export { DataTable, type DataTableColumn, type DataTableProps } from "./data-table";
 export { FilterBar, type FilterBarProps } from "./filter-bar";
+export { NativeSelect, type NativeSelectProps, type NativeSelectOption } from "./native-select";
+export { Thumbnail, type ThumbnailProps } from "./thumbnail";
+export { useConfirm, type ConfirmOptions } from "./use-confirm";
+export { PaginationBar, PAGE_SIZES, type PaginationBarProps } from "./pagination-bar";
+export { PageHelp, type PageHelpContent, type PageHelpLink } from "./page-help";

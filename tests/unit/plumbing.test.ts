@@ -7,6 +7,11 @@ import { createSseParser, type SseEvent } from '@/lib/realtime/sse';
 /* API errors, access checks and the SSE parser (docs/new/frontend/testing/frontend-testing.md §1) */
 
 describe('toApiError', () => {
+  it('leaves an already converted error alone, keeping the backend message', () => {
+    const converted = toApiError({ status: 422, data: { error: { message: 'Size mismatch', code: 'BUSINESS_RULE_VIOLATION' } } });
+    expect(converted.message).toBe('Size mismatch');
+    expect(toApiError(converted)).toBe(converted);
+  });
   it('reads the backend error and splits validation messages per field', () => {
     const e = toApiError({ status: 400, data: { success: false, error: { message: 'Validation failed: body.note: note is required when verification FAILED, body.quantity: Expected number, received string', code: 'BAD_REQUEST', statusCode: 400, requestId: 'r-1' } } });
     expect(e).toMatchObject({ status: 400, code: 'BAD_REQUEST', requestId: 'r-1' });
