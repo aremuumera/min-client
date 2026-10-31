@@ -47,7 +47,6 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
       // If profileDetailDescription exists in data, use it to populate profileDescriptionFields
       setProfileDescriptionFields(JSON.parse(JSON.stringify(data?.profileDetailDescription)));
 
-      console.log('object.profileDescriptionFields', data?.profileDetailDescription);
     } else {
       // Otherwise, initialize with a default empty field
       setProfileDescriptionFields([{ header: '', description: '' }]);
@@ -253,7 +252,6 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
     }
   };
 
-  console.log('formData:', formData);
 
   // Helper function to prepare options for Select component
   const renderOptions = (options: any[], selectCategoryName: string) => {

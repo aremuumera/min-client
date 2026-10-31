@@ -6,7 +6,7 @@ const iconButtonVariants = cva(
   [
     'inline-flex items-center justify-center',
     'rounded-full',
-    'transition-all duration-200',
+    'transition-colors duration-150',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
     'disabled:pointer-events-none disabled:opacity-50',
     'cursor-pointer select-none',
@@ -15,8 +15,8 @@ const iconButtonVariants = cva(
     variants: {
       variant: {
         default: 'hover:bg-neutral-100 active:bg-neutral-200',
-        contained: 'text-white shadow-sm',
-        outlined: 'border-2 bg-transparent',
+        contained: 'text-white',
+        outlined: 'border bg-canvas',
       },
       color: {
         default: '',
@@ -28,14 +28,15 @@ const iconButtonVariants = cva(
         error: '',
       },
       size: {
-        sm: 'h-8 w-8 text-sm',
-        md: 'h-10 w-10 text-base',
+        // 44px hit area on phones (design.md); the small size tightens from tablet up
+        sm: 'h-11 w-11 md:h-8 md:w-8 text-sm',
+        md: 'h-11 w-11 text-base',
         lg: 'h-12 w-12 text-lg',
       },
     },
     compoundVariants: [
       // Default variant colors
-      { variant: 'default', color: 'default', className: 'text-neutral-600 hover:bg-neutral-100' },
+      { variant: 'default', color: 'default', className: 'text-slate hover:bg-surface-soft' },
       { variant: 'default', color: 'primary', className: 'text-primary-500 hover:bg-primary-50' },
       { variant: 'default', color: 'secondary', className: 'text-secondary-700 hover:bg-secondary-50' },
       { variant: 'default', color: 'success', className: 'text-success-500 hover:bg-success-50' },

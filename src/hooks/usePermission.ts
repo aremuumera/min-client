@@ -1,37 +1,12 @@
 import { useAppSelector } from "@/redux/hooks";
 
-export type PermissionKey =
-    | 'products'
-    | 'rfq'
-    | 'chat'
-    | 'enquiries'
-    | 'invoices'
-    | 'inspectors'
-    | 'analytics'
-    | 'settings'
-    | 'team_management'
-    | 'activity';
+import type { TeamPermission } from "@/lib/permissions/team-permissions";
+import { canOpenArea, useActor } from "@/lib/permissions";
 
-export const usePermission = (permission: PermissionKey): boolean => {
-    const { isTeamMember, permissions, user } = useAppSelector((state) => state.auth);
+/** The team keys (the backend's catalogue, lib/permissions/team-permissions.ts) */
+export type PermissionKey = TeamPermission;
 
-    if (isTeamMember) {
-        return permissions.includes(permission);
-    }
-
-    const normalizedRole = (user?.role || '').toLowerCase();
-
-    switch (permission) {
-        case 'products':
-            return normalizedRole === 'supplier' || normalizedRole === 'buyer_supplier' || normalizedRole === 'both' || normalizedRole === 'admin';
-        case 'rfq':
-            return normalizedRole === 'buyer' || normalizedRole === 'buyer_supplier' || normalizedRole === 'both' || normalizedRole === 'admin';
-        case 'inspectors':
-            return normalizedRole === 'inspector' || normalizedRole === 'admin';
-        default:
-            return true;
-    }
-};
+export const usePermission = (permission: PermissionKey): boolean => canOpenArea(useActor(), permission);
 
 export const useIsTeamMember = (): boolean => {
     const { isTeamMember } = useAppSelector((state) => state.auth);

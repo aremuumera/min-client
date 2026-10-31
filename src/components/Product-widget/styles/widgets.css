@@ -22,7 +22,7 @@
     --icon-size: 18px;
     --icon-secondary-color: rgb(164, 164, 164);
     --icon-hover-color: rgb(165, 164, 164);
-    --icon-primary-color: #16b364;
+    --icon-primary-color: var(--color-primary);
     --icon-circle-border: 1px solid var(--icon-primary-color);
     --icon-circle-size: 25px;
     --icon-anmt-duration: 0.3s;

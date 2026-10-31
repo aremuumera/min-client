@@ -45,7 +45,6 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
     uploadedFiles,
     productDetailsFormData,
     serverReadyData,
-    productSuccessData
   } = useAppSelector((state) => state?.product);
 
   const {
@@ -189,7 +188,6 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
       }
 
 
-      console.log('formData', formData)
 
 
       const response = await createProduct({
@@ -223,7 +221,6 @@ const SupplierProductReview: React.FC<SupplierProductReviewProps> = ({
     }
   };
 
-  console.log('productSuccessData', productSuccessData)
 
   return (
     <div>

@@ -1339,10 +1339,14 @@ const Businesss: React.FC = () => {
                         <div>
                             <h3 className="font-bold text-green-900 mb-1">Verification Approved</h3>
                             <p className="text-green-800 text-sm">
-                                Your business verification was successfully approved on{' '}
-                                <span className="font-semibold">
-                                    {new Date(verificationData?.verified_at || Date.now()).toLocaleDateString()}
-                                </span>.
+                                Your business verification was successfully approved
+                                {/* the real date only: no date from the backend → none shown (not today's) */}
+                                {verificationData?.verified_at && (
+                                    <>
+                                        {' '}on <span className="font-semibold">{new Date(verificationData.verified_at).toLocaleDateString()}</span>
+                                    </>
+                                )}
+                                .
                             </p>
                         </div>
                     </div>
@@ -1356,10 +1360,12 @@ const Businesss: React.FC = () => {
                         <div>
                             <h3 className="font-bold text-amber-900 mb-1">Verification Under Review</h3>
                             <p className="text-amber-800 text-sm">
-                                Your verification is currently being reviewed. Submitted on{' '}
-                                <span className="font-semibold">
-                                    {new Date(verificationData?.submitted_at || Date.now()).toLocaleDateString()}
-                                </span>.
+                                Your verification is currently being reviewed.
+                                {verificationData?.submitted_at && (
+                                    <>
+                                        {' '}Submitted on <span className="font-semibold">{new Date(verificationData.submitted_at).toLocaleDateString()}</span>.
+                                    </>
+                                )}
                             </p>
                         </div>
                     </div>

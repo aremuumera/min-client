@@ -109,12 +109,14 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   }
 );
 
-export interface AlertTitleProps extends React.HTMLAttributes<HTMLHeadingElement> { }
+export type AlertTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
+Alert.displayName = 'Alert';
+
 const AlertTitle = ({ className, ...props }: AlertTitleProps) => (
   <h5 className={cn('font-semibold text-sm mb-1', className)} {...props} />
 );
 
-export interface AlertDescriptionProps extends React.HTMLAttributes<HTMLDivElement> { }
+export type AlertDescriptionProps = React.HTMLAttributes<HTMLDivElement>;
 const AlertDescription = ({ className, ...props }: AlertDescriptionProps) => (
   <div className={cn('text-sm', className)} {...props} />
 );

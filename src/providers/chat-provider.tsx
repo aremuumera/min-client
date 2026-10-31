@@ -419,7 +419,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   const deleteAttachment = useCallback(async (conversationId: string, messageId: string, attachmentIndex: number) => {
-    console.log('deleteAttachment', { conversationId, messageId, attachmentIndex });
     try {
       await chatService.deleteAttachment(conversationId, messageId, attachmentIndex);
       return true;
@@ -546,7 +545,6 @@ New Flow for for all roles to Admin
     let unsubscribe: any = null;
 
     if (effectiveUserId && userRole) {
-      console.log('Fetching trade rooms for:', effectiveUserId, userRole);
       setLoading(true);
       unsubscribe = customerTradeChatService.getUserTradeRooms(
         effectiveUserId,

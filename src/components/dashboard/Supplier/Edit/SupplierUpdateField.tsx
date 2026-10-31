@@ -72,7 +72,6 @@ const SupplierProductInputEditModal = ({ open, onClose, data, images, attachment
     { skip: !formData.product }
   );
 
-  console.log('yo me', images);
 
   useEffect(() => {
     if (data?.productDetailDescription) {

@@ -23,7 +23,6 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
   const {
     conversations,
     activeConversation,
-    notifications,
     setActiveConversation,
     messages,
     loading,
@@ -35,11 +34,6 @@ export function ChatView({ children }: { children?: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  console.log('conversations', conversations);
-  console.log('activeConversation', activeConversation);
-  console.log('messages', messages);
-  console.log('loading', loading);
-  console.log('notifications', notifications);
 
   const mdDown = useMediaQuery('down', 'md');
 

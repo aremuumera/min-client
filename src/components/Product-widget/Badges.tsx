@@ -41,7 +41,7 @@ export const NormalBadges = ({ label, color, className }: BadgeProps) => {
         variant="outlined"
         color={color}
         size="sm"
-        className={`h-8 bg-[#16b364] ${className || ''}`}
+        className={`h-8 bg-primary ${className || ''}`}
         icon={<GiMining />}
       />
     </div>

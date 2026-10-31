@@ -13,7 +13,7 @@ export interface Settings {
 export function applyDefaultSettings(settings: Partial<Settings> = {}): Settings {
     return {
         colorScheme: (config.site.colorScheme as any) || 'light',
-        primaryColor: config.site.primaryColor || '#16b364',
+        primaryColor: config.site.primaryColor || '#1e8742',
         direction: 'ltr',
         navColor: 'discrete',
         layout: 'vertical',

@@ -122,7 +122,7 @@ export default function CalendarPage() {
                 .fc-v-event { border: none !important; }
                 .fc .fc-col-header-cell-cushion { font-weight: 800 !important; font-size: 0.75rem !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; color: #6b7280 !important; padding: 10px 0 !important; }
                 .fc .fc-daygrid-day-number { font-weight: 700 !important; font-size: 0.75rem !important; color: #6b7280 !important; }
-                .fc .fc-day-today .fc-daygrid-day-number { color: #16b364 !important; font-weight: 900 !important; }
+                .fc .fc-day-today .fc-daygrid-day-number { color: var(--color-primary) !important; font-weight: 900 !important; }
             `}</style>
 
             {/* Header section */}

@@ -196,7 +196,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       if (currentFile) {
         try {
           await deleteSingleFileByNameFromIndexedDB('supplierProfileLogo', currentFile.name);
-          console.log(`Previous file ${currentFile.name} deleted`);
         } catch (error) {
           console.error(`Error deleting previous file: ${currentFile.name}`, error);
         }
@@ -205,7 +204,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       // Store the new file in IndexedDB
       try {
         const result = await storeSingleFileInIndexedDB(file, 'supplierProfileLogo');
-        console.log('New file stored:', result);
         dispatch(setSupplierProfileLogo(result as any)); // Update Redux with the new file
       } catch (error) {
         console.error('Error storing new file:', error);
@@ -221,7 +219,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
     if (currentFile && !Array.isArray(currentFile)) {
       try {
         await deleteSingleFileByNameFromIndexedDB('supplierProfileLogo', (currentFile as any).name);
-        console.log(`File ${(currentFile as any).name} deleted`);
         dispatch(setSupplierProfileLogo([])); // Clear the file in Redux
       } catch (error) {
         console.error(`Error deleting file: ${(currentFile as any).name}`, error);
@@ -258,7 +255,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
       if (currentFile) {
         try {
           await deleteSingleFileByNameFromIndexedDB('supplierProfileBanner', currentFile.name);
-          console.log(`Previous file ${currentFile.name} deleted`);
         } catch (error) {
           console.error(`Error deleting previous file: ${currentFile.name}`, error);
         }
@@ -282,7 +278,6 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
     if (currentFile && !Array.isArray(currentFile)) {
       try {
         await deleteSingleFileByNameFromIndexedDB('supplierProfileLogo', (currentFile as any).name);
-        console.log(`File ${(currentFile as any).name} deleted`);
         dispatch(setSupplierProfileBanner([])); // Clear the file in Redux
       } catch (error) {
         console.error(`Error deleting file: ${(currentFile as any).name}`, error);

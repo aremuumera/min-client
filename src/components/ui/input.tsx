@@ -4,26 +4,27 @@ import { cn } from '@/utils/helper';
 
 const inputVariants = cva(
   [
-    'flex w-full rounded-lg border bg-transparent px-3 py-2',
-    'text-sm text-foreground placeholder:text-neutral-400',
+    'flex w-full rounded-lg border bg-canvas px-3 py-2',
+    'text-base md:text-sm text-ink placeholder:text-muted',
     'transition-colors duration-200',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
-    'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-neutral-50',
+    'disabled:cursor-not-allowed disabled:text-muted disabled:bg-surface-soft',
     'file:border-0 file:bg-transparent file:text-sm file:font-medium',
   ],
   {
     variants: {
       variant: {
-        outlined: 'border-neutral-200 focus-visible:border-primary-500',
-        filled: 'border-transparent bg-neutral-100 focus-visible:bg-white focus-visible:border-primary-500',
+        outlined: 'border-hairline-strong focus-visible:border-primary-500',
+        filled: 'border-transparent bg-surface-soft focus-visible:bg-canvas focus-visible:border-primary-500',
       },
       inputSize: {
-        sm: 'h-8 text-xs',
-        md: 'h-10 text-sm',
-        lg: 'h-12 text-base',
+        // 44px touch targets on phones (design.md); the small size tightens from tablet up
+        sm: 'h-11 md:h-9 md:text-xs',
+        md: 'h-11',
+        lg: 'h-12 md:text-base',
       },
       error: {
-        true: 'border-error-500 focus-visible:ring-error-500',
+        true: 'border-semantic-error focus-visible:border-semantic-error focus-visible:ring-semantic-error',
         false: '',
       },
     },
@@ -98,7 +99,8 @@ const Input = React.forwardRef<HTMLInputElement & HTMLTextAreaElement & HTMLSele
     },
     ref
   ) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
     const hasError = !!error || !!errorMessage;
     const resolvedErrorMessage = typeof error === 'string' ? error : errorMessage;
 

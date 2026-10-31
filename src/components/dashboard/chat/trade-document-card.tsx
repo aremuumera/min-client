@@ -70,7 +70,6 @@ export function TradeDocumentCard({ document, position, currentUserRole, onSign,
         document.status === 'pending'
     ) && isTargetRecipient;
 
-    console.log('document', document);
 
     return (
         <Card

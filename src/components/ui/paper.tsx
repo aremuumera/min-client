@@ -13,19 +13,19 @@ export interface PaperProps extends React.HTMLAttributes<HTMLDivElement> {
 const Paper = React.forwardRef<HTMLDivElement, PaperProps>(
   ({ className, elevation = 1, variant = 'elevation', square = false, ...props }, ref) => {
     const elevationClasses = {
-      0: 'shadow-none',
-      1: 'shadow-sm',
-      2: 'shadow-md',
-      3: 'shadow-lg',
+      0: '',
+      1: 'border border-hairline',
+      2: 'border border-hairline',
+      3: 'border border-hairline',
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          'bg-white',
-          !square && 'rounded-xl',
-          variant === 'outlined' ? 'border border-neutral-200' : elevationClasses[elevation],
+          'bg-canvas',
+          !square && 'rounded-lg',
+          variant === 'outlined' ? 'border border-hairline' : elevationClasses[elevation],
           className
         )}
         {...props}

@@ -174,3 +174,18 @@ export {
   type TableCellProps,
   type TableCaptionProps,
 } from "./table";
+
+// MINMEG design-system components (docs/new/frontend/rules/frontend-design-rules.md §2)
+export { StatusBadge, statusTone, statusLabel, type StatusBadgeProps, type BadgeTone } from "./status-badge";
+export { CopyableId, type CopyableIdProps } from "./copyable-id";
+export { ConfirmDialog, type ConfirmDialogProps } from "./confirm-dialog";
+export { SideSheet, type SideSheetProps } from "./side-sheet";
+export { EmptyState, ErrorState, NoAccess } from "./states";
+export { PageHeader, type PageHeaderProps } from "./page-header";
+export { FormField, type FormFieldProps } from "./form-field";
+export { KeyValueList, type KeyValueItem } from "./key-value-list";
+export { Timeline, type TimelineEntry } from "./timeline";
+export { StatTile, type StatTileProps } from "./stat-tile";
+export { QuantityInput, QUANTITY_PATTERN, type QuantityInputProps } from "./quantity-input";
+export { DataTable, type DataTableColumn, type DataTableProps } from "./data-table";
+export { FilterBar, type FilterBarProps } from "./filter-bar";

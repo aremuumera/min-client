@@ -61,7 +61,6 @@ export function NewPasswordRequiredForm() {
       type: rtype || 'email',
     };
 
-    console.log(payload);
 
     try {
       const response = await resetPassword(payload).unwrap();

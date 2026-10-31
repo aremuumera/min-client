@@ -19,13 +19,12 @@ const DeleteRfQs = ({ open, rows, onClose }: { open: boolean, rows: any, onClose
 
   const { user, effectiveUserId } = useAuthIdentity();
 
-  const [deleteRFQ, { data, isLoading, isError }] = useDeleteRFQMutation();
+  const [deleteRFQ, { isLoading, isError }] = useDeleteRFQMutation();
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('data:', data);
     try {
       const response = await deleteRFQ({
         rfqId: rows?.rfqId,

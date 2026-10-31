@@ -37,10 +37,6 @@ export const teamApi = createApi({
             query: () => '/team/members',
             providesTags: ['TeamMembers'],
         }),
-        getTeamMember: builder.query<{ data: TeamMember }, string>({
-            query: (id) => `/team/members/${id}`,
-            providesTags: (result, error, id) => [{ type: 'TeamMembers', id }],
-        }),
         inviteTeamMember: builder.mutation<void, InviteRequest>({
             query: (body) => ({
                 url: '/team/invite',
@@ -76,7 +72,6 @@ export const teamApi = createApi({
 
 export const {
     useGetTeamMembersQuery,
-    useGetTeamMemberQuery,
     useInviteTeamMemberMutation,
     useUpdateTeamMemberMutation,
     useDeleteTeamMemberMutation,

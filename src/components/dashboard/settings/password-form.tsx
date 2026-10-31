@@ -64,7 +64,6 @@ export function PasswordForm() {
     }));
     validateField(name, (formData as any)[name]);
   };
-  console.log('formData', formData);
   const validateField = (fieldName: string, value: any) => {
     let error = '';
 
@@ -121,8 +120,7 @@ export function PasswordForm() {
     }
 
     try {
-      const res = await changePassword(formData).unwrap();
-      console.log('res', res);
+      await changePassword(formData).unwrap();
 
       showAlert('Password changed successfully', 'success');
 

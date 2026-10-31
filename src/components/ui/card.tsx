@@ -6,9 +6,9 @@ import { cn } from '@/utils/helper';
    ============================================ */
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Card elevation/shadow level */
+  /** Kept for older pages: MINMEG is flat, any elevation draws a hairline border (no shadow) */
   elevation?: 0 | 1 | 2 | 3;
-  /** Outlined variant (no shadow) */
+  /** Outlined variant */
   outlined?: boolean;
   /** MUI-style system props */
   sx?: any;
@@ -18,17 +18,17 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, elevation = 1, outlined = false, ...props }, ref) => {
     const elevationClasses = {
       0: '',
-      1: 'shadow-sm',
-      2: 'shadow-md',
-      3: 'shadow-lg',
+      1: 'border border-hairline',
+      2: 'border border-hairline',
+      3: 'border border-hairline',
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          'rounded-xl bg-white',
-          outlined ? 'border border-neutral-200' : elevationClasses[elevation],
+          'rounded-lg bg-canvas',
+          outlined ? 'border border-hairline' : elevationClasses[elevation],
           className
         )}
         style={{ ...(props.sx || {}), ...props.style }}
@@ -87,7 +87,7 @@ CardHeader.displayName = 'CardHeader';
    CARD CONTENT
    ============================================ */
 
-export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> { }
+export type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
 
 const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, ...props }, ref) => {
@@ -160,7 +160,7 @@ const CardMedia = React.forwardRef<HTMLDivElement, CardMediaProps>(
 
 CardMedia.displayName = 'CardMedia';
 
-export interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> { }
+export type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
 const CardTitle = ({ className, ...props }: CardTitleProps) => (
   <h3 className={cn('text-base font-semibold text-neutral-900 truncate', className)} {...props} />
 );

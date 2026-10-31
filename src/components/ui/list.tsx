@@ -14,12 +14,7 @@ export interface ListProps extends React.HTMLAttributes<HTMLUListElement> {
   subheader?: React.ReactNode;
 }
 
-export interface ListItemAvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Whether to disable padding */
-  // disablePadding?: boolean;
-  // /** Alignment of sub-items */
-  // alignItems?: 'flex-start' | 'center';
-}
+export type ListItemAvatarProps = React.HTMLAttributes<HTMLDivElement>;
 
 const List = React.forwardRef<HTMLUListElement, ListProps>(
   ({ className, disablePadding = false, dense = false, subheader, children, ...props }, ref) => {
@@ -112,7 +107,7 @@ ListItemButton.displayName = 'ListItemButton';
    LIST ITEM ICON
    ============================================ */
 
-export interface ListItemIconProps extends React.HTMLAttributes<HTMLDivElement> { }
+export type ListItemIconProps = React.HTMLAttributes<HTMLDivElement>;
 
 const ListItemIcon = React.forwardRef<HTMLDivElement, ListItemIconProps>(
   ({ className, ...props }, ref) => {

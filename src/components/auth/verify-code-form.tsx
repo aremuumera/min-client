@@ -21,7 +21,6 @@ export function VerifyCodeForm() {
   const { email, awaitingOTPVerification, vType } = useAppSelector((state) => state.auth);
 
 
-  console.log(email, awaitingOTPVerification, vType);
 
   const [verifyOTP, { isLoading: verifying }] = useVerifyOTPMutation();
   const [resendOTP, { isLoading: resending }] = useResendOTPMutation();

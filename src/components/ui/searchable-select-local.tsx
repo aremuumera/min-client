@@ -77,12 +77,12 @@ export const SearchableSelectLocal = ({ options, value, onChange, label, placeho
                             transition={{ duration: 0.15 }}
                             style={{
                                 position: 'fixed',
-                                top: `${containerRef.current?.getBoundingClientRect().bottom! + 4}px`,
+                                top: `${(containerRef.current?.getBoundingClientRect().bottom ?? 0) + 4}px`,
                                 left: `${containerRef.current?.getBoundingClientRect().left}px`,
                                 width: `${containerRef.current?.getBoundingClientRect().width}px`,
                                 zIndex: 9999
                             }}
-                            className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl"
+                            className="overflow-hidden rounded-lg border border-hairline bg-canvas"
                         >
                             <div className="sticky top-0 z-10 border-b border-neutral-100 bg-white p-2">
                                 <div className="relative">

@@ -22,7 +22,6 @@ import categoryApi from "./features/categories/cat_api";
 import savedItemsApi from "./features/savedFeature/saved_api";
 import reviewApi from "./features/reviewFeature/review_api";
 import chatApi from "./features/chatFeature/chatApi";
-import businessVerificationApi from "./features/business_verification_feature/bv_api";
 import blogApi from "./features/blogs/blog_api";
 import businessVerificationApiV1 from "./features/business_verification_feature/bv_v1_api";
 import inspectorApi from "./features/inspector/inspector_api";
@@ -48,7 +47,6 @@ const persistConfig = {
     "savedItemsApi",
     "reviewApi",
     "chatApi",
-    "businessVerificationApi",
     "businessVerificationApiV1",
     "blogApi",
     "enquiryApi",
@@ -80,7 +78,6 @@ export const makeStore = () => {
         savedItemsApi.middleware,
         reviewApi.middleware,
         chatApi.middleware,
-        businessVerificationApi.middleware,
         blogApi.middleware,
         businessVerificationApiV1.middleware,
         inspectorApi.middleware,

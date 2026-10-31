@@ -19,14 +19,15 @@ export interface ApiResponse<T = any> {
 
 // Mutex to prevent multiple concurrent refresh calls
 let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+// null = the refresh failed: waiting requests return their 401 instead of hanging
+let refreshSubscribers: ((token: string | null) => void)[] = [];
 
-const onTokenRefreshed = (token: string) => {
+const onTokenRefreshed = (token: string | null) => {
   refreshSubscribers.map((callback) => callback(token));
   refreshSubscribers = [];
 };
 
-const addRefreshSubscriber = (callback: (token: string) => void) => {
+const addRefreshSubscriber = (callback: (token: string | null) => void) => {
   refreshSubscribers.push(callback);
 };
 
@@ -107,6 +108,7 @@ export const baseQueryWithReauth: BaseQueryFn<
       } else {
         // console.error('Refresh failed or session truly expired - logging out');
         isRefreshing = false;
+        onTokenRefreshed(null);
         // Using string-based action types to break circular dependency with auth_slice
         api.dispatch(logoutAndCleanup() as any);
 
@@ -114,10 +116,11 @@ export const baseQueryWithReauth: BaseQueryFn<
       }
     } else {
       // Already refreshing, queue this request to wait for the new token
+      const failed = result;
       return new Promise((resolve) => {
         addRefreshSubscriber((newToken) => {
-          // Retry original request with the new token
-          resolve(baseQuery(args, api, extraOptions));
+          // Retry with the new token; if the refresh failed, return the original 401
+          resolve(newToken ? baseQuery(args, api, extraOptions) : failed);
         });
       });
     }

@@ -61,16 +61,17 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
       setImageError(false);
     }, [resolvedSrc]);
 
+    const initials = React.useMemo(() => {
+      if (!alt) return null;
+      const words = alt.trim().split(' ');
+      if (words.length === 1) {
+        return words[0].charAt(0).toUpperCase();
+      }
+      return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+    }, [alt]);
+
     if (showLegacyBehavior) {
       const showFallback = !resolvedSrc || imageError;
-      const initials = React.useMemo(() => {
-        if (!alt) return null;
-        const words = alt.trim().split(' ');
-        if (words.length === 1) {
-          return words[0].charAt(0).toUpperCase();
-        }
-        return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
-      }, [alt]);
 
       return (
         <div

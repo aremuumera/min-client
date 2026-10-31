@@ -23,7 +23,6 @@ const ConfirmSupplierProductsInfo = () => {
 
   const isLocal = process.env.NODE_ENV === 'development';
 
-  console.log('productSuccessData', productSuccessData);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(productLink)

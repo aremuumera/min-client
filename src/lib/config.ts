@@ -9,13 +9,13 @@ export const config = {
     name: "MINMEG",
     description: "B2B Mineral Marketplace",
     url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    themeColor: "#16b364",
+    themeColor: "#1e8742",
     facebook: "#",
     twitter: "#",
     linkedin: "#",
     instagram: "#",
     colorScheme: "light",
-    primaryColor: "#16b364",
+    primaryColor: "#1e8742",
   },
   api: {
     baseUrl: isProduction

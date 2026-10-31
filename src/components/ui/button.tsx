@@ -3,32 +3,25 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/utils/helper';
 
 /**
- * Button variants using class-variance-authority
- * Matches MUI button styling from the original customer-frontend
+ * Button (design-system/design.md: button-primary / secondary / danger / ghost).
+ * The MUI-style API (variant, color, size) is kept for the existing pages; the look is MINMEG's:
+ * pill, semibold, 44px on phones, brand green with white text, flat (no shadows).
  */
 const buttonVariants = cva(
   // Base styles
   [
     'inline-flex items-center justify-center gap-2',
-    'font-medium rounded-lg',
-    'transition-all duration-200',
+    'font-semibold rounded-full whitespace-nowrap',
+    'transition-colors duration-150',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
-    'disabled:pointer-events-none disabled:opacity-50',
+    'disabled:pointer-events-none disabled:bg-hairline disabled:text-muted disabled:border-hairline',
     'cursor-pointer select-none',
   ],
   {
     variants: {
       variant: {
-        contained: [
-          'text-white shadow-sm',
-          'hover:shadow-lg hover:brightness-110',
-          'active:brightness-95',
-        ],
-        outlined: [
-          'border-2 bg-transparent shadow-sm',
-          'hover:bg-opacity-10',
-          'active:bg-opacity-20',
-        ],
+        contained: ['text-white'],
+        outlined: ['border bg-canvas'],
         text: [
           'bg-transparent',
           'hover:bg-opacity-10',
@@ -44,8 +37,8 @@ const buttonVariants = cva(
         error: '',
       },
       size: {
-        sm: 'h-8 px-3 text-xs',
-        md: 'h-10 px-4 text-sm',
+        sm: 'h-11 md:h-9 px-4 text-xs',
+        md: 'h-11 px-5 text-sm',
         lg: 'h-12 px-6 text-base',
       },
       fullWidth: {
@@ -55,28 +48,28 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       // Contained variants
-      { variant: 'contained', color: 'primary', className: 'bg-primary-500 hover:bg-primary-600' },
-      { variant: 'contained', color: 'secondary', className: 'bg-secondary-700 hover:bg-secondary-800' },
-      { variant: 'contained', color: 'success', className: 'bg-success-500 hover:bg-success-600' },
-      { variant: 'contained', color: 'info', className: 'bg-info-500 hover:bg-info-600' },
-      { variant: 'contained', color: 'warning', className: 'bg-warning-500 hover:bg-warning-600 text-neutral-900' },
-      { variant: 'contained', color: 'error', className: 'bg-error-500 hover:bg-error-600' },
+      { variant: 'contained', color: 'primary', className: 'bg-primary hover:bg-primary-deep active:bg-primary-pressed' },
+      { variant: 'contained', color: 'secondary', className: 'bg-brand-dark hover:bg-brand-dark-hover' },
+      { variant: 'contained', color: 'success', className: 'bg-primary hover:bg-primary-deep active:bg-primary-pressed' },
+      { variant: 'contained', color: 'info', className: 'bg-slate hover:bg-charcoal' },
+      { variant: 'contained', color: 'warning', className: 'bg-semantic-warning hover:brightness-95 text-ink' },
+      { variant: 'contained', color: 'error', className: 'bg-semantic-error hover:bg-semantic-error-text' },
 
       // Outlined variants
-      { variant: 'outlined', color: 'primary', className: 'border-primary-500 text-primary-500 hover:bg-primary-50' },
-      { variant: 'outlined', color: 'secondary', className: 'border-secondary-300 text-secondary-700 hover:bg-secondary-50' },
-      { variant: 'outlined', color: 'success', className: 'border-success-500 text-success-500 hover:bg-success-50' },
-      { variant: 'outlined', color: 'info', className: 'border-info-500 text-info-500 hover:bg-info-50' },
-      { variant: 'outlined', color: 'warning', className: 'border-warning-500 text-warning-500 hover:bg-warning-50' },
-      { variant: 'outlined', color: 'error', className: 'border-error-500 text-error-500 hover:bg-error-50' },
+      { variant: 'outlined', color: 'primary', className: 'border-primary text-primary-pressed hover:bg-brand-green-soft' },
+      { variant: 'outlined', color: 'secondary', className: 'border-hairline-strong text-ink hover:bg-surface' },
+      { variant: 'outlined', color: 'success', className: 'border-primary text-primary-pressed hover:bg-brand-green-soft' },
+      { variant: 'outlined', color: 'info', className: 'border-hairline-strong text-slate hover:bg-surface' },
+      { variant: 'outlined', color: 'warning', className: 'border-semantic-warning text-semantic-warning-text hover:bg-semantic-warning-bg' },
+      { variant: 'outlined', color: 'error', className: 'border-semantic-error text-semantic-error-text hover:bg-semantic-error-bg' },
 
       // Text variants
-      { variant: 'text', color: 'primary', className: 'text-primary-500 hover:bg-primary-50' },
-      { variant: 'text', color: 'secondary', className: 'text-secondary-700 hover:bg-secondary-50' },
-      { variant: 'text', color: 'success', className: 'text-success-500 hover:bg-success-50' },
-      { variant: 'text', color: 'info', className: 'text-info-500 hover:bg-info-50' },
-      { variant: 'text', color: 'warning', className: 'text-warning-500 hover:bg-warning-50' },
-      { variant: 'text', color: 'error', className: 'text-error-500 hover:bg-error-50' },
+      { variant: 'text', color: 'primary', className: 'text-primary-pressed hover:bg-brand-green-soft' },
+      { variant: 'text', color: 'secondary', className: 'text-ink hover:bg-surface' },
+      { variant: 'text', color: 'success', className: 'text-primary-pressed hover:bg-brand-green-soft' },
+      { variant: 'text', color: 'info', className: 'text-slate hover:bg-surface' },
+      { variant: 'text', color: 'warning', className: 'text-semantic-warning-text hover:bg-semantic-warning-bg' },
+      { variant: 'text', color: 'error', className: 'text-semantic-error-text hover:bg-semantic-error-bg' },
     ],
     defaultVariants: {
       variant: 'contained',

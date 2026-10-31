@@ -119,7 +119,7 @@ function Autocomplete({
       />
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-hairline bg-canvas py-1">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => (
               <button

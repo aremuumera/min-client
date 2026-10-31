@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Box } from '@/components/ui/box';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -33,6 +33,8 @@ export default function PhoneNumberInput({
   className,
   ...rest
 }: PhoneNumberInputProps) {
+  // a stable id (the same on the server and in the browser, so a label can point at it)
+  const inputId = `${name}-${useId()}`;
   const [number, setNumber] = useState(_number || '');
   const [selectedCountry, setSelectedCountry] = useState(country);
   const [countryCode, setCountryCode] = useState(getCountryTelCode(country) || '');
@@ -81,7 +83,7 @@ export default function PhoneNumberInput({
       <div className="flex items-center flex-1 gap-2">
         <span className="text-sm text-gray-500 whitespace-nowrap">{countryCode}</span>
         <Input
-          id={`${name}-${Math.random()}`}
+          id={inputId}
           name={name}
           type="tel"
           value={number}

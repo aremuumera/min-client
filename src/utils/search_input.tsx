@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useGetAllRfqQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useGetAllProductQuery } from '@/redux/features/supplier-products/products_api';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
@@ -296,7 +297,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
                   <h3 className="text-sm font-semibold text-gray-500">Products</h3>
                 </div>
                 {productsToShow.map((product: any) => (
-                  <a
+                  <Link
                     key={product.id}
                     href={`/dashboard/products/details/${product.id}/${formatCompanyNameForUrl(product?.product_name)}`}
                     onClick={() => {
@@ -334,10 +335,10 @@ const SearchInput = ({ className }: SearchInputProps) => {
                         {Number(product.display_price || product.real_price || 0).toLocaleString()}
                       </p>
                     </div>
-                  </a>
+                  </Link>
                 ))}
                 {productData?.products?.length > 6 && (
-                  <a
+                  <Link
                     href="/dashboard/products/all-mineral-cp"
                     onClick={() => {
                       setShowResults(false);
@@ -346,7 +347,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
                     className="block px-4 py-3 text-center text-sm font-medium text-green-800 hover:bg-slate-100 transition-colors"
                   >
                     View all products
-                  </a>
+                  </Link>
                 )}
               </div>
             )}
@@ -358,7 +359,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
                   <h3 className="text-sm font-semibold text-gray-500">RFQs</h3>
                 </div>
                 {rfqsToShow.map((rfq: any, i: number) => (
-                  <a
+                  <Link
                     key={i}
                     href={`/dashboard/rfqs/details/${rfq.rfqId}/${formatCompanyNameForUrl(rfq?.rfqProductName)}`}
                     onClick={() => {
@@ -371,10 +372,10 @@ const SearchInput = ({ className }: SearchInputProps) => {
                     <p className="text-xs text-gray-500 mt-1">
                       Quantity: {rfq.quantityRequired} {rfq.quantityMeasure}
                     </p>
-                  </a>
+                  </Link>
                 ))}
                 {rfqData?.data?.length > 6 && (
-                  <a
+                  <Link
                     href="/dashboard/products/rfq-products"
                     onClick={() => {
                       setShowResults(false);
@@ -383,7 +384,7 @@ const SearchInput = ({ className }: SearchInputProps) => {
                     className="block px-4 py-3 text-center text-sm font-medium text-green-800 hover:bg-slate-100 transition-colors"
                   >
                     View all RFQs
-                  </a>
+                  </Link>
                 )}
               </div>
             )}

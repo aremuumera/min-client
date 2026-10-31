@@ -89,27 +89,9 @@ export const tradeApi = createApi({
       }),
       invalidatesTags: ["TradeChat"],
     }),
-    getRoomTrades: builder.query<any, string>({
-      query: (roomId) => `/trade/room/${roomId}/trades`,
-      providesTags: ["TradeInquiry"],
-    }),
     getOffersByRfq: builder.query<any, string>({
       query: (rfqId) => `/trade/rfq/${rfqId}/offers`,
       providesTags: ["TradeInquiry"],
-    }),
-    shortlistOffer: builder.mutation<
-      any,
-      { inquiryId: string; is_shortlisted: boolean }
-    >({
-      query: ({ inquiryId, is_shortlisted }) => ({
-        url: `/trade/inquiry/${inquiryId}/shortlist`,
-        method: "PUT",
-        body: { is_shortlisted },
-      }),
-      invalidatesTags: (result, error, { inquiryId }) => [
-        "TradeInquiry",
-        { type: "TradeInquiry", id: inquiryId },
-      ],
     }),
 
     // ==================== RFQ OFFER ENDPOINTS ====================
@@ -201,9 +183,7 @@ export const {
   useResolveTradeChatMutation,
   useAcknowledgeInquiryMutation,
   useRejectInquiryMutation,
-  useGetRoomTradesQuery,
   useGetOffersByRfqQuery,
-  useShortlistOfferMutation,
   // RFQ Offer hooks
   useSubmitRfqOfferMutation,
   useGetRfqOffersQuery,

@@ -542,12 +542,10 @@ const RfqDetails = ({
           formData.append(`rfqAttachment`, file);
         });
       }
-      console.log('you', formData);
       const res = await createRFQ({
         buyerId: effectiveUserId,
         rfqData: formData,
       }).unwrap();
-      console.log('res', res);
 
       toast.success('RFQ created successfully', {
         position: 'top-right',
@@ -569,12 +567,6 @@ const RfqDetails = ({
       setErrors({});
       setUploadedFiles([]);
       setSuccessModalOpen(true);
-
-      // Properly inspect FormData (FormData doesn't show in console.log)
-      console.log('Form Data Contents:');
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
-      }
 
       // Now you can submit your formData to an API
       // Example: submitFormData(formData);

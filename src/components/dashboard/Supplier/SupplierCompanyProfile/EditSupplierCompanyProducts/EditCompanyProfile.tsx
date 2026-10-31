@@ -293,8 +293,7 @@ const EditCompanyProfile = ({ open, rows, onClose }: any) => {
     setOpenModal(true);
   };
 
-  const handleSave = (updatedData: any) => {
-    console.log('Updated Data:', updatedData);
+  const handleSave = () => {
     // Apply updated data to your state or server here.
   };
 

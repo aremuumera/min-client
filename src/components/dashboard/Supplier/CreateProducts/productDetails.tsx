@@ -561,7 +561,6 @@ const SupplierProductDetails: React.FC<SupplierProductDetailsProps> = ({
         supplierId: effectiveUserId,
         body: formData,
       }).unwrap();
-      console.log('API Response:', response);
       toast.success(`${response?.message || 'Product details submitted successfully!'}`, {
         position: 'top-right',
         duration: 3000,

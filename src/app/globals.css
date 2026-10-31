@@ -1,152 +1,13 @@
 @import "tailwindcss";
 
-/* ============================================
-   PUBLIC SANS FONT FAMILY
-   ============================================ */
+@import "../../design-system/tailwind-theme.css";
 
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Thin.ttf') format('truetype');
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-ThinItalic.ttf') format('truetype');
-  font-weight: 100;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-ExtraLight.ttf') format('truetype');
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-ExtraLightItalic.ttf') format('truetype');
-  font-weight: 200;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-LightItalic.ttf') format('truetype');
-  font-weight: 300;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Italic.ttf') format('truetype');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-MediumItalic.ttf') format('truetype');
-  font-weight: 500;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-SemiBold.ttf') format('truetype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-SemiBoldItalic.ttf') format('truetype');
-  font-weight: 600;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-BoldItalic.ttf') format('truetype');
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-ExtraBold.ttf') format('truetype');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-ExtraBoldItalic.ttf') format('truetype');
-  font-weight: 800;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-Black.ttf') format('truetype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  src: url('/font/PublicSans-BlackItalic.ttf') format('truetype');
-  font-weight: 900;
-  font-style: italic;
-  font-display: swap;
-}
+/*
+ * MINMEG merchants — light mode only, no shadows (docs/new/frontend/rules/frontend-design-rules.md).
+ * Brand colours, the green scale, radius and the flat / light-only rules come from the design system;
+ * the scales below only map the older class names onto it.
+ * Font: Euclid Circular A (next/font/local in src/app/layout.tsx → --font-euclid).
+ */
 
 /* ============================================
    TAILWIND THEME CONFIGURATION
@@ -154,7 +15,7 @@
 
 @theme {
   /* Font Family */
-  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-euclid), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Font Sizes */
   --font-size-xs: 0.75rem;
@@ -167,18 +28,6 @@
   --font-size-4xl: 2.25rem;
 
   /* Primary - Chateau Green */
-  --color-primary-50: #edfcf2;
-  --color-primary-100: #d2f9de;
-  --color-primary-200: #aaf0c4;
-  --color-primary-300: #72e3a3;
-  --color-primary-400: #3acd7e;
-  --color-primary-500: #16b364;
-  --color-primary-600: #0a9150;
-  --color-primary-700: #087442;
-  --color-primary-800: #095c37;
-  --color-primary-900: #094b2f;
-  --color-primary-950: #042a1a;
-  --color-primary: var(--color-primary-500);
 
   /* Secondary - Nevada */
   --color-secondary-50: #fbfcfe;
@@ -201,8 +50,8 @@
   --color-error-300: #fdaaa4;
   --color-error-400: #f97970;
   --color-error-500: #f04438;
-  --color-error-600: #de3024;
-  --color-error-700: #bb241a;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
   --color-error-800: #9a221a;
   --color-error-900: #80231c;
   --color-error-950: #460d09;
@@ -223,31 +72,31 @@
   --color-warning: var(--color-warning-500);
 
   /* Success - Kepple */
-  --color-success-50: #f0fdfa;
-  --color-success-100: #ccfbef;
-  --color-success-200: #9af5e1;
-  --color-success-300: #5fe9ce;
-  --color-success-400: #2ed3b8;
-  --color-success-500: #15b79f;
-  --color-success-600: #0e9382;
-  --color-success-700: #107569;
-  --color-success-800: #115e56;
-  --color-success-900: #134e48;
-  --color-success-950: #042f2c;
+  --color-success-50: var(--color-primary-50);
+  --color-success-100: var(--color-primary-100);
+  --color-success-200: var(--color-primary-200);
+  --color-success-300: var(--color-primary-300);
+  --color-success-400: var(--color-primary-400);
+  --color-success-500: var(--color-primary-500);
+  --color-success-600: var(--color-primary-600);
+  --color-success-700: var(--color-primary-700);
+  --color-success-800: var(--color-primary-800);
+  --color-success-900: var(--color-primary-900);
+  --color-success-950: var(--color-primary-950);
   --color-success: var(--color-success-500);
 
   /* Info - Shakespeare */
-  --color-info-50: #ecfdff;
-  --color-info-100: #cff7fe;
-  --color-info-200: #a4eefd;
-  --color-info-300: #66e0fa;
-  --color-info-400: #10bee8;
-  --color-info-500: #04aad6;
-  --color-info-600: #0787b3;
-  --color-info-700: #0d6d91;
-  --color-info-800: #145876;
-  --color-info-900: #154964;
-  --color-info-950: #082f44;
+  --color-info-50: var(--color-secondary-50);
+  --color-info-100: var(--color-secondary-100);
+  --color-info-200: var(--color-secondary-200);
+  --color-info-300: var(--color-secondary-300);
+  --color-info-400: var(--color-secondary-400);
+  --color-info-500: var(--color-secondary-500);
+  --color-info-600: var(--color-secondary-600);
+  --color-info-700: var(--color-secondary-700);
+  --color-info-800: var(--color-secondary-800);
+  --color-info-900: var(--color-secondary-900);
+  --color-info-950: var(--color-secondary-950);
   --color-info: var(--color-info-500);
 
   /* Neutral - Storm Grey */
@@ -269,7 +118,7 @@
   --color-background-level1: var(--color-neutral-50);
   --color-background-level2: var(--color-neutral-100);
   --color-background-level3: var(--color-neutral-200);
-  --color-foreground: var(--color-neutral-900);
+  --color-foreground: var(--color-ink);
   --color-foreground-secondary: var(--color-neutral-500);
   --color-foreground-muted: var(--color-neutral-400);
 
@@ -284,12 +133,6 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
 /* ============================================
@@ -328,9 +171,18 @@ html {
   height: 100%;
 }
 
+html {
+  color-scheme: light;
+}
+
+/* flat: toasts carry no shadow */
+[data-sonner-toast] {
+  box-shadow: none !important;
+}
+
 body {
   height: 100%;
-  font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   background: var(--color-background);
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;

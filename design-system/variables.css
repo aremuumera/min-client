@@ -26,7 +26,7 @@
   --color-semantic-error-text: #b42318;
   --color-semantic-warning: #f5a524;
   --color-semantic-warning-bg: #fff8e0;
-  --color-semantic-warning-text: #946f3f;
+  --color-semantic-warning-text: #7a5a2f;
   --color-canvas: #ffffff;
   --color-surface: #f9fbfa;
   --color-surface-soft: #f4f7f6;
@@ -43,6 +43,19 @@
   --color-muted: #a8b3bc;
   --color-on-dark: #ffffff;
   --color-on-dark-muted: #a8b3bc;
+
+  /* Brand green scale */
+  --color-primary-50: #f1f9f3;
+  --color-primary-100: #e6f4ea;
+  --color-primary-200: #c7e1d0;
+  --color-primary-300: #9ac9aa;
+  --color-primary-400: #61ab7b;
+  --color-primary-500: #1e8742;
+  --color-primary-600: #196f37;
+  --color-primary-700: #145a2c;
+  --color-primary-800: #114824;
+  --color-primary-900: #0e3a1e;
+  --color-primary-950: #0a1f1a;
 
   /* Type scale */
   --text-micro: 0.6875rem;

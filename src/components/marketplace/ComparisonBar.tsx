@@ -37,7 +37,6 @@ const ComparisonBar = () => {
     }, []);
 
     if (!isMounted) return null;
-    console.log('comparisonList', comparisonList);
     return (
         <AnimatePresence>
             {comparisonList.length > 0 && (

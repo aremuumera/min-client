@@ -123,7 +123,7 @@ export function LogoLoader({
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.4 }}
-          className="mt-3 text-xs font-semibold tracking-widest text-emerald-700 dark:text-emerald-400 uppercase text-center"
+          className="mt-3 text-xs font-semibold tracking-widest text-primary-700 uppercase text-center"
         >
           {label}
         </motion.p>
@@ -137,13 +137,13 @@ export function LogoLoader({
  */
 export function FullscreenLogoLoader({ text = "Loading Minmeg Platform..." }: { text?: string }) {
   return (
-    <div className="fixed inset-0 z-[99999] bg-white/95 dark:bg-gray-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 z-[99999] bg-white/95 flex flex-col items-center justify-center p-4">
       <LogoLoader size="lg" loop={true} />
       <motion.p
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.4 }}
-        className="mt-6 text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-widest uppercase"
+        className="mt-6 text-sm font-bold text-primary-700 tracking-widest uppercase"
       >
         {text}
       </motion.p>
