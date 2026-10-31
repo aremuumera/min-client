@@ -42,3 +42,18 @@ export const sharedWithMeHelp: PageHelpContent = {
   links: [{ label: 'Documents', href: '/dashboard/documents', why: "Your own company's vault." }],
   goodToKnow: ['Access ends on its end date, or as soon as the owner removes it.'],
 };
+
+export const companyEvidenceHelp: PageHelpContent = {
+  title: 'Company evidence',
+  purpose: 'Documents that prove something about your company, such as a mining licence or tax clearance, attached from your vault for MINMEG to check. Each one shows whether it has been verified. The labels and tags MINMEG or you have put on your company are listed too.',
+  example: {
+    title: 'your mining licence',
+    steps: [
+      'Upload the licence to Documents, then attach it here as a Licence, with the expiry date printed on it.',
+      'MINMEG compares it with the ministry register and marks it Verified.',
+      'You are warned 30 and 7 days before the expiry date, so you can upload the renewal in time.',
+    ],
+  },
+  links: [{ label: 'Documents', href: '/dashboard/documents', why: 'Where the files themselves are kept.' }],
+  goodToKnow: ['Removing evidence here keeps the file in your vault.', 'You cannot delete a file from the vault while it is attached as evidence.', 'Only MINMEG can verify evidence.'],
+};

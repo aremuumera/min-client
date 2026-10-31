@@ -4,6 +4,8 @@ import { idempotencyHeaders } from '@/lib/api/idempotency';
 import {
   listParams,
   type AccessLogEntry,
+  type Assignment,
+  type Attachment,
   type ContentLink,
   type FileClass,
   type FolderTree,
@@ -12,6 +14,7 @@ import {
   type GrantPermission,
   type Paged,
   type ResourceVisibility,
+  type ShareOpened,
   type SharePermission,
   type ShareScope,
   type ShareLink,
@@ -63,7 +66,7 @@ export interface CreateGrantBody {
 export const vaultApi = createApi({
   reducerPath: 'vaultApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Folders', 'Files', 'ShareLinks', 'AccessLog', 'Grants', 'Visibility'],
+  tagTypes: ['Folders', 'Files', 'ShareLinks', 'AccessLog', 'Grants', 'Visibility', 'Evidence'],
   endpoints: (builder) => ({
     // ---------- folders ----------
     getFolderTree: builder.query<Single<FolderTree>, void>({ query: () => '/storage/folders', providesTags: ['Folders'] }),
@@ -127,6 +130,22 @@ export const vaultApi = createApi({
       invalidatesTags: ['ShareLinks', 'Files'],
     }),
 
+    /** Opens a signed-in-only link with this session; each open counts towards its limit */
+    openShareLink: builder.mutation<Single<ShareOpened>, string>({ query: (token) => `/storage/share/${token}` }),
+
+    // ---------- company evidence (Group 02 on ORGANIZATION) ----------
+    getCompanyEvidence: builder.query<Single<Attachment[]>, string>({ query: (orgId) => `/resources/ORGANIZATION/${orgId}/attachments`, providesTags: ['Evidence'] }),
+    attachEvidence: builder.mutation<Single<Attachment>, { resourceId: string; fileAssetId: string; attachmentType: string; title?: string; validUntil?: string; idempotencyKey: string }>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/resource-attachments', method: 'POST', body: { ...body, resourceType: 'ORGANIZATION' }, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Evidence', 'Files'],
+    }),
+    unlinkEvidence: builder.mutation<Single<Attachment>, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({ url: `/resource-attachments/${id}`, method: 'DELETE', body: { reason } }),
+      invalidatesTags: ['Evidence', 'Files'],
+    }),
+    getCompanyLabels: builder.query<Single<Assignment[]>, string>({ query: (orgId) => `/resources/ORGANIZATION/${orgId}/labels` }),
+    getCompanyTags: builder.query<Single<Assignment[]>, string>({ query: (orgId) => `/resources/ORGANIZATION/${orgId}/tags` }),
+
     // ---------- who can see a file (Group 02) ----------
     getVisibilityPolicies: builder.query<Paged<VisibilityPolicy>, void>({ query: () => '/visibility-policies?active=true&limit=100' }),
     getVisibility: builder.query<Single<ResourceVisibility>, string>({ query: (fileId) => `/resource-visibility/FILE_ASSET/${fileId}`, providesTags: ['Visibility'] }),
@@ -164,6 +183,12 @@ export const {
   useGetShareLinksQuery,
   useCreateShareLinkMutation,
   useRevokeShareLinkMutation,
+  useOpenShareLinkMutation,
+  useGetCompanyEvidenceQuery,
+  useAttachEvidenceMutation,
+  useUnlinkEvidenceMutation,
+  useGetCompanyLabelsQuery,
+  useGetCompanyTagsQuery,
   useGetVisibilityPoliciesQuery,
   useGetVisibilityQuery,
   useSetVisibilityMutation,

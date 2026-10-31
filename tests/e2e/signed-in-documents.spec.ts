@@ -24,6 +24,7 @@ test.beforeAll(({}, info) => test.skip(info.project.name !== 'desktop', 'desktop
 test.describe.configure({ mode: 'serial', timeout: 90_000 });
 
 let page: Page;
+let shareToken = '';
 const folderName = `E2E docs ${Date.now().toString(36)}`;
 const shot = async (name: string) => {
   await page.waitForTimeout(400); // sheets finish sliding in
@@ -94,7 +95,16 @@ test('details: preview is logged; a share link is shown once, then revoked', asy
   const shown = page.getByRole('dialog').filter({ hasText: 'Copy the link now' });
   await expect(shown.getByTestId('share-url')).toContainText('/share/');
   await shot('share-link');
+  shareToken = (await shown.getByTestId('share-url').textContent())!.trim().split('/share/')[1];
   await shown.getByRole('button', { name: 'Done' }).click();
+
+  // a signed-in link opens with this session, on click only
+  const opener = await page.context().newPage();
+  await opener.goto(`/dashboard/documents/open/${shareToken}`);
+  await opener.getByRole('button', { name: 'Open document' }).click();
+  await expect(opener.getByRole('link', { name: 'View', exact: true })).toHaveAttribute('href', /^https?:/, { timeout: 15_000 });
+  await opener.screenshot({ path: 'tests/e2e/.results/documents-open-link.png' });
+  await opener.close();
 
   const links = sheet.getByRole('list', { name: 'Share links' });
   await expect(links.getByText('Active')).toBeVisible();
@@ -119,9 +129,45 @@ test('who can see it: access mode and the give-access form check their fields', 
   await shot('access');
 });
 
+test('company evidence: attach the file; it can\'t be deleted while attached; remove it', async () => {
+  await page.goto('/dashboard/documents/evidence');
+  await expect(page.getByRole('heading', { name: 'Company evidence', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Attach evidence' }).click();
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('button', { name: 'Attach', exact: true }).click();
+  await expect(sheet.getByText('Choose a file from your documents')).toBeVisible();
+  await sheet.getByLabel('File').selectOption({ label: 'assay-lot-12.pdf' });
+  await sheet.getByLabel('What it proves').selectOption('ASSAY');
+  await sheet.getByRole('button', { name: 'Attach', exact: true }).click();
+  await confirmIn('Attach assay-lot-12.pdf?', 'Attach');
+  const list = page.getByRole('list', { name: 'Company evidence' });
+  await expect(list.getByText('Waiting for MINMEG')).toBeVisible({ timeout: 15_000 });
+  await shot('evidence');
+
+  await page.goto('/dashboard/documents');
+  await page.getByRole('table', { name: 'Files' }).getByText('assay-lot-12.pdf').click();
+  const file = page.getByRole('dialog').filter({ has: page.getByRole('tablist', { name: 'File' }) });
+  await file.getByRole('button', { name: 'Delete' }).click();
+  const del = page.getByRole('dialog').filter({ hasText: 'Delete assay-lot-12.pdf?' });
+  await del.getByLabel('Reason').fill('E2E: should be refused');
+  await del.getByRole('button', { name: 'Delete file' }).click();
+  await expect(page.locator('[data-sonner-toast]').getByText(/attached|evidence/i)).toBeVisible({ timeout: 15_000 });
+  await del.getByRole('button', { name: 'Cancel' }).click();
+  await file.getByRole('button', { name: 'Close', exact: true }).click();
+
+  await page.goto('/dashboard/documents/evidence');
+  await page.getByRole('list', { name: 'Company evidence' }).getByRole('button', { name: 'Remove' }).click();
+  const rm = page.getByRole('dialog').filter({ hasText: 'Remove this evidence?' });
+  await rm.getByLabel('Reason').fill('E2E test finished');
+  await rm.getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(page.getByText('No evidence yet')).toBeVisible({ timeout: 15_000 });
+  await page.goto('/dashboard/documents');
+  await page.getByRole('navigation', { name: 'Folders' }).getByRole('button', { name: new RegExp(folderName) }).click();
+  await page.getByRole('table', { name: 'Files' }).getByText('assay-lot-12.pdf').click();
+});
+
 test('clean up: the file is deleted with a reason and the folder archived', async () => {
-  const sheet = page.getByRole('dialog').filter({ hasText: 'assay-lot-12.pdf' });
-  await sheet.getByRole('tab', { name: 'Details' }).click();
+  const sheet = page.getByRole('dialog').filter({ has: page.getByRole('tablist', { name: 'File' }) });
   await sheet.getByRole('button', { name: 'Delete' }).click();
   const del = page.getByRole('dialog').filter({ hasText: 'Delete assay-lot-12.pdf?' });
   await del.getByLabel('Reason').fill('E2E test finished');
@@ -131,6 +177,12 @@ test('clean up: the file is deleted with a reason and the folder archived', asyn
   await page.getByRole('button', { name: 'Archive folder' }).click();
   await confirmIn(`Archive ${folderName}?`, 'Archive folder');
   await expect(page.getByRole('navigation', { name: 'Folders' }).getByText(folderName)).toHaveCount(0, { timeout: 15_000 });
+});
+
+test('a revoked signed-in link says so on the page that opens it', async () => {
+  await page.goto(`/dashboard/documents/open/${shareToken}`);
+  await page.getByRole('button', { name: 'Open document' }).click();
+  await expect(page.getByText(/not valid/)).toBeVisible({ timeout: 15_000 });
 });
 
 test('shared with me loads', async () => {

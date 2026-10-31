@@ -142,6 +142,33 @@ export interface Grant {
   revokedAt: string | null;
 }
 
+export const ATTACHMENT_TYPES = ['LICENSE', 'CERTIFICATE', 'COMPLIANCE_EVIDENCE', 'ORIGIN_EVIDENCE', 'ASSAY', 'INSPECTION_REPORT', 'CONTRACT', 'SHIPPING_DOCUMENT', 'PHOTO', 'OTHER'] as const;
+
+/** A vault file attached to a record as evidence; MINMEG staff verify it, never the owner */
+export interface Attachment {
+  id: string;
+  fileAssetId: string;
+  attachmentType: string;
+  title: string | null;
+  verificationStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'FAILED';
+  verificationNote: string | null;
+  validUntil: string | null;
+  expired: boolean;
+  linkedAt: string;
+  file: { id: string; displayName: string; status: string } | null;
+}
+
+export interface Assignment {
+  id: string;
+  label?: { name: string };
+  tag?: { name: string };
+}
+
+/** GET /storage/share/:token */
+export type ShareOpened =
+  | { verificationRequired: true; emailHint: string; permission: SharePermission }
+  | { verificationRequired?: undefined; file: { displayName: string; fileClass: string; sizeBytes: number }; permission: SharePermission; url: string; expiresAt: string };
+
 /** The types and size the backend accepts (src/modules/vault/services/file-types.ts) */
 export const ACCEPTED_FILE_TYPES: Record<string, string> = {
   'application/pdf': 'PDF',
@@ -181,6 +208,16 @@ export const LABELS: Record<string, string> = {
   ORGANIZATION: 'A company',
   USER: 'A person',
   TRADE_PARTICIPANT: "A trade's buyer, supplier and inspectors",
+  COMPLIANCE_EVIDENCE: 'Compliance evidence',
+  ORIGIN_EVIDENCE: 'Origin evidence',
+  INSPECTION_REPORT: 'Inspection report',
+  SHIPPING_DOCUMENT: 'Shipping document',
+  ASSAY: 'Assay',
+  PHOTO: 'Photo',
+  UNVERIFIED: 'Waiting for MINMEG',
+  PENDING: 'Being checked',
+  VERIFIED: 'Verified',
+  FAILED: 'Not accepted',
   READ: 'See it',
   VIEW_EVIDENCE: 'See its evidence',
   LEGAL_HOLD: 'Legal hold',

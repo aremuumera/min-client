@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { Archive, FolderPlus, Pencil, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, DataTable, FilterBar, NativeSelect, PageHeader, PaginationBar, StatusBadge, useConfirm } from '@/components/ui';
@@ -9,6 +8,8 @@ import { FileDetailSheet } from '@/components/documents/file-detail-sheet';
 import { FolderFormSheet, type FolderForm } from '@/components/documents/folder-form-sheet';
 import { FolderTree, type FolderChoice } from '@/components/documents/folder-tree';
 import { UploadSheet } from '@/components/documents/upload-sheet';
+import { DocumentsTabs } from '@/components/documents/documents-tabs';
+import { paths } from '@/config/paths';
 import { toApiError } from '@/lib/api/errors';
 import { formatDate } from '@/lib/format';
 import { documentsHelp } from '@/lib/help/documents';
@@ -93,14 +94,7 @@ function DocumentsPage() {
         }
       />
 
-      <div className="mb-4 flex gap-1 border-b border-hairline" role="navigation" aria-label="Documents">
-        <span className="-mb-px border-b-2 border-primary-500 px-4 py-2 text-sm font-medium text-primary-pressed" aria-current="page">
-          My documents
-        </span>
-        <Link href="/dashboard/documents/shared" className="px-4 py-2 text-sm font-medium text-steel hover:text-ink">
-          Shared with me
-        </Link>
-      </div>
+      <DocumentsTabs current={paths.dashboard.documents.list} />
 
       <div className="grid gap-6 md:grid-cols-[240px_1fr]">
         <aside className="min-w-0">

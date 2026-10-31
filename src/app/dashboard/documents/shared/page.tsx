@@ -1,10 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, CopyableId, DataTable, PageHeader, PaginationBar } from '@/components/ui';
+import { DocumentsTabs } from '@/components/documents/documents-tabs';
+import { paths } from '@/config/paths';
 import { toApiError } from '@/lib/api/errors';
 import { formatDate } from '@/lib/format';
 import { sharedWithMeHelp } from '@/lib/help/documents';
@@ -54,14 +55,7 @@ function SharedPage() {
   return (
     <div>
       <PageHeader title="Shared with me" help={sharedWithMeHelp} description="Documents and records other companies have given you access to." />
-      <div className="mb-4 flex gap-1 border-b border-hairline" role="navigation" aria-label="Documents">
-        <Link href="/dashboard/documents" className="px-4 py-2 text-sm font-medium text-steel hover:text-ink">
-          My documents
-        </Link>
-        <span className="-mb-px border-b-2 border-primary-500 px-4 py-2 text-sm font-medium text-primary-pressed" aria-current="page">
-          Shared with me
-        </span>
-      </div>
+      <DocumentsTabs current={paths.dashboard.documents.shared} />
 
       <DataTable<Grant>
         caption="Shared with me"
