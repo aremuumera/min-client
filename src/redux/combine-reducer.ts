@@ -24,6 +24,7 @@ import { authApi } from "./features/AuthFeature/auth_api_rtk";
 import { teamApi } from "./features/team/teamApi";
 import { vaultApi } from "./features/vault/vaultApi";
 import { locationsApi } from "./features/locations/locations_api";
+import { batchesApi } from "./features/batches/batches_api";
 import activityApi from "./features/activity/activityApi";
 import definitionApi from "./features/definitions/definition_api";
 import tradeApi from "./features/trade/trade_api";
@@ -74,6 +75,7 @@ const rootReducer = combineReducers({
   [teamApi.reducerPath]: teamApi.reducer,
   [vaultApi.reducerPath]: vaultApi.reducer,
   [locationsApi.reducerPath]: locationsApi.reducer,
+  [batchesApi.reducerPath]: batchesApi.reducer,
   [activityApi.reducerPath]: activityApi.reducer,
   [definitionApi.reducerPath]: definitionApi.reducer,
   [tradeApi.reducerPath]: tradeApi.reducer,
