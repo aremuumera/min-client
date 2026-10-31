@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { quietLogins } from './quiet-login';
 import { test, expect, type Page } from '@playwright/test';
 
 /*
@@ -39,7 +40,9 @@ const confirmIn = async (title: RegExp | string, button: string) => {
 };
 
 test.beforeAll(async ({ browser }) => {
-  page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await quietLogins(context, env.E2E_RUN_SECRET);
+  page = await context.newPage();
   await page.goto('/auth/sign-in');
   await page.getByPlaceholder('Enter your email').fill(env.E2E_BUYER);
   await page.getByPlaceholder('Enter your password').fill(env.E2E_PASSWORD);
