@@ -82,6 +82,7 @@ export const paths = {
     becomeASupplier: "/dashboard/become-a-supplier",
     companyInfoVerification: "/dashboard/company-info-verification",
     invoices: "/dashboard/invoices",
+    sites: "/dashboard/sites",
     documents: { list: "/dashboard/documents", shared: "/dashboard/documents/shared", evidence: "/dashboard/documents/evidence" },
     wallet: "/dashboard/wallet",
     settings: {
@@ -219,6 +220,8 @@ export const routeAccess = {
     paths.dashboard.settings.business,
     paths.dashboard.settings.legals,
     paths.dashboard.settings.team,
+    // sites (step 2.4)
+    paths.dashboard.sites,
     // documents (step 2.3)
     paths.dashboard.documents.list,
     paths.dashboard.documents.shared,

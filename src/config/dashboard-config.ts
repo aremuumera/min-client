@@ -227,6 +227,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "chat",
         },
         {
+          key: "sites",
+          title: "My sites",
+          href: paths.dashboard.sites,
+          icon: "map-pin",
+          matcher: { type: "startsWith", href: "/dashboard/sites" },
+          permission: "inventory",
+        },
+        {
           key: "documents",
           title: "Documents",
           href: paths.dashboard.documents.list,
