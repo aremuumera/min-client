@@ -67,6 +67,8 @@ export function canOpenArea(actor: Actor, key: string | undefined): boolean {
       return r === 'buyer' || r === 'buyer_supplier';
     case 'inspectors':
       return r === 'inspector';
+    case 'inventory':
+      return r !== 'inspector'; // batches, stock and sites belong to trading companies
     default:
       return true;
   }

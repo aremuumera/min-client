@@ -11,6 +11,7 @@ import {
   Layout,
   FileText,
   FolderLock,
+  MapPin,
   FileWarning,
   Truck,
   Lock,
@@ -56,6 +57,7 @@ export const icons = {
   cube: Briefcase, // Placeholder/Alternative
   file: FileText,
   folder: FolderLock,
+  'map-pin': MapPin,
   house: Home,
   kanban: Layout,
   link: LinkIcon,

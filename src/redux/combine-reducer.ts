@@ -23,6 +23,7 @@ import supplierProfileReducer from "./features/supplier-profile/supplier_profile
 import { authApi } from "./features/AuthFeature/auth_api_rtk";
 import { teamApi } from "./features/team/teamApi";
 import { vaultApi } from "./features/vault/vaultApi";
+import { locationsApi } from "./features/locations/locations_api";
 import activityApi from "./features/activity/activityApi";
 import definitionApi from "./features/definitions/definition_api";
 import tradeApi from "./features/trade/trade_api";
@@ -72,6 +73,7 @@ const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
   [teamApi.reducerPath]: teamApi.reducer,
   [vaultApi.reducerPath]: vaultApi.reducer,
+  [locationsApi.reducerPath]: locationsApi.reducer,
   [activityApi.reducerPath]: activityApi.reducer,
   [definitionApi.reducerPath]: definitionApi.reducer,
   [tradeApi.reducerPath]: tradeApi.reducer,

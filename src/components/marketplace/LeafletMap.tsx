@@ -9,10 +9,7 @@ const MapContainer = dynamic(
     () => import('react-leaflet').then((mod) => mod.MapContainer),
     { ssr: false }
 );
-const TileLayer = dynamic(
-    () => import('react-leaflet').then((mod) => mod.TileLayer),
-    { ssr: false }
-);
+const MapTilesLayer = dynamic(() => import('@/components/ui/map-tiles-layer'), { ssr: false });
 const Marker = dynamic(
     () => import('react-leaflet').then((mod) => mod.Marker),
     { ssr: false }
@@ -74,10 +71,7 @@ const LeafletMap = ({
                 scrollWheelZoom={false}
                 style={{ height: '100%', width: '100%' }}
             >
-                {/* <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                /> */}
+                <MapTilesLayer />
                 <Marker position={[lat, lng]}>
                     {popupText && (
                         <Popup>
