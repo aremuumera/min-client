@@ -33,6 +33,8 @@ export function fieldErrors(message: string): Record<string, string> {
 export function toApiError(error: unknown): ApiError {
   const e = error as { status?: number | string; data?: BackendErrorBody; error?: string; message?: string } | undefined;
   if (!e) return { status: 0, code: 'UNKNOWN', message: 'Something went wrong', fields: {} };
+  // already converted (e.g. rejected by an upload helper)
+  if (typeof (error as ApiError).code === 'string' && typeof (error as ApiError).fields === 'object') return error as ApiError;
 
   if (e.status === 'FETCH_ERROR') return { status: 0, code: 'NETWORK', message: 'No connection to the server. Check your network and try again.', fields: {} };
   if (e.status === 'TIMEOUT_ERROR') return { status: 0, code: 'TIMEOUT', message: 'The server took too long to answer. Try again.', fields: {} };
