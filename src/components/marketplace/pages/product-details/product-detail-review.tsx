@@ -306,6 +306,7 @@ const ProductDetailReview = ({ products }: { products: any }) => {
           sampling_method: products?.sampling_method,
           quantity: products?.quantity,
           measure: products?.measure,
+          minimum_order_quantity: products?.minimum_order_quantity,
         }}
         productData={{
           purity_grade: products?.purity_grade,

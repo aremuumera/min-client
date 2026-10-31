@@ -54,6 +54,7 @@ interface ChildRow {
   batchCode: string;
   currentLocationId: string;
   physicalForm: string;
+  keepListed: boolean;
 }
 
 /** POST /batches/:id/split: the parent is retired and its whole quantity moves to the new batches */
@@ -63,7 +64,7 @@ export function SplitSheet({ open, batch, onClose, onDone }: SheetProps) {
   const { key, done } = useIdempotencyKey();
   const { confirm, dialog } = useConfirm();
   const counter = React.useRef(0);
-  const blank = (): ChildRow => ({ key: ++counter.current, quantity: '', batchCode: '', currentLocationId: batch.currentLocationId ?? '', physicalForm: batch.physicalForm ?? '' });
+  const blank = (): ChildRow => ({ key: ++counter.current, quantity: '', batchCode: '', currentLocationId: batch.currentLocationId ?? '', physicalForm: batch.physicalForm ?? '', keepListed: true });
   const [rows, setRows] = React.useState<ChildRow[]>([]);
   const [reason, setReason] = React.useState('');
   const [occurredAt, setOccurredAt] = React.useState('');
@@ -107,7 +108,7 @@ export function SplitSheet({ open, batch, onClose, onDone }: SheetProps) {
     try {
       const res = await split({
         id: batch.id,
-        children: rows.map((r) => ({ quantity: r.quantity, ...optional('batchCode', r.batchCode), ...optional('currentLocationId', r.currentLocationId), ...optional('physicalForm', r.physicalForm) })),
+        children: rows.map((r) => ({ quantity: r.quantity, ...optional('batchCode', r.batchCode), ...optional('currentLocationId', r.currentLocationId), ...optional('physicalForm', r.physicalForm), ...(batch.listing && !r.keepListed ? { keepListed: false } : {}) })),
         ...optional('reason', reason.trim()),
         ...when(occurredAt),
         expectedVersion: batch.version,
@@ -149,6 +150,12 @@ export function SplitSheet({ open, batch, onClose, onDone }: SheetProps) {
                 <NativeSelect id={`split-form-${r.key}`} value={r.physicalForm} onValueChange={(v) => change(r.key, { physicalForm: v })} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
               </FormField>
             </div>
+            {batch.listing && (
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-ink">
+                <input type="checkbox" className="h-4 w-4" checked={r.keepListed} onChange={(e) => change(r.key, { keepListed: e.target.checked })} />
+                Keep this part on {batch.listing.product_name}
+              </label>
+            )}
           </fieldset>
         ))}
         <div className="flex flex-wrap items-center justify-between gap-2">

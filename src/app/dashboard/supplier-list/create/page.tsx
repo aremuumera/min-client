@@ -1,15 +1,20 @@
-import React, { Suspense } from 'react';
-import SupplierListing from '@/components/dashboard/Supplier/CreateProducts';
+'use client';
 
-export const metadata = {
-    title: 'Create Product | MINMEG',
-    description: 'Add a new product to your MINMEG store.',
-};
+import { useRouter } from 'next/navigation';
+import { PageHeader } from '@/components/ui';
+import { ListingForm } from '@/components/listings/listing-form';
+import { paths } from '@/config/paths';
+import { listingsHelp } from '@/lib/help/listings';
+import { RequireAccess } from '@/lib/permissions';
 
-export default function CreateProductPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <SupplierListing />
-        </Suspense>
-    );
+/* New listing (step 2.6 D2) */
+export default function Page() {
+  const router = useRouter();
+  const back = () => router.push(paths.dashboard.products.list);
+  return (
+    <RequireAccess role={['supplier', 'buyer_supplier']} teamKey="products">
+      <PageHeader title="New listing" help={listingsHelp} description="Start with the stock you are selling, then add the details buyers see." />
+      <ListingForm listing={null} onDone={back} onCancel={back} />
+    </RequireAccess>
+  );
 }

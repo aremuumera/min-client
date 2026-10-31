@@ -23,7 +23,7 @@ import { useRouter, useParams } from 'next/navigation';
 
 import RfqInputEditModal from './InpputEditModal';
 import { MoqUnits as Moq } from '@/lib/marketplace-data';
-import { paymentTerms, shippingTerms as shippingTermsFields } from '@/components/dashboard/Supplier/CreateProducts/paymentTerms';
+import { paymentTerms, shippingTerms as shippingTermsFields } from '@/lib/trade-terms';
 import { useGetRfqDetailsForbuyQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { useSelector } from 'react-redux';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';

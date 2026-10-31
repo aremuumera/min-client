@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Loader2, CheckCircle, X, MapPin, Calendar, Scale, AlertTriangle, Box, Check, ChevronRight, ChevronDown, DollarSign, Upload, FileText } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
@@ -38,6 +38,7 @@ interface ProductInquiryModalProps {
         sampling_method?: string;
         quantity?: number | string;
         measure?: string;
+        minimum_order_quantity?: string | null;
         product_category?: string;
     };
     itemType?: 'product' | 'rfq' | 'business';
@@ -115,6 +116,12 @@ const ProductInquiryModal = ({
     const [customPackaging, setCustomPackaging] = useState(false);
     const [showSpecsPopover, setShowSpecsPopover] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    // A listing with a minimum order is asked for in its own unit, so the amount can be checked
+    const listedMeasure = !isRfqOffer ? (product as { measure?: string })?.measure : undefined;
+    const minimumOrder = !isRfqOffer ? (product as { minimum_order_quantity?: string | null })?.minimum_order_quantity : null;
+    useEffect(() => {
+        if (isOpen && listedMeasure) setFormData((f: any) => ({ ...f, measure_type: listedMeasure }));
+    }, [isOpen, listedMeasure]);
 
     const handleClose = () => {
         setStep(1);
@@ -599,13 +606,16 @@ const ProductInquiryModal = ({
                                                     const actualValue = typeof val === 'string' ? val : val.target.value;
                                                     setFormData({ ...formData, measure_type: actualValue });
                                                 }}
-                                                options={MoqUnits.map(unit => ({
+                                                options={(minimumOrder && listedMeasure ? [listedMeasure] : Array.from(new Set([...(listedMeasure ? [listedMeasure] : []), ...MoqUnits]))).map(unit => ({
                                                     value: unit,
                                                     label: unit
                                                 }))}
                                             />
                                         </div>
                                     </div>
+                                    {minimumOrder && (
+                                        <p className="text-sm text-gray-600">Minimum order: {Number(minimumOrder).toLocaleString()} {listedMeasure}</p>
+                                    )}
 
                                     {/* Mineral Specifications */}
                                     <div className="space-y-4 pt-1">

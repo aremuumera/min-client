@@ -64,7 +64,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Option } from '@/components/core/option';
-import { paymentTerms, shippingTerms } from '../../Supplier/CreateProducts/paymentTerms';
+import { paymentTerms, shippingTerms } from '@/lib/trade-terms';
 import { useAppDispatch, useAppSelector } from '@/redux';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';

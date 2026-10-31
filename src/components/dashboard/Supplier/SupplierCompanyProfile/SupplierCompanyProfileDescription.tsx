@@ -49,7 +49,7 @@ import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { useAppDispatch, useAppSelector, useAppStore } from '@/redux';
 import { supplierBusinessData as businessData } from '@/lib/marketplace-data';
 
-import { paymentTerms, shippingTerms } from '../CreateProducts/paymentTerms';
+import { paymentTerms, shippingTerms } from '@/lib/trade-terms';
 
 import { z } from 'zod';
 import { MultiCheckboxSelect, SearchableSelect } from '@/components/ui';

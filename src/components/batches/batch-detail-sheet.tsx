@@ -231,6 +231,7 @@ export function BatchDetailSheet({
                     { label: 'Origin evidence', value: batchLabel(b.provenanceStatus) },
                     { label: 'Verification', value: batchLabel(b.verificationStatus) },
                     { label: 'Can be listed', value: batchLabel(b.listingEligibilityStatus) },
+                    { label: 'On listing', value: b.listing ? `${b.listing.product_name} (${b.listing.listingCode ?? b.listing.status})` : 'Not listed' },
                     { label: 'Quantity approval', value: approvalRule(b.quantityApproval) },
                     { label: 'Last changed', value: formatDateTime(b.updatedAt) },
                   ]}

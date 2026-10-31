@@ -77,6 +77,8 @@ export interface Batch {
   unit?: UnitChoice;
   sourceLocation?: NamedRecord | null;
   currentLocation?: NamedRecord | null;
+  /** The active listing it backs */
+  listing?: { id: string; listingCode: string | null; product_name: string; status: string } | null;
   lineage?: { parents: number; children: number };
   pendingLedgerEntries?: number;
   quantityApproval?: { policy: 'TOLERANCE' | 'NOT_REQUIRED'; tolerancePercent?: string | null; source?: string } | null;

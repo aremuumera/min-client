@@ -77,13 +77,13 @@ export const dashboardConfig: DashboardConfig = {
           items: [
             {
               key: "products:create",
-              title: "Create product",
+              title: "New listing",
               href: paths.dashboard.products.create,
               permission: "products",
             },
             {
               key: "supplier-list",
-              title: "Listed products",
+              title: "My listings",
               href: paths.dashboard.products.list,
               permission: "products",
             },
