@@ -10,6 +10,7 @@ import {
   Users,
   Layout,
   FileText,
+  FolderLock,
   FileWarning,
   Truck,
   Lock,
@@ -54,6 +55,7 @@ export const icons = {
   'star-border': Star,
   cube: Briefcase, // Placeholder/Alternative
   file: FileText,
+  folder: FolderLock,
   house: Home,
   kanban: Layout,
   link: LinkIcon,

@@ -227,6 +227,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "chat",
         },
         {
+          key: "documents",
+          title: "Documents",
+          href: paths.dashboard.documents.list,
+          icon: "folder",
+          matcher: { type: "startsWith", href: "/dashboard/documents" },
+          permission: "documents",
+        },
+        {
           key: "becomeasupplier",
           title: "Become a supplier",
           href: paths.dashboard.becomeASupplier,

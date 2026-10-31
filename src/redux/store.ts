@@ -14,6 +14,7 @@ import rootReducer from "./combine-reducer";
 
 import { authApi } from "./features/AuthFeature/auth_api_rtk";
 import { teamApi } from "./features/team/teamApi";
+import { vaultApi } from "./features/vault/vaultApi";
 import inquiryApi from "./features/enquiry/enquiry_api";
 import supplierProductApi from "./features/supplier-products/products_api";
 import rfqApi from "./features/buyer-rfq/rfq-api";
@@ -36,6 +37,7 @@ const persistConfig = {
   storage,
   blacklist: [
     "auth",
+    "vaultApi",
     "authApi",
     "supplierProfileApi",
     "rfqApi",
@@ -83,6 +85,7 @@ export const makeStore = () => {
         inspectorApi.middleware,
         invoiceApi.middleware,
         teamApi.middleware,
+        vaultApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,
         docHubApi.middleware,

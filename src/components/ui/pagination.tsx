@@ -20,6 +20,8 @@ export interface PaginationProps extends Omit<React.HTMLAttributes<HTMLElement>,
   size?: 'sm' | 'md' | 'lg';
   /** Shape variant */
   shape?: 'circular' | 'rounded';
+  /** Leave out the arrow buttons (PaginationBar shows labelled Previous / Next instead) */
+  hideArrows?: boolean;
 }
 
 const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
@@ -34,6 +36,7 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
       color = 'primary',
       size = 'md',
       shape = 'circular',
+      hideArrows = false,
       ...props
     },
     ref
@@ -85,15 +88,16 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
         className={cn('flex items-center gap-1', className)}
         {...props}
       >
-        <Button
+        {!hideArrows && <Button
           variant="text"
           size={size === 'sm' ? 'sm' : 'md'}
           className={cn('p-1 h-auto min-w-0', shape === 'circular' && 'rounded-full')}
           disabled={page <= 1}
           onClick={() => onChange?.(page - 1)}
+          aria-label="Previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </Button>}
 
         {pages.map((p, i) => (
           p === 'ellipsis' ? (
@@ -112,21 +116,24 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
                 page !== p && 'text-neutral-700 hover:bg-neutral-100'
               )}
               onClick={() => onChange?.(p as number)}
+              aria-label={`Page ${p}`}
+              aria-current={page === p ? 'page' : undefined}
             >
               {p}
             </Button>
           )
         ))}
 
-        <Button
+        {!hideArrows && <Button
           variant="text"
           size={size === 'sm' ? 'sm' : 'md'}
           className={cn('p-1 h-auto min-w-0', shape === 'circular' && 'rounded-full')}
           disabled={page >= count}
           onClick={() => onChange?.(page + 1)}
+          aria-label="Next page"
         >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </Button>}
       </nav>
     );
   }
