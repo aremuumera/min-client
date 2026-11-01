@@ -105,6 +105,7 @@ function Select({
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLUListElement>(null);
+  const listId = React.useId();
 
   // If children are provided instead of options array
   const derivedOptions = React.useMemo(() => {
@@ -219,6 +220,7 @@ function Select({
         role="combobox"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-controls={listId}
         aria-label={ariaLabel}
         aria-invalid={ariaInvalid}
         aria-describedby={ariaDescribedBy}
@@ -260,6 +262,7 @@ function Select({
         <Portal>
           <ul
             ref={listRef}
+            id={listId}
             role="listbox"
             data-select-list="true"
             style={{
