@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/ui';
 import { ListingForm } from '@/components/listings/listing-form';
 import { ListingSaved } from '@/components/listings/listing-saved';
-import { MaterialRequestPanel } from '@/components/listings/material-request-panel';
+import { MaterialRequestLink } from '@/components/listings/material-request-form';
 import { paths } from '@/config/paths';
 import { listingsHelp } from '@/lib/help/listings';
 import { RequireAccess } from '@/lib/permissions';
@@ -18,7 +18,7 @@ export default function Page() {
   return (
     <RequireAccess role={['supplier', 'buyer_supplier']} teamKey="products">
       <PageHeader title="New listing" help={listingsHelp} description="Start with the stock you are selling, then add the details buyers see." />
-      {published ? <ListingSaved id={published.id} name={published.name} /> : <ListingForm listing={null} sitesHref="/dashboard/sites" materialHelp={<MaterialRequestPanel />} onDone={(id, live, name) => (live ? setPublished({ id, name }) : back())} onCancel={back} />}
+      {published ? <ListingSaved id={published.id} name={published.name} /> : <ListingForm listing={null} sitesHref="/dashboard/sites" materialHelp={<MaterialRequestLink />} onDone={(id, live, name) => (live ? setPublished({ id, name }) : back())} onCancel={back} />}
     </RequireAccess>
   );
 }

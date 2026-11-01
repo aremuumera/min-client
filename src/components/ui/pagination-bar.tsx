@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './button';
+import { DropdownSelect } from './dropdown-select';
 import { Pagination } from './pagination';
 
 export interface PaginationBarProps {
@@ -36,21 +37,18 @@ export function PaginationBar({ meta, page, onPage, limit, onLimit, limitOptions
         <span>
           {first}–{last} of {meta.totalItems}
         </span>
-        <label htmlFor={id} className="flex items-center gap-2">
-          Rows per page
-          <select
+        <div className="flex items-center gap-2">
+          <span>Rows per page</span>
+          <DropdownSelect
             id={id}
-            value={limit}
-            onChange={(e) => onLimit(Number(e.target.value))}
-            className="h-11 rounded-lg border border-hairline-strong bg-canvas px-2 text-base text-ink md:h-9 md:text-sm"
-          >
-            {limitOptions.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+            aria-label="Rows per page"
+            value={String(limit)}
+            onValueChange={(v) => onLimit(Number(v))}
+            options={limitOptions.map((n) => ({ value: String(n), label: String(n) }))}
+            searchable={false}
+            className="w-24"
+          />
+        </div>
       </div>
       {meta.totalPages > 1 && (
         <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">

@@ -128,6 +128,7 @@ export const paths = {
       create: "/dashboard/supplier-list/create",
       update: (listedSupplierProductId?: string | number) =>
         listedSupplierProductId ? `/dashboard/supplier-list/update/${listedSupplierProductId}` : "/dashboard/supplier-list/update",
+      materialRequests: "/dashboard/supplier-list/material-requests",
       companyProfile: "/dashboard/supplier-list/company-profile/create",
       receivedInquiries: "/dashboard/received-inquiries",
     },
@@ -205,6 +206,7 @@ export const routeAccess = {
     paths.dashboard.products.list,
     paths.dashboard.products.create,
     paths.dashboard.products.update,
+    paths.dashboard.products.materialRequests,
     paths.dashboard.products.companyProfile,
     paths.dashboard.products.receivedInquiries,
     paths.dashboard.myTradeInquiries,

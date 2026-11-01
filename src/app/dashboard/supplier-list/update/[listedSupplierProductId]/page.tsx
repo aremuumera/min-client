@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { Alert, PageHeader, Skeleton } from '@/components/ui';
 import { ListingForm } from '@/components/listings/listing-form';
-import { MaterialRequestPanel } from '@/components/listings/material-request-panel';
+import { MaterialRequestLink } from '@/components/listings/material-request-form';
 import { paths } from '@/config/paths';
 import { toApiError } from '@/lib/api/errors';
 import { listingsHelp } from '@/lib/help/listings';
@@ -19,7 +19,7 @@ function EditListing() {
   return (
     <>
       <PageHeader title={detail.data ? `Edit ${detail.data.data.product_name}` : 'Edit listing'} help={listingsHelp} />
-      {detail.isLoading ? <Skeleton className="h-96 w-full" /> : detail.isError || !detail.data ? <Alert severity="error">{toApiError(detail.error).message}</Alert> : <ListingForm sitesHref="/dashboard/sites" materialHelp={<MaterialRequestPanel />} key={detail.data.data.id} listing={detail.data.data} onDone={back} onCancel={back} />}
+      {detail.isLoading ? <Skeleton className="h-96 w-full" /> : detail.isError || !detail.data ? <Alert severity="error">{toApiError(detail.error).message}</Alert> : <ListingForm sitesHref="/dashboard/sites" materialHelp={<MaterialRequestLink />} key={detail.data.data.id} listing={detail.data.data} onDone={back} onCancel={back} />}
     </>
   );
 }

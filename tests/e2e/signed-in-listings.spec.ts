@@ -204,7 +204,7 @@ test('stock: a batch can stop counting, and the batch says which listing it back
   await expect(page.getByRole('row').filter({ hasText: name }).getByText('60 t')).toBeVisible({ timeout: 30_000 });
 });
 
-test('a missing material can be requested, and shows as waiting', async () => {
+test('a missing material is requested from the form, and followed on its own page', async () => {
   await page.goto('/dashboard/supplier-list/create');
   await expect(page.getByRole('heading', { name: 'New listing', level: 1 })).toBeVisible({ timeout: 30_000 });
   await page.getByRole('button', { name: /Can't find your material/ }).click();
@@ -215,10 +215,54 @@ test('a missing material can be requested, and shows as waiting', async () => {
   await form.locator('#request-note').fill('E2E test request');
   await form.getByRole('button', { name: 'Send request' }).click();
   await confirmIn(`Ask MINMEG to add E2E material ${stamp}?`, 'Send request');
-  const requests = page.getByRole('list', { name: 'Your material requests' });
-  await expect(requests.getByText(`E2E material ${stamp}`)).toBeVisible({ timeout: 15_000 });
-  await expect(requests.getByText('Waiting for MINMEG').first()).toBeVisible();
-  await shot('material-request');
+  await expect(form).toBeHidden({ timeout: 15_000 });
+  // The form keeps only the link: no list of requests in the middle of a listing
+  await expect(page.getByRole('button', { name: /Can't find your material/ })).toBeVisible();
+  await expect(page.getByText('Waiting for MINMEG')).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Material requests' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Material requests', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('All requests', { exact: true })).toBeVisible();
+  await page.getByPlaceholder('Search material name').fill(`E2E material ${stamp}`);
+  const row = page.getByText(`E2E material ${stamp}`).first();
+  await expect(row).toBeVisible({ timeout: 15_000 });
+  await row.click();
+  const detail = page.getByRole('dialog').filter({ hasText: 'MINMEG is reviewing this request' });
+  await expect(detail).toBeVisible();
+  await expect(detail.getByText('E2E test request')).toBeVisible();
+  await shot('material-request-detail');
+  const requestId = await detail.getByText(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).innerText();
+  await detail.getByRole('button', { name: 'Close' }).click();
+  await shot('material-requests');
+
+  // A notification opens the request it is about, with MINMEG's answer first
+  const answered = async (fields: Record<string, unknown>) => {
+    await page.unroute(`**/material-requests/${requestId}`);
+    await page.route(`**/material-requests/${requestId}`, async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      await route.fulfill({ response, json: { ...body, data: { ...body.data, reviewedAt: new Date().toISOString(), ...fields } } });
+    });
+    await page.goto(`/dashboard/supplier-list/material-requests?request=${requestId}`);
+    return page.getByRole('dialog').filter({ hasText: `E2E material ${stamp}` });
+  };
+  const refused = await answered({ status: 'REFUSED', reviewReason: 'This is the same as Tin Ore' });
+  await expect(refused.getByText('MINMEG did not add this material')).toBeVisible({ timeout: 30_000 });
+  await expect(refused.getByText('This is the same as Tin Ore')).toBeVisible();
+  await shot('material-request-refused');
+  const added = await answered({ status: 'APPROVED', reviewReason: null, material: { id: requestId, code: 'BERYL_ORE', name: 'Beryl Ore' } });
+  await expect(added.getByText('Beryl Ore is on the material list')).toBeVisible({ timeout: 30_000 });
+  await expect(added.getByRole('button', { name: 'Create a listing' })).toBeVisible();
+  await shot('material-request-added');
+  await page.unroute(`**/material-requests/${requestId}`);
+});
+
+test('rows per page uses our dropdown', async () => {
+  await page.goto('/dashboard/supplier-list/material-requests');
+  const rows = page.getByRole('combobox', { name: 'Rows per page' });
+  await expect(rows).toBeVisible({ timeout: 30_000 });
+  await pick(rows, { label: '50' });
+  await expect(rows).toContainText('50');
 });
 
 test('non-mineral: pick the categories and type the quantity; no batch, and the success screen links to it', async () => {
@@ -301,4 +345,10 @@ test('phone width: the list and the form fit', async () => {
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   await shot('phone-form');
+  await page.goto('/dashboard/supplier-list/material-requests');
+  await expect(page.getByRole('heading', { name: 'Material requests', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('All requests', { exact: true })).toBeVisible();
+  await page.waitForTimeout(1000);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+  await shot('phone-material-requests');
 });

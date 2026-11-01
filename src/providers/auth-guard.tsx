@@ -194,6 +194,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       paths.dashboard.products.create, // /dashboard/supplier-list/create
       paths.dashboard.products.companyProfile, // /dashboard/supplier-list/company-profile/create
       '/dashboard/supplier-list/update',
+      paths.dashboard.products.materialRequests,
       '/dashboard/received-inquiries',
       '/dashboard/company-profile',
       '/dashboard/my-submitted-offers',

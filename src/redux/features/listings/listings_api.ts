@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { AvailabilityRow, CategoryNode, Listing, ListingAction, ListingBatchRow, MaterialRequest } from '@/lib/listings';
+import type { AvailabilityRow, CategoryNode, Listing, ListingAction, ListingBatchRow, MaterialRequest, MaterialRequestSummary } from '@/lib/listings';
 import { listParams, type NamedRecord, type Paged } from '@/lib/batches';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -68,6 +68,8 @@ export const listingsApi = createApi({
     getPublicMaterials: builder.query<Single<{ id: string; name: string; categoryPath: string[] }[]>, void>({ query: () => '/marketplace/public/materials' }),
     getCategoryTree: builder.query<Single<CategoryNode[]>, void>({ query: () => '/categories/tree?active=true' }),
     getMaterialRequests: builder.query<Paged<MaterialRequest>, Query>({ query: (q) => `/material-requests${listParams(q)}`, providesTags: ['MaterialRequests'] }),
+    getMaterialRequestSummary: builder.query<Single<MaterialRequestSummary>, void>({ query: () => '/material-requests/summary', providesTags: ['MaterialRequests'] }),
+    getMaterialRequest: builder.query<Single<MaterialRequest>, string>({ query: (id) => `/material-requests/${id}`, providesTags: ['MaterialRequests'] }),
     createMaterialRequest: builder.mutation<Single<MaterialRequest>, { name: string; suggestedCategoryId?: string | null; note?: string | null; idempotencyKey: string }>({
       query: ({ idempotencyKey, ...body }) => ({ url: '/material-requests', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
       invalidatesTags: ['MaterialRequests'],
@@ -81,6 +83,8 @@ export const {
   useGetMaterialMeasureQuery,
   useGetCategoryTreeQuery,
   useGetMaterialRequestsQuery,
+  useGetMaterialRequestSummaryQuery,
+  useGetMaterialRequestQuery,
   useCreateMaterialRequestMutation,
   useGetListingQuery,
   useCreateListingMutation,

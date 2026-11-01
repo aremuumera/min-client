@@ -219,7 +219,9 @@ export interface MaterialRequest {
   reviewReason: string | null;
   createdAt: string;
 }
-export const materialRequestLabel = (s: MaterialRequestStatus) => ({ PENDING: 'Waiting for MINMEG', APPROVED: 'Added', REFUSED: 'Refused' })[s];
+export type MaterialRequestSummary = Record<MaterialRequestStatus | 'total', number>;
+export const MATERIAL_REQUEST_STATUSES: MaterialRequestStatus[] = ['PENDING', 'APPROVED', 'REFUSED'];
+export const materialRequestLabel =(s: MaterialRequestStatus) => ({ PENDING: 'Waiting for MINMEG', APPROVED: 'Added', REFUSED: 'Refused' })[s];
 export const materialRequestTone = (s: MaterialRequestStatus) => ({ PENDING: 'warning', APPROVED: 'success', REFUSED: 'error' } as const)[s];
 
 /** Editor text with no words in it counts as empty */
