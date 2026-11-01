@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { useAlert } from '@/providers/alert-provider';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { links, real, Category, SubCategory, countries, MoqUnits } from '@/lib/marketplace-data';
+import { links, real, Category, SubCategory, countries } from '@/lib/marketplace-data';
 import { ChevronDown, ChevronUp, Search, X, Star } from 'lucide-react';
 import { IoSearch } from 'react-icons/io5';
 
@@ -83,10 +83,8 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   // Local UI states
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
   const [filteredCountries, setFilteredCountries] = useState(countries);
-  const [moqValue, setMoqValue] = useState(filters.quantity || '');
   const [minPrice, setMinPrice] = useState(filters.minPrice || '');
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice || '');
-  const [selectedMoqUnit, setSelectedMoqUnit] = useState(filters.measure || '');
 
   useEffect(() => {
     if (locationSearchTerm) {
@@ -115,8 +113,6 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
     setFilteredCountries(countries);
     setMinPrice('');
     setMaxPrice('');
-    setSelectedMoqUnit('');
-    setMoqValue('');
     setActiveCategory(null);
     setActiveSubCategory(null);
   };
@@ -159,21 +155,6 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
     dispatch(setFilter({ filterType: 'rating', value: checked ? name : null }));
-  };
-
-  const handleSelectMoqChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedMoqUnit(e.target.value);
-  };
-
-  const handleMoqSearch = () => {
-    if (selectedMoqUnit && moqValue) {
-      dispatch(setFilter({ filterType: 'measure', value: selectedMoqUnit }));
-      dispatch(setFilter({ filterType: 'quantity', value: moqValue }));
-    } else {
-      dispatch(setFilter({ filterType: 'measure', value: null }));
-      dispatch(setFilter({ filterType: 'quantity', value: null }));
-    }
-    if (isMobile) onClose();
   };
 
   const handlePriceChange = () => {
@@ -569,39 +550,6 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
             >
               Apply Price Filter
             </button>
-          </div>
-        )}
-
-        {/* MOQ Filter */}
-        {prodCheck && (
-          <div className="mt-8">
-            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Minimum Order Quantity</h2>
-            <div className="h-px bg-gray-200 mb-3"></div>
-            <div className="flex items-center gap-2 p-1.5 border border-gray-300 rounded-xl bg-gray-50/50 hover:bg-white transition-colors focus-within:ring-2 focus-within:ring-green-500/20 focus-within:border-green-600">
-              <DropdownSelect
-                aria-label="Unit"
-                className="w-24 shrink-0"
-                searchable={false}
-                value={selectedMoqUnit}
-                onValueChange={(value) => handleSelectMoqChange({ target: { value } } as React.ChangeEvent<HTMLSelectElement>)}
-                options={(MoqUnits ?? []).map((unit) => ({ value: unit.toLowerCase(), label: unit }))}
-                placeholder="Unit"
-              />
-              <div className="w-px h-6 bg-gray-300 shrink-0"></div>
-              <input
-                type="text"
-                placeholder="Value"
-                value={moqValue}
-                onChange={(e) => setMoqValue(e.target.value)}
-                className="bg-transparent text-sm w-full focus:outline-none placeholder:text-gray-400 font-medium"
-              />
-              <button
-                onClick={handleMoqSearch}
-                className="p-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md active:scale-95"
-              >
-                <IoSearch size={16} />
-              </button>
-            </div>
           </div>
         )}
 
