@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, FormField, Input, NativeSelect, QuantityInput, SideSheet, Textarea, useConfirm } from '@/components/ui';
+import { Alert, Button, FormField, Input, DropdownSelect, QuantityInput, SideSheet, Textarea, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { BATCH_CODE_PATTERN, MAX_MERGE_SOURCES, MAX_SPLIT_CHILDREN, MAX_TRANSFORM_OUTPUTS, OPERABLE_STATUSES, PHYSICAL_FORMS, batchOptions, formatQuantity, fromMicro, isPositive, leftToAssign, type Batch } from '@/lib/batches';
@@ -144,10 +144,10 @@ export function SplitSheet({ open, batch, onClose, onDone }: SheetProps) {
                 <Input id={`split-code-${r.key}`} value={r.batchCode} onChange={(e) => change(r.key, { batchCode: e.target.value.toUpperCase() })} maxLength={64} autoComplete="off" />
               </FormField>
               <FormField label="Where it is now" htmlFor={`split-site-${r.key}`}>
-                <NativeSelect id={`split-site-${r.key}`} value={r.currentLocationId} onValueChange={(v) => change(r.key, { currentLocationId: v })} options={sites} placeholder="Not recorded" />
+                <DropdownSelect id={`split-site-${r.key}`} value={r.currentLocationId} onValueChange={(v) => change(r.key, { currentLocationId: v })} options={sites} placeholder="Not recorded" />
               </FormField>
               <FormField label="Physical form" htmlFor={`split-form-${r.key}`}>
-                <NativeSelect id={`split-form-${r.key}`} value={r.physicalForm} onValueChange={(v) => change(r.key, { physicalForm: v })} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
+                <DropdownSelect id={`split-form-${r.key}`} value={r.physicalForm} onValueChange={(v) => change(r.key, { physicalForm: v })} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
               </FormField>
             </div>
             {batch.listing && (
@@ -274,10 +274,10 @@ export function MergeSheet({ open, batch, onClose, onDone }: SheetProps) {
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Where it is now" htmlFor="merge-site">
-            <NativeSelect id="merge-site" value={currentLocationId} onValueChange={setCurrentLocationId} options={sites} placeholder="Not recorded" />
+            <DropdownSelect id="merge-site" value={currentLocationId} onValueChange={setCurrentLocationId} options={sites} placeholder="Not recorded" />
           </FormField>
           <FormField label="Physical form" htmlFor="merge-form-kind">
-            <NativeSelect id="merge-form-kind" value={physicalForm} onValueChange={setPhysicalForm} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
+            <DropdownSelect id="merge-form-kind" value={physicalForm} onValueChange={setPhysicalForm} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
           </FormField>
         </div>
         <CommonFields prefix="merge" reason={reason} setReason={setReason} occurredAt={occurredAt} setOccurredAt={setOccurredAt} />
@@ -381,20 +381,20 @@ export function TransformSheet({ open, batch, onClose, onDone }: SheetProps) {
               )}
             </div>
             <FormField label="Material" htmlFor={`output-material-${r.key}`} required>
-              <NativeSelect id={`output-material-${r.key}`} value={r.materialId} onValueChange={(v) => change(r.key, { materialId: v })} options={materialOptions} placeholder="Choose a material" />
+              <DropdownSelect id={`output-material-${r.key}`} value={r.materialId} onValueChange={(v) => change(r.key, { materialId: v })} options={materialOptions} placeholder="Choose a material" />
             </FormField>
             <div className="grid gap-3 sm:grid-cols-2">
               <FormField label="Quantity" htmlFor={`output-qty-${r.key}`} required help="Can differ from the input: processing loses or gains weight">
                 <QuantityInput id={`output-qty-${r.key}`} value={r.quantity} onChange={(v) => change(r.key, { quantity: v })} />
               </FormField>
               <FormField label="Unit" htmlFor={`output-unit-${r.key}`} required>
-                <NativeSelect id={`output-unit-${r.key}`} value={r.quantityUnitId} onValueChange={(v) => change(r.key, { quantityUnitId: v })} options={unitOptions} placeholder="Choose a unit" />
+                <DropdownSelect id={`output-unit-${r.key}`} value={r.quantityUnitId} onValueChange={(v) => change(r.key, { quantityUnitId: v })} options={unitOptions} placeholder="Choose a unit" />
               </FormField>
               <FormField label="Batch code" htmlFor={`output-code-${r.key}`} help="Empty: MINMEG makes one">
                 <Input id={`output-code-${r.key}`} value={r.batchCode} onChange={(e) => change(r.key, { batchCode: e.target.value.toUpperCase() })} maxLength={64} autoComplete="off" />
               </FormField>
               <FormField label="Physical form" htmlFor={`output-form-${r.key}`}>
-                <NativeSelect id={`output-form-${r.key}`} value={r.physicalForm} onValueChange={(v) => change(r.key, { physicalForm: v })} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
+                <DropdownSelect id={`output-form-${r.key}`} value={r.physicalForm} onValueChange={(v) => change(r.key, { physicalForm: v })} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
               </FormField>
             </div>
           </fieldset>
@@ -403,7 +403,7 @@ export function TransformSheet({ open, batch, onClose, onDone }: SheetProps) {
           Add another output
         </Button>
         <FormField label="Where it was processed" htmlFor="transform-site">
-          <NativeSelect id="transform-site" value={processLocationId} onValueChange={setProcessLocationId} options={sites} placeholder="Not recorded" />
+          <DropdownSelect id="transform-site" value={processLocationId} onValueChange={setProcessLocationId} options={sites} placeholder="Not recorded" />
         </FormField>
         <CommonFields prefix="transform" reason={reason} setReason={setReason} occurredAt={occurredAt} setOccurredAt={setOccurredAt} />
       </form>

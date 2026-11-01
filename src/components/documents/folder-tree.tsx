@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ChevronRight, Folder, FolderOpen, Inbox, Layers } from 'lucide-react';
-import { NativeSelect, Skeleton } from '@/components/ui';
+import { DropdownSelect, Skeleton } from '@/components/ui';
 import { cn } from '@/utils/helper';
 import { flattenFolders, type FolderNode, type FolderTree as Tree } from '@/lib/vault';
 
@@ -73,7 +73,7 @@ export function FolderTree({ tree, loading, value, onChange }: { tree?: Tree; lo
   return (
     <>
       <div className="md:hidden">
-        <NativeSelect
+        <DropdownSelect
           aria-label="Folder"
           value={value}
           onValueChange={onChange}

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, FormField, Input, NativeSelect, SideSheet, Textarea, useConfirm } from '@/components/ui';
+import { Alert, Button, FormField, Input, DropdownSelect, SideSheet, Textarea, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { flattenFolders, type FolderNode } from '@/lib/vault';
@@ -106,7 +106,7 @@ export function FolderFormSheet({ form, onClose }: { form: FolderForm; onClose: 
           <Input id="folder-name" value={name} onChange={(e) => setName(e.target.value)} error={!!error} maxLength={255} autoComplete="off" />
         </FormField>
         <FormField label="Inside" htmlFor="folder-parent">
-          <NativeSelect id="folder-parent" value={parentId} onValueChange={setParentId} options={options} placeholder="Top level" />
+          <DropdownSelect id="folder-parent" value={parentId} onValueChange={setParentId} options={options} placeholder="Top level" />
         </FormField>
         <FormField label="Description" htmlFor="folder-description">
           <Textarea id="folder-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} maxLength={2000} />

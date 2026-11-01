@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, FormField, Input, NativeSelect, StatusBadge, useConfirm } from '@/components/ui';
+import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, FormField, Input, DropdownSelect, StatusBadge, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDate } from '@/lib/format';
@@ -183,7 +183,7 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
         ) : (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <FormField label="Access" htmlFor="file-access-mode" className="flex-1">
-              <NativeSelect id="file-access-mode" value={mode} onValueChange={setMode} options={OWNER_ACCESS_MODES.map((m) => ({ value: m, label: label(m) }))} />
+              <DropdownSelect id="file-access-mode" value={mode} onValueChange={setMode} options={OWNER_ACCESS_MODES.map((m) => ({ value: m, label: label(m) }))} />
             </FormField>
             <Button variant="outlined" onClick={saveMode} disabled={mode === file.accessMode} loading={updateState.isLoading} className="h-11">
               Save
@@ -193,7 +193,7 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
         {mode === 'POLICY_CONTROLLED' && file.accessMode === 'POLICY_CONTROLLED' && (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <FormField label="Visibility rule" htmlFor="file-policy" className="flex-1" help={effective ? `In force now: ${effective.name}` : 'None yet: only your company can open it'}>
-              <NativeSelect
+              <DropdownSelect
                 id="file-policy"
                 value={policyId}
                 onValueChange={setPolicyId}
@@ -242,7 +242,7 @@ export function FileAccessPanel({ file }: { file: VaultFile }) {
           <form onSubmit={addGrant} noValidate aria-label="Give access" className="flex flex-col gap-3 rounded-xl border border-hairline p-4">
             {errors.form && <Alert severity="error">{errors.form}</Alert>}
             <FormField label="To" htmlFor="grant-type">
-              <NativeSelect
+              <DropdownSelect
                 id="grant-type"
                 value={granteeType}
                 onValueChange={(v) => {

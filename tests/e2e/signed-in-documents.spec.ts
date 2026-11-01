@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { quietLogins } from './quiet-login';
 import { test, expect, type Page } from '@playwright/test';
+import { pick } from './pick';
 
 /*
  * Step 2.3 documents vault with a real buyer account against the local backend (desktop only).
@@ -68,10 +69,10 @@ test('a folder, then a PDF uploaded into it with progress and a SHA-256 check', 
 
   await page.getByRole('button', { name: 'Upload', exact: true }).first().click(); // the header and the empty state both offer it
   const sheet = page.getByRole('dialog').filter({ hasText: 'Upload documents' });
-  await expect(sheet.getByLabel('Folder')).toHaveValue(/.+/); // the open folder is preselected
+  await expect(sheet.getByLabel('Folder')).toHaveText(/.+/); // the open folder is preselected
   await page.getByLabel('Files to upload').setInputFiles({ name: 'assay-lot-12.pdf', mimeType: 'application/pdf', buffer: PDF });
-  await expect(sheet.getByLabel('Kind of document: assay-lot-12.pdf')).toHaveValue('DOCUMENT');
-  await sheet.getByLabel('Kind of document: assay-lot-12.pdf').selectOption('REPORT');
+  await expect(sheet.getByLabel('Kind of document: assay-lot-12.pdf')).toHaveText('Document');
+  await pick(sheet.getByLabel('Kind of document: assay-lot-12.pdf'), 'REPORT');
   await shot('upload');
   await sheet.getByRole('button', { name: 'Upload 1 file' }).click();
   await confirmIn('Upload 1 file?', 'Upload');
@@ -92,7 +93,7 @@ test('details: preview is logged; a share link is shown once, then revoked', asy
 
   await sheet.getByRole('tab', { name: /Share links/ }).click();
   await sheet.getByRole('button', { name: 'New share link' }).click();
-  await sheet.getByLabel('Who can open it').selectOption('AUTHENTICATED_LINK');
+  await pick(sheet.getByLabel('Who can open it'), 'AUTHENTICATED_LINK');
   await sheet.getByRole('button', { name: 'Create link' }).click();
   await confirmIn('Share assay-lot-12.pdf?', 'Create link');
   const shown = page.getByRole('dialog').filter({ hasText: 'Copy the link now' });
@@ -125,7 +126,7 @@ test('details: preview is logged; a share link is shown once, then revoked', asy
 test('who can see it: email and ID are offered, trade participants are not; email sends a link', async () => {
   const sheet = page.getByRole('dialog').filter({ has: page.getByRole('tablist', { name: 'File' }) });
   await sheet.getByRole('tab', { name: 'Who can see it' }).click();
-  await expect(sheet.getByLabel('Access', { exact: true })).toHaveValue('PRIVATE');
+  await expect(sheet.getByLabel('Access', { exact: true })).toHaveText(/.+/);
   await sheet.getByRole('button', { name: 'Give access' }).click();
   const form = sheet.getByRole('form', { name: 'Give access' });
   expect(await form.getByLabel('To').locator('option').allTextContents()).toEqual(['An email address', 'A company', 'A person']);
@@ -154,7 +155,7 @@ test('who can see it: email and ID are offered, trade participants are not; emai
   // a company by ID is still there
   await sheet.getByRole('tab', { name: 'Who can see it' }).click();
   await sheet.getByRole('button', { name: 'Give access' }).click();
-  await form.getByLabel('To').selectOption('ORGANIZATION');
+  await pick(form.getByLabel('To'), 'ORGANIZATION');
   await form.getByRole('button', { name: 'Give access' }).click();
   await expect(form.getByText('Paste the full ID')).toBeVisible();
   await shot('access');
@@ -167,8 +168,8 @@ test('company evidence: attach the file; it can\'t be deleted while attached; re
   const sheet = page.getByRole('dialog');
   await sheet.getByRole('button', { name: 'Attach', exact: true }).click();
   await expect(sheet.getByText('Choose a file from your documents')).toBeVisible();
-  await sheet.getByLabel('File').selectOption({ label: 'assay-lot-12.pdf' });
-  await sheet.getByLabel('What it proves').selectOption('ASSAY');
+  await pick(sheet.getByLabel('File'), { label: 'assay-lot-12.pdf' });
+  await pick(sheet.getByLabel('What it proves'), 'ASSAY');
   await sheet.getByRole('button', { name: 'Attach', exact: true }).click();
   await confirmIn('Attach assay-lot-12.pdf?', 'Attach');
   const list = page.getByRole('list', { name: 'Company evidence' });

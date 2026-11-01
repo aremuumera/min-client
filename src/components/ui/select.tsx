@@ -54,6 +54,11 @@ export interface SelectProps {
   onOpen?: () => void;
   /** Callback when select closes */
   onClose?: () => void;
+  /** The trigger's id, so a label can point at it */
+  id?: string;
+  'aria-label'?: string;
+  'aria-invalid'?: boolean;
+  'aria-describedby'?: string;
 }
 
 const sizeClasses = {
@@ -81,6 +86,10 @@ function Select({
   open: controlledOpen,
   onOpen,
   onClose,
+  id,
+  'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
 }: SelectProps) {
   const [internalIsOpen, setInternalIsOpen] = React.useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalIsOpen;
@@ -205,7 +214,14 @@ function Select({
 
       {/* Trigger */}
       <button
+        id={id}
         type="button"
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={ariaLabel}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
         data-select-trigger="true"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
@@ -244,6 +260,7 @@ function Select({
         <Portal>
           <ul
             ref={listRef}
+            role="listbox"
             data-select-list="true"
             style={{
               position: 'fixed',
@@ -266,6 +283,10 @@ function Select({
               return (
                 <li
                   key={option.value || index}
+                  role="option"
+                  aria-selected={option.value === value}
+                  aria-disabled={option.disabled || undefined}
+                  data-value={option.value}
                   onMouseDown={(e) => {
                     // Use onMouseDown to prevent blur from happening before click
                     e.preventDefault();

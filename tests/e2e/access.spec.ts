@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { pick } from './pick';
 
 /* The team-member sheet (step 2.1 B1), as the owner and as a limited member, at every size */
 async function check(page: Page, name: string, project: string) {
@@ -15,9 +16,9 @@ test('owner invites: all 16 keys, role presets', async ({ page }, info) => {
   await page.getByRole('button', { name: 'Invite' }).click();
   const sheet = page.getByRole('dialog');
   await expect(sheet.getByText('3 of 16')).toBeVisible(); // marketer preset
-  await sheet.getByLabel('Team role').selectOption('admin');
+  await pick(sheet.getByLabel('Team role'), 'admin');
   await expect(sheet.getByText('16 of 16')).toBeVisible();
-  await sheet.getByLabel('Team role').selectOption('customer_care');
+  await pick(sheet.getByLabel('Team role'), 'customer_care');
   await expect(sheet.getByText('2 of 16')).toBeVisible();
   await expect(sheet.getByLabel(/ESG & carbon/)).toBeEnabled();
   await check(page, 'owner-invite', info.project.name);

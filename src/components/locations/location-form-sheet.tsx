@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Country, State } from 'country-state-city';
 import { toast } from 'sonner';
-import { Alert, Button, FormField, Input, MapPicker, NativeSelect, SideSheet, Textarea, useConfirm } from '@/components/ui';
+import { Alert, Button, FormField, Input, MapPicker, DropdownSelect, SideSheet, Textarea, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { CODE_PATTERN, LOCATION_TYPES, locationLabel, locationOptions, outlinePoints, outlineToBoundary, positionErrors, type Location, type LngLat } from '@/lib/locations';
@@ -147,7 +147,7 @@ export function LocationFormSheet({ open, location, onClose, onSaved, ownerField
             <Input id="site-name" value={name} onChange={(e) => setName(e.target.value)} error={!!errors.name} maxLength={255} autoComplete="off" placeholder="e.g. Jos tin mine, pit 3" />
           </FormField>
           <FormField label="Kind of site" htmlFor="site-type" required error={errors.locationType}>
-            <NativeSelect id="site-type" value={type} onValueChange={setType} options={locationOptions(LOCATION_TYPES)} placeholder="Choose…" error={!!errors.locationType} />
+            <DropdownSelect id="site-type" value={type} onValueChange={setType} options={locationOptions(LOCATION_TYPES)} placeholder="Choose…" error={!!errors.locationType} />
           </FormField>
         </div>
         <FormField label="Code" htmlFor="site-code" help={location ? 'Fixed once created' : 'Empty: MINMEG makes one. It can\'t change later.'} error={errors.code}>
@@ -155,7 +155,7 @@ export function LocationFormSheet({ open, location, onClose, onSaved, ownerField
         </FormField>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Country" htmlFor="site-country" required error={errors.countryCode}>
-            <NativeSelect
+            <DropdownSelect
               id="site-country"
               value={country}
               onValueChange={(v) => {
@@ -166,7 +166,7 @@ export function LocationFormSheet({ open, location, onClose, onSaved, ownerField
             />
           </FormField>
           <FormField label="State or region" htmlFor="site-state" error={errors.stateRegion}>
-            <NativeSelect id="site-state" value={state} onValueChange={setState} options={stateOptions} placeholder="Not set" />
+            <DropdownSelect id="site-state" value={state} onValueChange={setState} options={stateOptions} placeholder="Not set" />
           </FormField>
           <FormField label="City or town" htmlFor="site-city" error={errors.city}>
             <Input id="site-city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={128} />

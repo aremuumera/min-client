@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Copy, Link2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, FormField, Input, Modal, ModalBody, ModalFooter, ModalHeader, NativeSelect, StatusBadge, useConfirm } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, FormField, Input, Modal, ModalBody, ModalFooter, ModalHeader, DropdownSelect, StatusBadge, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
@@ -126,7 +126,7 @@ export function ShareLinksPanel({ fileId, fileName }: { fileId: string; fileName
         <form onSubmit={submit} noValidate className="flex flex-col gap-3 rounded-xl border border-hairline p-4" aria-label="New share link">
           {formError && <Alert severity="error">{formError}</Alert>}
           <FormField label="Who can open it" htmlFor="share-scope">
-            <NativeSelect id="share-scope" value={scope} onValueChange={(v) => setScope(v as ShareScope)} options={SHARE_SCOPES.map((s) => ({ value: s, label: label(s) }))} />
+            <DropdownSelect id="share-scope" value={scope} onValueChange={(v) => setScope(v as ShareScope)} options={SHARE_SCOPES.map((s) => ({ value: s, label: label(s) }))} />
           </FormField>
           {scope === 'SPECIFIC_EMAIL' && (
             <FormField label="Email address" htmlFor="share-email" required help="They get a 6-digit code by email each time they open it" error={errors.targetEmail}>
@@ -141,7 +141,7 @@ export function ShareLinksPanel({ fileId, fileName }: { fileId: string; fileName
           {isPublic && <Alert severity="warning">Anyone who gets this link can open the file, without signing in. Prefer a link for one email address when you can.</Alert>}
           <div className="grid gap-3 md:grid-cols-2">
             <FormField label="They can" htmlFor="share-permission">
-              <NativeSelect id="share-permission" value={permission} onValueChange={(v) => setPermission(v as SharePermission)} options={[{ value: 'VIEW', label: label('VIEW') }, { value: 'DOWNLOAD', label: label('DOWNLOAD') }]} />
+              <DropdownSelect id="share-permission" value={permission} onValueChange={(v) => setPermission(v as SharePermission)} options={[{ value: 'VIEW', label: label('VIEW') }, { value: 'DOWNLOAD', label: label('DOWNLOAD') }]} />
             </FormField>
             <FormField label="Most opens" htmlFor="share-uses" help="Empty: no limit" error={errors.maxUses}>
               <Input id="share-uses" type="number" inputMode="numeric" min={1} max={1000} value={maxUses} onChange={(e) => setMaxUses(e.target.value)} error={!!errors.maxUses} />

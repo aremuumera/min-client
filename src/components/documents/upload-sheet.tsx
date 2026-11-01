@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { CheckCircle2, FileUp, RotateCcw, Trash2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, FormField, IconButton, NativeSelect, SideSheet, useConfirm } from '@/components/ui';
+import { Button, FormField, IconButton, DropdownSelect, SideSheet, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { newIdempotencyKey } from '@/lib/api/idempotency';
 import { ACCEPTED_FILE_TYPES, FILE_CLASSES, fileClassFor, flattenFolders, formatBytes, label, MAX_FILE_BYTES, sha256Hex, type FileClass } from '@/lib/vault';
@@ -129,7 +129,7 @@ export function UploadSheet({ open, folderId, onClose }: { open: boolean; folder
     >
       <div className="flex flex-col gap-4">
         <FormField label="Folder" htmlFor="upload-folder">
-          <NativeSelect id="upload-folder" value={target} onValueChange={setTarget} options={folders} placeholder="Top level (no folder)" disabled={busy} />
+          <DropdownSelect id="upload-folder" value={target} onValueChange={setTarget} options={folders} placeholder="Top level (no folder)" disabled={busy} />
         </FormField>
 
         <button
@@ -179,7 +179,7 @@ export function UploadSheet({ open, folderId, onClose }: { open: boolean; folder
                   )}
                 </div>
                 {i.state === 'ready' && (
-                  <NativeSelect aria-label={`Kind of document: ${i.file.name}`} value={i.fileClass} onValueChange={(v) => patch(i.key, { fileClass: v as FileClass })} options={CLASS_OPTIONS} />
+                  <DropdownSelect aria-label={`Kind of document: ${i.file.name}`} value={i.fileClass} onValueChange={(v) => patch(i.key, { fileClass: v as FileClass })} options={CLASS_OPTIONS} />
                 )}
                 {i.state === 'uploading' && (
                   <div role="progressbar" aria-label={`Uploading ${i.file.name}`} aria-valuenow={Math.round(i.progress * 100)} aria-valuemin={0} aria-valuemax={100} className="h-2 overflow-hidden rounded-full bg-surface-soft">

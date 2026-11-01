@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, FormField, Input, NativeSelect, QuantityInput, SideSheet, Textarea, useConfirm } from '@/components/ui';
+import { Alert, Button, FormField, Input, DropdownSelect, QuantityInput, SideSheet, Textarea, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { ADJUSTMENT_TYPES, MEASUREMENT_SOURCES, batchLabel, batchOptions, formatQuantity, isPositive, type Batch } from '@/lib/batches';
@@ -98,11 +98,11 @@ export function AdjustSheet({ open, batch, onClose }: SheetProps) {
         {formError && <Alert severity="error">{formError}</Alert>}
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="What happened" htmlFor="adjust-type">
-            <NativeSelect id="adjust-type" value={entryType} onValueChange={setEntryType} options={batchOptions(ADJUSTMENT_TYPES)} />
+            <DropdownSelect id="adjust-type" value={entryType} onValueChange={setEntryType} options={batchOptions(ADJUSTMENT_TYPES)} />
           </FormField>
           {entryType === 'ADJUSTMENT' && (
             <FormField label="Direction" htmlFor="adjust-direction">
-              <NativeSelect
+              <DropdownSelect
                 id="adjust-direction"
                 value={direction}
                 onValueChange={setDirection}
@@ -121,7 +121,7 @@ export function AdjustSheet({ open, batch, onClose }: SheetProps) {
           <Textarea id="adjust-reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={1000} placeholder="e.g. Spillage while loading at the yard" />
         </FormField>
         <FormField label="Supporting document" htmlFor="adjust-evidence" help="Attach it to the batch first">
-          <NativeSelect id="adjust-evidence" value={evidence} onValueChange={setEvidence} options={(attachments.data?.data ?? []).map((a) => ({ value: a.id, label: a.title ?? a.file?.displayName ?? batchLabel(a.attachmentType) }))} placeholder="None" />
+          <DropdownSelect id="adjust-evidence" value={evidence} onValueChange={setEvidence} options={(attachments.data?.data ?? []).map((a) => ({ value: a.id, label: a.title ?? a.file?.displayName ?? batchLabel(a.attachmentType) }))} placeholder="None" />
         </FormField>
         <FormField label="When it happened" htmlFor="adjust-when" help="Empty: now">
           <Input id="adjust-when" type="datetime-local" value={occurredAt} max={nowForInput()} onChange={(e) => setOccurredAt(e.target.value)} />
@@ -209,11 +209,11 @@ export function ReconcileSheet({ open, batch, onClose }: SheetProps) {
             <QuantityInput id="reconcile-quantity" value={measured} onChange={(v) => setMeasured(v)} />
           </FormField>
           <FormField label="Unit" htmlFor="reconcile-unit" error={errors.unitId} help="Converted if it differs from the batch's unit">
-            <NativeSelect id="reconcile-unit" value={unitId} onValueChange={setUnitId} options={(units.data?.data ?? []).map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} />
+            <DropdownSelect id="reconcile-unit" value={unitId} onValueChange={setUnitId} options={(units.data?.data ?? []).map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} />
           </FormField>
         </div>
         <FormField label="How it was measured" htmlFor="reconcile-source">
-          <NativeSelect id="reconcile-source" value={source} onValueChange={setSource} options={batchOptions(MEASUREMENT_SOURCES)} />
+          <DropdownSelect id="reconcile-source" value={source} onValueChange={setSource} options={batchOptions(MEASUREMENT_SOURCES)} />
         </FormField>
         <FormField label="Note" htmlFor="reconcile-note">
           <Textarea id="reconcile-note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={1000} />

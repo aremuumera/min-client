@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Archive, FolderPlus, Pencil, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, DataTable, FilterBar, NativeSelect, PageHeader, PaginationBar, StatusBadge, useConfirm } from '@/components/ui';
+import { Button, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge, useConfirm } from '@/components/ui';
 import { FileDetailSheet } from '@/components/documents/file-detail-sheet';
 import { FolderFormSheet, type FolderForm } from '@/components/documents/folder-form-sheet';
 import { FolderTree, type FolderChoice } from '@/components/documents/folder-tree';
@@ -122,8 +122,8 @@ function DocumentsPage() {
               setStatus('ACTIVE');
             }}
           >
-            <NativeSelect aria-label="Kind of document" value={fileClass} onValueChange={setFileClass} options={FILE_CLASSES.map((c) => ({ value: c, label: label(c) }))} placeholder="All kinds" className="md:w-44" />
-            <NativeSelect aria-label="Status" value={status} onValueChange={setStatus} options={STATUS_FILTERS} className="md:w-40" />
+            <DropdownSelect aria-label="Kind of document" value={fileClass} onValueChange={setFileClass} options={FILE_CLASSES.map((c) => ({ value: c, label: label(c) }))} placeholder="All kinds" className="md:w-44" />
+            <DropdownSelect aria-label="Status" value={status} onValueChange={setStatus} options={STATUS_FILTERS} className="md:w-40" />
           </FilterBar>
 
           <DataTable<VaultFile>

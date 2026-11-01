@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Plus } from 'lucide-react';
 import { Country } from 'country-state-city';
 import { toast } from 'sonner';
-import { Button, ConfirmDialog, DataTable, FilterBar, NativeSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
+import { Button, ConfirmDialog, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { LocationDetailSheet, type LocationPermissions } from '@/components/locations/location-detail-sheet';
 import { LocationFormSheet } from '@/components/locations/location-form-sheet';
 import { toApiError } from '@/lib/api/errors';
@@ -86,8 +86,8 @@ function SitesPage() {
           setActive('');
         }}
       >
-        <NativeSelect aria-label="Kind of site" value={locationType} onValueChange={setLocationType} options={locationOptions(LOCATION_TYPES)} placeholder="All kinds" className="md:w-48" />
-        <NativeSelect aria-label="Status" value={active} onValueChange={setActive} options={ACTIVE_FILTERS} placeholder="All statuses" className="md:w-36" />
+        <DropdownSelect aria-label="Kind of site" value={locationType} onValueChange={setLocationType} options={locationOptions(LOCATION_TYPES)} placeholder="All kinds" className="md:w-48" />
+        <DropdownSelect aria-label="Status" value={active} onValueChange={setActive} options={ACTIVE_FILTERS} placeholder="All statuses" className="md:w-36" />
       </FilterBar>
       <DataTable<Location>
         caption="Sites"
