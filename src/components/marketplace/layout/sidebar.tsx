@@ -12,7 +12,6 @@ import { useAlert } from '@/providers/alert-provider';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { links, real, Category, SubCategory, countries } from '@/lib/marketplace-data';
 import { ChevronDown, ChevronUp, Search, X, Star } from 'lucide-react';
-import { IoSearch } from 'react-icons/io5';
 
 // Assets
 const ca = '/assets/flag-ca.svg'; // Check assets
