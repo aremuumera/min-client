@@ -41,6 +41,7 @@ export const supplierProductApi = createApi({
           measure,
           quantity,
           review,
+          materialId,
         } = params;
         const queryParams = new URLSearchParams();
         if (limit)
@@ -67,6 +68,7 @@ export const supplierProductApi = createApi({
         if (measure) queryParams.append("measure", measure);
         if (quantity) queryParams.append("minQuantity", quantity);
         if (review) queryParams.append("review", review);
+        if (materialId) queryParams.append("materialId", materialId);
 
         return `/products/all?${queryParams.toString()}`;
       },

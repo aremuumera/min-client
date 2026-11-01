@@ -49,8 +49,15 @@ export interface AvailabilityRow {
   reason?: string | null;
 }
 
+export type ListingKind = 'MINERAL' | 'NON_MINERAL';
+
 export interface Listing {
   id: string;
+  listingKind: ListingKind;
+  categoryId: string | null;
+  product_main_category: string;
+  product_category: string;
+  product_sub_category: string | null;
   listingCode: string | null;
   supplierId: string;
   status: ListingStatus;
@@ -159,3 +166,66 @@ export function formatMoney(amount: number | string | null | undefined, currency
 const STATUS_WORDS: Record<string, string> = { draft: 'Draft', published: 'Published', paused: 'Paused', closed: 'Closed', archived: 'Archived', unavailable: 'Unavailable' };
 export const listingStatusLabel = (status: string) => STATUS_WORDS[status] ?? status;
 export const listingStatusTone = (status: string): 'success' | 'neutral' | 'warning' | 'error' => (status === 'published' ? 'success' : status === 'paused' || status === 'unavailable' ? 'warning' : 'neutral');
+
+export const isNonMineral = (l: Pick<Listing, 'listingKind'> | null | undefined) => l?.listingKind === 'NON_MINERAL';
+
+/** What a listing is filed under on the marketplace, most specific last */
+export const categoryPathOf = (l: Pick<Listing, 'product_main_category' | 'product_category' | 'product_sub_category'>) => [...new Set([l.product_main_category, l.product_category, l.product_sub_category].filter(Boolean) as string[])];
+
+export interface CategoryNode {
+  id: string;
+  code: string | null;
+  name: string;
+  active?: boolean;
+  children: CategoryNode[];
+}
+
+/** Everything outside Minerals: tools, protective equipment and services (the backend checks this too) */
+export const nonMineralRoots = (tree: readonly CategoryNode[]) => tree.filter((n) => n.code !== 'MINERALS');
+export const mineralRoot = (tree: readonly CategoryNode[]) => tree.find((n) => n.code === 'MINERALS') ?? null;
+
+/** The ids from a root down to this category, or [] */
+export function categoryChain(tree: readonly CategoryNode[], id: string | null | undefined): string[] {
+  if (!id) return [];
+  for (const node of tree) {
+    if (node.id === id) return [id];
+    const below = categoryChain(node.children, id);
+    if (below.length) return [node.id, ...below];
+  }
+  return [];
+}
+
+/** Lowest-level categories under a node, with their path, for a searchable list */
+export function leafCategories(node: CategoryNode, path: string[] = []): { value: string; label: string }[] {
+  const here = [...path, node.name];
+  return node.children.length ? node.children.flatMap((c) => leafCategories(c, here)) : [{ value: node.id, label: here.join(' › ') }];
+}
+
+/** Units that make sense for things sold by count, size or time; the master list also holds temperature, emissions and so on */
+export const NON_MINERAL_UNIT_TYPES = ['COUNT', 'MASS', 'LENGTH', 'AREA', 'VOLUME', 'TIME'];
+
+export type MaterialRequestStatus = 'PENDING' | 'APPROVED' | 'REFUSED';
+export interface MaterialRequest {
+  id: string;
+  requesterOrganizationId: string;
+  requestedName: string;
+  suggestedCategoryId: string | null;
+  suggestedCategory?: { category_uuid: string; name: string } | null;
+  note: string | null;
+  status: MaterialRequestStatus;
+  materialId: string | null;
+  material?: { id: string; code: string; name: string } | null;
+  reviewedAt: string | null;
+  reviewReason: string | null;
+  createdAt: string;
+}
+export const materialRequestLabel = (s: MaterialRequestStatus) => ({ PENDING: 'Waiting for MINMEG', APPROVED: 'Added', REFUSED: 'Refused' })[s];
+export const materialRequestTone = (s: MaterialRequestStatus) => ({ PENDING: 'warning', APPROVED: 'success', REFUSED: 'error' } as const)[s];
+
+/** Editor text with no words in it counts as empty */
+export const isBlankText = (html: string) => !html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
+export const withCommas = (value: string) => {
+  const [whole, ...rest] = value.split('.');
+  return [whole.replace(/\B(?=(\d{3})+(?!\d))/g, ','), ...rest].join('.');
+};

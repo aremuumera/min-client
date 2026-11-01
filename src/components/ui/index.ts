@@ -190,6 +190,10 @@ export { QuantityInput, QUANTITY_PATTERN, type QuantityInputProps } from "./quan
 export { DataTable, type DataTableColumn, type DataTableProps } from "./data-table";
 export { FilterBar, type FilterBarProps } from "./filter-bar";
 export { DropdownSelect, type DropdownSelectProps, type DropdownSelectOption } from "./dropdown-select";
+export { SelectWithCustom, type SelectWithCustomProps } from "./select-with-custom";
+export { FieldInfo } from "./field-info";
+export { FileDropZone, type FileDropZoneProps } from "./file-drop-zone";
+export { RichText } from "./rich-text";
 export { Thumbnail, type ThumbnailProps } from "./thumbnail";
 export { useConfirm, type ConfirmOptions } from "./use-confirm";
 export { PaginationBar, PAGE_SIZES, type PaginationBarProps } from "./pagination-bar";

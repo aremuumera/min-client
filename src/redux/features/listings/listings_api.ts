@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { AvailabilityRow, Listing, ListingAction, ListingBatchRow } from '@/lib/listings';
+import type { AvailabilityRow, CategoryNode, Listing, ListingAction, ListingBatchRow, MaterialRequest } from '@/lib/listings';
 import { listParams, type NamedRecord, type Paged } from '@/lib/batches';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -10,10 +10,15 @@ type Query = Record<string, string | number | boolean | null | undefined>;
 type Single<T> = { data: T; message?: string };
 const CHANGES = ['Listings', 'ListingBatches'] as const;
 
+export interface MarketplaceMaterial extends NamedRecord {
+  categoryId: string;
+  categoryPath?: string[];
+}
+
 export const listingsApi = createApi({
   reducerPath: 'listingsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Listings', 'ListingBatches'],
+  tagTypes: ['Listings', 'ListingBatches', 'MaterialRequests'],
   endpoints: (builder) => ({
     getListings: builder.query<Paged<Listing>, Query>({ query: (q) => `/listings${listParams(q)}`, providesTags: ['Listings'] }),
     getListing: builder.query<Single<Listing>, string>({ query: (id) => `/listings/${id}`, providesTags: ['Listings'] }),
@@ -56,12 +61,27 @@ export const listingsApi = createApi({
       query: ({ supplierId, id, kind, mediaId }) => ({ url: `/suppliers/${supplierId}/products/${id}/media/${kind}`, method: 'DELETE', body: { mediaUuid: mediaId } }),
       invalidatesTags: ['Listings'],
     }),
-    getMarketplaceMaterials: builder.query<Paged<NamedRecord>, void>({ query: () => '/materials?marketplaceEnabled=true&active=true&limit=100' }),
+    getMarketplaceMaterials: builder.query<Paged<MarketplaceMaterial>, void>({ query: () => '/materials?marketplaceEnabled=true&active=true&limit=100', providesTags: ['MaterialRequests'] }),
+    /** How the material is measured, so the form offers only units that fit it */
+    getMaterialMeasure: builder.query<Single<{ effectiveMaterialType: { measurementTypeId: string } | null }>, string>({ query: (id) => `/materials/${id}` }),
+    /** No sign-in needed: names and categories for the marketplace filter */
+    getPublicMaterials: builder.query<Single<{ id: string; name: string; categoryPath: string[] }[]>, void>({ query: () => '/marketplace/public/materials' }),
+    getCategoryTree: builder.query<Single<CategoryNode[]>, void>({ query: () => '/categories/tree?active=true' }),
+    getMaterialRequests: builder.query<Paged<MaterialRequest>, Query>({ query: (q) => `/material-requests${listParams(q)}`, providesTags: ['MaterialRequests'] }),
+    createMaterialRequest: builder.mutation<Single<MaterialRequest>, { name: string; suggestedCategoryId?: string | null; note?: string | null; idempotencyKey: string }>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/material-requests', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['MaterialRequests'],
+    }),
   }),
 });
 
 export const {
   useGetListingsQuery,
+  useGetPublicMaterialsQuery,
+  useGetMaterialMeasureQuery,
+  useGetCategoryTreeQuery,
+  useGetMaterialRequestsQuery,
+  useCreateMaterialRequestMutation,
   useGetListingQuery,
   useCreateListingMutation,
   useUpdateListingMutation,

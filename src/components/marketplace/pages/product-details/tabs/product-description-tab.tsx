@@ -5,6 +5,7 @@ import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import LoginModal from '@/utils/login-modal';
 import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
 import { useAlert } from '@/providers';
+import { RichText } from '@/components/ui';
 
 const ProductDescriptionTab = ({ products }: { products: any }) => {
   const { productDetailDescription, product_name, supplierId, id, supplierProfile, supplier } = products || {};
@@ -49,7 +50,7 @@ const ProductDescriptionTab = ({ products }: { products: any }) => {
 
                   {section.description && (
                     <div className="ml-0 md:ml-4">
-                      <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-none">{section.description}</p>
+                      <RichText text={section.description} className="text-sm md:text-base text-gray-600 leading-relaxed max-w-none" />
                     </div>
                   )}
                 </div>

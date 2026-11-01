@@ -40,6 +40,8 @@ export interface UnitChoice {
   code: string;
   symbol: string;
   name?: string;
+  measurementTypeId?: string;
+  measurementType?: { id: string; code: string; name?: string } | null;
 }
 
 export interface Batch {

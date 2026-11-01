@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { quietLogins } from './quiet-login';
+import { pick } from './pick';
 import { test, expect, type Page } from '@playwright/test';
 
 /*
@@ -67,15 +68,19 @@ test('step 1: material and stock are checked; new stock asks for what a batch ne
   await expect(page.getByRole('heading', { name: 'New listing', level: 1 })).toBeVisible({ timeout: 30_000 });
   await next();
   await expect(page.getByText('Choose the material', { exact: true })).toBeVisible();
-  await page.locator('#listing-material').selectOption({ index: 1 });
-  await page.locator('#listing-unit').selectOption({ label: 'Metric tonne (t)' });
+  await pick(page.locator('#listing-material'), { index: 1 });
+  await expect(page.getByTestId('listing-categories')).toContainText('Minerals');
+  await pick(page.locator('#listing-unit'), { label: 'Metric tonne (t)' });
+  await page.getByRole('button', { name: 'About Material' }).click();
+  await expect(page.getByRole('note', { name: 'About Material' })).toContainText('exact thing you are selling');
+  await page.keyboard.press('Escape');
   await next();
   await expect(page.getByText(/Tick at least one batch/)).toBeVisible();
   await page.getByText('Add new stock', { exact: true }).click();
   await next();
   await expect(page.getByText('Enter the quantity you physically have')).toBeVisible();
   await page.getByLabel('Quantity (t)').fill('100');
-  await page.getByLabel('Where it came from').selectOption('MINED');
+  await pick(page.getByLabel('Where it came from'), 'MINED');
   await page.getByLabel('Purity (%)').fill('98.5');
   await page.getByLabel('Batch code').fill(batchCode);
   await shot('step-stock');
@@ -88,15 +93,23 @@ test('steps 2 and 3 are checked; publishing needs 5 pictures, a draft does not',
   await page.locator('#listing-name').fill(name);
   await page.getByLabel('Short description').fill('E2E test listing, tin ore from Jos');
   await page.getByLabel('Color').fill('Dark grey');
-  await page.getByRole('button', { name: 'Add a section' }).click();
+  await expect(page.getByText('(Optional)').first()).toBeVisible();
+  await pick(page.locator('#listing-packaging'), { label: 'Custom' });
+  await page.getByLabel('Your packaging').fill('25 kg woven bags');
+  await pick(page.locator('#listing-sampling'), 'SGS');
   await page.getByLabel('Heading').fill('Assay');
-  await page.getByLabel('Text', { exact: true }).fill('Sn 72%');
+  await page.getByTestId('section-text-0').locator('.tiptap').click();
+  await page.keyboard.type('Sn 72%');
+  await page.getByRole('button', { name: 'Preview', exact: true }).click();
+  await expect(page.getByRole('dialog').filter({ hasText: 'Preview description' }).getByText('Sn 72%')).toBeVisible();
+  await page.getByRole('dialog').filter({ hasText: 'Preview description' }).getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByLabel('Add pictures').setInputFiles(pictures(1));
   await next();
 
   await next();
   await expect(page.getByText('Enter a price with up to 2 decimals').first()).toBeVisible();
   await page.getByLabel(/^Price per t/).fill('1500.50');
+  await expect(page.getByLabel(/^Price per t/)).toHaveValue('1,500.50');
   await page.getByLabel(/^Minimum order/).fill('20');
   await page.getByLabel('Delivery period').fill('30 days');
   for (const label of ['Payment terms', 'Shipping terms']) {
@@ -113,6 +126,7 @@ test('steps 2 and 3 are checked; publishing needs 5 pictures, a draft does not',
   await expect(page.getByText(/Add at least 5 pictures to publish. You have 1/)).toBeVisible();
   await shot('step-review');
 
+  await expect(page.getByText('25 kg woven bags')).toBeVisible();
   await page.getByRole('button', { name: 'Save as draft' }).click();
   await confirmIn(`Save ${name} as a draft?`, 'Save draft');
   await expect(page.getByRole('heading', { name: 'My listings', level: 1 })).toBeVisible({ timeout: 45_000 });
@@ -129,6 +143,11 @@ test('edit a draft to add pictures and publish; quantity follows the batch', asy
   await expect(page.getByRole('list', { name: 'Current pictures' }).getByRole('listitem')).toHaveCount(1);
   await page.getByLabel('Add pictures').setInputFiles(pictures(4));
   await next();
+  await next();
+  await page.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(page.getByText(/Choose where this is offered from to publish/).first()).toBeVisible();
+  await page.getByRole('button', { name: /3\. Price and terms/ }).click();
+  await pick(page.locator('#listing-site'), { index: 1 });
   await next();
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
   await confirmIn(`Publish ${name}?`, 'Publish');
@@ -169,6 +188,73 @@ test('stock: a batch can stop counting, and the batch says which listing it back
 
   await page.goto('/dashboard/supplier-list');
   await expect(page.getByRole('row').filter({ hasText: name }).getByText('60 t')).toBeVisible({ timeout: 30_000 });
+});
+
+test('a missing material can be requested, and shows as waiting', async () => {
+  await page.goto('/dashboard/supplier-list/create');
+  await expect(page.getByRole('heading', { name: 'New listing', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: /Can't find your material/ }).click();
+  const form = page.getByRole('dialog').filter({ hasText: 'Ask MINMEG to add a material' });
+  await form.getByRole('button', { name: 'Send request' }).click();
+  await expect(form.getByText('Enter the name of the material')).toBeVisible();
+  await form.getByLabel('Material name').fill(`E2E material ${stamp}`);
+  await form.getByLabel('Note for MINMEG').fill('E2E test request');
+  await form.getByRole('button', { name: 'Send request' }).click();
+  await confirmIn(`Ask MINMEG to add E2E material ${stamp}?`, 'Send request');
+  const requests = page.getByRole('list', { name: 'Your material requests' });
+  await expect(requests.getByText(`E2E material ${stamp}`)).toBeVisible({ timeout: 15_000 });
+  await expect(requests.getByText('Waiting for MINMEG').first()).toBeVisible();
+  await shot('material-request');
+});
+
+test('non-mineral: pick the categories and type the quantity; no batch, and the success screen links to it', async () => {
+  const toolName = `E2E tool ${stamp}`;
+  await page.goto('/dashboard/supplier-list/create');
+  await expect(page.getByRole('heading', { name: 'New listing', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await page.getByText('Something else', { exact: true }).click();
+  await next();
+  await expect(page.getByText('Choose the unit')).toBeVisible();
+  await pick(page.locator('#listing-category-0'), { label: 'Mining tools' });
+  await pick(page.locator('#listing-category-1'), { index: 1 });
+  while (await page.locator('#listing-category-2').isVisible() && (await page.locator('#listing-category-2').innerText()).includes('Choose one')) {
+    await pick(page.locator('#listing-category-2'), { index: 1 });
+  }
+  await pick(page.locator('#listing-unit'), { label: 'Piece (pc)' });
+  await page.locator('#listing-quantity').fill('4');
+  await next();
+  await page.locator('#listing-name').fill(toolName);
+  await page.getByLabel('Short description').fill('E2E test tool');
+  await page.getByLabel('Add pictures').setInputFiles(pictures(5));
+  await next();
+  await page.getByLabel(/^Price per pc/).fill('250000');
+  await page.getByLabel('Delivery period').fill('14 days');
+  for (const label of ['Payment terms', 'Shipping terms']) {
+    const field = page.locator('div').filter({ has: page.getByText(label, { exact: true }) }).last();
+    await field.getByRole('button').last().click();
+    await page.getByText(label === 'Payment terms' ? 'T/T - Telegraphic Transfer' : 'FOB - Free On Board', { exact: true }).click();
+    await page.getByRole('heading', { name: 'New listing', level: 1 }).click();
+  }
+  await pick(page.locator('#listing-site'), { index: 1 });
+  await next();
+  await expect(page.getByText('4 pc', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Publish', exact: true }).click();
+  await confirmIn(`Publish ${toolName}?`, 'Publish');
+  await expect(page.getByText(`${toolName} is live`)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole('button', { name: 'Copy link' })).toBeVisible();
+  await shot('non-mineral-live');
+
+  await page.goto('/dashboard/supplier-list');
+  const row = page.getByRole('row').filter({ hasText: toolName });
+  await expect(row.getByText('Not a mineral')).toBeVisible({ timeout: 30_000 });
+  await row.click();
+  const details = page.getByRole('dialog').filter({ hasText: toolName });
+  await expect(details.getByRole('tab', { name: 'Stock' })).toHaveCount(0);
+  await details.getByRole('region', { name: 'Actions' }).getByRole('button', { name: 'Close', exact: true }).click();
+  await confirmIn(`Close ${toolName}?`, 'Close');
+  await details.getByRole('button', { name: 'Archive' }).click({ timeout: 15_000 });
+  await confirmIn(`Archive ${toolName}?`, 'Archive');
+  await expect(details.getByRole('button', { name: 'Archive' })).toHaveCount(0, { timeout: 15_000 });
+  await details.getByRole('button', { name: 'Close', exact: true }).first().click();
 });
 
 test('status: pause, close frees the batches, relist, and archive keeps it as history', async () => {

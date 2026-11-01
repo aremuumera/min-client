@@ -11,16 +11,7 @@ import { MoqUnits } from '@/lib/marketplace-data';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 import { getErrorMessage } from '@/utils/helper';
-
-const PACKAGING_OPTIONS = [
-    { value: '50kg bags', label: '50kg Bags' },
-    { value: '1 ton bags', label: '1 Ton Bags' },
-    { value: 'Jumbo bags', label: 'Jumbo Bags (FIBC)' },
-    { value: 'Bulk', label: 'Bulk (Loose)' },
-    { value: 'Drums', label: 'Drums' },
-    { value: 'Containers', label: 'Containers' },
-    { value: 'Custom', label: 'Custom Packaging' },
-];
+import { PACKAGING_OPTIONS } from '@/lib/trade-terms';
 
 interface ProductInquiryModalProps {
     isOpen: boolean;

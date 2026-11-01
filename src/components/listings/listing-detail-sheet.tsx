@@ -3,11 +3,11 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, CopyableId, FormField, KeyValueList, NativeSelect, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, RichText, CopyableId, FormField, KeyValueList, DropdownSelect, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { formatQuantity } from '@/lib/batches';
 import { formatDateTime } from '@/lib/format';
-import { actionsFor, asList, canBackListing, formatMoney, listingStatusLabel, listingStatusTone, type Listing, type ListingAction, type ListingBatchRow } from '@/lib/listings';
+import { actionsFor, asList, canBackListing, categoryPathOf, formatMoney, isNonMineral, listingStatusLabel, listingStatusTone, type Listing, type ListingAction, type ListingBatchRow } from '@/lib/listings';
 import { useGetBatchesQuery } from '@/redux/features/batches/batches_api';
 import { useAddListingBatchMutation, useChangeListingStatusMutation, useGetListingAvailabilityQuery, useGetListingBatchesQuery, useGetListingQuery, useRemoveListingBatchMutation, useSetListingBatchStatusMutation } from '@/redux/features/listings/listings_api';
 
@@ -100,7 +100,7 @@ function StockPanel({ listing, can, ownerFilter }: { listing: Listing; can: List
         adding ? (
           <div className="flex flex-col gap-3 rounded-xl border border-hairline p-4">
             <FormField label="Batch to add" htmlFor="listing-add-batch" help={candidates.isSuccess && !usable.length ? 'No matching batch is free. Register or split one in Inventory.' : 'Same material and unit, listed whole'}>
-              <NativeSelect id="listing-add-batch" value={batchId} onValueChange={setBatchId} options={usable.map((b) => ({ value: b.id, label: `${b.batchCode} · ${formatQuantity(b.availableQuantity, b.unit?.symbol)}` }))} placeholder="Choose a batch" />
+              <DropdownSelect id="listing-add-batch" value={batchId} onValueChange={setBatchId} options={usable.map((b) => ({ value: b.id, label: `${b.batchCode} · ${formatQuantity(b.availableQuantity, b.unit?.symbol)}` }))} placeholder="Choose a batch" />
             </FormField>
             <div className="flex gap-2">
               <Button variant="outlined" color="secondary" onClick={() => setAdding(false)}>Cancel</Button>
@@ -168,6 +168,7 @@ export function ListingDetailSheet({
   React.useEffect(() => setTab('details'), [listingId]);
   if (!listingId) return null;
   const l = detail.data?.data;
+  const nonMineral = isNonMineral(l);
   const unit = l?.unit?.symbol ?? l?.measure ?? '';
   const words = action ? ACTION_WORDS[action] : null;
 
@@ -195,11 +196,12 @@ export function ListingDetailSheet({
         <Tabs value={tab} onChange={setTab}>
           <TabList className="mb-4 overflow-x-auto" aria-label="Listing">
             <Tab value="details" label="Details" />
-            <Tab value="stock" label="Stock" />
+            {!nonMineral && <Tab value="stock" label="Stock" />}
           </TabList>
           <TabPanel value="details">
             <div className="flex flex-col gap-5">
-              {l.status === 'draft' && !(l.batches ?? []).length && <Alert severity="info">Add stock to publish. {l.metadata?.statusNote ?? ''}</Alert>}
+              {l.status === 'draft' && !nonMineral && !(l.batches ?? []).length && <Alert severity="info">Add stock to publish. {l.metadata?.statusNote ?? ''}</Alert>}
+              {l.status === 'draft' && nonMineral && !l.quantity && <Alert severity="info">Enter the quantity available to publish. {l.metadata?.statusNote ?? ''}</Alert>}
               {l.images && l.images.length > 0 && (
                 <ul aria-label="Pictures" className="flex flex-wrap gap-2">
                   {l.images.map((m) => (
@@ -216,11 +218,15 @@ export function ListingDetailSheet({
                   { label: 'Listing ID', value: <CopyableId value={l.id} />, wide: true },
                   ...(ownerNode ? [{ label: 'Company', value: ownerNode(l), wide: true }] : []),
                   { label: 'Status', value: <StatusBadge tone={listingStatusTone(l.status)}>{listingStatusLabel(l.status)}</StatusBadge> },
+                  { label: 'Type', value: nonMineral ? 'Not a mineral' : 'Mineral' },
+                  { label: 'Buyers find it under', value: categoryPathOf(l).join(' › '), wide: true },
                   { label: 'Available to buyers', value: formatQuantity(l.availableQuantity, unit) },
                   { label: 'Minimum order', value: l.minimum_order_quantity ? formatQuantity(l.minimum_order_quantity, unit) : 'None' },
                   { label: 'Your price', value: formatMoney(l.real_price, l.unitCurrency) },
                   { label: 'Buyers pay', value: formatMoney(l.display_price, l.unitCurrency) },
-                  { label: 'Purity or grade', value: l.purity_grade },
+                  ...(nonMineral ? [] : [{ label: 'Purity or grade', value: l.purity_grade }]),
+                  { label: 'Packaging', value: l.packaging },
+                  { label: 'Sampling method', value: l.sampling_method },
                   { label: 'Payment terms', value: asList(l.selected_payments).join(', ') },
                   { label: 'Shipping terms', value: asList(l.selected_shipping).join(', ') },
                   { label: 'Delivery period', value: l.delivery_period },
@@ -229,6 +235,12 @@ export function ListingDetailSheet({
                 ]}
               />
               <p className="text-sm text-slate">{l.productHeaderDescription}</p>
+              {Array.isArray(l.productDetailDescription) && l.productDetailDescription.map((section, i) => (
+                <section key={i}>
+                  <h3 className="mb-1 text-sm font-semibold text-ink">{section.header}</h3>
+                  <RichText text={section.description} className="text-sm text-slate" />
+                </section>
+              ))}
               {extra?.(l)}
               {(can.edit || can.status) && (
                 <section aria-label="Actions" className="flex flex-wrap gap-2 border-t border-hairline pt-4">
@@ -242,9 +254,11 @@ export function ListingDetailSheet({
               )}
             </div>
           </TabPanel>
-          <TabPanel value="stock">
-            <StockPanel listing={l} can={can} ownerFilter={ownerFilter} />
-          </TabPanel>
+          {!nonMineral && (
+            <TabPanel value="stock">
+              <StockPanel listing={l} can={can} ownerFilter={ownerFilter} />
+            </TabPanel>
+          )}
         </Tabs>
       )}
       <ConfirmDialog

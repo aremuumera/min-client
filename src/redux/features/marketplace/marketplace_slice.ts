@@ -13,6 +13,7 @@ interface MarketplaceState {
         color: any;
         rfqsStatus: any;
         location: any;
+        materialId: any;
         measure: any;
         quantity: any;
     };
@@ -37,6 +38,7 @@ const initialState: MarketplaceState = {
         color: null,
         rfqsStatus: null,
         location: null,
+        materialId: null,
         measure: null,
         quantity: null,
     },

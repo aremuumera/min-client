@@ -3,6 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { resetFilters, setFilter, setSort } from '@/redux/features/marketplace/marketplace_slice';
+import { useGetPublicMaterialsQuery } from '@/redux/features/listings/listings_api';
+import { DropdownSelect } from '@/components/ui';
 import { useDispatch, useSelector } from 'react-redux';
 import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
@@ -68,6 +70,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
 
   const mdUp = useMediaQuery('up', 'md');
   const { showAlert } = useAlert();
+  const publicMaterials = useGetPublicMaterialsQuery();
 
   const { limit, page, category, mainCategory, subCategory, filters, search, sort, supplierId, profileId } =
     useSelector((state: any) => state.marketplace);
@@ -460,6 +463,21 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
                 </label>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Material Filter */}
+        {!rfqCheck && (
+          <div className="mt-6">
+            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Material</h2>
+            <DropdownSelect
+              aria-label="Material"
+              searchable
+              value={filters.materialId ?? ''}
+              onValueChange={(value) => dispatch(setFilter({ filterType: 'materialId', value: value || null }))}
+              options={(publicMaterials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))}
+              placeholder="All materials"
+            />
           </div>
         )}
 
