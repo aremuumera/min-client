@@ -201,6 +201,7 @@ export function ListingDetailSheet({
           <TabPanel value="details">
             <div className="flex flex-col gap-5">
               {l.status === 'draft' && !nonMineral && !(l.batches ?? []).length && <Alert severity="info">Add stock to publish. {l.metadata?.statusNote ?? ''}</Alert>}
+              {!l.locationId && (l.status === 'draft' || l.status === 'paused') && <Alert severity="info">Edit this listing and choose where it is offered from to publish.</Alert>}
               {l.status === 'draft' && nonMineral && !l.quantity && <Alert severity="info">Enter the quantity available to publish. {l.metadata?.statusNote ?? ''}</Alert>}
               {l.images && l.images.length > 0 && (
                 <ul aria-label="Pictures" className="flex flex-wrap gap-2">
@@ -248,7 +249,7 @@ export function ListingDetailSheet({
                     <Link href={editHref(l)}><Button variant="outlined">Edit</Button></Link>
                   )}
                   {can.status && actionsFor(l.status).map((a) => (
-                    <Button key={a} variant={a === 'publish' || a === 'relist' ? 'contained' : 'outlined'} color={ACTION_WORDS[a].tone === 'error' ? 'error' : undefined} onClick={() => setAction(a)}>{ACTION_WORDS[a].button}</Button>
+                    <Button key={a} disabled={(a === 'publish' || a === 'relist') && !l.locationId} variant={a === 'publish' || a === 'relist' ? 'contained' : 'outlined'} color={ACTION_WORDS[a].tone === 'error' ? 'error' : undefined} onClick={() => setAction(a)}>{ACTION_WORDS[a].button}</Button>
                   ))}
                 </section>
               )}

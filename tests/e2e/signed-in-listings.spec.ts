@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { quietLogins } from './quiet-login';
 import { pick } from './pick';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
 
 /*
  * Step 2.6 My listings with a real supplier account against the local backend (desktop only). Creates
@@ -44,7 +44,21 @@ const confirmIn = async (title: RegExp | string, button: string) => {
 const sheet = () => page.getByRole('dialog').filter({ has: page.getByRole('tab', { name: 'Stock' }) });
 const next = () => page.getByRole('button', { name: 'Next', exact: true }).click();
 
-test.beforeAll(async ({ browser }) => {
+const API = 'http://localhost:8081/api';
+/** A site the test company can offer listings from; reused between runs */
+async function ensureSite(api: APIRequestContext, identifier: string, loginPath: string) {
+  const login = await (await api.post(`${API}${loginPath}`, { headers: { 'x-e2e-run': env.E2E_RUN_SECRET }, data: { type: 'email', identifier, password: env.E2E_PASSWORD } })).json();
+  const headers = { Authorization: `Bearer ${login.ac ?? login.data?.ac}` };
+  const found = await (await api.get(`${API}/v1/locations?search=E2E%20listing%20site&active=true&limit=1`, { headers })).json();
+  if (found.data?.length) return;
+  const made = await api.post(`${API}/v1/locations`, { headers: { ...headers, 'Idempotency-Key': `e2e-site-${Date.now()}` }, data: { name: 'E2E listing site', locationType: 'WAREHOUSE', countryCode: 'NG', stateRegion: 'Plateau' } });
+  if (!made.ok()) throw new Error(`Could not add the test site: ${made.status()}`);
+}
+
+test.beforeAll(async ({ browser, playwright }) => {
+  const api = await playwright.request.newContext();
+  await ensureSite(api, env.E2E_SUPPLIER, '/v1/auth/umera/login');
+  await api.dispose();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await quietLogins(context, env.E2E_RUN_SECRET);
   page = await context.newPage();
@@ -230,7 +244,7 @@ test('non-mineral: pick the categories and type the quantity; no batch, and the 
   await page.getByLabel('Delivery period').fill('14 days');
   for (const label of ['Payment terms', 'Shipping terms']) {
     const field = page.locator('div').filter({ has: page.getByText(label, { exact: true }) }).last();
-    await field.getByRole('button').last().click();
+    await field.getByRole('button').first().click();
     await page.getByText(label === 'Payment terms' ? 'T/T - Telegraphic Transfer' : 'FOB - Free On Board', { exact: true }).click();
     await page.getByRole('heading', { name: 'New listing', level: 1 }).click();
   }
