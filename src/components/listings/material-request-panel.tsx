@@ -15,7 +15,7 @@ export function MaterialRequestPanel() {
   const [categoryId, setCategoryId] = React.useState('');
   const [note, setNote] = React.useState('');
   const [error, setError] = React.useState<string>();
-  const requests = useGetMaterialRequestsQuery({ limit: 5 });
+  const requests = useGetMaterialRequestsQuery({ limit: 5 }, { refetchOnMountOrArgChange: true });
   const tree = useGetCategoryTreeQuery();
   const [send, sending] = useCreateMaterialRequestMutation();
   const key = useIdempotencyKey();

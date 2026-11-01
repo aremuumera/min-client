@@ -93,10 +93,10 @@ test('step 1: material and stock are checked; new stock asks for what a batch ne
   await page.getByText('Add new stock', { exact: true }).click();
   await next();
   await expect(page.getByText('Enter the quantity you physically have')).toBeVisible();
-  await page.getByLabel('Quantity (t)').fill('100');
-  await pick(page.getByLabel('Where it came from'), 'MINED');
-  await page.getByLabel('Purity (%)').fill('98.5');
-  await page.getByLabel('Batch code').fill(batchCode);
+  await page.locator('#listing-new-quantity').fill('100');
+  await pick(page.locator('#listing-new-source'), 'MINED');
+  await page.locator('#listing-new-purity').fill('98.5');
+  await page.locator('#listing-new-code').fill(batchCode);
   await shot('step-stock');
   await next();
 });
@@ -105,8 +105,8 @@ test('steps 2 and 3 are checked; publishing needs 5 pictures, a draft does not',
   await next();
   await expect(page.getByText('Enter a name')).toBeVisible();
   await page.locator('#listing-name').fill(name);
-  await page.getByLabel('Short description').fill('E2E test listing, tin ore from Jos');
-  await page.getByLabel('Color').fill('Dark grey');
+  await page.locator('#listing-summary').fill('E2E test listing, tin ore from Jos');
+  await page.locator('#listing-color').fill('Dark grey');
   await expect(page.getByText('(Optional)').first()).toBeVisible();
   await pick(page.locator('#listing-packaging'), { label: 'Custom' });
   await page.getByLabel('Your packaging').fill('25 kg woven bags');
@@ -122,10 +122,10 @@ test('steps 2 and 3 are checked; publishing needs 5 pictures, a draft does not',
 
   await next();
   await expect(page.getByText('Enter a price with up to 2 decimals').first()).toBeVisible();
-  await page.getByLabel(/^Price per t/).fill('1500.50');
-  await expect(page.getByLabel(/^Price per t/)).toHaveValue('1,500.50');
-  await page.getByLabel(/^Minimum order/).fill('20');
-  await page.getByLabel('Delivery period').fill('30 days');
+  await page.locator('#listing-price').fill('1500.50');
+  await expect(page.locator('#listing-price')).toHaveValue('1,500.50');
+  await page.locator('#listing-minimum').fill('20');
+  await page.locator('#listing-delivery').fill('30 days');
   for (const label of ['Payment terms', 'Shipping terms']) {
     const field = page.locator('div').filter({ has: page.getByText(label, { exact: true }) }).last();
     await field.getByRole('button').first().click();
@@ -211,8 +211,8 @@ test('a missing material can be requested, and shows as waiting', async () => {
   const form = page.getByRole('dialog').filter({ hasText: 'Ask MINMEG to add a material' });
   await form.getByRole('button', { name: 'Send request' }).click();
   await expect(form.getByText('Enter the name of the material')).toBeVisible();
-  await form.getByLabel('Material name').fill(`E2E material ${stamp}`);
-  await form.getByLabel('Note for MINMEG').fill('E2E test request');
+  await form.locator('#request-name').fill(`E2E material ${stamp}`);
+  await form.locator('#request-note').fill('E2E test request');
   await form.getByRole('button', { name: 'Send request' }).click();
   await confirmIn(`Ask MINMEG to add E2E material ${stamp}?`, 'Send request');
   const requests = page.getByRole('list', { name: 'Your material requests' });
@@ -237,11 +237,11 @@ test('non-mineral: pick the categories and type the quantity; no batch, and the 
   await page.locator('#listing-quantity').fill('4');
   await next();
   await page.locator('#listing-name').fill(toolName);
-  await page.getByLabel('Short description').fill('E2E test tool');
+  await page.locator('#listing-summary').fill('E2E test tool');
   await page.getByLabel('Add pictures').setInputFiles(pictures(5));
   await next();
-  await page.getByLabel(/^Price per pc/).fill('250000');
-  await page.getByLabel('Delivery period').fill('14 days');
+  await page.locator('#listing-price').fill('250000');
+  await page.locator('#listing-delivery').fill('14 days');
   for (const label of ['Payment terms', 'Shipping terms']) {
     const field = page.locator('div').filter({ has: page.getByText(label, { exact: true }) }).last();
     await field.getByRole('button').first().click();

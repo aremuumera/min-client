@@ -390,7 +390,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
                 <CategoryPicker key={categoryRoots.length} roots={categoryRoots} value={categoryId} error={errors.categoryId} onChange={setCategoryId} />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField label="Unit" htmlFor="listing-unit" required info={FIELD_INFO.unit} error={errors.unitId}>
-                    <DropdownSelect id="listing-unit" value={unitId} onValueChange={setUnitId} options={unitChoices.map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} placeholder="Choose a unit" />
+                    <DropdownSelect id="listing-unit" searchable value={unitId} onValueChange={setUnitId} options={unitChoices.map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} placeholder="Choose a unit" />
                   </FormField>
                   <FormField label={`Quantity available${symbol ? ` (${symbol})` : ''}`} htmlFor="listing-quantity" required info={FIELD_INFO.typedQuantity} error={errors.quantity}>
                     <Input id="listing-quantity" inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ''))} autoComplete="off" />
@@ -413,7 +413,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
                   </dl>
                 )}
                 <FormField label="Unit" htmlFor="listing-unit" required error={errors.unitId} info={FIELD_INFO.unit}>
-                  <DropdownSelect id="listing-unit" value={unitId} disabled={materialFixed} onValueChange={(v) => { setUnitId(v); setPicked(new Set()); }} options={unitChoices.map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} placeholder="Choose a unit" />
+                  <DropdownSelect id="listing-unit" searchable value={unitId} disabled={materialFixed} onValueChange={(v) => { setUnitId(v); setPicked(new Set()); }} options={unitChoices.map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} placeholder="Choose a unit" />
                 </FormField>
                 {editing && openBatches > 0 && <p className="text-sm text-steel">{openBatches === 1 ? 'One batch is' : `${openBatches} batches are`} linked, with {formatQuantity(listing?.availableQuantity, symbol)} available. Manage them from the listing&apos;s Stock tab, or add more below.</p>}
 
