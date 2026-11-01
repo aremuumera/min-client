@@ -47,6 +47,7 @@ import StateSelector from "@/utils/state-selector-modal";
 import CountrySelectionModal from "@/utils/country-selection-modal";
 import { getErrorMessage } from "@/utils/helper";
 import z from "zod";
+import { compressImage } from '@/lib/images/compress';
 
 
 const MINING_SPECIALTIES = [
@@ -174,9 +175,10 @@ export default function InspectorProfileSetupPage() {
         }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
-        const file = e.target.files?.[0];
-        if (file) {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
+        const picked = e.target.files?.[0];
+        if (picked) {
+            const file = await compressImage(picked);
             if (file.size > 2 * 1024 * 1024) {
                 toast.error("File size must be less than 2MB");
                 return;

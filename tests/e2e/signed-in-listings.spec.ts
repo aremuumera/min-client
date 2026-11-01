@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+import { crc32, deflateSync } from 'node:zlib';
 import fs from 'node:fs';
 import path from 'node:path';
 import { quietLogins } from './quiet-login';
@@ -32,6 +34,23 @@ const batchCode = `E2EL-${stamp}`;
 // The smallest valid PNG
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEBgIApD5fRAAAAABJRU5ErkJggg==', 'base64');
 const pictures = (n: number) => Array.from({ length: n }, (_, i) => ({ name: `e2e-${stamp}-${i}.png`, mimeType: 'image/png', buffer: PNG }));
+/** A photo-sized PNG that PNG can't shrink, like a 13 MB camera picture */
+function noisyPng(width: number, height: number): Buffer {
+  const chunk = (type: string, data: Buffer) => {
+    const body = Buffer.concat([Buffer.from(type), data]);
+    const out = Buffer.alloc(body.length + 8);
+    out.writeUInt32BE(data.length, 0);
+    body.copy(out, 4);
+    out.writeUInt32BE(crc32(body), body.length + 4);
+    return out;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.set([8, 2, 0, 0, 0], 8);
+  const rows = Buffer.concat(Array.from({ length: height }, () => Buffer.concat([Buffer.from([0]), randomBytes(width * 3)])));
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(rows, { level: 0 })), chunk('IEND', Buffer.alloc(0))]);
+}
 const shot = async (shotName: string) => {
   await page.waitForTimeout(500);
   await page.screenshot({ path: `tests/e2e/.results/listings-${shotName}.png` });
@@ -204,6 +223,19 @@ test('stock: a batch can stop counting, and the batch says which listing it back
   await expect(page.getByRole('row').filter({ hasText: name }).getByText('60 t')).toBeVisible({ timeout: 30_000 });
 });
 
+test('a big photo is compressed in the browser, so it passes the 5 MB limit', async () => {
+  await page.goto('/dashboard/supplier-list');
+  await page.getByRole('row').filter({ hasText: name }).click();
+  await sheet().getByRole('link', { name: 'Edit' }).click();
+  await expect(page.getByRole('heading', { name: `Edit ${name}`, level: 1 })).toBeVisible({ timeout: 30_000 });
+  await next();
+  const big = noisyPng(2400, 1800);
+  expect(big.length).toBeGreaterThan(5 * 1024 * 1024);
+  await page.getByLabel('Add pictures').setInputFiles([{ name: 'photo.png', mimeType: 'image/png', buffer: big }]);
+  await expect(page.getByText('photo.webp')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/too large/)).toHaveCount(0);
+});
+
 test('a missing material is requested from the form, and followed on its own page', async () => {
   await page.goto('/dashboard/supplier-list/create');
   await expect(page.getByRole('heading', { name: 'New listing', level: 1 })).toBeVisible({ timeout: 30_000 });
@@ -220,10 +252,10 @@ test('a missing material is requested from the form, and followed on its own pag
   await expect(page.getByRole('button', { name: /Can't find your material/ })).toBeVisible();
   await expect(page.getByText('Waiting for MINMEG')).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Material requests' }).first().click();
-  await expect(page.getByRole('heading', { name: 'Material requests', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('link', { name: 'My requests' }).first().click();
+  await expect(page.getByRole('heading', { name: 'My requests', level: 1 })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText('All requests', { exact: true })).toBeVisible();
-  await page.getByPlaceholder('Search material name').fill(`E2E material ${stamp}`);
+  await page.getByPlaceholder('Search requests').fill(`E2E material ${stamp}`);
   const row = page.getByText(`E2E material ${stamp}`).first();
   await expect(row).toBeVisible({ timeout: 15_000 });
   await row.click();
@@ -255,6 +287,59 @@ test('a missing material is requested from the form, and followed on its own pag
   await expect(added.getByRole('button', { name: 'Create a listing' })).toBeVisible();
   await shot('material-request-added');
   await page.unroute(`**/material-requests/${requestId}`);
+});
+
+test('a category or anything else can be requested from My requests', async () => {
+  await page.goto('/dashboard/supplier-list/material-requests');
+  await expect(page.getByRole('heading', { name: 'My requests', level: 1 })).toBeVisible({ timeout: 30_000 });
+  const form = page.getByRole('dialog').filter({ hasText: 'Send MINMEG a request' });
+
+  await page.getByRole('button', { name: 'New request' }).first().click();
+  await pick(form.locator('#request-type'), 'CATEGORY');
+  await form.locator('#request-name').fill(`E2E category ${stamp}`);
+  await pick(form.locator('#request-category'), { index: 1 });
+  await form.getByRole('button', { name: 'Send request' }).click();
+  await confirmIn(`Ask MINMEG to add the category E2E category ${stamp}?`, 'Send request');
+  await expect(form).toBeHidden({ timeout: 15_000 });
+
+  await page.getByRole('button', { name: 'New request' }).first().click();
+  await pick(form.locator('#request-type'), 'OTHER');
+  await expect(form.locator('#request-category')).toHaveCount(0);
+  await form.locator('#request-name').fill(`E2E question ${stamp}`);
+  await form.getByRole('button', { name: 'Send request' }).click();
+  await expect(form.getByText('Say what you need from MINMEG')).toBeVisible();
+  await form.locator('#request-note').fill('E2E test question');
+  await form.getByRole('button', { name: 'Send request' }).click();
+  await confirmIn(`Send "E2E question ${stamp}" to MINMEG?`, 'Send request');
+  await expect(form).toBeHidden({ timeout: 15_000 });
+
+  await page.getByPlaceholder('Search requests').fill(stamp);
+  await expect(page.getByRole('row').filter({ hasText: `E2E category ${stamp}` }).getByText('New category')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('row').filter({ hasText: `E2E question ${stamp}` }).getByText('Something else')).toBeVisible();
+  await shot('requests-types');
+});
+
+test('stone offers weight, area and slab units; other minerals only weight', async () => {
+  await page.goto('/dashboard/supplier-list/create');
+  await expect(page.getByRole('heading', { name: 'New listing', level: 1 })).toBeVisible({ timeout: 30_000 });
+  const unitsFor = async (material: string) => {
+    await pick(page.locator('#listing-material'), { label: material });
+    await page.waitForTimeout(1500);
+    await page.locator('#listing-unit').click();
+    const list = page.locator('[data-select-list="true"]').last();
+    await expect(list.getByRole('option').first()).toBeVisible();
+    const texts = await list.getByRole('option').allInnerTexts();
+    await page.keyboard.press('Escape');
+    return texts.join(' | ');
+  };
+  const stone = await unitsFor('Marble');
+  expect(stone).toContain('t)');
+  expect(stone).toContain('m²');
+  expect(stone).toContain('Slab');
+  const gold = await unitsFor('Gold Ore');
+  expect(gold).toContain('t)');
+  expect(gold).not.toContain('m²');
+  expect(gold).not.toContain('Slab');
 });
 
 test('rows per page uses our dropdown', async () => {
@@ -346,7 +431,7 @@ test('phone width: the list and the form fit', async () => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   await shot('phone-form');
   await page.goto('/dashboard/supplier-list/material-requests');
-  await expect(page.getByRole('heading', { name: 'Material requests', level: 1 })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'My requests', level: 1 })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText('All requests', { exact: true })).toBeVisible();
   await page.waitForTimeout(1000);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);

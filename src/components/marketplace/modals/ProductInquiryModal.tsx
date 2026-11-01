@@ -12,6 +12,7 @@ import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 import { getErrorMessage } from '@/utils/helper';
 import { PACKAGING_OPTIONS } from '@/lib/trade-terms';
+import { compressImages } from '@/lib/images/compress';
 
 interface ProductInquiryModalProps {
     isOpen: boolean;
@@ -531,8 +532,8 @@ const ProductInquiryModal = ({
                                                 accept="image/*,application/pdf,video/mp4"
                                                 id="offer-attachments"
                                                 className="hidden"
-                                                onChange={(e) => {
-                                                    const files = Array.from(e.target.files || []);
+                                                onChange={async (e) => {
+                                                    const files = await compressImages(e.target.files || []);
                                                     const validFiles = files.filter(f => {
                                                         if (f.size > 15 * 1024 * 1024) {
                                                             showAlert(`${f.name} is too large (>15MB)`, 'error');

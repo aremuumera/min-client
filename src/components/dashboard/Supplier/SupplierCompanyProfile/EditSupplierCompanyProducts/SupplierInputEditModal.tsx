@@ -19,6 +19,7 @@ import { motion } from 'framer-motion';
 import { Country, State } from 'country-state-city';
 import { MdOutlineCancel } from 'react-icons/md';
 import { Loader2 } from 'lucide-react';
+import { compressImages } from '@/lib/images/compress';
 
 
 const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: any) => {
@@ -394,7 +395,7 @@ const SupplierProfileInputEditModal = ({ open, onClose, data, fields, onSave }: 
                         id={`file-input-${field.id}`}
                         type="file"
                         hidden
-                        onChange={(e) => handleFileChange(field.id, e.target.files)}
+                        onChange={async (e) => handleFileChange(field.id, await compressImages(e.target.files ?? []))}
                       />
                     </label>
 

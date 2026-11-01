@@ -22,6 +22,7 @@ import { useAppSelector } from '@/redux';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
+import { compressImages } from '@/lib/images/compress';
 
 const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSave }: { open: boolean, onClose: () => void, attachments: any, data: any, fields: any, onSave: (data: any) => void }) => {
   const [formData, setFormData] = useState<any>({});
@@ -595,7 +596,7 @@ const RfqInputEditModal = ({ open, onClose, attachments, data, fields = [], onSa
                         type="file"
                         hidden
                         multiple
-                        onChange={(e) => handleFileChange(field.id, e.target.files)}
+                        onChange={async (e) => handleFileChange(field.id, await compressImages(e.target.files ?? []))}
                       />
                     </label>
 

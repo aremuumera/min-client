@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { AvailabilityRow, CategoryNode, Listing, ListingAction, ListingBatchRow, MaterialRequest, MaterialRequestSummary } from '@/lib/listings';
+import type { AvailabilityRow, CategoryNode, Listing, ListingAction, ListingBatchRow, MaterialRequest, MaterialRequestSummary, MaterialRequestType } from '@/lib/listings';
 import { listParams, type NamedRecord, type Paged } from '@/lib/batches';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -63,14 +63,14 @@ export const listingsApi = createApi({
     }),
     getMarketplaceMaterials: builder.query<Paged<MarketplaceMaterial>, void>({ query: () => '/materials?marketplaceEnabled=true&active=true&limit=100', providesTags: ['MaterialRequests'] }),
     /** How the material is measured, so the form offers only units that fit it */
-    getMaterialMeasure: builder.query<Single<{ effectiveMaterialType: { measurementTypeId: string } | null }>, string>({ query: (id) => `/materials/${id}` }),
+    getMaterialMeasure: builder.query<Single<{ effectiveMaterialType: { measurementTypeId: string; additionalMeasurementTypeIds?: string[] | null } | null }>, string>({ query: (id) => `/materials/${id}` }),
     /** No sign-in needed: names and categories for the marketplace filter */
     getPublicMaterials: builder.query<Single<{ id: string; name: string; categoryPath: string[] }[]>, void>({ query: () => '/marketplace/public/materials' }),
     getCategoryTree: builder.query<Single<CategoryNode[]>, void>({ query: () => '/categories/tree?active=true' }),
     getMaterialRequests: builder.query<Paged<MaterialRequest>, Query>({ query: (q) => `/material-requests${listParams(q)}`, providesTags: ['MaterialRequests'] }),
     getMaterialRequestSummary: builder.query<Single<MaterialRequestSummary>, void>({ query: () => '/material-requests/summary', providesTags: ['MaterialRequests'] }),
     getMaterialRequest: builder.query<Single<MaterialRequest>, string>({ query: (id) => `/material-requests/${id}`, providesTags: ['MaterialRequests'] }),
-    createMaterialRequest: builder.mutation<Single<MaterialRequest>, { name: string; suggestedCategoryId?: string | null; note?: string | null; idempotencyKey: string }>({
+    createMaterialRequest: builder.mutation<Single<MaterialRequest>, { type: MaterialRequestType; name: string; suggestedCategoryId?: string | null; note?: string | null; idempotencyKey: string }>({
       query: ({ idempotencyKey, ...body }) => ({ url: '/material-requests', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
       invalidatesTags: ['MaterialRequests'],
     }),

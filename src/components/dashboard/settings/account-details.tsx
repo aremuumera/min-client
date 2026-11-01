@@ -29,6 +29,7 @@ import { paths } from '@/config/paths';
 
 import { useUpdateProfileMutation } from '@/redux/features/AuthFeature/auth_api_rtk';
 import { toast } from 'sonner';
+import { compressImage } from '@/lib/images/compress';
 
 export function AccountDetails() {
     const { user } = useAppSelector((state) => state.auth);
@@ -48,9 +49,10 @@ export function AccountDetails() {
     }, [currentPic]);
 
     // Handle file selection
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files && event.target.files[0];
-        if (file) {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const picked = event.target.files && event.target.files[0];
+        if (picked) {
+            const file = await compressImage(picked);
             setSelectedFile(file);
             const reader = new FileReader();
             reader.onload = (e) => {

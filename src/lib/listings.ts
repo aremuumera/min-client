@@ -201,12 +201,19 @@ export function leafCategories(node: CategoryNode, path: string[] = []): { value
   return node.children.length ? node.children.flatMap((c) => leafCategories(c, here)) : [{ value: node.id, label: here.join(' › ') }];
 }
 
-/** Units that make sense for things sold by count, size or time; the master list also holds temperature, emissions and so on */
-export const NON_MINERAL_UNIT_TYPES = ['COUNT', 'MASS', 'LENGTH', 'AREA', 'VOLUME', 'TIME'];
+/** Measures nothing is sold by. Every other measurement type made in admin, new ones included, is offered for non-minerals */
+export const UNITS_NOT_FOR_SALE = ['TEMPERATURE', 'EMISSIONS', 'EMISSION_INTENSITY', 'ENERGY', 'CONCENTRATION', 'PERCENTAGE', 'TRANSPORT_WORK'];
+
+/** Every category with its full path, for a category request */
+export function allCategories(nodes: readonly CategoryNode[], path: string[] = []): { value: string; label: string }[] {
+  return nodes.flatMap((n) => [{ value: n.id, label: [...path, n.name].join(' › ') }, ...allCategories(n.children, [...path, n.name])]);
+}
 
 export type MaterialRequestStatus = 'PENDING' | 'APPROVED' | 'REFUSED';
+export type MaterialRequestType = 'MATERIAL' | 'CATEGORY' | 'OTHER';
 export interface MaterialRequest {
   id: string;
+  requestType: MaterialRequestType;
   requesterOrganizationId: string;
   requestedName: string;
   suggestedCategoryId: string | null;
@@ -215,13 +222,21 @@ export interface MaterialRequest {
   status: MaterialRequestStatus;
   materialId: string | null;
   material?: { id: string; code: string; name: string } | null;
+  categoryId: string | null;
+  category?: { category_uuid: string; name: string } | null;
   reviewedAt: string | null;
   reviewReason: string | null;
   createdAt: string;
 }
 export type MaterialRequestSummary = Record<MaterialRequestStatus | 'total', number>;
 export const MATERIAL_REQUEST_STATUSES: MaterialRequestStatus[] = ['PENDING', 'APPROVED', 'REFUSED'];
-export const materialRequestLabel =(s: MaterialRequestStatus) => ({ PENDING: 'Waiting for MINMEG', APPROVED: 'Added', REFUSED: 'Refused' })[s];
+export const materialRequestLabel = (s: MaterialRequestStatus, type?: MaterialRequestType) => ({ PENDING: 'Waiting for MINMEG', APPROVED: !type ? 'Added or answered' : type === 'OTHER' ? 'Answered' : 'Added', REFUSED: 'Refused' })[s];
+export const MATERIAL_REQUEST_TYPES: { value: MaterialRequestType; label: string }[] = [
+  { value: 'MATERIAL', label: 'New material' },
+  { value: 'CATEGORY', label: 'New category' },
+  { value: 'OTHER', label: 'Something else' },
+];
+export const requestTypeLabel = (t: MaterialRequestType) => MATERIAL_REQUEST_TYPES.find((o) => o.value === t)?.label ?? t;
 export const materialRequestTone = (s: MaterialRequestStatus) => ({ PENDING: 'warning', APPROVED: 'success', REFUSED: 'error' } as const)[s];
 
 /** Editor text with no words in it counts as empty */

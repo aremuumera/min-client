@@ -5,7 +5,7 @@ export const FIELD_INFO = {
   categories: 'Filled in from the material. Buyers filter the marketplace by these. They change only if you choose another material.',
   mainCategory: 'The biggest group, such as Mining tools. Buyers filter the marketplace by it.',
   category: 'A narrower group inside the one above. Keep going until no more choices appear.',
-  unit: 'How quantity and price are measured. For a mineral, only units that fit that material are shown. Your price is per one of this unit.',
+  unit: 'How quantity and price are measured. For a mineral, only units that fit that material are shown: weight for most, and also area or count for stone. Your price is per one of this unit.',
   stock: 'Choose batches you already registered, or add new stock and MINMEG registers it as a batch. A draft can wait for stock, but publishing needs some.',
   typedQuantity: 'How many you can sell right now, as a whole number. For a service, how many jobs you can take on. Lower it when you sell some elsewhere.',
   newQuantity: 'What you physically have today. This becomes a batch in your Inventory, and buyers see it as available.',

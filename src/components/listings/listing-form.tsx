@@ -10,11 +10,12 @@ import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { BATCH_CODE_PATTERN, PHYSICAL_FORMS, REGISTER_SOURCES, batchOptions, formatQuantity, fromMicro, isPositive, toMicro } from '@/lib/batches';
 import { FIELD_INFO } from '@/lib/help/listing-fields';
-import { MIN_IMAGES, MONEY_PATTERN, NON_MINERAL_UNIT_TYPES, asList, attachmentError, canBackListing, categoryChain, categoryPathOf, formatMoney, isBlankText, isNonMineral, mediaError, nonMineralRoots, withCommas, type CategoryNode, type DescriptionSection, type Listing, type ListingKind, type ListingMedia } from '@/lib/listings';
+import { MIN_IMAGES, MONEY_PATTERN, UNITS_NOT_FOR_SALE, asList, attachmentError, canBackListing, categoryChain, categoryPathOf, formatMoney, isBlankText, isNonMineral, mediaError, nonMineralRoots, withCommas, type CategoryNode, type DescriptionSection, type Listing, type ListingKind, type ListingMedia } from '@/lib/listings';
 import { PACKAGING_OPTIONS, SAMPLING_OPTIONS, paymentTerms, shippingTerms } from '@/lib/trade-terms';
 import { useCreateBatchMutation, useGetBatchesQuery, useGetUnitChoicesQuery } from '@/redux/features/batches/batches_api';
 import { useGetLocationsQuery } from '@/redux/features/locations/locations_api';
 import { useAddListingBatchMutation, useAddListingMediaMutation, useChangeListingStatusMutation, useCreateListingMutation, useGetCategoryTreeQuery, useGetMarketplaceMaterialsQuery, useGetMaterialMeasureQuery, useRemoveListingMediaMutation, useUpdateListingMutation } from '@/redux/features/listings/listings_api';
+import { compressImages } from '@/lib/images/compress';
 
 const STEPS = ["What you're selling", 'Details', 'Price and terms', 'Review'] as const;
 const SUMMARY_LIMIT = 500;
@@ -128,8 +129,9 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
   const batchKey = useIdempotencyKey();
   const { confirm, dialog } = useConfirm();
 
-  const measurementTypeId = nonMineral ? undefined : measure.data?.data.effectiveMaterialType?.measurementTypeId;
-  const unitChoices = (units.data?.data ?? []).filter((u) => (nonMineral ? !u.measurementType || NON_MINERAL_UNIT_TYPES.includes(u.measurementType.code) : !measurementTypeId || !u.measurementTypeId || u.measurementTypeId === measurementTypeId));
+  const effective = nonMineral ? null : measure.data?.data.effectiveMaterialType;
+  const measures = effective ? [effective.measurementTypeId, ...(effective.additionalMeasurementTypeIds ?? [])] : [];
+  const unitChoices = (units.data?.data ?? []).filter((u) => (nonMineral ? !u.measurementType || !UNITS_NOT_FOR_SALE.includes(u.measurementType.code) : !measures.length || !u.measurementTypeId || measures.includes(u.measurementTypeId)));
   const unit = units.data?.data.find((u) => u.id === unitId);
   const symbol = unit?.symbol ?? listing?.measure ?? '';
   const material = materials.data?.data.find((m) => m.id === materialId);
@@ -142,7 +144,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
   React.useEffect(() => {
     if (unitId && units.data && !materialFixed && !unitChoices.some((u) => u.id === unitId)) setUnitId('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [measurementTypeId, kind, units.data]);
+  }, [measures.join(), kind, units.data]);
 
   const existingImages = (listing?.images ?? []).filter((m) => !removedMedia.some((r) => r.kind === 'images' && r.id === mediaId(m)));
   const existingAttachments = (listing?.attachments ?? []).filter((m) => !removedMedia.some((r) => r.kind === 'attachments' && r.id === mediaId(m)));
@@ -321,8 +323,8 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
     }
   };
 
-  const pickFiles = (which: 'images' | 'attachments', list: FileList) => {
-    const files = Array.from(list);
+  const pickFiles = async (which: 'images' | 'attachments', list: FileList) => {
+    const files = which === 'images' ? await compressImages(list) : Array.from(list); // attachments are documents: never changed
     if (which === 'images') {
       const problem = mediaError([...images, ...files], existingImages.some((m) => m.type === 'video'));
       if (problem) return setErrors({ images: problem });

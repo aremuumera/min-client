@@ -89,7 +89,7 @@ export const dashboardConfig: DashboardConfig = {
             },
             {
               key: "supplier-material-requests",
-              title: "Material requests",
+              title: "My requests",
               href: paths.dashboard.products.materialRequests,
               permission: "products",
             },

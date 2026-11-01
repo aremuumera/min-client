@@ -70,6 +70,7 @@ import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { SearchableSelectLocal } from '@/components/ui/searchable-select-local';
 import { MultiCheckboxSelectLocal } from '@/components/ui/multi-checkbox-select-local';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
+import { compressImages } from '@/lib/images/compress';
 
 const rfqSchema = z.object({
   rfqProductName: z.string().min(1, 'Product name is required'),
@@ -299,10 +300,10 @@ const RfqDetails = ({
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const fileArray = Array.from(files);
+      const fileArray = await compressImages(files);
 
       const validFiles = fileArray.filter((file) => {
         const isVideo = file.type.startsWith('video/');

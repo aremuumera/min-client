@@ -5,7 +5,7 @@ import { Alert, Button, CopyableId, KeyValueList, SideSheet, Skeleton, StatusBad
 import { paths } from '@/config/paths';
 import { toApiError } from '@/lib/api/errors';
 import { formatDate } from '@/lib/format';
-import { materialRequestLabel, materialRequestTone, type MaterialRequest } from '@/lib/listings';
+import { materialRequestLabel, materialRequestTone, requestTypeLabel, type MaterialRequest } from '@/lib/listings';
 import { useGetMaterialRequestQuery } from '@/redux/features/listings/listings_api';
 
 /* MINMEG's answer comes first, because that is what the supplier opened this for */
@@ -14,8 +14,25 @@ function Answer({ request }: { request: MaterialRequest }) {
   if (request.status === 'REFUSED') {
     return (
       <Alert severity="error">
-        <p className="font-medium">MINMEG did not add this material</p>
+        <p className="font-medium">{request.requestType === 'MATERIAL' ? 'MINMEG did not add this material' : request.requestType === 'CATEGORY' ? 'MINMEG did not add this category' : 'MINMEG refused this request'}</p>
         <p className="mt-1">{request.reviewReason}</p>
+      </Alert>
+    );
+  }
+  if (request.requestType === 'OTHER') {
+    return (
+      <Alert severity="success">
+        <p className="font-medium">MINMEG&apos;s answer</p>
+        <p className="mt-1">{request.reviewReason}</p>
+      </Alert>
+    );
+  }
+  if (request.requestType === 'CATEGORY') {
+    return (
+      <Alert severity="success">
+        <p className="font-medium">{request.category?.name ?? request.requestedName} is in the category list</p>
+        <p className="mt-1">Everyone on MINMEG can now use it.</p>
+        {request.reviewReason && <p className="mt-1">MINMEG says: {request.reviewReason}</p>}
       </Alert>
     );
   }
@@ -36,10 +53,10 @@ export function MaterialRequestDetailSheet({ requestId, onClose }: { requestId: 
     <SideSheet
       open={!!requestId}
       onClose={onClose}
-      title={request?.requestedName ?? 'Material request'}
-      subtitle={request && <StatusBadge tone={materialRequestTone(request.status)}>{materialRequestLabel(request.status)}</StatusBadge>}
+      title={request?.requestedName ?? 'Request'}
+      subtitle={request && <StatusBadge tone={materialRequestTone(request.status)}>{materialRequestLabel(request.status, request.requestType)}</StatusBadge>}
       footer={
-        request?.status === 'APPROVED' ? (
+        request?.status === 'APPROVED' && request.requestType === 'MATERIAL' ? (
           <Link href={paths.dashboard.products.create}>
             <Button>Create a listing</Button>
           </Link>
@@ -55,10 +72,12 @@ export function MaterialRequestDetailSheet({ requestId, onClose }: { requestId: 
           <Answer request={request} />
           <KeyValueList
             items={[
-              { label: 'Material you asked for', value: request.requestedName },
+              { label: 'Type', value: requestTypeLabel(request.requestType) },
+              { label: 'You asked for', value: request.requestedName },
               ...(request.material ? [{ label: 'Name on the material list', value: request.material.name }] : []),
-              { label: 'Where you said it belongs', value: request.suggestedCategory?.name ?? 'Not sure' },
-              { label: 'Your note', value: request.note },
+              ...(request.category ? [{ label: 'Name on the category list', value: request.category.name }] : []),
+              ...(request.requestType === 'OTHER' ? [] : [{ label: request.requestType === 'CATEGORY' ? 'Where you said it goes' : 'Where you said it belongs', value: request.suggestedCategory?.name ?? 'Not sure' }]),
+              { label: request.requestType === 'OTHER' ? 'What you asked' : 'Your note', value: request.note },
               { label: 'Sent', value: formatDate(request.createdAt) },
               { label: 'Answered', value: request.reviewedAt ? formatDate(request.reviewedAt) : 'Not yet' },
               { label: 'Request ID', value: <CopyableId value={request.id} /> },
