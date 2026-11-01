@@ -165,7 +165,7 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
       ) : (
         <div className="flex flex-col gap-4">
           {formError && <Alert severity="error">{formError}</Alert>}
-          {decided && <Alert severity="info">This offer was already decided, so it can't be revised.</Alert>}
+          {decided && <Alert severity="info">This offer was already decided, so it can&apos;t be revised.</Alert>}
           {existing && !decided && <Alert severity="info">You already sent version {existing.version_number ?? 1}. Sending again replaces it, and the old one stays in its history.</Alert>}
           <div className="rounded-lg bg-surface p-3 text-sm">
             <p className="text-xs font-medium uppercase text-steel">The buyer asked for</p>

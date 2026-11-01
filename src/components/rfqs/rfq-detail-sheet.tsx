@@ -88,8 +88,8 @@ export function RfqDetailSheet({ rfqId, row, buyerId, onClose }: { rfqId: string
               { label: 'Max moisture', value: rfq.moisture_max == null ? null : `${rfq.moisture_max}%` },
               { label: 'Packaging', value: rfq.packaging },
               { label: 'Sampling method', value: rfq.sampling_method },
-              { label: 'Payment terms', value: rfq.selectedPayments?.join(', ') },
-              { label: 'Shipping terms', value: rfq.selectedShippings?.join(', ') },
+              { label: 'Payment terms', value: rfq.selectedPayments?.join(', ') || null },
+              { label: 'Shipping terms', value: rfq.selectedShippings?.join(', ') || null },
               { label: 'Payment details', value: rfq.paymentsTermsDescribed, wide: true },
               { label: 'Shipping details', value: rfq.shippingTermsDescribed, wide: true },
               { label: 'Supply', value: rfq.inquiry_type === 'recurring' ? `Recurring, ${rfq.recurring_frequency ?? ''}, ${rfq.recurring_duration ?? ''} months` : 'One time' },
@@ -124,6 +124,7 @@ export function RfqDetailSheet({ rfqId, row, buyerId, onClose }: { rfqId: string
         onConfirm={async (reason) => {
           try {
             await change({ buyerId, rfqId: rfq!.rfqId, status: 'cancelled', reason: reason || undefined }).unwrap();
+            setError(undefined);
             toast.success('RFQ cancelled');
           } catch (err) {
             setError(toApiError(err).message);
