@@ -2,7 +2,8 @@ import React from 'react';
 import { MapPin } from 'lucide-react';
 
 const ProductLocationTab = ({ products }: { products: any }) => {
-  const { latitude, longitude, selected_state, selected_country_name, product_name } = products || {};
+  const { latitude, longitude, selected_state, selected_country_name, product_name, trade_scope } = products || {};
+  const SCOPE: Record<string, string> = { local: 'Sold locally', international: 'Sold internationally', both: 'Sold locally and internationally' };
 
   // Parse coordinates
   const lat = parseFloat(latitude);
@@ -10,7 +11,7 @@ const ProductLocationTab = ({ products }: { products: any }) => {
   const hasValidCoords = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
   // Compute map location query for Google Maps embed
-  const locationString = [selected_state, selected_country_name].filter(Boolean).join(', ') || 'Nigeria';
+  const locationString = [selected_state, selected_country_name].filter(Boolean).join(', ') || 'Not stated';
   const mapSearchQuery = hasValidCoords ? `${lat},${lng}` : locationString;
   const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapSearchQuery)}&t=&z=${hasValidCoords ? 12 : 9}&ie=UTF8&iwloc=&output=embed`;
 
@@ -50,8 +51,8 @@ const ProductLocationTab = ({ products }: { products: any }) => {
             <span className="text-sm font-semibold text-gray-800">{selected_state ? `${selected_state}, ` : ''}{selected_country_name || 'N/A'}</span>
           </div>
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Global Delivery</span>
-            <span className="text-sm font-semibold text-gray-800">Worldwide Freight & Shipping Available</span>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Trade Scope</span>
+            <span className="text-sm font-semibold text-gray-800">{SCOPE[trade_scope] ?? 'Not stated'}</span>
           </div>
         </div>
       </div>

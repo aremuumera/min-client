@@ -222,9 +222,13 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
             <ShareButton productName={product_name} />
           </div>
 
+          {products.status && products.status !== 'published' && (
+            <p className="mb-3 text-sm text-gray-500">This listing is not on sale right now.</p>
+          )}
           <button
             onClick={handleRequestQuote}
-            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm sm:text-base transition-all shadow-sm hover:shadow active:scale-[0.99]"
+            disabled={!!products.status && products.status !== 'published'}
+            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm sm:text-base transition-all disabled:cursor-not-allowed disabled:bg-gray-300 active:scale-[0.99]"
           >
             Request Quote
           </button>

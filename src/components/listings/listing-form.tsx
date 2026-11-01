@@ -162,7 +162,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
       if (!unitId) next.unitId = 'Choose the unit';
       if (nonMineral) {
         if (!categoryId) next.categoryId = 'Choose down to the most specific category';
-        if (!/^\d+$/.test(quantity)) next.quantity = 'Enter a whole number';
+        if (!/^\d+(\.\d{1,6})?$/.test(quantity)) next.quantity = 'Enter a number, with up to 6 decimal places';
       } else {
         if (!materialId) next.materialId = 'Choose the material';
         if (mode === 'existing' && !picked.size && !editing) next.stock = 'Tick at least one batch, or choose another option';
@@ -395,7 +395,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
                     <DropdownSelect id="listing-unit" searchable value={unitId} onValueChange={setUnitId} options={unitChoices.map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} placeholder="Choose a unit" />
                   </FormField>
                   <FormField label={`Quantity available${symbol ? ` (${symbol})` : ''}`} htmlFor="listing-quantity" required info={FIELD_INFO.typedQuantity} error={errors.quantity}>
-                    <Input id="listing-quantity" inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ''))} autoComplete="off" />
+                    <Input id="listing-quantity" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/[^\d.]/g, ''))} autoComplete="off" />
                   </FormField>
                 </div>
               </>

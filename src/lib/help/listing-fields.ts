@@ -7,7 +7,7 @@ export const FIELD_INFO = {
   category: 'A narrower group inside the one above. Keep going until no more choices appear.',
   unit: 'How quantity and price are measured. For a mineral, only units that fit that material are shown: weight for most, and also area or count for stone. Your price is per one of this unit.',
   stock: 'Choose batches you already registered, or add new stock and MINMEG registers it as a batch. A draft can wait for stock, but publishing needs some.',
-  typedQuantity: 'How many you can sell right now, as a whole number. For a service, how many jobs you can take on. Lower it when you sell some elsewhere.',
+  typedQuantity: 'How much you can sell right now. Decimals are fine, such as 10.5. For a service, how many jobs you can take on. Lower it when you sell some elsewhere.',
   newQuantity: 'What you physically have today. This becomes a batch in your Inventory, and buyers see it as available.',
   source: 'How you got this stock. It starts the record that traces it back to where it came from.',
   origin: 'The site this stock came from, if you have added it under My sites.',

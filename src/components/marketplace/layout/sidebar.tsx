@@ -578,16 +578,15 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
             <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Minimum Order Quantity</h2>
             <div className="h-px bg-gray-200 mb-3"></div>
             <div className="flex items-center gap-2 p-1.5 border border-gray-300 rounded-xl bg-gray-50/50 hover:bg-white transition-colors focus-within:ring-2 focus-within:ring-green-500/20 focus-within:border-green-600">
-              <select
+              <DropdownSelect
+                aria-label="Unit"
+                className="w-24 shrink-0"
+                searchable={false}
                 value={selectedMoqUnit}
-                onChange={handleSelectMoqChange}
-                className="bg-transparent text-[0.8rem] font-semibold focus:outline-none max-w-[80px] cursor-pointer text-gray-700"
-              >
-                <option value="">Unit</option>
-                {MoqUnits?.map(unit => (
-                  <option key={unit} value={unit.toLowerCase()}>{unit}</option>
-                ))}
-              </select>
+                onValueChange={(value) => handleSelectMoqChange({ target: { value } } as React.ChangeEvent<HTMLSelectElement>)}
+                options={(MoqUnits ?? []).map((unit) => ({ value: unit.toLowerCase(), label: unit }))}
+                placeholder="Unit"
+              />
               <div className="w-px h-6 bg-gray-300 shrink-0"></div>
               <input
                 type="text"

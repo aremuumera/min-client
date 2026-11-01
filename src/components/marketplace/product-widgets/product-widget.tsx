@@ -1,6 +1,7 @@
 
 "use client";
 
+import { formatNumberWithCommas } from '@/lib/number-format';
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { PromoBadges, VerifiedBadges } from './badges';
@@ -182,13 +183,17 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                     )}
                                 </div>
 
-                                {quantity && (
+                                {products.minimum_order_quantity && (
                                     <div className='mt-1 flex items-center'>
                                         <span className='text-[13px] text-gray-500 font-medium'>M.O.Q:</span>
-                                        <span className='text-[13px] font-[400] pl-[5px] text-gray-800'>{quantity} {measure}</span>
+                                        <span className='text-[13px] font-[400] pl-[5px] text-gray-800'>{formatNumberWithCommas(Number(products.minimum_order_quantity))} {measure}</span>
                                     </div>
                                 )}
 
+                                <div className='mt-1 flex items-center'>
+                                    <span className='text-[13px] text-gray-500 font-medium'>Available:</span>
+                                    <span className='text-[13px] font-[400] pl-[5px] text-gray-800'>{formatNumberWithCommas(quantity ?? 0)} {measure}</span>
+                                </div>
 
                                 {delivery_period && (
                                     <div className='mt-1 flex items-center'>

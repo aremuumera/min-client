@@ -148,12 +148,16 @@ const SavedProductWidget = ({ products, onDelete, isSaved }: any) => {
                     </div>
 
                     <div className="space-y-1 mt-2">
-                        {quantity && (
+                        {products.minimum_order_quantity && (
                             <div className='flex items-center text-[13px]'>
                                 <span className='text-gray-500 font-medium'>M.O.Q:</span>
-                                <span className='pl-1 text-gray-800'>{quantity} {measure}</span>
+                                <span className='pl-1 text-gray-800'>{Number(products.minimum_order_quantity)} {measure}</span>
                             </div>
                         )}
+                        <div className='flex items-center text-[13px]'>
+                            <span className='text-gray-500 font-medium'>Available:</span>
+                            <span className='pl-1 text-gray-800'>{quantity ?? 0} {measure}</span>
+                        </div>
 
                         {delivery_period && (
                             <div className='flex items-center text-[13px]'>
