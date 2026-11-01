@@ -75,7 +75,7 @@ export function SearchableSelect({
                     autoFocus
                     // Prevent select from closing when clicking the search input
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
+                    onKeyDown={(e: React.KeyboardEvent) => { if (e.key !== 'Escape') e.stopPropagation(); }}
                     startAdornment={<Search className="h-4 w-4 text-neutral-400 mr-2" />}
                     endAdornment={
                         searchTerm && (

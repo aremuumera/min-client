@@ -211,6 +211,32 @@ test('the buyer compares on the Offer Board and shortlists, with a confirm; the 
   await shot(page, 'offer-detail');
 });
 
+test('a dropdown near the bottom of the screen opens upward and stays fully on screen', async () => {
+  const page = buyer;
+  await page.setViewportSize({ width: 1280, height: 500 });
+  await page.goto('/dashboard/rfq-list/create');
+  const field = page.locator('#rfq-unit');
+  await expect(field).toBeVisible({ timeout: 30_000 });
+  await field.scrollIntoViewIfNeeded();
+  await page.evaluate(() => {
+    const el = document.getElementById('rfq-unit')!;
+    el.scrollIntoView({ block: 'end' });
+  });
+  await page.waitForTimeout(500);
+  await field.click();
+  const list = page.locator('[data-select-list="true"]').last();
+  await expect(list).toBeVisible();
+  const box = (await list.boundingBox())!;
+  const trigger = (await field.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(500);
+  expect(box.y + box.height).toBeLessThanOrEqual(trigger.y);
+  expect(box.height).toBeGreaterThan(150);
+  await shot(page, 'dropdown-upward');
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1280, height: 800 });
+});
+
 test('phone width: the pages fit', async () => {
   const page = buyer;
   await page.setViewportSize({ width: 390, height: 844 });

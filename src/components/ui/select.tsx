@@ -5,6 +5,26 @@ import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/utils/helper';
 import { Portal } from './portal';
 
+const LIST_MAX_HEIGHT = 250;
+const LIST_GAP = 4;
+const SCREEN_MARGIN = 8;
+
+/** Opens below the field, or above it when there is more room there, and never runs off the screen */
+function listPosition(field: HTMLElement | null): React.CSSProperties {
+  if (!field) return { position: 'fixed', top: 0, left: 0, width: 0 };
+  const box = field.getBoundingClientRect();
+  const below = window.innerHeight - box.bottom - LIST_GAP - SCREEN_MARGIN;
+  const above = box.top - LIST_GAP - SCREEN_MARGIN;
+  const upward = below < LIST_MAX_HEIGHT && above > below;
+  return {
+    position: 'fixed',
+    left: box.left,
+    width: box.width,
+    maxHeight: Math.min(LIST_MAX_HEIGHT, Math.max(upward ? above : below, 0)),
+    ...(upward ? { bottom: window.innerHeight - box.top + LIST_GAP } : { top: box.bottom + LIST_GAP }),
+  };
+}
+
 export interface SelectOption {
   value: string;
   label: React.ReactNode;
@@ -268,18 +288,15 @@ function Select({
             id={listId}
             role="listbox"
             data-select-list="true"
-            style={{
-              position: 'fixed',
-              top: `${containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 0}px`,
-              left: `${containerRef.current ? containerRef.current.getBoundingClientRect().left : 0}px`,
-              width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
-              zIndex: 15000,
+            style={{ ...listPosition(containerRef.current), zIndex: 15000 }}
+            onKeyDown={(e) => {
+              // From the search box inside the list: Escape closes the list only, not the sheet around it
+              if (e.key !== 'Escape') return;
+              e.nativeEvent.stopImmediatePropagation();
+              e.stopPropagation();
+              setIsOpen(false);
             }}
-            className={cn(
-              'overflow-auto rounded-lg border border-hairline',
-              'bg-canvas',
-              'max-h-[250px]'
-            )}
+            className={cn('overflow-auto rounded-lg border border-hairline', 'bg-canvas')}
           >
             {derivedOptions.map((option, index) => {
               if (!option.isSelectable) {
