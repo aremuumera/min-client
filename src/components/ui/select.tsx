@@ -197,6 +197,9 @@ function Select({
         setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
         break;
       case 'Escape':
+        // Closes the list only, not the sheet or modal around it
+        if (isOpen) e.nativeEvent.stopImmediatePropagation();
+        if (isOpen) e.stopPropagation();
         setIsOpen(false);
         break;
     }
