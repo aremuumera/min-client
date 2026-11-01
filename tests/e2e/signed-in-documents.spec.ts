@@ -132,6 +132,7 @@ test('who can see it: email and ID are offered, trade participants are not; emai
   await form.getByLabel('To').click();
   await expect(page.locator('[data-select-list="true"]').last().getByRole('option')).toHaveText(['An email address', 'A company', 'A person']);
   await page.keyboard.press('Escape');
+  await expect(page.locator('[data-select-list="true"]')).toHaveCount(0);
 
   await form.getByRole('button', { name: 'Send link' }).click();
   await expect(form.getByText('Enter the email address')).toBeVisible();
