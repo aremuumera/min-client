@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Plus } from 'lucide-react';
-import { Button, Checkbox, DataTable, FilterBar, NativeSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
+import { Button, Checkbox, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { BatchDetailSheet, type BatchPermissions } from '@/components/batches/batch-detail-sheet';
 import { BatchDocumentsPanel } from '@/components/batches/batch-documents-panel';
 import { BatchFormSheet } from '@/components/batches/batch-form-sheet';
@@ -71,9 +71,9 @@ function InventoryPage() {
           setIncludeRetired(false);
         }}
       >
-        <NativeSelect aria-label="Material" value={materialId} onValueChange={setMaterialId} options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))} placeholder="All materials" className="md:w-48" />
-        <NativeSelect aria-label="Status" value={batchStatus} onValueChange={setBatchStatus} options={batchOptions(BATCH_STATUSES)} placeholder="All statuses" className="md:w-44" />
-        <NativeSelect aria-label="Where it is now" value={currentLocationId} onValueChange={setCurrentLocationId} options={(locations.data?.data ?? []).map((l) => ({ value: l.id, label: l.name }))} placeholder="All sites" className="md:w-44" />
+        <DropdownSelect aria-label="Material" value={materialId} onValueChange={setMaterialId} options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))} placeholder="All materials" className="md:w-48" />
+        <DropdownSelect aria-label="Status" value={batchStatus} onValueChange={setBatchStatus} options={batchOptions(BATCH_STATUSES)} placeholder="All statuses" className="md:w-44" />
+        <DropdownSelect aria-label="Where it is now" value={currentLocationId} onValueChange={setCurrentLocationId} options={(locations.data?.data ?? []).map((l) => ({ value: l.id, label: l.name }))} placeholder="All sites" className="md:w-44" />
         <Checkbox label="Include ended batches" checked={includeRetired} onChange={(e) => setIncludeRetired(e.target.checked)} />
       </FilterBar>
       <DataTable<Batch>

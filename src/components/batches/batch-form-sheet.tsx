@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, FormField, Input, NativeSelect, QuantityInput, SideSheet, useConfirm } from '@/components/ui';
+import { Alert, Button, FormField, Input, DropdownSelect, QuantityInput, SideSheet, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { BATCH_CODE_PATTERN, PHYSICAL_FORMS, REGISTER_SOURCES, REGISTER_TYPES, batchOptions, formatQuantity, isPositive, type Batch } from '@/lib/batches';
@@ -162,34 +162,34 @@ export function BatchFormSheet({ open, batch, onClose, onSaved, ownerField, owne
             {ownerField}
             {errors.ownerOrganizationId && <p className="text-sm text-semantic-error-text">{errors.ownerOrganizationId}</p>}
             <FormField label="Material" htmlFor="batch-material" required error={errors.materialId}>
-              <NativeSelect id="batch-material" value={materialId} onValueChange={setMaterialId} options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))} placeholder="Choose a material" />
+              <DropdownSelect id="batch-material" value={materialId} onValueChange={setMaterialId} options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))} placeholder="Choose a material" />
             </FormField>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Quantity" htmlFor="batch-quantity" required error={errors.initialQuantity} help="What you physically have today">
                 <QuantityInput id="batch-quantity" value={quantity} onChange={(v) => setQuantity(v)} />
               </FormField>
               <FormField label="Unit" htmlFor="batch-unit" required error={errors.quantityUnitId}>
-                <NativeSelect id="batch-unit" value={unitId} onValueChange={setUnitId} options={unitOptions} placeholder="Choose a unit" />
+                <DropdownSelect id="batch-unit" value={unitId} onValueChange={setUnitId} options={unitOptions} placeholder="Choose a unit" />
               </FormField>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Where it came from" htmlFor="batch-source" required error={errors.sourceType}>
-                <NativeSelect id="batch-source" value={sourceType} onValueChange={setSourceType} options={batchOptions(REGISTER_SOURCES)} placeholder="Choose one" />
+                <DropdownSelect id="batch-source" value={sourceType} onValueChange={setSourceType} options={batchOptions(REGISTER_SOURCES)} placeholder="Choose one" />
               </FormField>
               <FormField label="Registering" htmlFor="batch-type" help="New stock is always its own batch, never added to an old one">
-                <NativeSelect id="batch-type" value={batchType} onValueChange={setBatchType} options={batchOptions(REGISTER_TYPES)} />
+                <DropdownSelect id="batch-type" value={batchType} onValueChange={setBatchType} options={batchOptions(REGISTER_TYPES)} />
               </FormField>
             </div>
             <FormField label="Origin site" htmlFor="batch-origin" error={errors.sourceLocationId} help="Without one, the batch's origin shows as not recorded">
-              <NativeSelect id="batch-origin" value={sourceLocationId} onValueChange={setSourceLocationId} options={siteOptions} placeholder="Not recorded" />
+              <DropdownSelect id="batch-origin" value={sourceLocationId} onValueChange={setSourceLocationId} options={siteOptions} placeholder="Not recorded" />
             </FormField>
           </>
         )}
         <FormField label="Where it is now" htmlFor="batch-current" error={errors.currentLocationId} help={editing ? undefined : 'Empty: at the origin site'}>
-          <NativeSelect id="batch-current" value={currentLocationId} onValueChange={setCurrentLocationId} options={siteOptions} placeholder="Not recorded" />
+          <DropdownSelect id="batch-current" value={currentLocationId} onValueChange={setCurrentLocationId} options={siteOptions} placeholder="Not recorded" />
         </FormField>
         <FormField label="Physical form" htmlFor="batch-form-kind" error={errors.physicalForm}>
-          <NativeSelect id="batch-form-kind" value={physicalForm} onValueChange={setPhysicalForm} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
+          <DropdownSelect id="batch-form-kind" value={physicalForm} onValueChange={setPhysicalForm} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Grade" htmlFor="batch-grade" error={errors.grade} help="As your material is usually graded">

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, CopyableId, FormField, Input, KeyValueList, NativeSelect, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs, useConfirm } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, FormField, Input, KeyValueList, DropdownSelect, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { FILE_CLASSES, flattenFolders, formatBytes, label, type FileClass } from '@/lib/vault';
@@ -171,7 +171,7 @@ export function FileDetailSheet({ fileId, onClose }: { fileId: string | null; on
                       <Input id="file-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={255} />
                     </FormField>
                     <FormField label="Kind of document" htmlFor="file-class">
-                      <NativeSelect id="file-class" value={fileClass} onValueChange={(v) => setFileClass(v as FileClass)} options={FILE_CLASSES.map((c) => ({ value: c, label: label(c) }))} />
+                      <DropdownSelect id="file-class" value={fileClass} onValueChange={(v) => setFileClass(v as FileClass)} options={FILE_CLASSES.map((c) => ({ value: c, label: label(c) }))} />
                     </FormField>
                   </div>
                   <Button variant="outlined" className="self-start" onClick={save} disabled={!changed || !name.trim()} loading={updateState.isLoading}>
@@ -180,7 +180,7 @@ export function FileDetailSheet({ fileId, onClose }: { fileId: string | null; on
 
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
                     <FormField label="Move to" htmlFor="file-move" className="flex-1">
-                      <NativeSelect id="file-move" value={folderId} onValueChange={setFolderId} options={folders} placeholder="Top level" />
+                      <DropdownSelect id="file-move" value={folderId} onValueChange={setFolderId} options={folders} placeholder="Top level" />
                     </FormField>
                     <Button variant="outlined" onClick={move} disabled={folderId === (f.folderId ?? '')} loading={moveState.isLoading} className="h-11">
                       Move
