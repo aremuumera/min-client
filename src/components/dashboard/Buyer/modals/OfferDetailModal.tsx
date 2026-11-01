@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useShortlistRfqOfferMutation } from '@/redux/features/trade/trade_api';
+import { useConfirm } from '@/components/ui';
+import { OfferHistory } from '@/components/rfqs/offer-history';
 import { useAlert } from '@/providers';
 import { Loader2 } from 'lucide-react';
 
@@ -40,6 +42,7 @@ const safelyParse = (value: any) => {
 
 const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, offer }) => {
     const [shortlistOffer, { isLoading }] = useShortlistRfqOfferMutation();
+    const { confirm, dialog } = useConfirm();
     const { showAlert } = useAlert();
     const [selectedMedia, setSelectedMedia] = React.useState<{ url: string; type: 'image' | 'video' } | null>(null);
 
@@ -49,6 +52,8 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
 
     const handleShortlist = async () => {
         const nextState = !isShortlisted;
+        const ok = await confirm(nextState ? { title: 'Shortlist this offer?', description: 'The MINMEG Trade Desk sees that you prefer it.', confirmLabel: 'Shortlist' } : { title: 'Remove this offer from your shortlist?', description: 'You can shortlist it again later.', confirmLabel: 'Remove' });
+        if (!ok) return;
         try {
             await shortlistOffer({
                 offerId: offer.external_id || offer.id,
@@ -111,7 +116,7 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">Offer Detail</h2>
-                        <p className="text-xs text-gray-500 mt-0.5">Reference: {offer.external_id?.substring(0, 8)}...</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Offer ID: {offer.external_id}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors border border-transparent hover:border-gray-200">
                         <X size={20} className="text-gray-500" />
@@ -120,6 +125,8 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+                    {offer.external_id && <OfferHistory offerId={offer.external_id} />}
+    {dialog}
                     {/* Supplier Section */}
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 font-bold text-xl uppercase">
@@ -132,8 +139,6 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                             </h3>
                             <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                                 <span className="flex items-center gap-1.5"><MapPin size={14} /> {offer.delivery_country}, {offer.delivery_state}</span>
-                                <span>•</span>
-                                <span>Member since 2023</span>
                             </div>
                         </div>
                     </div>

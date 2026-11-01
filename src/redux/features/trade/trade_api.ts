@@ -111,8 +111,20 @@ export const tradeApi = createApi({
       query: (offerId) => `/rfq/offers/${offerId}`,
       providesTags: (result, error, id) => [{ type: "RfqOffer", id }],
     }),
-    getMyRfqOffers: builder.query<any, void>({
-      query: () => "/rfq/offers/my-offers",
+    getMyRfqOffers: builder.query<any, { page?: number; limit?: number; status?: string; search?: string; state?: string }>({
+      query: (params) => {
+        const q = new URLSearchParams();
+        for (const [k, v] of Object.entries(params)) if (v) q.append(k, String(v));
+        return `/rfq/offers/my-offers?${q.toString()}`;
+      },
+      providesTags: ["RfqOffer"],
+    }),
+    getMyRfqOfferSummary: builder.query<any, void>({
+      query: () => "/rfq/offers/my-offers/summary",
+      providesTags: ["RfqOffer"],
+    }),
+    getOfferHistory: builder.query<any, string>({
+      query: (offerId) => `/rfq/offers/${offerId}/history`,
       providesTags: ["RfqOffer"],
     }),
     shortlistRfqOffer: builder.mutation<
@@ -184,6 +196,8 @@ export const {
   useAcknowledgeInquiryMutation,
   useRejectInquiryMutation,
   useGetOffersByRfqQuery,
+  useGetMyRfqOfferSummaryQuery,
+  useGetOfferHistoryQuery,
   // RFQ Offer hooks
   useSubmitRfqOfferMutation,
   useGetRfqOffersQuery,

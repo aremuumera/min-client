@@ -129,13 +129,13 @@ export const dashboardConfig: DashboardConfig = {
           items: [
             {
               key: "rfq:create",
-              title: "Create Rfq",
+              title: "New RFQ",
               href: paths.dashboard.rfqs.create,
               permission: "rfq",
             },
             {
               key: "rfq",
-              title: "Listed RFQs",
+              title: "My RFQs",
               href: paths.dashboard.rfqs.list,
               permission: "rfq",
             },

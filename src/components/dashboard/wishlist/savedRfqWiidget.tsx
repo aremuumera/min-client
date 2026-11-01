@@ -13,7 +13,7 @@ import { useSelector } from 'react-redux';
 import Link from 'next/link';
 
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
-import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
+import { OfferForm } from '@/components/rfqs/offer-form';
 import { useAppSelector } from '@/redux';
 
 
@@ -177,17 +177,10 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
       /> 
       */}
 
-      <ProductInquiryModal
-        isOpen={showQuoteModal}
+      <OfferForm
+        open={showQuoteModal}
         onClose={closeQuoteModal}
-        product={{
-          id: rfqIdentifier.toString(),
-          rfqId: rfqIdentifier.toString(),
-          name: productName,
-          mineral_tag: 'mineral', // Assuming mineral_tag is not available in wishlist
-          supplier_id: rfqProduct.userId?.toString()
-        }}
-        itemType="rfq"
+        rfq={{ rfqId: String(rfqIdentifier), name: productName, quantityRequired: rfqProduct.quantityRequired, quantityMeasure: rfqProduct.quantityMeasure, purity_grade: rfqProduct.purity_grade, moisture_max: rfqProduct.moisture_max, packaging: rfqProduct.packaging, productDestination: rfqProduct.productDestination }}
       />
     </>
   );

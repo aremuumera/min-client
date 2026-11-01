@@ -7,11 +7,12 @@ import { User, Send, MapPin, X, Box, CheckCircle, Package, Timer, Clock, AlertCi
 import { differenceInSeconds } from 'date-fns';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
-import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
+import { OfferForm } from '@/components/rfqs/offer-form';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
 import { useAlert } from '@/providers';
 import { paths } from '@/config/paths';
 import { useAppSelector } from '@/redux';
+import { FULFILMENT_OPTIONS, LOCATION_TYPE_OPTIONS, optionLabel } from '@/lib/rfqs';
 
 // Media Modal Component
 const MediaModal = ({ isOpen, onClose, url, type }: { isOpen: boolean, onClose: () => void, url: string, type: 'image' | 'video' | 'document' }) => {
@@ -90,6 +91,8 @@ const CountdownTimer = ({ deadline }: { deadline: string }) => {
   );
 };
 
+const NOT_TAKING_OFFERS = ['closed', 'finalized', 'expired', 'cancelled', 'draft'];
+
 const StatusBadge = ({ status }: { status: string }) => {
   const isNegotiating = status === 'in_negotiation';
   const isClosed = status === 'closed' || status === 'finalized';
@@ -104,6 +107,12 @@ const StatusBadge = ({ status }: { status: string }) => {
   if (isClosed) return (
     <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-4 py-2 rounded-lg text-xs font-bold border border-gray-100 uppercase tracking-widest shadow-sm">
       <Box size={16} /> Bidding Closed
+    </div>
+  );
+
+  if (status === 'cancelled') return (
+    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg text-sm font-semibold">
+      <Box size={16} /> Cancelled
     </div>
   );
 
@@ -222,7 +231,7 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
             </div>
 
             <div className="flex flex-col items-end gap-3 shrink-0">
-              {status && status !== 'pending' && status !== 'supplier_matched' ? (
+              {status && !['pending', 'published', 'supplier_matched'].includes(status) ? (
                 <StatusBadge status={status} />
               ) : (
                 bidding_deadline && <CountdownTimer deadline={bidding_deadline} />
@@ -325,6 +334,46 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
               </div>
             </div>
 
+            {rfqProduct.material?.name && (
+              <div className="flex items-start gap-3">
+                <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Material:</p>
+                  <p className="font-semibold text-gray-800">{rfqProduct.material.name}</p>
+                </div>
+              </div>
+            )}
+
+            {rfqProduct.selectedState && (
+              <div className="flex items-start gap-3">
+                <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Destination state:</p>
+                  <p className="font-semibold text-gray-800">{rfqProduct.selectedState}</p>
+                </div>
+              </div>
+            )}
+
+            {rfqProduct.fulfillment_type && (
+              <div className="flex items-start gap-3">
+                <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Fulfilment:</p>
+                  <p className="font-semibold text-gray-800">{optionLabel(FULFILMENT_OPTIONS, rfqProduct.fulfillment_type)}</p>
+                </div>
+              </div>
+            )}
+
+            {rfqProduct.location_type && (
+              <div className="flex items-start gap-3">
+                <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Location type:</p>
+                  <p className="font-semibold text-gray-800">{optionLabel(LOCATION_TYPE_OPTIONS, rfqProduct.location_type)}</p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-start gap-3">
               <Send className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
               <div>
@@ -345,7 +394,7 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Payment Terms:</p>
                 <p className="font-semibold text-gray-800">
-                  {Array.isArray(selectedPayments) ? selectedPayments.join(', ') : selectedPayments || 'Unavailable'}
+                  {Array.isArray(selectedPayments) ? (selectedPayments.join(', ') || 'Unavailable') : selectedPayments || 'Unavailable'}
                 </p>
               </div>
             </div>
@@ -403,7 +452,7 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Shipping Terms:</p>
                 <p className="font-semibold text-gray-800">
-                  {Array.isArray(selectedShippings) ? selectedShippings.join(', ') : selectedShippings || 'Unavailable'}
+                  {Array.isArray(selectedShippings) ? (selectedShippings.join(', ') || 'Unavailable') : selectedShippings || 'Unavailable'}
                 </p>
               </div>
             </div>
@@ -474,10 +523,10 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
             </div>
             <button
               onClick={handleRequestQuote}
-              disabled={status === 'closed' || status === 'finalized' || status === 'expired'}
-              className={`w-full md:w-auto px-10 py-4 ${status === 'closed' || status === 'finalized' || status === 'expired' ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 '} text-white rounded-xl transition-all font-black text-sm md:min-w-[240px] uppercase tracking-widest`}
+              disabled={NOT_TAKING_OFFERS.includes(status)}
+              className={`w-full md:w-auto px-10 py-4 ${NOT_TAKING_OFFERS.includes(status) ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 '} text-white rounded-xl transition-all font-black text-sm md:min-w-[240px] uppercase tracking-widest`}
             >
-              {status === 'closed' || status === 'finalized' || status === 'expired' ? 'Submission Closed' : 'Submit Best Quote'}
+              {NOT_TAKING_OFFERS.includes(status) ? 'Submission Closed' : 'Submit Best Quote'}
             </button>
           </div>
         </div>
@@ -505,17 +554,10 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
       /> 
       */}
 
-      <ProductInquiryModal
-        isOpen={showQuoteModal}
+      <OfferForm
+        open={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
-        product={{
-          id: effectiveRfqId.toString(),
-          rfqId: effectiveRfqId.toString(),
-          name: rfqProductName,
-          mineral_tag: rfqProduct.mineral_tag || rfqProduct.category_tag || 'mineral', // Use category_tag as fallback
-          supplier_id: userId?.toString()
-        }}
-        itemType="rfq"
+        rfq={{ rfqId: String(effectiveRfqId), name: rfqProductName, quantityRequired, quantityMeasure, purity_grade: rfqProduct.purity_grade, moisture_max: rfqProduct.moisture_max, packaging: rfqProduct.packaging, productDestination }}
       />
       <MediaModal
         isOpen={mediaModal.isOpen}

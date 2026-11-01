@@ -31,7 +31,7 @@ export const rfqApi = createApi({
         }),
         getAllRfq: builder.query({
             query: (params) => {
-                const { limit, page, sort, search, category, mainCategory, subCategory, measure, quantity, status } = params;
+                const { materialId, limit, page, sort, search, category, mainCategory, subCategory, measure, quantity, status } = params;
                 const queryParams = new URLSearchParams();
                 if (limit) queryParams.append('limit', limit.toString());
                 if (page) queryParams.append('page', page.toString());
@@ -39,7 +39,8 @@ export const rfqApi = createApi({
                 if (category) queryParams.append('category', category);
                 if (mainCategory) queryParams.append('mainCategory', mainCategory);
                 if (subCategory) queryParams.append('subCategory', subCategory);
-                if (search) queryParams.append('search', search);
+                if (search) queryParams.append('q', search);
+                if (materialId) queryParams.append('materialId', materialId);
                 if (measure) queryParams.append('measure', measure);
                 if (quantity) queryParams.append('minQuantity', quantity);
                 if (status) queryParams.append('status', status);
@@ -64,6 +65,14 @@ export const rfqApi = createApi({
                 return `/rfqs/${buyerId}/buyer?${queryParams.toString()}`;
             },
             providesTags: ['Rfq'],
+        }),
+        getBuyerRfqSummary: builder.query<{ data: Record<string, number> }, string>({
+            query: (buyerId) => `/rfqs/${buyerId}/buyer/summary`,
+            providesTags: ['Rfq'],
+        }),
+        changeRfqStatus: builder.mutation<unknown, { buyerId: string; rfqId: string; status: 'published' | 'cancelled'; reason?: string }>({
+            query: ({ buyerId, rfqId, ...body }) => ({ url: `/buyers/${buyerId}/rfqs/${rfqId}/status`, method: 'PUT', body }),
+            invalidatesTags: ['Rfq'],
         }),
         getDetailFfq: builder.query({
             query: ({ rfqId }) => `/rfqs/${rfqId}/detail`,
@@ -98,6 +107,8 @@ export const {
     useGetAllRfqByBuyerIdQuery,
     useUpdateRfqMediaMutation,
     useGetRfqDetailsForbuyQuery,
+    useGetBuyerRfqSummaryQuery,
+    useChangeRfqStatusMutation,
     useGetDetailFfqQuery,
     useDeleteRfqMediaMutation,
     useDeleteRFQMutation,

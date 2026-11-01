@@ -42,6 +42,7 @@ const AllRfqsView = ({ mainCategoryId, mineralCategoryId, subMineralCategoryId }
             subCategory: subMineralCategoryId,
             search,
             sort,
+            materialId: filters?.materialId,
             measure: filters?.measure,
             quantity: filters?.quantity,
             status: filters?.rfqsStatus,

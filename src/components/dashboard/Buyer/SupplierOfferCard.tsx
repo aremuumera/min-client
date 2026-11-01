@@ -2,6 +2,7 @@ import { MdVerified, MdOutlineDownloadForOffline } from 'react-icons/md';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useShortlistRfqOfferMutation } from '@/redux/features/trade/trade_api';
+import { useConfirm } from '@/components/ui';
 import { Loader2 } from 'lucide-react';
 import { useAlert } from '@/providers';
 
@@ -14,12 +15,15 @@ interface SupplierOfferCardProps {
 
 const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected, onToggleSelect, onViewDetails }) => {
     const [shortlistOffer, { isLoading }] = useShortlistRfqOfferMutation();
+    const { confirm, dialog } = useConfirm();
     const { showAlert } = useAlert();
     const isShortlisted = offer.is_shortlisted;
 
     const handleShortlist = async (e: React.MouseEvent) => {
         e.stopPropagation();
         const nextState = !isShortlisted;
+        const ok = await confirm(nextState ? { title: 'Shortlist this offer?', description: 'The MINMEG Trade Desk sees that you prefer it.', confirmLabel: 'Shortlist' } : { title: 'Remove this offer from your shortlist?', description: 'You can shortlist it again later.', confirmLabel: 'Remove' });
+        if (!ok) return;
         try {
             await shortlistOffer({
                 offerId: offer.external_id || offer.id,
@@ -39,6 +43,7 @@ const SupplierOfferCard: React.FC<SupplierOfferCardProps> = ({ offer, isSelected
                 ${isSelected ? 'border-green-500 ring-2 ring-green-100 shadow-md' : 'border-gray-200 hover:border-gray-300'}
             `}
         >
+            <div onClick={(e) => e.stopPropagation()}>{dialog}</div>
             {/* Selection Checkbox */}
             <div className="absolute -top-3 -right-3 bg-white rounded-full z-10 p-1 border border-gray-200" onClick={(e) => e.stopPropagation()}>
                 <Checkbox

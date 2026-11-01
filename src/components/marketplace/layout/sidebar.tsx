@@ -467,7 +467,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
         )}
 
         {/* Material Filter */}
-        {!rfqCheck && (
+        {(
           <div className="mt-6">
             <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Material</h2>
             <DropdownSelect

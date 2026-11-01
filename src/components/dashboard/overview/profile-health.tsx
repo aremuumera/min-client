@@ -37,7 +37,7 @@ export const ProfileHealth = () => {
     }, { skip: !user?.id });
 
     // Fetch RFQ offers to check supplier offer activity
-    const { data: offerData } = useGetMyRfqOffersQuery(undefined, { skip: !user?.id || isBuyerOnly });
+    const { data: offerData } = useGetMyRfqOffersQuery({ limit: 1 }, { skip: !user?.id || isBuyerOnly });
 
     const hasProducts = (prodData?.total_items || 0) > 0 || (prodData?.total || 0) > 0 || (Array.isArray(prodData?.data) && prodData.data.length > 0) || (Array.isArray(prodData?.products) && prodData.products.length > 0);
     const hasRfqs = (rfqData?.total_items || 0) > 0 || (rfqData?.total || 0) > 0 || (Array.isArray(rfqData?.data) && rfqData.data.length > 0) || (Array.isArray(rfqData?.rfqs) && rfqData.rfqs.length > 0);

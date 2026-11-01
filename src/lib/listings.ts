@@ -174,6 +174,7 @@ export const categoryPathOf = (l: Pick<Listing, 'product_main_category' | 'produ
 
 export interface CategoryNode {
   id: string;
+  tag?: string;
   code: string | null;
   name: string;
   active?: boolean;
@@ -183,6 +184,16 @@ export interface CategoryNode {
 /** Everything outside Minerals: tools, protective equipment and services (the backend checks this too) */
 export const nonMineralRoots = (tree: readonly CategoryNode[]) => tree.filter((n) => n.code !== 'MINERALS');
 export const mineralRoot = (tree: readonly CategoryNode[]) => tree.find((n) => n.code === 'MINERALS') ?? null;
+
+/** The category with this tag, for an old record that stores only the tag */
+export function categoryByTag(tree: readonly CategoryNode[], tag: string | null | undefined): CategoryNode | null {
+  for (const node of tree) {
+    if (node.tag === tag) return node;
+    const below = categoryByTag(node.children, tag);
+    if (below) return below;
+  }
+  return null;
+}
 
 /** The ids from a root down to this category, or [] */
 export function categoryChain(tree: readonly CategoryNode[], id: string | null | undefined): string[] {

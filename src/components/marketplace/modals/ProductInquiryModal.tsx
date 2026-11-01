@@ -5,14 +5,13 @@ import { Loader2, CheckCircle, X, MapPin, Calendar, Scale, AlertTriangle, Box, C
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useAlert } from '@/providers';
-import { useCreateProductInquiryMutation, useCreateBusinessInquiryMutation, useSubmitRfqOfferMutation } from '@/redux/features/trade/trade_api';
+import { useCreateProductInquiryMutation, useCreateBusinessInquiryMutation } from '@/redux/features/trade/trade_api';
 import { Select } from '@/components/ui/select';
 import { MoqUnits } from '@/lib/marketplace-data';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 import { getErrorMessage } from '@/utils/helper';
 import { PACKAGING_OPTIONS } from '@/lib/trade-terms';
-import { compressImages } from '@/lib/images/compress';
 
 interface ProductInquiryModalProps {
     isOpen: boolean;
@@ -33,17 +32,7 @@ interface ProductInquiryModalProps {
         minimum_order_quantity?: string | null;
         product_category?: string;
     };
-    itemType?: 'product' | 'rfq' | 'business';
-    rfqData?: {
-        quantityRequired?: string;
-        quantityMeasure?: string;
-        purity_grade?: string;
-        moisture_max?: number;
-        packaging?: string;
-        sampling_method?: string;
-        productDestination?: string;
-        rfqDescription?: string;
-    };
+    itemType?: 'product' | 'business';
     productData?: {
         purity_grade?: string;
         moisture_max?: number | string;
@@ -74,43 +63,21 @@ const initialState = {
     sampling_method: '',
 };
 
-const offerInitialState = {
-    quantity: '',
-    measure_type: 'Tons',
-    unit_price: '',
-    currency: 'NGN',
-    purity_grade: '',
-    moisture_max: '',
-    packaging: '',
-    sampling_method: '',
-    delivery_location: '',
-    delivery_state: '',
-    delivery_country: 'Nigeria',
-    delivery_address: '',
-    timeline_type: 'immediate',
-    recurring_duration: '',
-    recurring_frequency: 'monthly',
-    description: '',
-    attachments: [] as any[],
-};
-
 const ProductInquiryModal = ({
     isOpen,
     onClose,
     product,
     itemType = 'product',
-    rfqData,
     productData,
 }: ProductInquiryModalProps) => {
-    const isRfqOffer = itemType === 'rfq';
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState<any>(isRfqOffer ? offerInitialState : initialState);
+    const [formData, setFormData] = useState<any>(initialState);
     const [customPackaging, setCustomPackaging] = useState(false);
     const [showSpecsPopover, setShowSpecsPopover] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     // A listing with a minimum order is asked for in its own unit, so the amount can be checked
-    const listedMeasure = !isRfqOffer ? (product as { measure?: string })?.measure : undefined;
-    const minimumOrder = !isRfqOffer ? (product as { minimum_order_quantity?: string | null })?.minimum_order_quantity : null;
+    const listedMeasure = (product as { measure?: string })?.measure;
+    const minimumOrder = (product as { minimum_order_quantity?: string | null })?.minimum_order_quantity ?? null;
     useEffect(() => {
         if (isOpen && listedMeasure) setFormData((f: any) => ({ ...f, measure_type: listedMeasure }));
     }, [isOpen, listedMeasure]);
@@ -118,7 +85,7 @@ const ProductInquiryModal = ({
     const handleClose = () => {
         setStep(1);
         setShowSpecsPopover(false);
-        setFormData(isRfqOffer ? offerInitialState : initialState);
+        setFormData(initialState);
         onClose();
     };
 
@@ -194,42 +161,17 @@ const ProductInquiryModal = ({
 
     const [createInquiry, { isLoading }] = useCreateProductInquiryMutation();
     const [createBusinessInquiry, { isLoading: isCreatingBusinessInquiry }] = useCreateBusinessInquiryMutation();
-    const [submitOffer, { isLoading: isSubmittingOffer }] = useSubmitRfqOfferMutation();
     const { user } = useSelector((state: any) => state.auth);
     const { showAlert } = useAlert();
     const router = useRouter();
-    const loading = isRfqOffer ? isSubmittingOffer : (itemType === 'business' ? isCreatingBusinessInquiry : isLoading);
+    const loading = itemType === 'business' ? isCreatingBusinessInquiry : isLoading;
 
     if (!isOpen) return null;
 
-    // Prevent buyers from submitting RFQ offers
     const userRole = (user?.role || '').toLowerCase();
-    const canSubmitOffer = userRole === 'supplier' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin';
-    if (isRfqOffer && !canSubmitOffer) {
-        return (
-            <div className="fixed inset-0 bg-black/60 z-11000 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-8 text-center">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertTriangle className="text-red-600 w-8 h-8" />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Not Authorized</h3>
-                    <p className="text-sm text-gray-500 mb-6">
-                        You are not authorized to submit an offer, Kindly contact support.
-                    </p>
-                    <button
-                        onClick={onClose}
-                        className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all"
-                    >
-                        Go Back
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
     // Prevent suppliers from submitting product inquiries or requesting quotes
     const canSubmitInquiry = userRole === 'buyer' || userRole === 'buyer_supplier' || userRole === 'both' || userRole === 'admin' || userRole === 'super_admin' || userRole === 'user';
-    if (!isRfqOffer && !canSubmitInquiry) {
+    if (!canSubmitInquiry) {
         return (
             <div className="fixed inset-0 bg-black/60 z-11000 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-8 text-center">
@@ -281,92 +223,53 @@ const ProductInquiryModal = ({
         if (submitting || loading) return;
         setSubmitting(true);
         try {
-            if (isRfqOffer) {
-                const offerData = formData as typeof offerInitialState;
-                const isRecurring = offerData.timeline_type === 'recurring';
-
-                const formDataPayload = new FormData();
-                formDataPayload.append('quantity', String(offerData.quantity || 0));
-                formDataPayload.append('measure_type', offerData.measure_type);
-                formDataPayload.append('unit_price', String(offerData.unit_price || 0));
-                formDataPayload.append('currency', offerData.currency);
-                formDataPayload.append('purity_grade', offerData.purity_grade);
-                formDataPayload.append('moisture_max', offerData.moisture_max);
-                formDataPayload.append('packaging', offerData.packaging);
-                formDataPayload.append('sampling_method', offerData.sampling_method);
-                formDataPayload.append('delivery_location', offerData.delivery_location);
-                formDataPayload.append('delivery_state', offerData.delivery_state);
-                formDataPayload.append('delivery_country', offerData.delivery_country);
-                formDataPayload.append('delivery_address', offerData.delivery_address);
-                formDataPayload.append('timeline_type', offerData.timeline_type);
-                if (isRecurring && offerData.recurring_duration) {
-                    formDataPayload.append('recurring_frequency', offerData.recurring_frequency);
-                    formDataPayload.append('recurring_duration', String(Math.round(Number(offerData.recurring_duration))));
-                }
-                formDataPayload.append('description', offerData.description);
-
-                if (offerData.attachments && offerData.attachments.length > 0) {
-                    offerData.attachments.forEach((file: File) => {
-                        formDataPayload.append('offerAttachment', file);
-                    });
-                }
-
-                const targetRfqId = product.rfqId || product.id;
-                if (!targetRfqId) {
-                    showAlert('Target RFQ ID is missing', 'error');
-                    return;
-                }
-
-                await submitOffer({ rfqId: targetRfqId, body: formDataPayload }).unwrap();
+            const inquiryData = formData as typeof initialState;
+            const isRecurring = inquiryData.timeline_type === 'recurring';
+            if (itemType === 'business') {
+                const payload = {
+                    supplier_profile_id: product.id,
+                    quantity: Number(inquiryData.quantity) || 0,
+                    measure_type: inquiryData.measure_type,
+                    delivery_location: inquiryData.delivery_location,
+                    delivery_address: inquiryData.delivery_address,
+                    delivery_state: inquiryData.delivery_state,
+                    delivery_country: inquiryData.delivery_country,
+                    timeline_type: inquiryData.timeline_type,
+                    recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
+                    recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
+                    urgency: inquiryData.urgency,
+                    description: inquiryData.description,
+                };
+                await createBusinessInquiry(payload).unwrap();
             } else {
-                const inquiryData = formData as typeof initialState;
-                const isRecurring = inquiryData.timeline_type === 'recurring';
-                if (itemType === 'business') {
-                    const payload = {
-                        supplier_profile_id: product.id,
-                        quantity: Number(inquiryData.quantity) || 0,
-                        measure_type: inquiryData.measure_type,
-                        delivery_location: inquiryData.delivery_location,
-                        delivery_address: inquiryData.delivery_address,
-                        delivery_state: inquiryData.delivery_state,
-                        delivery_country: inquiryData.delivery_country,
-                        timeline_type: inquiryData.timeline_type,
-                        recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
-                        recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
-                        urgency: inquiryData.urgency,
-                        description: inquiryData.description,
-                    };
-                    await createBusinessInquiry(payload).unwrap();
-                } else {
-                    const payload = {
-                        product_id: product.id,
-                        entity_type: itemType,
-                        mineral_tag: product.mineral_tag,
-                        quantity: Number(inquiryData.quantity) || 0,
-                        measure_type: inquiryData.measure_type,
-                        delivery_location: inquiryData.delivery_location,
-                        delivery_address: inquiryData.delivery_address,
-                        delivery_state: inquiryData.delivery_state,
-                        delivery_country: inquiryData.delivery_country,
-                        timeline_type: inquiryData.timeline_type,
-                        recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
-                        recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
-                        inspection_intent: inquiryData.inspection_intent,
-                        preferred_grade: inquiryData.preferred_grade,
-                        urgency: inquiryData.urgency,
-                        description: inquiryData.description,
-                        purity_grade: inquiryData.purity_grade,
-                        moisture_max: inquiryData.moisture_max,
-                        packaging: inquiryData.packaging,
-                        sampling_method: inquiryData.sampling_method,
-                    };
-                    await createInquiry(payload).unwrap();
-                }
+                const payload = {
+                    product_id: product.id,
+                    entity_type: itemType,
+                    mineral_tag: product.mineral_tag,
+                    quantity: Number(inquiryData.quantity) || 0,
+                    measure_type: inquiryData.measure_type,
+                    delivery_location: inquiryData.delivery_location,
+                    delivery_address: inquiryData.delivery_address,
+                    delivery_state: inquiryData.delivery_state,
+                    delivery_country: inquiryData.delivery_country,
+                    timeline_type: inquiryData.timeline_type,
+                    recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
+                    recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
+                    inspection_intent: inquiryData.inspection_intent,
+                    preferred_grade: inquiryData.preferred_grade,
+                    urgency: inquiryData.urgency,
+                    description: inquiryData.description,
+                    purity_grade: inquiryData.purity_grade,
+                    moisture_max: inquiryData.moisture_max,
+                    packaging: inquiryData.packaging,
+                    sampling_method: inquiryData.sampling_method,
+                };
+                await createInquiry(payload).unwrap();
             }
             setStep(3);
         } catch (err: any) {
             console.error('Submit Error:', err);
-            showAlert(getErrorMessage(err, isRfqOffer ? 'Failed to submit offer' : 'Failed to submit inquiry'), 'error');
+            showAlert(getErrorMessage(err, 'Failed to submit inquiry'), 'error');
         } finally {
             setSubmitting(false);
         }
@@ -374,17 +277,9 @@ const ProductInquiryModal = ({
 
     const handleNext = () => {
         if (step === 1) {
-            if (isRfqOffer) {
-                const od = formData as typeof offerInitialState;
-                if (!od.quantity || !od.unit_price) {
-                    showAlert('Please fill in Quantity and Unit Price', 'error');
-                    return;
-                }
-            } else {
-                if (!formData.quantity || !formData.delivery_location || !formData.delivery_address || !formData.delivery_state || !formData.delivery_country) {
-                    showAlert('Please fill in required fields (Quantity, LGA, Country, State and Address)', 'error');
-                    return;
-                }
+            if (!formData.quantity || !formData.delivery_location || !formData.delivery_address || !formData.delivery_state || !formData.delivery_country) {
+                showAlert('Please fill in required fields (Quantity, LGA, Country, State and Address)', 'error');
+                return;
             }
         }
         setStep(step + 1);
@@ -399,7 +294,6 @@ const ProductInquiryModal = ({
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">
                             {itemType === 'product' && 'Product Inquiry'}
-                            {itemType === 'rfq' && 'Submit Offer'}
                             {itemType === 'business' && 'Contact Business'}
                         </h3>
                         <p className="text-xs text-gray-500">for {product.name}</p>
@@ -413,169 +307,6 @@ const ProductInquiryModal = ({
                 <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
                     {step === 1 && (
                         <div className="space-y-6">
-                            {isRfqOffer ? (
-                                <>
-                                    {/* Buyer Requirements (Read-Only) */}
-                                    {rfqData && (
-                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                                            <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2"><FileText size={16} /> Buyer Requirements</h4>
-                                            <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
-                                                {rfqData.quantityRequired && <p><strong>Qty:</strong> {rfqData.quantityRequired} {rfqData.quantityMeasure}</p>}
-                                                {rfqData.purity_grade && <p><strong>Grade:</strong> {rfqData.purity_grade}</p>}
-                                                {rfqData.moisture_max && <p><strong>Moisture:</strong> ≤{rfqData.moisture_max}%</p>}
-                                                {rfqData.packaging && <p><strong>Packaging:</strong> {rfqData.packaging}</p>}
-                                                {rfqData.productDestination && <p><strong>Destination:</strong> {rfqData.productDestination}</p>}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Pricing */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div className="sm:col-span-2">
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Unit Price *</label>
-                                            <div className="relative">
-                                                <div className="absolute left-3 top-3 text-gray-400 text-sm font-bold">
-                                                    {(formData as any).currency === 'NGN' ? '₦' : '$'}
-                                                </div>
-                                                <input type="text" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Price per unit"
-                                                    value={formatNumberWithCommas((formData as any).unit_price)}
-                                                    onChange={e => setFormData({ ...formData, unit_price: stripCommas(e.target.value) } as any)} />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Currency</label>
-                                            <Select fullWidth value={(formData as any).currency}
-                                                onChange={(val: any) => { const v = typeof val === 'string' ? val : val.target.value; setFormData({ ...formData, currency: v } as any); }}
-                                                options={[{ value: 'NGN', label: '₦ NGN' } /* , { value: 'USD', label: '$ USD' } */]} />
-                                        </div>
-                                    </div>
-
-                                    {/* Quantity & Measure */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Quantity Available *</label>
-                                            <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Enter amount"
-                                                value={formatNumberWithCommas(formData.quantity)}
-                                                onChange={e => setFormData({ ...formData, quantity: stripCommas(e.target.value) })} />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Measure Type</label>
-                                            <Select fullWidth value={formData.measure_type}
-                                                onChange={(val: any) => { const v = typeof val === 'string' ? val : val.target.value; setFormData({ ...formData, measure_type: v }); }}
-                                                options={MoqUnits.map(u => ({ value: u, label: u }))} />
-                                        </div>
-                                    </div>
-
-                                    {/* Mineral Specs */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Your Purity / Grade</label>
-                                            <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. 95%+, Grade A"
-                                                value={(formData as any).purity_grade} onChange={e => setFormData({ ...formData, purity_grade: e.target.value } as any)} />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Your Moisture (%)</label>
-                                            <input type="number" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. 5.0"
-                                                value={(formData as any).moisture_max} onChange={e => setFormData({ ...formData, moisture_max: e.target.value } as any)} />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Packaging</label>
-                                            <Select fullWidth value={customPackaging ? 'Custom' : ((formData as any).packaging || '')}
-                                                onChange={(val: any) => {
-                                                    const v = typeof val === 'string' ? val : val.target.value;
-                                                    if (v === 'Custom') {
-                                                        setCustomPackaging(true);
-                                                        setFormData({ ...formData, packaging: '' } as any);
-                                                    } else {
-                                                        setCustomPackaging(false);
-                                                        setFormData({ ...formData, packaging: v } as any);
-                                                    }
-                                                }}
-                                                options={PACKAGING_OPTIONS} />
-                                            {customPackaging && (
-                                                <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none mt-2" placeholder="Enter custom packaging"
-                                                    value={(formData as any).packaging} onChange={e => setFormData({ ...formData, packaging: e.target.value } as any)} />
-                                            )}
-                                        </div>
-                                        {/* Sampling Protocol - not needed for supplier offers */}
-                                        {/* <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Sampling Protocol</label>
-                                            <input type="text" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. ASTM Standard"
-                                                value={(formData as any).sampling_method} onChange={e => setFormData({ ...formData, sampling_method: e.target.value } as any)} />
-                                        </div> */}
-                                    </div>
-
-                                    {/* Origin / Loading Point */}
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Origin / Loading Point</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <input type="text" className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Country"
-                                                value={formData.delivery_country} onChange={e => setFormData({ ...formData, delivery_country: e.target.value })} />
-                                            <input type="text" className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="State"
-                                                value={formData.delivery_state} onChange={e => setFormData({ ...formData, delivery_state: e.target.value })} />
-                                            <input type="text" className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="LGA / Loading Site"
-                                                value={formData.delivery_location} onChange={e => setFormData({ ...formData, delivery_location: e.target.value })} />
-                                            <input type="text" className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Detailed Address"
-                                                value={formData.delivery_address} onChange={e => setFormData({ ...formData, delivery_address: e.target.value })} />
-                                        </div>
-                                    </div>
-
-                                    {/* Attachments */}
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-bold text-gray-700">Attachments (Images/PDF/MP4)</label>
-                                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center">
-                                            <input
-                                                type="file"
-                                                multiple
-                                                accept="image/*,application/pdf,video/mp4"
-                                                id="offer-attachments"
-                                                className="hidden"
-                                                onChange={async (e) => {
-                                                    const files = await compressImages(e.target.files || []);
-                                                    const validFiles = files.filter(f => {
-                                                        if (f.size > 15 * 1024 * 1024) {
-                                                            showAlert(`${f.name} is too large (>15MB)`, 'error');
-                                                            return false;
-                                                        }
-                                                        if (f.type.startsWith('video/') && f.type !== 'video/mp4') {
-                                                            showAlert(`Only MP4 videos are supported`, 'error');
-                                                            return false;
-                                                        }
-                                                        return true;
-                                                    });
-                                                    setFormData({ ...formData, attachments: [...(formData.attachments || []), ...validFiles] });
-                                                }}
-                                            />
-                                            <label htmlFor="offer-attachments" className="cursor-pointer flex flex-col items-center gap-2">
-                                                <Upload size={24} className="text-gray-400" />
-                                                <span className="text-xs text-gray-500">Click to upload (Max 15MB per file)</span>
-                                            </label>
-                                        </div>
-                                        {formData.attachments?.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {formData.attachments.map((file: any, i: number) => (
-                                                    <div key={i} className="bg-gray-100 px-2 py-1 rounded text-[10px] flex items-center gap-1">
-                                                        <span className="truncate max-w-[100px]">{file.name}</span>
-                                                        <button onClick={() => setFormData({ ...formData, attachments: formData.attachments.filter((_: any, idx: number) => idx !== i) })} className="text-red-500"><X size={10} /></button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Additional Description</label>
-                                        <textarea
-                                            className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm h-24 focus:ring-2 focus:ring-green-500 outline-none transition-all resize-none"
-                                            placeholder="Provide more details about your offer..."
-                                            value={formData.description}
-                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                        />
-                                    </div>
-                                </>
-                            ) : (
                                 <>
                                     {/* Quantity & Measure */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -942,7 +673,6 @@ const ProductInquiryModal = ({
                                         />
                                     </div>
                                 </>
-                            )}
                         </div>
                     )}
 
@@ -951,7 +681,7 @@ const ProductInquiryModal = ({
                             <div className="bg-gray-50/80 p-6 rounded-2xl border border-gray-100 text-sm text-gray-600 space-y-4">
                                 <h4 className="font-bold text-gray-900 border-b border-gray-200 pb-2 mb-2 flex items-center gap-2">
                                     <Box size={18} className="text-green-600" />
-                                    {isRfqOffer ? 'Review Your Offer' : 'Review Your Inquiry'}
+                                    Review Your Inquiry
                                 </h4>
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
@@ -962,12 +692,6 @@ const ProductInquiryModal = ({
                                         <span className="text-gray-500">Quantity:</span>
                                         <span className="font-bold text-gray-900">{formatNumberWithCommas(formData.quantity)} {formData.measure_type?.replace(/_/g, ' ')}</span>
                                     </div>
-                                    {isRfqOffer && (
-                                        <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
-                                            <span className="text-gray-500">Unit Price:</span>
-                                            <span className="font-bold text-gray-900">{formData.currency} {formatNumberWithCommas(formData.unit_price)}</span>
-                                        </div>
-                                    )}
                                     <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
                                         <span className="text-gray-500">Grade Required:</span>
                                         <span className="font-bold text-gray-900">{formData.purity_grade || formData.preferred_grade || 'Standard'}</span>
@@ -1029,13 +753,10 @@ const ProductInquiryModal = ({
                             <button
                                 onClick={() => {
                                     handleClose();
-                                    if (isRfqOffer) {
-                                        router.push('/dashboard/chat');
-                                    }
                                 }}
                                 className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all active:scale-[0.98]"
                             >
-                                {isRfqOffer ? 'View in Trade Desk' : 'Return to Marketplace'}
+                                Return to Marketplace
                             </button>
                         </div>
                     )}
@@ -1076,7 +797,7 @@ const ProductInquiryModal = ({
                                             <Loader2 className="animate-spin" size={18} />
                                         ) : (
                                             <>
-                                                {isRfqOffer ? 'Submit Offer' : 'Send Inquiry'} <ChevronRight size={18} />
+                                                Send Inquiry <ChevronRight size={18} />
                                             </>
                                         )}
                                     </button>

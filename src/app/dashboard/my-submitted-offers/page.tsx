@@ -1,7 +1,11 @@
 "use client";
 
 import React from 'react';
-import { useGetMyRfqOffersQuery } from '@/redux/features/trade/trade_api';
+import { useGetMyRfqOfferSummaryQuery, useGetMyRfqOffersQuery } from '@/redux/features/trade/trade_api';
+import { CopyableId, DropdownSelect, PageHelp, PaginationBar } from '@/components/ui';
+import { OfferHistory } from '@/components/rfqs/offer-history';
+import { myOffersHelp } from '@/lib/help/rfqs';
+import { NIGERIA, OFFER_STATUS_OPTIONS, stateOptions } from '@/lib/rfqs';
 import {
     Clock,
     Box,
@@ -39,37 +43,6 @@ import {
 import { Drawer } from '@/components/ui/drawer';
 import { Menu, MenuItem } from '@/components/ui/menu';
 import { Button } from '@/components/ui/button';
-
-const CopyableId = ({ id }: { id: string }) => {
-    const [copied, setCopied] = React.useState(false);
-    const fullId = id?.toUpperCase() || '';
-    const shortId = fullId.length > 12 ? `${fullId.substring(0, 8)}...` : fullId;
-
-    const handleCopy = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(fullId);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    return (
-        <div className="group/id relative flex items-center gap-2 w-fit">
-            <span
-                className="font-mono text-[11px] font-bold text-gray-500 bg-gray-100/70 px-2.5 py-1 rounded-md cursor-help"
-                title={fullId}
-            >
-                #{shortId}
-            </span>
-            <button
-                onClick={handleCopy}
-                className="p-1 hover:bg-gray-100 rounded-md transition-all text-gray-400 hover:text-green-600"
-                title="Copy reference ID"
-            >
-                {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
-            </button>
-        </div>
-    );
-};
 
 const StatusBadge = ({ status, isShortlisted }: { status: string; isShortlisted?: boolean }) => {
     if (isShortlisted && status !== 'accepted' && status !== 'rejected') {
@@ -127,7 +100,7 @@ const DetailDrawer = ({ isOpen, onClose, offer }: { isOpen: boolean; onClose: ()
                         <h2 className="text-xl font-bold text-gray-900 tracking-tight">Bid Details</h2>
                         <StatusBadge status={offer.status} isShortlisted={offer.is_shortlisted} />
                     </div>
-                    <CopyableId id={offer.external_id} />
+                    <CopyableId value={offer.external_id} />
                 </div>
 
                 {/* Body */}
@@ -139,7 +112,7 @@ const DetailDrawer = ({ isOpen, onClose, offer }: { isOpen: boolean; onClose: ()
                             Target RFQ Product
                         </div>
                         <h3 className="text-base font-bold text-gray-900 leading-snug">{productName}</h3>
-                        <p className="text-xs text-gray-500 font-medium">RFQ Ref: #{offer.rfq?.rfqId?.substring(0, 8).toUpperCase() || 'N/A'}</p>
+                        <p className="text-xs text-gray-500 font-medium">RFQ ID: {offer.rfq?.rfqId || 'N/A'}</p>
                     </div>
 
                     {/* Key Metrics (Quantity, Unit Price) */}
@@ -224,6 +197,8 @@ const DetailDrawer = ({ isOpen, onClose, offer }: { isOpen: boolean; onClose: ()
                     </section>
 
                     {/* Offer Note */}
+                    {offer.external_id && <OfferHistory offerId={offer.external_id} />}
+
                     {offer.description && (
                         <section className="space-y-3">
                             <div className="flex items-center gap-3">
@@ -308,42 +283,29 @@ export default function MySubmittedOffers() {
     const [selectedState, setSelectedState] = React.useState('');
     const [selectedStatus, setSelectedStatus] = React.useState('');
 
-    const { data, isLoading } = useGetMyRfqOffersQuery(undefined, {
+    const [page, setPage] = React.useState(1);
+    const [limit, setLimit] = React.useState(20);
+    const [debouncedSearch, setDebouncedSearch] = React.useState('');
+    React.useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+        return () => clearTimeout(t);
+    }, [searchTerm]);
+    React.useEffect(() => setPage(1), [debouncedSearch, selectedState, selectedStatus]);
+
+    const { data, isLoading } = useGetMyRfqOffersQuery({ page, limit, status: selectedStatus, search: debouncedSearch, state: selectedState }, {
         refetchOnMountOrArgChange: true
     });
+    const summary = useGetMyRfqOfferSummaryQuery(undefined, { refetchOnMountOrArgChange: true });
+    const counts = summary.data?.data;
 
     const [selectedOffer, setSelectedOffer] = React.useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = React.useState(false);
 
-    const allOffers = data?.data || [];
-
-    // Filter offers locally
-    const offers = allOffers.filter((off: any) => {
-        if (selectedState && (off.delivery_state || '').toLowerCase() !== selectedState.toLowerCase()) {
-            return false;
-        }
-        if (selectedStatus) {
-            const st = (off.status || '').toLowerCase();
-            if (selectedStatus === 'SHORTLISTED' && !off.is_shortlisted) return false;
-            if (selectedStatus === 'ACCEPTED' && st !== 'accepted') return false;
-            if (selectedStatus === 'PENDING' && (st !== 'pending' || off.is_shortlisted)) return false;
-            if (selectedStatus === 'REJECTED' && st !== 'rejected') return false;
-        }
-        if (searchTerm.trim()) {
-            const term = searchTerm.toLowerCase();
-            const extMatch = (off.external_id || '').toLowerCase().includes(term);
-            const prodMatch = (off.rfq?.rfqProductName || '').toLowerCase().includes(term);
-            const locMatch = (off.delivery_location || '').toLowerCase().includes(term) || (off.delivery_state || '').toLowerCase().includes(term);
-            if (!extMatch && !prodMatch && !locMatch) return false;
-        }
-        return true;
-    });
-
-    // Calculate Analytics Status Totals
-    const totalCount = allOffers.length;
-    const shortlistedCount = allOffers.filter((o: any) => o.is_shortlisted).length;
-    const acceptedCount = allOffers.filter((o: any) => (o.status || '').toLowerCase() === 'accepted').length;
-    const pendingCount = allOffers.filter((o: any) => (o.status || '').toLowerCase() === 'pending' && !o.is_shortlisted).length;
+    const offers = data?.data || [];
+    const totalCount = counts?.total ?? '—';
+    const shortlistedCount = counts?.SHORTLISTED ?? '—';
+    const acceptedCount = counts?.ACCEPTED ?? '—';
+    const pendingCount = counts?.PENDING ?? '—';
 
     // Analytics Cards configuration matching Analytics page design (100% UNIFIED GREEN ICON THEME)
     const analyticsCards = [
@@ -381,19 +343,7 @@ export default function MySubmittedOffers() {
         }
     ];
 
-    // Extract dynamic unique states for dropdown options
-    const uniqueStatesFromData = Array.from(
-        new Set(allOffers.map((off: any) => off.delivery_state).filter(Boolean))
-    ) as string[];
-
-    const standardStates = [
-        "Abuja", "Lagos", "Kano", "Rivers", "Oyo", "Kaduna", "Enugu", "Plateau", "Kwara", "Nasarawa",
-        "Edo", "Delta", "Ogun", "Gombe", "Kogi", "Bauchi", "Sokoto", "Zamfara", "Kebbi", "Jigawa",
-        "Yobe", "Borno", "Adamawa", "Taraba", "Benue", "Niger", "Cross River", "Akwa Ibom", "Bayelsa",
-        "Abia", "Anambra", "Ebonyi", "Imo", "Ekiti", "Ondo", "Osun"
-    ];
-
-    const allStateOptions = Array.from(new Set([...uniqueStatesFromData, ...standardStates]));
+    const allStateOptions = stateOptions(NIGERIA);
 
     const handleViewDetail = (offer: any) => {
         setSelectedOffer(offer);
@@ -413,7 +363,7 @@ export default function MySubmittedOffers() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight">Active Bids</h1>
+                    <h1 className="flex items-center gap-2 text-2xl lg:text-3xl font-black text-gray-900 tracking-tight">Active Bids <PageHelp content={myOffersHelp} /></h1>
                     <p className="text-gray-500 mt-1 text-sm font-medium">Track all quotes sent to buyers for their RFQs in real-time.</p>
                 </div>
             </div>
@@ -469,34 +419,13 @@ export default function MySubmittedOffers() {
                 {/* State Filter */}
                 <div className="flex items-center gap-2 w-full md:w-56">
                     <MapPin size={16} className="text-gray-400 shrink-0 hidden sm:inline-block" />
-                    <select
-                        value={selectedState}
-                        onChange={(e) => setSelectedState(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none w-full cursor-pointer transition-all"
-                    >
-                        <option value="">All States</option>
-                        {allStateOptions.map((st) => (
-                            <option key={st} value={st}>
-                                {st}
-                            </option>
-                        ))}
-                    </select>
+                    <DropdownSelect aria-label="State" searchable value={selectedState} onValueChange={setSelectedState} options={allStateOptions} placeholder="All States" className="w-full" />
                 </div>
 
                 {/* Status Filter */}
                 <div className="flex items-center gap-2 w-full md:w-52">
                     <Filter size={16} className="text-gray-400 shrink-0 hidden sm:inline-block" />
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none w-full cursor-pointer transition-all"
-                    >
-                        <option value="">All Statuses</option>
-                        <option value="SHORTLISTED">Shortlisted</option>
-                        <option value="ACCEPTED">Accepted</option>
-                        <option value="PENDING">Pending Review</option>
-                        <option value="REJECTED">Declined</option>
-                    </select>
+                    <DropdownSelect aria-label="Status" value={selectedStatus} onValueChange={setSelectedStatus} options={OFFER_STATUS_OPTIONS} placeholder="All Statuses" className="w-full" />
                 </div>
 
                 {/* Reset Filters */}
@@ -564,7 +493,7 @@ export default function MySubmittedOffers() {
                                     return (
                                         <TableRow key={offer.id || index} className="group hover:bg-gray-50/80 border-b border-gray-100 transition-colors">
                                             <TableCell className="py-4 px-6">
-                                                <CopyableId id={offer.external_id} />
+                                                <CopyableId value={offer.external_id} />
                                             </TableCell>
                                             <TableCell className="py-4 px-4 max-w-[240px]">
                                                 <div className="flex flex-col gap-0.5">
@@ -572,7 +501,7 @@ export default function MySubmittedOffers() {
                                                         {offer.rfq?.rfqProductName || 'RFQ Product'}
                                                     </span>
                                                     <span className="text-[10px] text-gray-400 font-semibold font-mono">
-                                                        RFQ Ref: #{offer.rfq?.rfqId?.substring(0, 8).toUpperCase() || 'N/A'}
+                                                        RFQ ID: {offer.rfq?.rfqId || 'N/A'}
                                                     </span>
                                                 </div>
                                             </TableCell>
@@ -617,6 +546,17 @@ export default function MySubmittedOffers() {
                     </Table>
                 </TableContainer>
             </div>
+
+            <PaginationBar
+                meta={data?.meta}
+                page={page}
+                onPage={setPage}
+                limit={limit}
+                onLimit={(n) => {
+                    setLimit(n);
+                    setPage(1);
+                }}
+            />
 
             <DetailDrawer
                 isOpen={isDetailModalOpen}
