@@ -209,7 +209,9 @@ export const customerTradeChatService = {
    *
    * Filtering logic:
    * - RFQ rooms + supplier role → only show trades where supplier_id matches
-   * - All other rooms (product, business) → show all trades (1-to-1, no privacy concern)
+   * - Product rooms + supplier role → the same when a cycle names its supplier: staff can give a
+   *   rejected inquiry to another supplier in the same room (decision #103)
+   * - Other rooms (business) → show all trades (1-to-1, no privacy concern)
    * - Buyer role → always sees all trades in any room type
    */
   getRoomInquiries(
@@ -265,7 +267,16 @@ export const customerTradeChatService = {
                 this.isSameId(trade.matched_inspector_id, userId)
             );
           }
-          // For product/business rooms OR buyer role → no filtering, show all
+          if (roomEntityType !== "rfq" && roomEntityType !== "business" && isSupplierRole) {
+            inquiries = inquiries.filter(
+              (trade: any) =>
+                !trade.supplier_id ||
+                this.isSameId(trade.supplier_id, userId) ||
+                this.isSameId(trade.buyer_id, userId) ||
+                this.isSameId(trade.user_id, userId)
+            );
+          }
+          // Buyer role → no filtering, show all
 
           callback(inquiries);
         },
@@ -746,7 +757,8 @@ export const customerTradeChatService = {
             const inspectorIdStr = String(data.inspector_id || data.matched_inspector_id || "");
 
             const isRoomBuyer = buyerIdStr === cleanUserId;
-            const isRoomSupplier = supplierIdStr === cleanUserId;
+            // A supplier brought in by "find another supplier" is on the room through participant_ids
+            const isRoomSupplier = supplierIdStr === cleanUserId || (spoke === "admin_supplier" && !isRoomBuyer);
             const isInspector = inspectorIdStr === cleanUserId;
 
             const buyerCode = data.buyer_code || "B-1";

@@ -129,7 +129,7 @@ export function ThreadToolbar({ thread }: any) {
                       }}
                     >
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold">#{String(cycle.reference || cycle.id).slice(-8).toUpperCase()}</span>
+                        <span className="break-all font-mono text-xs font-bold">{String(cycle.reference || cycle.id)}</span>
                         <span className="text-[10px] text-gray-500">
                           {cycle.item_name || 'Trade Inquiry'} - {cycle.status}
                           {cycle.display_price ? ` • ${cycle.currency === 'USD' ? '$' : '₦'}${Number(cycle.display_price).toLocaleString()}/unit` : ''}
