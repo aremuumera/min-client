@@ -17,6 +17,7 @@ import { teamApi } from "./features/team/teamApi";
 import { vaultApi } from "./features/vault/vaultApi";
 import { locationsApi } from "./features/locations/locations_api";
 import { batchesApi } from "./features/batches/batches_api";
+import { supportApi } from "./features/support/support_api";
 import { listingsApi } from "./features/listings/listings_api";
 import inquiryApi from "./features/enquiry/enquiry_api";
 import supplierProductApi from "./features/supplier-products/products_api";
@@ -43,6 +44,7 @@ const persistConfig = {
     "vaultApi",
     "locationsApi",
     "batchesApi",
+    "supportApi",
     "listingsApi",
     "authApi",
     "supplierProfileApi",
@@ -94,6 +96,7 @@ export const makeStore = () => {
         vaultApi.middleware,
         locationsApi.middleware,
         batchesApi.middleware,
+        supportApi.middleware,
         listingsApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,

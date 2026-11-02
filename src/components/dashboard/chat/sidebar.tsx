@@ -12,6 +12,10 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { DirectSearch } from './direct-search';
 import { ThreadItem } from './thread-item';
 import { ConversationTypeFilter } from './type_filter';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useSse } from '@/lib/realtime/use-sse';
+import { useGetMySupportQuery } from '@/redux/features/support/support_api';
 
 interface SidebarProps {
   conversations: any[];
@@ -113,6 +117,13 @@ function SidebarContent({
   // }, [currentConversationId, conversations, selectedType]);
 
   // Calculate UNREAD conversation counts by type
+  const support = useGetMySupportQuery(undefined, { refetchOnMountOrArgChange: true });
+  const supportUnread = support.data?.data?.unread ?? 0;
+  useSse('/notifications/stream', (e) => {
+    if (e.event === 'support') void support.refetch();
+  });
+  const pathname = usePathname();
+
   const conversationCounts = React.useMemo(() => {
     const counts: Record<string, number> = {
       all: 0,
@@ -130,8 +141,11 @@ function SidebarContent({
       }
     });
 
+    counts.admin = supportUnread;
+    counts.all += supportUnread;
+
     return counts;
-  }, [conversations]);
+  }, [conversations, supportUnread]);
 
   // Filter conversations based on selected type and search
   const filteredConversations = React.useMemo(() => {
@@ -251,7 +265,22 @@ function SidebarContent({
           spacing={1}
           style={{ display: searchFocused ? 'none' : 'flex', listStyle: 'none', margin: 0, paddingLeft: 0 }}
         >
-          {filteredConversations?.length > 0 ? (
+          {(selectedType === 'all' || selectedType === 'admin') && (
+            <li>
+              <Link
+                href="/dashboard/chat/support"
+                className={`flex items-center gap-3 rounded-2xl border p-3 transition-colors ${pathname === '/dashboard/chat/support' ? 'border-emerald-200 bg-emerald-50' : 'border-transparent hover:bg-gray-50'}`}
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">MD</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-gray-900">MINMEG Support</span>
+                  <span className="block truncate text-xs text-gray-500">{support.data?.data?.lastMessagePreview || 'Contact MINMEG'}</span>
+                </span>
+                {supportUnread > 0 && <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white">{supportUnread}</span>}
+              </Link>
+            </li>
+          )}
+          {selectedType === 'admin' ? null : filteredConversations?.length > 0 ? (
             filteredConversations?.map((thread, i) => (
               <ThreadItem
                 active={currentConversationId === thread.conversationId}
