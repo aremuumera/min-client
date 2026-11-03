@@ -18,6 +18,7 @@ export const shipmentsHelp: PageHelpContent = {
     { label: 'My sites', href: '/dashboard/sites', why: 'Where goods leave from and arrive at.' },
   ],
   goodToKnow: [
+    'MINMEG plans the checkpoints on the way. A MINMEG tracker records each passage when the truck enters the checkpoint zone. Without a tracker, the company that runs that checkpoint records it, never the supplier. The receiver marks the goods arrived.',
     'Only stock committed at Trade Accepted can go on a shipment. Tools, equipment and services have no shipments.',
     'Dispatch waits until MINMEG has proceeded the inspection and the goods carry active MINMEG codes.',
     'Buyers see the status, dates, quantities, material, batch codes and destination. The driver, vehicle, carrier and the supplier\'s site stay with the supplier and MINMEG. On a return, which the buyer can move, the buyer sees everything except the supplier\'s site.',

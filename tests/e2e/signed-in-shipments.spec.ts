@@ -116,23 +116,29 @@ test('the supplier plans a shipment from the trade room: confirm, committed stoc
   await dispatch.getByRole('button', { name: 'Back' }).click();
 });
 
-test('tracking: no tracker yet; the supplier plans the checkpoints on the way', async () => {
+test('tracking: MINMEG plans the checkpoints; the supplier can neither plan nor record them', async () => {
   const page = supplierPage;
   const detail = page.getByRole('dialog').filter({ hasText: shipmentNumber });
   await expect(detail.getByText('No tracker on this shipment. Each step is recorded by hand.')).toBeVisible({ timeout: 30_000 });
   await expect(detail.locator('.leaflet-container')).toBeVisible();
-  await detail.getByRole('button', { name: 'Edit checkpoints' }).click();
-  const modal = page.getByRole('dialog').filter({ hasText: 'Checkpoints on the way' });
-  await modal.getByRole('combobox', { name: 'Add a checkpoint' }).click();
-  await page.getByRole('option', { name: /E2E site gate/ }).first().click();
-  await expect(modal.getByText('1. E2E site gate')).toBeVisible();
-  await page.screenshot({ path: 'tests/e2e/.results/shipments-checkpoints.png' });
-  await modal.getByRole('button', { name: 'Save checkpoints' }).click();
-  await expect(modal).toHaveCount(0, { timeout: 30_000 });
-  await expect(detail.getByText('1. E2E site gate')).toBeVisible({ timeout: 30_000 });
-  await expect(detail.getByText('Ahead')).toBeVisible();
-  // Recording a passage only opens once the goods have left
-  await expect(detail.getByRole('button', { name: 'Record passing' })).toHaveCount(0);
+  await expect(detail.getByText("MINMEG hasn't planned checkpoints for this shipment yet.")).toBeVisible();
+  await expect(detail.getByRole('button', { name: 'Edit checkpoints' })).toHaveCount(0);
+
+  // Staff plan the route (decision #106)
+  const staff = await staffHeaders();
+  const found = (await (await api.get(`${API}/v1/shipments?search=${shipmentNumber}`, { headers: staff })).json()).data[0];
+  const gate = ((await (await api.get(`${API}/v1/checkpoints?limit=100`, { headers: staff })).json()).data as { id: string; code: string }[]).find((c) => c.code === GATE_CODE);
+  const planned = await api.put(`${API}/v1/shipments/${found.id}/checkpoint-plan`, { headers: staff, data: { checkpoints: [{ checkpointId: gate!.id }] } });
+  expect(planned.ok(), await planned.text()).toBeTruthy();
+  // The supplier asking the API directly is refused: proved in the backend test (a second supplier sign-in here would sign this browser out)
+
+  await page.goto('/dashboard/shipments');
+  await page.getByPlaceholder('Shipment number').fill(shipmentNumber);
+  await page.getByRole('row').filter({ hasText: shipmentNumber }).click({ timeout: 60_000 });
+  const reopened = page.getByRole('dialog').filter({ hasText: shipmentNumber });
+  await expect(reopened.getByText('1. E2E site gate')).toBeVisible({ timeout: 30_000 });
+  await expect(reopened.getByText('Ahead')).toBeVisible();
+  await expect(reopened.getByRole('button', { name: /Record passing|Skip/ })).toHaveCount(0);
   await page.screenshot({ path: 'tests/e2e/.results/shipments-tracking-seller.png' });
 });
 

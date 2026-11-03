@@ -1,22 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { ArrowDown, ArrowUp, LocateFixed, X } from 'lucide-react';
-import { Button, DropdownSelect, FormField, Input, Modal, StatusBadge, Textarea, TrackMap, type TrackMapPlace } from '@/components/ui';
+import { LocateFixed } from 'lucide-react';
+import { Button, FormField, Input, Modal, StatusBadge, Textarea, TrackMap, type TrackMapPlace } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { useSse } from '@/lib/realtime/use-sse';
 import type { Shipment } from '@/lib/shipments';
 import { OPEN_PLAN, PLAN_LABELS, toNumber, VISIT_LABELS, type PlanRow, type Site } from '@/lib/tracking';
-import { useGetCheckpointsQuery } from '@/redux/features/locations/locations_api';
+import { useGetLocationsQuery } from '@/redux/features/locations/locations_api';
 import {
   useAcknowledgeAlertMutation,
   useGetHistoryQuery,
   useGetShipmentAlertsQuery,
   useGetTrackingQuery,
   useScanCheckpointMutation,
-  useSetCheckpointPlanMutation,
-  useSkipCheckpointMutation,
 } from '@/redux/features/shipments/shipments_api';
 
 const sitePlace = (s: Site | null, label: string): TrackMapPlace[] => {
@@ -24,73 +22,6 @@ const sitePlace = (s: Site | null, label: string): TrackMapPlace[] => {
   const lng = toNumber(s?.longitude);
   return s && lat !== null && lng !== null ? [{ label: `${label}: ${s.name}`, latitude: lat, longitude: lng, radius: s.geofenceRadiusMeters ?? null, kind: 'site' }] : [];
 };
-
-type Draft = { checkpointId: string; name: string; required: boolean; skipAllowed: boolean };
-
-function PlanModal({ shipmentId, rows, onClose }: { shipmentId: string; rows: PlanRow[]; onClose: () => void }) {
-  const checkpoints = useGetCheckpointsQuery({ limit: 100 });
-  const [draft, setDraft] = React.useState<Draft[]>(rows.filter((r) => OPEN_PLAN.includes(r.status) && r.checkpoint).map((r) => ({ checkpointId: r.checkpoint!.id, name: r.checkpoint!.name, required: r.required, skipAllowed: r.skipAllowed })));
-  const [adding, setAdding] = React.useState('');
-  const [error, setError] = React.useState<string | null>(null);
-  const [save, { isLoading }] = useSetCheckpointPlanMutation();
-  const done = new Set(rows.filter((r) => !OPEN_PLAN.includes(r.status)).map((r) => r.checkpoint?.id));
-  const options = (checkpoints.data?.data ?? []).filter((c) => !draft.some((d) => d.checkpointId === c.id) && !done.has(c.id)).map((c) => ({ value: c.id, label: `${c.name}${c.location ? ` · ${c.location.name}` : ''}` }));
-  const move = (i: number, by: number) => {
-    const next = [...draft];
-    [next[i], next[i + by]] = [next[i + by], next[i]];
-    setDraft(next);
-  };
-  const add = (id: string) => {
-    const c = checkpoints.data?.data.find((x) => x.id === id);
-    if (c) setDraft([...draft, { checkpointId: c.id, name: c.name, required: true, skipAllowed: false }]);
-    setAdding('');
-  };
-  const submit = async () => {
-    setError(null);
-    try {
-      await save({ id: shipmentId, checkpoints: draft.map(({ checkpointId, required, skipAllowed }) => ({ checkpointId, required, skipAllowed })) }).unwrap();
-      onClose();
-    } catch (err) {
-      setError(toApiError(err).message);
-    }
-  };
-  return (
-    <Modal open onClose={onClose} size="md">
-      <div className="space-y-4 p-6">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900">Checkpoints on the way</h3>
-          <p className="mt-1 text-sm text-gray-500">In the order the truck passes them. Checkpoints already passed or skipped stay as they are.</p>
-        </div>
-        <ol className="space-y-2">
-          {draft.map((d, i) => (
-            <li key={d.checkpointId} className="space-y-2 rounded-lg border border-gray-200 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-gray-900">{i + 1}. {d.name}</span>
-                <span className="flex gap-1">
-                  <button type="button" aria-label={`Move ${d.name} up`} disabled={i === 0} onClick={() => move(i, -1)} className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-30"><ArrowUp className="h-4 w-4" aria-hidden /></button>
-                  <button type="button" aria-label={`Move ${d.name} down`} disabled={i === draft.length - 1} onClick={() => move(i, 1)} className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-30"><ArrowDown className="h-4 w-4" aria-hidden /></button>
-                  <button type="button" aria-label={`Remove ${d.name}`} onClick={() => setDraft(draft.filter((_, n) => n !== i))} className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100"><X className="h-4 w-4" aria-hidden /></button>
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-700">
-                <label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={d.required} onChange={(e) => setDraft(draft.map((x, n) => (n === i ? { ...x, required: e.target.checked } : x)))} /> Must be passed</label>
-                <label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={d.skipAllowed} onChange={(e) => setDraft(draft.map((x, n) => (n === i ? { ...x, skipAllowed: e.target.checked } : x)))} /> Can be skipped with a reason</label>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <FormField htmlFor="plan-add" label="Add a checkpoint" optional>
-          <DropdownSelect id="plan-add" aria-label="Add a checkpoint" value={adding} onValueChange={add} placeholder={checkpoints.isLoading ? 'Loading checkpoints…' : 'Choose a checkpoint'} options={options} searchable />
-        </FormField>
-        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button disabled={isLoading} onClick={submit}>{isLoading ? 'Saving…' : 'Save checkpoints'}</Button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
 
 function ScanModal({ shipmentId, row, onClose }: { shipmentId: string; row: PlanRow; onClose: () => void }) {
   const cp = row.checkpoint!;
@@ -136,7 +67,7 @@ function ScanModal({ shipmentId, row, onClose }: { shipmentId: string; row: Plan
     <Modal open onClose={onClose} size="sm">
       <div className="space-y-4 p-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">Record passing {cp.name}</h3>
+          <h3 className="text-lg font-bold text-gray-900">Record the truck passing {cp.name}</h3>
           <p className="mt-1 text-sm text-gray-500">{needs.length ? `This checkpoint checks ${needs.join(', ')}.` : 'This checkpoint has no checks of its own.'} If a check fails, nothing moves and you can try again.</p>
         </div>
         <FormField htmlFor="scan-identifier" label="Number read at the checkpoint" required={cp.scanRequired} optional={!cp.scanRequired} info="The shipment number, waybill, container or seal number, or the code on a loaded unit.">
@@ -162,48 +93,20 @@ function ScanModal({ shipmentId, row, onClose }: { shipmentId: string; row: Plan
   );
 }
 
-function SkipModal({ row, onClose }: { row: PlanRow; onClose: () => void }) {
-  const [reason, setReason] = React.useState('');
-  const [error, setError] = React.useState<string | null>(null);
-  const [skip, { isLoading }] = useSkipCheckpointMutation();
-  const submit = async () => {
-    setError(null);
-    try {
-      await skip({ rowId: row.id, reason: reason.trim() }).unwrap();
-      onClose();
-    } catch (err) {
-      setError(toApiError(err).message);
-    }
-  };
-  return (
-    <Modal open onClose={onClose} size="sm">
-      <div className="space-y-4 p-6">
-        <h3 className="text-lg font-bold text-gray-900">Skip {row.checkpoint?.name}?</h3>
-        <FormField htmlFor="skip-reason" label="Reason" required>
-          <Textarea id="skip-reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={1000} />
-        </FormField>
-        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button variant="outlined" onClick={onClose}>Back</Button>
-          <Button disabled={isLoading || reason.trim().length < 3} onClick={submit}>Skip</Button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
 /**
- * The tracking part of a shipment: the map, the checkpoints on the way and the alerts. `canMove` is the
- * side that moves the goods (the seller; either side on a return; staff); `visitActions` adds staff buttons.
+ * The tracking part of a shipment: the map, the checkpoints on the way and the alerts. MINMEG staff plan
+ * the route; a MINMEG tracker records each passage on entering the checkpoint's zone. Where there is no
+ * tracker, the company that runs the checkpoint's site records it (decision #106), so a company sees
+ * "Record passing" only at its own sites.
  */
-export function ShipmentTracking({ shipment, canMove, visitActions }: { shipment: Shipment; canMove: boolean; visitActions?: (row: PlanRow) => React.ReactNode }) {
+export function ShipmentTracking({ shipment }: { shipment: Shipment }) {
   const tracking = useGetTrackingQuery(shipment.id, { refetchOnMountOrArgChange: true });
   const history = useGetHistoryQuery(shipment.id, { refetchOnMountOrArgChange: true });
   const alerts = useGetShipmentAlertsQuery(shipment.id, { refetchOnMountOrArgChange: true });
   const [acknowledge] = useAcknowledgeAlertMutation();
-  const [planning, setPlanning] = React.useState(false);
   const [scanning, setScanning] = React.useState<PlanRow | null>(null);
-  const [skipping, setSkipping] = React.useState<PlanRow | null>(null);
+  const sites = useGetLocationsQuery({ limit: 100 });
+  const ownSites = new Set((sites.data?.data ?? []).filter((l) => l.organizationId).map((l) => l.id));
   const [alertError, setAlertError] = React.useState<string | null>(null);
 
   useSse(`/realtime/shipments/${shipment.id}`, (e) => {
@@ -218,7 +121,6 @@ export function ShipmentTracking({ shipment, canMove, visitActions }: { shipment
   if (tracking.isError) return <p role="alert" className="text-sm text-red-600">{toApiError(tracking.error).message}</p>;
   if (!view) return <p className="text-sm text-steel">Loading tracking…</p>;
 
-  const open = !shipment.finalizedAt && !['DELIVERED', 'PARTIALLY_DELIVERED', 'DELIVERY_REJECTED', 'CANCELLED'].includes(shipment.status);
   const moving = ['DEPARTED', 'IN_TRANSIT', 'ARRIVED'].includes(shipment.status);
   const places: TrackMapPlace[] = [
     ...sitePlace(view.origin, 'From'),
@@ -255,12 +157,9 @@ export function ShipmentTracking({ shipment, canMove, visitActions }: { shipment
             : 'No tracker on this shipment. Each step is recorded by hand.'}
       </p>
 
-      <div className="flex items-center justify-between gap-2">
-        <h4 className="text-sm font-semibold text-ink">Checkpoints</h4>
-        {canMove && open && <Button size="sm" variant="outlined" onClick={() => setPlanning(true)}>Edit checkpoints</Button>}
-      </div>
+      <h4 className="text-sm font-semibold text-ink">Checkpoints</h4>
       {!view.checkpoints.length ? (
-        <p className="text-sm text-steel">No checkpoints planned.</p>
+        <p className="text-sm text-steel">MINMEG hasn't planned checkpoints for this shipment yet.</p>
       ) : (
         <ol className="divide-y divide-hairline rounded-xl border border-hairline">
           {view.checkpoints.map((r) => (
@@ -275,9 +174,7 @@ export function ShipmentTracking({ shipment, canMove, visitActions }: { shipment
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={r.status}>{PLAN_LABELS[r.status]}</StatusBadge>
-                {canMove && moving && OPEN_PLAN.includes(r.status) && <Button size="sm" onClick={() => setScanning(r)}>Record passing</Button>}
-                {canMove && open && r.skipAllowed && OPEN_PLAN.includes(r.status) && <Button size="sm" variant="outlined" onClick={() => setSkipping(r)}>Skip</Button>}
-                {visitActions?.(r)}
+                {moving && OPEN_PLAN.includes(r.status) && !!r.checkpoint?.location && ownSites.has(r.checkpoint.location.id) && <Button size="sm" onClick={() => setScanning(r)}>Record passing</Button>}
               </div>
             </li>
           ))}
@@ -306,9 +203,7 @@ export function ShipmentTracking({ shipment, canMove, visitActions }: { shipment
         </ul>
       )}
 
-      {planning && <PlanModal shipmentId={shipment.id} rows={view.checkpoints} onClose={() => setPlanning(false)} />}
       {scanning && <ScanModal shipmentId={shipment.id} row={scanning} onClose={() => setScanning(null)} />}
-      {skipping && <SkipModal row={skipping} onClose={() => setSkipping(null)} />}
     </section>
   );
 }

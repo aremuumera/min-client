@@ -187,7 +187,7 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
         planning && seller && !isReturn && <Button key="edit" variant="outlined" onClick={() => setEditing(true)}>Edit plan</Button>,
         planning && mover && <Button key="dispatch" onClick={() => setAction('dispatch')}>Dispatch</Button>,
         planning && seller && <Button key="cancel" variant="outlined" onClick={() => setAction('cancel')}>Cancel shipment</Button>,
-        moving && mover && s.status !== 'ARRIVED' && <Button key="arrive" variant="outlined" disabled={isLoading} onClick={() => simple('arrive', 'Mark as arrived?', 'The goods are at the destination. The receiver then records what arrived.', 'Mark arrived')}>Mark arrived</Button>,
+        moving && receiver && s.status !== 'ARRIVED' && <Button key="arrive" variant="outlined" disabled={isLoading} onClick={() => simple('arrive', 'Mark as arrived?', 'The goods are at your site. You then record what arrived.', 'Mark arrived')}>Mark arrived</Button>,
         moving && receiver && <Button key="deliver" onClick={() => setAction('deliver')}>Record delivery</Button>,
         moving && receiver && !isReturn && <Button key="reject" variant="outlined" onClick={() => setAction('reject')}>Reject delivery</Button>,
         recorded && receiver && <Button key="reconcile" variant="outlined" onClick={() => setAction('reconcile')}>New measurement</Button>,
@@ -240,7 +240,7 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
               ))}
             </ul>
           </section>
-          {s.status !== 'CANCELLED' && <ShipmentTracking shipment={s} canMove={!!mover} />}
+          {s.status !== 'CANCELLED' && <ShipmentTracking shipment={s} />}
           {!!s.returnShipments?.length && (
             <section>
               <h3 className="mb-2 text-sm font-semibold text-ink">Returns</h3>
