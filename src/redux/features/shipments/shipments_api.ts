@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
 import type { Readiness, Shipment } from '@/lib/shipments';
+import type { Alert, Ping, PlanRow, TrackingView } from '@/lib/tracking';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Group 09 shipments (step 2.7a). Anything that moves stock sends an Idempotency-Key where the backend takes one. */
@@ -13,7 +14,7 @@ type Action = 'dispatch' | 'arrive' | 'deliver' | 'reject' | 'reconcile' | 'retu
 export const shipmentsApi = createApi({
   reducerPath: 'shipmentsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Shipments'],
+  tagTypes: ['Shipments', 'Tracking'],
   endpoints: (builder) => ({
     getShipments: builder.query<Paged<Shipment>, Query>({ query: (params) => ({ url: '/shipments', params }), providesTags: ['Shipments'] }),
     getShipment: builder.query<Single<Shipment>, string>({ query: (id) => `/shipments/${id}`, providesTags: ['Shipments'] }),
@@ -34,7 +35,27 @@ export const shipmentsApi = createApi({
       query: ({ id, action, body, idempotencyKey }) => ({ url: `/shipments/${id}/${action}`, method: 'POST', body: body ?? {}, headers: idempotencyKey ? idempotencyHeaders(idempotencyKey) : undefined }),
       invalidatesTags: ['Shipments'],
     }),
+    // ---- tracking (step 2.7b) ----
+    getTracking: builder.query<Single<TrackingView>, string>({ query: (id) => `/shipments/${id}/tracking`, providesTags: ['Tracking'] }),
+    getHistory: builder.query<Single<Ping[]>, string>({ query: (id) => `/shipments/${id}/location-history?limit=2000`, providesTags: ['Tracking'] }),
+    setCheckpointPlan: builder.mutation<Single<PlanRow[]>, { id: string; checkpoints: { checkpointId: string; required: boolean; skipAllowed: boolean }[] }>({
+      query: ({ id, checkpoints }) => ({ url: `/shipments/${id}/checkpoint-plan`, method: 'PUT', body: { checkpoints } }),
+      invalidatesTags: ['Tracking'],
+    }),
+    skipCheckpoint: builder.mutation<unknown, { rowId: string; reason: string }>({
+      query: ({ rowId, reason }) => ({ url: `/shipment-checkpoints/${rowId}/skip`, method: 'POST', body: { reason } }),
+      invalidatesTags: ['Tracking'],
+    }),
+    scanCheckpoint: builder.mutation<unknown, { id: string; checkpointId: string; body: Body }>({
+      query: ({ id, checkpointId, body }) => ({ url: `/shipments/${id}/checkpoints/${checkpointId}/scan`, method: 'POST', body }),
+      invalidatesTags: ['Tracking', 'Shipments'],
+    }),
+    getShipmentAlerts: builder.query<Paged<Alert>, string>({ query: (shipmentId) => ({ url: '/alerts', params: { shipmentId, limit: 50 } }), providesTags: ['Tracking'] }),
+    acknowledgeAlert: builder.mutation<unknown, { id: string; note?: string }>({
+      query: ({ id, note }) => ({ url: `/alerts/${id}/acknowledge`, method: 'POST', body: note ? { note } : {} }),
+      invalidatesTags: ['Tracking'],
+    }),
   }),
 });
 
-export const { useGetShipmentsQuery, useGetShipmentQuery, useGetReadinessQuery, useCreateShipmentMutation, useUpdateShipmentMutation, useRemoveLineMutation, useShipmentActionMutation } = shipmentsApi;
+export const { useGetShipmentsQuery, useGetShipmentQuery, useGetReadinessQuery, useCreateShipmentMutation, useUpdateShipmentMutation, useRemoveLineMutation, useShipmentActionMutation, useGetTrackingQuery, useGetHistoryQuery, useSetCheckpointPlanMutation, useSkipCheckpointMutation, useScanCheckpointMutation, useGetShipmentAlertsQuery, useAcknowledgeAlertMutation } = shipmentsApi;

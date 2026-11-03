@@ -27,6 +27,7 @@ let buyerPage: Page;
 let supplierPage: Page;
 let trade = { id: '', room: '' };
 let shipmentNumber = '';
+const GATE_CODE = 'E2E_GATE';
 
 async function login(pathName: string, identifier: string): Promise<Party> {
   const res = await (await api.post(`${API}/v1/auth/${pathName}`, { headers: { 'x-e2e-run': env.E2E_RUN_SECRET }, data: { type: 'email', identifier, password: env.E2E_PASSWORD } })).json();
@@ -68,6 +69,13 @@ test.beforeAll(async ({ browser, playwright }) => {
   expect(ack.ok(), await ack.text()).toBeTruthy();
   const accepted = await api.put(`${API}/v1/admin/trade/inquiries/${trade.id}`, { headers: await staffHeaders(), data: { status: 'FINAL_TRADE_PACK_ACCEPTED', isAdminOverride: true, reason: 'E2E: test trade accepted' } });
   expect(accepted.ok(), await accepted.text()).toBeTruthy();
+  // A checkpoint on the supplier's own site for the route, reused between runs
+  const mine = (await (await api.get(`${API}/v1/checkpoints?limit=100`, { headers: supplier.headers })).json()).data as { code: string }[];
+  if (!mine.some((c) => c.code === GATE_CODE)) {
+    const site = (await (await api.get(`${API}/v1/locations?limit=100`, { headers: supplier.headers })).json()).data.find((l: { organizationId: string | null }) => l.organizationId);
+    const made = await api.post(`${API}/v1/checkpoints`, { headers: { ...supplier.headers, 'Idempotency-Key': crypto.randomUUID() }, data: { locationId: site.id, code: GATE_CODE, name: 'E2E site gate', checkpointType: 'EXIT_GATE' } });
+    expect(made.status(), await made.text()).toBe(201);
+  }
   supplierPage = await signIn(browser, env.E2E_SUPPLIER);
   buyerPage = await signIn(browser, env.E2E_BUYER);
 });
@@ -108,6 +116,26 @@ test('the supplier plans a shipment from the trade room: confirm, committed stoc
   await dispatch.getByRole('button', { name: 'Back' }).click();
 });
 
+test('tracking: no tracker yet; the supplier plans the checkpoints on the way', async () => {
+  const page = supplierPage;
+  const detail = page.getByRole('dialog').filter({ hasText: shipmentNumber });
+  await expect(detail.getByText('No tracker on this shipment. Each step is recorded by hand.')).toBeVisible({ timeout: 30_000 });
+  await expect(detail.locator('.leaflet-container')).toBeVisible();
+  await detail.getByRole('button', { name: 'Edit checkpoints' }).click();
+  const modal = page.getByRole('dialog').filter({ hasText: 'Checkpoints on the way' });
+  await modal.getByRole('combobox', { name: 'Add a checkpoint' }).click();
+  await page.getByRole('option', { name: /E2E site gate/ }).first().click();
+  await expect(modal.getByText('1. E2E site gate')).toBeVisible();
+  await page.screenshot({ path: 'tests/e2e/.results/shipments-checkpoints.png' });
+  await modal.getByRole('button', { name: 'Save checkpoints' }).click();
+  await expect(modal).toHaveCount(0, { timeout: 30_000 });
+  await expect(detail.getByText('1. E2E site gate')).toBeVisible({ timeout: 30_000 });
+  await expect(detail.getByText('Ahead')).toBeVisible();
+  // Recording a passage only opens once the goods have left
+  await expect(detail.getByRole('button', { name: 'Record passing' })).toHaveCount(0);
+  await page.screenshot({ path: 'tests/e2e/.results/shipments-tracking-seller.png' });
+});
+
 test('the buyer sees status, quantity, material and destination, and no carrier, driver or origin', async () => {
   const page = buyerPage;
   await page.goto('/dashboard/shipments');
@@ -123,6 +151,9 @@ test('the buyer sees status, quantity, material and destination, and no carrier,
   await expect(detail.getByText(/E2E Driver|LAG-123-XY/)).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Dispatch', exact: true })).toHaveCount(0);
   await expect(detail.getByRole('button', { name: 'Cancel shipment' })).toHaveCount(0);
+  // The buyer follows the route but doesn't plan it
+  await expect(detail.getByText('1. E2E site gate')).toBeVisible({ timeout: 30_000 });
+  await expect(detail.getByRole('button', { name: 'Edit checkpoints' })).toHaveCount(0);
   await page.screenshot({ path: 'tests/e2e/.results/shipments-detail-buyer.png' });
 });
 

@@ -9,6 +9,7 @@ import { DELIVERY_RECORDED, LINE_LABELS, MOVING, PLANNING, shipmentStatusLabel, 
 import { showQuantity } from '@/lib/trade-stock';
 import { useGetReadinessQuery, useGetShipmentQuery, useRemoveLineMutation, useShipmentActionMutation } from '@/redux/features/shipments/shipments_api';
 import { ShipmentFormSheet } from './shipment-form-sheet';
+import { ShipmentTracking } from './shipment-tracking';
 
 type LineAmounts = Record<string, { received: string; rejected: string }>;
 
@@ -239,6 +240,7 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
               ))}
             </ul>
           </section>
+          {s.status !== 'CANCELLED' && <ShipmentTracking shipment={s} canMove={!!mover} />}
           {!!s.returnShipments?.length && (
             <section>
               <h3 className="mb-2 text-sm font-semibold text-ink">Returns</h3>

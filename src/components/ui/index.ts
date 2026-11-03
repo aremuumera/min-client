@@ -199,3 +199,4 @@ export { useConfirm, type ConfirmOptions } from "./use-confirm";
 export { PaginationBar, PAGE_SIZES, type PaginationBarProps } from "./pagination-bar";
 export { PageHelp, type PageHelpContent, type PageHelpLink } from "./page-help";
 export { MapPicker, type MapPickerProps } from "./map-picker";
+export { TrackMap, type TrackMapProps, type TrackMapPlace } from "./track-map";
