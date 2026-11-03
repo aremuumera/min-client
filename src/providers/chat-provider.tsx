@@ -29,8 +29,8 @@ interface ChatContextType {
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
-  activeTab: 'chat' | 'vault' | 'activity' | 'inspections' | 'stock';
-  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity' | 'inspections' | 'stock'>>;
+  activeTab: 'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments';
+  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments'>>;
   loading: boolean;
   loadingMessages: boolean;
   loadingAttachments: boolean;
@@ -93,7 +93,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeInquiryId, setActiveInquiryId] = useState<string | null>(null);
   const [roomInquiries, setRoomInquiries] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity' | 'inspections' | 'stock'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments'>('chat');
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -661,7 +661,7 @@ New Flow for for all roles to Admin
         const namedOnRoom = [metadata.buyer_id, metadata.supplier_id, metadata.inspector_id].some((id: any) => customerTradeChatService.isSameId(id, normalizedUserId));
         const isParticipant = isAdmin || namedOnRoom || participantIds.includes(normalizedUserId);
         const isHidden = Array.isArray(metadata.hidden_for_user_ids) && metadata.hidden_for_user_ids.map((id: any) => String(id).toLowerCase()).includes(normalizedUserId);
-
+            
         // If user is not an active participant or room is explicitly hidden, redirect away — do not synthesize
         if (!isParticipant || isHidden) {
           setActiveConversation(null);

@@ -233,6 +233,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "chat",
         },
         {
+          key: "shipments",
+          title: "Shipments",
+          href: paths.dashboard.shipments,
+          icon: "truck",
+          matcher: { type: "startsWith", href: "/dashboard/shipments" },
+          permission: "shipments",
+        },
+        {
           key: "inventory",
           title: "Inventory",
           href: paths.dashboard.batches,

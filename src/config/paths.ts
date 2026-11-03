@@ -84,6 +84,7 @@ export const paths = {
     invoices: "/dashboard/invoices",
     sites: "/dashboard/sites",
     batches: "/dashboard/batches",
+    shipments: "/dashboard/shipments",
     documents: { list: "/dashboard/documents", shared: "/dashboard/documents/shared", evidence: "/dashboard/documents/evidence" },
     wallet: "/dashboard/wallet",
     settings: {

@@ -17,6 +17,7 @@ import { TradeInspectionsTab } from './trade-inspections-tab';
 import { DocumentVault } from './document-vault';
 import { TradeActivityTimeline } from './trade-activity-timeline';
 import { TradeStockNotice, TradeStockTab } from './trade-stock-tab';
+import { TradeShipmentsTab } from './trade-shipments-tab';
 import { ChatContext } from '@/providers/chat-provider';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
@@ -90,7 +91,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
   const openTab = useSearchParams().get('tab');
   useEffect(() => {
-    if (openTab === 'stock') setActiveTab('stock');
+    if (openTab === 'stock' || openTab === 'shipments') setActiveTab(openTab);
   }, [openTab, setActiveTab]);
 
   const messagesRef = React.useRef<HTMLDivElement>(null);
@@ -264,6 +265,17 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             Stock
           </button>
         )}
+        {!isInspector && (
+          <button
+            onClick={() => setActiveTab('shipments')}
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'shipments'
+              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            Shipments
+          </button>
+        )}
       </div>
 
       {!isInspector && activeTab !== 'stock' && threadType === 'rfq' && activeInquiryId && (
@@ -296,6 +308,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       ) : activeTab === 'activity' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
           <TradeActivityTimeline inquiryId={activeInquiryId || ''} />
+        </div>
+      ) : activeTab === 'shipments' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradeShipmentsTab inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} />
         </div>
       ) : activeTab === 'stock' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">

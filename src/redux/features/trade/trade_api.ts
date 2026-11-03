@@ -25,6 +25,11 @@ export const tradeApi = createApi({
       query: (params) => ({ url: "/trades", params }),
       providesTags: ["TradeStock"],
     }),
+    /** The company's trades as seller, for planning a shipment */
+    getSellerTrades: builder.query<{ data: TradeStockRecord[] }, void>({
+      query: () => ({ url: "/trades", params: { role: "seller", limit: 100 } }),
+      providesTags: ["TradeStock"],
+    }),
     getTradeRecord: builder.query<{ data: TradeStockRecord }, string>({
       query: (id) => `/trades/${id}`,
       providesTags: ["TradeStock"],
@@ -224,6 +229,7 @@ export const {
   useGetTradeStockQuery,
   useGetTradeRecordQuery,
   useGetTradeAllocationsQuery,
+  useGetSellerTradesQuery,
   useHoldBatchMutation,
   useReleaseHoldMutation,
   useCreateProductInquiryMutation,

@@ -26,6 +26,7 @@ import { vaultApi } from "./features/vault/vaultApi";
 import { locationsApi } from "./features/locations/locations_api";
 import { batchesApi } from "./features/batches/batches_api";
 import { supportApi } from "./features/support/support_api";
+import { shipmentsApi } from "./features/shipments/shipments_api";
 import { listingsApi } from "./features/listings/listings_api";
 import activityApi from "./features/activity/activityApi";
 import definitionApi from "./features/definitions/definition_api";
@@ -79,6 +80,7 @@ const rootReducer = combineReducers({
   [locationsApi.reducerPath]: locationsApi.reducer,
   [batchesApi.reducerPath]: batchesApi.reducer,
   [supportApi.reducerPath]: supportApi.reducer,
+  [shipmentsApi.reducerPath]: shipmentsApi.reducer,
   [listingsApi.reducerPath]: listingsApi.reducer,
   [activityApi.reducerPath]: activityApi.reducer,
   [definitionApi.reducerPath]: definitionApi.reducer,
