@@ -12,7 +12,32 @@ export interface Evidence {
   attachmentType: string;
   title: string | null;
 }
-export interface Reading {
+/** Decision #107: MINMEG released a record, for one trade, to its buyer, supplier and / or assigned inspector */
+export interface RecordRelease {
+  id: string;
+  resourceType: 'TRACEABILITY_EVENT' | 'DYNAMIC_MEASUREMENT';
+  resourceId: string;
+  tradeId: string;
+  tradeCode: string | null;
+  toBuyer: boolean;
+  toSupplier: boolean;
+  toInspector: boolean;
+  status: 'ACTIVE' | 'REVERTED';
+  releasedAt: string;
+  revertedAt: string | null;
+  revertReason: string | null;
+}
+/** Staff only: the releases of a record and the trades it can be released for */
+export interface ReleaseInfo {
+  releases?: RecordRelease[];
+  releasableTrades?: { id: string; tradeCode: string }[];
+}
+export function releaseAudience(r: Pick<RecordRelease, 'toBuyer' | 'toSupplier' | 'toInspector'>): string {
+  const who = [r.toBuyer && 'buyer', r.toSupplier && 'supplier', r.toInspector && 'inspector'].filter(Boolean) as string[];
+  return who.length > 1 ? `${who.slice(0, -1).join(', ')} and ${who[who.length - 1]}` : (who[0] ?? 'nobody');
+}
+export interface Reading extends ReleaseInfo {
+  evidence?: Evidence[];
   id: string;
   subjectType: RecordSubject;
   subjectId: string;
@@ -55,7 +80,8 @@ export interface EventType {
   recordableBy: ('OWNER' | 'INSPECTOR' | 'STAFF' | 'DEVICE')[] | null;
   category?: { id: string; code: string; name: string } | null;
 }
-export interface TraceEvent {
+export interface TraceEvent extends ReleaseInfo {
+  evidence?: Evidence[];
   id: string;
   subjectType: string;
   subjectId: string;
@@ -104,3 +130,11 @@ export const eventIsOpen = (e: TraceEvent) => !['INVALIDATED', 'SUPERSEDED'].inc
 
 /** Which event types this role may record by hand */
 export const recorderKind = (role: RecorderRole) => (role === 'owner' ? 'OWNER' : role === 'inspector' ? 'INSPECTOR' : role === 'staff' ? 'STAFF' : null);
+
+/** GET /trades/{id}/released-records: what MINMEG released on the trade to the caller's side */
+export interface ReleasedRecords {
+  tradeId: string;
+  tradeCode: string;
+  party: 'buyer' | 'supplier' | 'inspector' | 'staff';
+  records: ({ kind: 'READING'; at: string; release: RecordRelease; record: Reading; evidence: Evidence[] } | { kind: 'EVENT'; at: string; release: RecordRelease; record: TraceEvent; evidence: Evidence[] })[];
+}

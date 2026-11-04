@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { EventType, Reading, RecordSubject, TraceEvent } from '@/lib/records';
+import type { EventType, Reading, RecordSubject, ReleasedRecords, TraceEvent } from '@/lib/records';
 import type { BatchUnits, Code, CustodyRow, FieldWindow, InspectionFile, PrintJob, RoundResults, ScanResult } from '@/lib/traceability';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -89,6 +89,8 @@ export const traceabilityApi = createApi({
       query: ({ id, reason }) => ({ url: `/events/${id}/invalidate`, method: 'POST', body: { reason } }),
       invalidatesTags: ['Records'],
     }),
+    /** Decision #107: readings and events MINMEG released on the trade to the caller's side, with their evidence */
+    getReleasedRecords: builder.query<Single<ReleasedRecords>, string>({ query: (tradeId) => `/trades/${tradeId}/released-records`, providesTags: ['Records'] }),
     // ---- inspection results (step 2.8a): nothing reaches the buyer or supplier before MINMEG releases the round ----
     getRoundResults: builder.query<Single<RoundResults>, string>({ query: (assignmentId) => `/inspections/${assignmentId}/results`, providesTags: ['Results'] }),
     uploadInspectionFiles: builder.mutation<{ data: InspectionFile[] }, { assignmentId: string; form: FormData }>({
@@ -157,6 +159,7 @@ export const {
   useRecordEventMutation,
   useCheckEventMutation,
   useWithdrawEventMutation,
+  useGetReleasedRecordsQuery,
   useUploadInspectionFilesMutation,
   useSubmitFindingsMutation,
   useSubmitLabResultMutation,

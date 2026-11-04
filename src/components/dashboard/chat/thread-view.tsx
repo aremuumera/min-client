@@ -303,6 +303,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               return (inq?.type === 'rfq' || inq?.type === 'rfq_offer') ? 'rfq' : 'product';
             })()}
             isBuyer={Boolean(user?.id && thread?.metadata?.buyer_id && user.id === thread.metadata.buyer_id) || (!user?.id || user?.id !== thread?.metadata?.supplier_id && user?.id !== thread?.metadata?.inspector_id)}
+            showReleased={!isInspector}
           />
         </div>
       ) : activeTab === 'activity' ? (

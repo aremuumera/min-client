@@ -10,7 +10,7 @@ import { numberText } from '@/lib/traceability';
 import { ACCEPTED_FILE_TYPES, MAX_FILE_BYTES, sha256Hex } from '@/lib/vault';
 import { sendFileBytes } from '@/lib/vault-upload';
 import { useGetUnitChoicesQuery } from '@/redux/features/batches/batches_api';
-import { useGetMeasurementChoicesQuery } from '@/redux/features/locations/locations_api';
+import { useGetLocationsQuery, useGetMeasurementChoicesQuery } from '@/redux/features/locations/locations_api';
 import {
   useCheckEventMutation,
   useCheckReadingMutation,
@@ -25,6 +25,7 @@ import {
 } from '@/redux/features/traceability/traceability_api';
 import { useInitiateUploadMutation } from '@/redux/features/vault/vaultApi';
 import { useAppSelector } from '@/redux/hooks';
+import { EvidenceList } from './evidence-list';
 
 /*
  * Readings and events on a batch, unit or shipment (step 2.8b, decisions #70, #106).
@@ -175,6 +176,22 @@ function ReadingForm({ subjectType, subjectId, role, onClose }: { subjectType: R
   );
 }
 
+/** Where it happened: your own sites (the company), or the batch's site (the inspector) */
+function PlacePicker({ role, siteId, value, onChange, required }: { role: RecorderRole; siteId: string | null; value: string; onChange: (v: string) => void; required: boolean }) {
+  const own = useGetLocationsQuery({ active: true, limit: 100, page: 1 }, { skip: role !== 'owner' });
+  const options =
+    role === 'owner'
+      ? (own.data?.data ?? []).map((l) => ({ value: l.id, label: l.name }))
+      : siteId
+        ? [{ value: siteId, label: 'The batch’s site' }]
+        : [];
+  return (
+    <FormField htmlFor="event-place" label="Where" required={required} optional={!required} info={role === 'owner' ? undefined : 'Only the site where the goods are.'}>
+      <DropdownSelect id="event-place" aria-label="Where" value={value} placeholder={options.length ? 'Choose' : 'No site known'} options={options} onValueChange={onChange} />
+    </FormField>
+  );
+}
+
 function FieldInput({ field, value, onChange }: { field: DataField; value: string; onChange: (v: string) => void }) {
   const id = `event-data-${field.key}`;
   const label = field.label ?? field.key;
@@ -204,10 +221,11 @@ const toData = (fields: DataField[], values: Record<string, string>): Record<str
       }),
   );
 
-function EventForm({ subjectId, role, types, onClose }: { subjectId: string; role: RecorderRole; types: EventType[]; onClose: () => void }) {
+function EventForm({ subjectId, role, types, siteId, onClose }: { subjectId: string; role: RecorderRole; types: EventType[]; siteId: string | null; onClose: () => void }) {
   const [typeId, setTypeId] = React.useState(types.length === 1 ? types[0].id : '');
   const [occurredAt, setOccurredAt] = React.useState(() => toLocal(new Date()));
   const [values, setValues] = React.useState<Record<string, string>>({});
+  const [placeId, setPlaceId] = React.useState('');
   const [file, setFile] = React.useState<File | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -220,8 +238,8 @@ function EventForm({ subjectId, role, types, onClose }: { subjectId: string; rol
   const missing = fields.find((f) => f.required && !(values[f.key] ?? '').trim());
   const problem = !type
     ? 'Choose what happened.'
-    : type.requiresLocation
-      ? 'This kind of event needs a place: MINMEG staff record it.'
+    : type.requiresLocation && !placeId
+      ? 'Choose where it happened.'
       : missing
         ? `Fill in ${missing.label ?? missing.key}.`
         : type.requiresEvidence && !file
@@ -239,6 +257,7 @@ function EventForm({ subjectId, role, types, onClose }: { subjectId: string; rol
         eventTypeId: type.id,
         subjectId,
         occurredAt: new Date(occurredAt).toISOString(),
+        ...(placeId ? { locationId: placeId } : {}),
         ...(fields.length ? { data: toData(fields, values) } : {}),
         ...(fileAssetId ? { evidence: [{ fileAssetId, attachmentType: 'OTHER', title: file!.name }] } : {}),
       }).unwrap();
@@ -268,6 +287,7 @@ function EventForm({ subjectId, role, types, onClose }: { subjectId: string; rol
         <FormField htmlFor="event-at" label="When" required info="Up to 30 days back.">
           <Input id="event-at" type="datetime-local" value={occurredAt} onChange={(e) => setOccurredAt(e.target.value)} />
         </FormField>
+        {type && <PlacePicker role={role} siteId={siteId} value={placeId} onChange={setPlaceId} required={type.requiresLocation} />}
         {fields.map((f) => <FieldInput key={f.key} field={f} value={values[f.key] ?? ''} onChange={(v) => setValues((p) => ({ ...p, [f.key]: v }))} />)}
         {type && <EvidencePicker id="event-evidence" file={file} onChange={setFile} required={type.requiresEvidence} />}
         {problem && <p className="text-sm text-gray-500">{problem}</p>}
@@ -327,7 +347,7 @@ function CorrectReading({ reading, onClose }: { reading: Reading; onClose: () =>
 }
 
 /** "Readings and events" for one batch, unit or shipment */
-export function SubjectRecords({ subjectType, subjectId, role, title = 'Readings and events' }: { subjectType: RecordSubject; subjectId: string; role: RecorderRole; title?: string }) {
+export function SubjectRecords({ subjectType, subjectId, role, siteId = null, title = 'Readings and events' }: { subjectType: RecordSubject; subjectId: string; role: RecorderRole; siteId?: string | null; title?: string }) {
   const me = useAppSelector((s) => (s.auth as { user?: { id?: string } | null }).user?.id ?? null);
   const [showHistory, setShowHistory] = React.useState(false);
   const readings = useGetReadingsQuery({ subjectType, subjectId, includeHistory: showHistory });
@@ -395,6 +415,7 @@ export function SubjectRecords({ subjectType, subjectId, role, title = 'Readings
               <p className="text-xs text-gray-500">{sourceLabel(r.sourceType)} · measured {formatDateTime(r.measuredAt)}</p>
               {r.verificationNote && <p className="text-sm text-gray-600">Note: {r.verificationNote}</p>}
               {r.statusReason && <p className="text-sm text-gray-600">Why: {r.statusReason}</p>}
+              <EvidenceList evidence={r.evidence} />
               {open && (
                 <div className="flex flex-wrap gap-2 pt-1">
                   {canCheck && r.verificationStatus === 'UNVERIFIED' && r.recordedBy !== me && (
@@ -427,6 +448,7 @@ export function SubjectRecords({ subjectType, subjectId, role, title = 'Readings
             {!!e.data && !!Object.keys(e.data).length && <p className="text-sm text-gray-700">{Object.entries(e.data).map(([k, v]) => `${k}: ${valueOf(v)}`).join(' · ')}</p>}
             {e.verificationNote && <p className="text-sm text-gray-600">Note: {e.verificationNote}</p>}
             {e.statusReason && <p className="text-sm text-gray-600">Why: {e.statusReason}</p>}
+            <EvidenceList evidence={e.evidence} />
             {eventIsOpen(e) && !e.eventType?.systemDefined && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {canCheck && ['PENDING', 'RECORDED'].includes(e.status) && e.actorId !== me && <Button size="sm" onClick={() => setPending({ kind: 'check-event', event: e })}>Checked</Button>}
@@ -445,7 +467,7 @@ export function SubjectRecords({ subjectType, subjectId, role, title = 'Readings
       </label>
 
       {form === 'reading' && <ReadingForm subjectType={subjectType} subjectId={subjectId} role={role} onClose={() => setForm(null)} />}
-      {form === 'event' && <EventForm subjectId={subjectId} role={role} types={myTypes} onClose={() => setForm(null)} />}
+      {form === 'event' && <EventForm subjectId={subjectId} role={role} types={myTypes} siteId={siteId} onClose={() => setForm(null)} />}
       {pending?.kind === 'correct-reading' && <CorrectReading reading={pending.reading} onClose={() => setPending(null)} />}
       {pending && pending.kind !== 'correct-reading' && (
         <ConfirmDialog
@@ -476,7 +498,7 @@ export function WorkbenchRecords({ assignmentId }: { assignmentId: string }) {
       </div>
       {batches.map((b) => (
         <div key={b.id} className="rounded-xl border border-gray-200 bg-white p-4">
-          <SubjectRecords subjectType="BATCH" subjectId={b.id} role="inspector" title={`${b.batchCode}${b.material ? ` · ${b.material}` : ''}`} />
+          <SubjectRecords subjectType="BATCH" subjectId={b.id} role="inspector" siteId={b.siteId} title={`${b.batchCode}${b.material ? ` · ${b.material}` : ''}`} />
         </div>
       ))}
     </section>

@@ -8,11 +8,14 @@ import RequestReinspectionModal from './modals/RequestReinspectionModal';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/helper';
 import { ReleasedResults } from '@/components/traceability/inspection-results-panel';
+import { ReleasedRecords } from '@/components/traceability/released-records';
 
 interface TradeInspectionsTabProps {
     tradeId: string;
     itemType?: string;
     isBuyer?: boolean;
+    /** Readings and events MINMEG released to the buyer or supplier (decision #107); not for the inspector */
+    showReleased?: boolean;
 }
 
 const formatScheduledTime = (dateStr?: string, timeStr?: string) => {
@@ -271,7 +274,7 @@ function InspectionReportPanel({ assignmentId, onClose }: { assignmentId: string
 }
 
 // ─── Main Component ────────────────────────────────────────────
-export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = false }: TradeInspectionsTabProps) {
+export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = false, showReleased = false }: TradeInspectionsTabProps) {
     const { data: rawData, isLoading, refetch } = useGetTradeAssignmentsHistoryQuery(
         { tradeId, itemType },
         { skip: !tradeId || tradeId === 'undefined' }
@@ -308,8 +311,11 @@ export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = f
         );
     }
 
+    const released = showReleased ? <ReleasedRecords inquiryId={tradeId} itemType={itemType === 'rfq' ? 'rfq' : 'product'} /> : null;
+
     if (!assignments || assignments.length === 0) {
         return (
+            <div className="space-y-6 max-w-5xl mx-auto">
             <div className="p-12 text-center bg-white rounded-2xl border border-gray-200 space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mx-auto">
                     <ShieldCheck size={24} />
@@ -318,6 +324,8 @@ export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = f
                 <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
                     Inspection assignments and accredited laboratory reports for this trade will appear here once appointed by Min-meg Admin.
                 </p>
+            </div>
+            {released}
             </div>
         );
     }
@@ -477,6 +485,8 @@ export function TradeInspectionsTab({ tradeId, itemType = 'product', isBuyer = f
                     </div>
                 </div>
             )}
+
+            {released}
 
             {/* Re-Inspection Modal */}
             <RequestReinspectionModal
