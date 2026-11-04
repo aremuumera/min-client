@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { ApplicabilityRule, Assessment, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVersion, PassportVerification, Single, Standard, VisibilityPolicy, Template, TemplateRequest } from '@/lib/passports';
+import type { ApplicabilityRule, Assessment, BulkResult, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVerification, PassportVersion, RecordHistory, RelationshipTree, Single, Standard, Template, TemplateRequest, VisibilityPolicy } from '@/lib/passports';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -40,8 +40,10 @@ export const passportsApi = createApi({
     getPassport: builder.query<Single<Passport>, string>({ query: (id) => `/certificates/${id}`, providesTags: ['Passports'] }),
     getPassportVersion: builder.query<Single<PassportVersion>, { id: string; versionId: string }>({ query: ({ id, versionId }) => `/certificates/${id}/versions/${versionId}`, providesTags: ['Passports'] }),
     getPassportVersions: builder.query<Paged<PassportVersion>, string>({ query: (id) => ({ url: `/certificates/${id}/versions`, params: { limit: 100 } }), providesTags: ['Passports'] }),
-    getPassportHistory: builder.query<Single<{ items: { id: string; occurredAt: string; eventType?: { code: string; name: string } | null; data?: Record<string, unknown> | null }[] }>, string>({ query: (id) => `/certificates/${id}/history`, providesTags: ['Passports'] }),
+    getRecordHistory: builder.query<Single<RecordHistory>, string>({ query: (id) => `/certificates/${id}/history`, providesTags: ['Passports', 'Certificates'] }),
+    getRelationshipTree: builder.query<Single<RelationshipTree>, string>({ query: (id) => `/certificates/${id}/relationship-tree`, providesTags: ['Passports', 'Certificates'] }),
     getPassportVerification: builder.query<Single<PassportVerification>, string>({ query: (id) => `/certificates/${id}/verification`, providesTags: ['Passports'] }),
+    getPassportMaterialChoices: builder.query<Paged<{ id: string; code: string; name: string }>, void>({ query: () => '/materials?active=true&limit=100' }),
     getTemplate: builder.query<Single<Template>, string>({ query: (id) => `/passport-templates/${id}`, providesTags: ['Templates'] }),
     getBatchResults: builder.query<Single<{ batchId: string; inspectionResults: { id: string; quantityVerified: string | null; summary: string | null; status: string; createdAt: string }[]; assayResults: { id: string; laboratoryName: string; sampleReference: string | null; grade: { parameter: string; value: string | number; unit: string } | null; status: string; testedAt: string | null }[] }>, string>({
       query: (batchId) => `/batches/${batchId}/inspection-results`,
@@ -79,6 +81,14 @@ export const passportsApi = createApi({
       invalidatesTags: ['Passports'],
     }),
     removePassportMaterial: builder.mutation<unknown, string>({ query: (id) => ({ url: `/passport-materials/${id}`, method: 'DELETE' }), invalidatesTags: ['Passports'] }),
+    setPassportMetadata: builder.mutation<unknown, { versionId: string; entries: Body[] }>({
+      query: ({ versionId, entries }) => ({ url: `/passport-versions/${versionId}/metadata`, method: 'PUT', body: { entries } }),
+      invalidatesTags: ['Passports'],
+    }),
+    setPassportValuesBulk: builder.mutation<Single<BulkResult>, { versionId: string; items: Body[]; idempotencyKey: string }>({
+      query: ({ versionId, items, idempotencyKey }) => ({ url: `/passport-versions/${versionId}/fields/bulk`, method: 'POST', body: { items }, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Passports'],
+    }),
     // ---------- 2.9a: what companies read of the rules, and their template requests ----------
     getVisibilityPolicies: builder.query<Paged<VisibilityPolicy>, void>({ query: () => ({ url: '/visibility-policies', params: { limit: 100 } }) }),
     getPassportTypes: builder.query<Paged<PassportType>, void>({ query: () => ({ url: '/passport-types', params: { limit: 100 } }) }),
@@ -117,7 +127,8 @@ export const {
   useGetPassportQuery,
   useGetPassportVersionQuery,
   useGetPassportVersionsQuery,
-  useGetPassportHistoryQuery,
+  useGetRecordHistoryQuery,
+  useGetRelationshipTreeQuery,
   useGetPassportVerificationQuery,
   useGetBatchResultsQuery,
   useCreatePassportMutation,
@@ -129,7 +140,10 @@ export const {
   useClearPassportValueMutation,
   useAddPassportMaterialMutation,
   useRemovePassportMaterialMutation,
+  useSetPassportMetadataMutation,
+  useSetPassportValuesBulkMutation,
   useGetTemplateQuery,
+  useGetPassportMaterialChoicesQuery,
   useGetPassportTypesQuery,
   useGetTemplatesQuery,
   useGetTemplateRequestsQuery,

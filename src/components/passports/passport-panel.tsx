@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Alert, Button, ConfirmDialog, CopyableId, DropdownSelect, FormField, Input, Modal, StatusBadge, Textarea } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, DropdownSelect, FormField, Modal, StatusBadge } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
@@ -40,6 +40,7 @@ import { useGetReadingsQuery } from '@/redux/features/traceability/traceability_
 import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
+import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
 
 /*
  * A batch's digital passport (step 2.9b, decisions #74, #108).
@@ -60,33 +61,6 @@ function shown(f: VersionField) {
     return r?.value ? `${numberText(r.value)} ${r.unit?.symbol ?? ''} (latest reading${r.measuredAt ? `, ${formatDateTime(r.measuredAt)}` : ''})` : 'No reading yet';
   }
   return f.value ? valueText(f.value.value) : '';
-}
-
-/** Typed input for one field, by its kind */
-function TypedInput({ def, value, onChange }: { def: TemplateField | undefined; value: string; onChange: (v: string) => void }) {
-  const type = def?.dataType ?? 'STRING';
-  if (type === 'ENUM') return <DropdownSelect id="value-input" aria-label="Value" value={value} placeholder="Choose" options={(def?.enumValues ?? []).map((v) => ({ value: v, label: v }))} onValueChange={onChange} />;
-  if (type === 'BOOLEAN') return <DropdownSelect id="value-input" aria-label="Value" value={value} placeholder="Choose" options={[{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]} onValueChange={onChange} />;
-  if (type === 'OBJECT' || type === 'ARRAY') return <Textarea id="value-input" aria-label="Value" value={value} onChange={(e) => onChange(e.target.value)} rows={4} placeholder={type === 'ARRAY' ? '["a", "b"]' : '{"key": "value"}'} />;
-  return (
-    <Input
-      id="value-input"
-      aria-label="Value"
-      type={type === 'DATE' ? 'date' : type === 'DATETIME' ? 'datetime-local' : 'text'}
-      inputMode={type === 'NUMBER' || type === 'INTEGER' ? 'decimal' : undefined}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  );
-}
-
-function parseTyped(type: string, raw: string): unknown {
-  const v = raw.trim();
-  if (type === 'NUMBER' || type === 'INTEGER') return Number(v);
-  if (type === 'BOOLEAN') return v === 'true';
-  if (type === 'DATETIME') return new Date(v).toISOString();
-  if (type === 'OBJECT' || type === 'ARRAY') return JSON.parse(v);
-  return v;
 }
 
 /** Set one field: typed, from a reading, from a released lab or inspection result, or a document */
@@ -247,24 +221,6 @@ function FieldsView({ version, editable, defs, batchId }: { version: PassportVer
   );
 }
 
-function Materials({ version }: { version: PassportVersion }) {
-  if (!version.materials.length) return null;
-  return (
-    <section className="space-y-1">
-      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Made of</h4>
-      <ul className="text-sm text-gray-700">
-        {version.materials.map((m) => (
-          <li key={m.id}>
-            {m.material?.name ?? m.materialId}
-            {m.role ? ` · ${words(m.role)}` : ''}
-            {m.percentage != null ? ` · ${m.percentage} %` : ''}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 /** The open version the owner fills, checks and publishes */
 function VersionEditor({ passport, versionId, batchId }: { passport: Passport; versionId: string; batchId: string | null }) {
   const version = useGetPassportVersionQuery({ id: passport.id, versionId });
@@ -295,6 +251,7 @@ function VersionEditor({ passport, versionId, batchId }: { passport: Passport; v
           <p className="text-xs text-gray-500">Template {v.template.name} ({v.template.code} revision {v.template.version}){v.changeReason ? ` · ${v.changeReason}` : ''}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <FillSeveral version={v} defs={template.data?.data.fields ?? []} />
           <Button size="sm" variant="outlined" loading={checkState.isLoading} onClick={runCheck}>Check</Button>
           {v.status === 'VALIDATED' && <Button size="sm" onClick={() => setDialog('publish')}>Publish</Button>}
           {v.versionNumber > 1 && <Button size="sm" variant="text" onClick={() => setDialog('discard')}>Discard draft</Button>}
@@ -314,7 +271,8 @@ function VersionEditor({ passport, versionId, batchId }: { passport: Passport; v
         </div>
       )}
       <FieldsView version={v} editable defs={template.data?.data.fields ?? []} batchId={batchId} />
-      <Materials version={v} />
+      <MaterialsSection version={v} editable />
+      <DetailsSection version={v} editable />
       <ConfirmDialog
         open={!!dialog}
         title={dialog === 'publish' ? `Publish version ${v.versionNumber}?` : `Discard version ${v.versionNumber}?`}
@@ -345,7 +303,8 @@ export function PublishedView({ passport, versionId }: { passport: Passport; ver
   const v = version.data?.data;
   if (version.isLoading) return <p className="text-sm text-gray-500">Loading…</p>;
   if (!v) return <Alert severity="error">{version.error ? toApiError(version.error).message : 'Not available'}</Alert>;
-  const counts = (verification.data?.data as { values?: { verified?: number; total?: number } } | undefined)?.values;
+  const tally = (verification.data?.data as { valueVerification?: Record<string, number> } | undefined)?.valueVerification;
+  const counts = tally ? { verified: tally.VERIFIED ?? 0, total: Object.values(tally).reduce((a, b) => a + b, 0) } : null;
   return (
     <div className="space-y-4" data-testid="passport-published">
       <p className="text-xs text-gray-500">
@@ -354,7 +313,8 @@ export function PublishedView({ passport, versionId }: { passport: Passport; ver
       </p>
       <FieldsView version={v} editable={false} defs={[]} batchId={null} />
       {!!v.hiddenFieldCount && <p className="text-sm text-gray-500">{v.hiddenFieldCount} field{v.hiddenFieldCount === 1 ? '' : 's'} not shared with you.</p>}
-      <Materials version={v} />
+      <MaterialsSection version={v} editable={false} />
+      <DetailsSection version={v} editable={false} />
     </div>
   );
 }
@@ -456,6 +416,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       )}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}
+      <RecordTrail id={p.id} />
       <p className="text-xs text-gray-400">Passport ID <CopyableId value={p.id} /></p>
       <ConfirmDialog
         open={!!dialog}

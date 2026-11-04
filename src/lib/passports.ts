@@ -243,9 +243,52 @@ export interface PassportVersion extends VersionSummary {
   template: { id: string; code: string; version: number; name: string; status: string };
   fields: VersionField[];
   hiddenFieldCount?: number;
-  metadata: { id: string; key: string; value: unknown; description: string | null }[];
+  metadata: MetadataEntry[];
   materials: PassportMaterial[];
   validationReport?: { valid: boolean; issues: ValidationIssue[]; checkedAt: string } | null;
+}
+/** An extra detail on a version (Group 15 metadata): owner-only unless a visibility policy says otherwise */
+export interface MetadataEntry {
+  id: string;
+  key: string;
+  value: unknown;
+  type?: string | null;
+  format?: string | null;
+  description: string | null;
+  order?: number | null;
+  visibilityPolicyId?: string;
+  hashIncluded?: boolean;
+}
+/** GET /certificates/{id}/history: readers get the public events and the version number; managers also get who and the details */
+export interface RecordHistoryItem {
+  id: string;
+  occurredAt: string;
+  eventType: { code: string; name: string } | null;
+  actorType?: string;
+  actorId?: string;
+  data?: Record<string, unknown> | null;
+  versionNumber?: number | null;
+}
+export interface RecordHistory {
+  items: RecordHistoryItem[];
+}
+type Ref = { type: string; id: string };
+/** GET /certificates/{id}/relationship-tree, for both kinds */
+export interface RelationshipTree {
+  passport?: { id: string; passportCode: string; status: string };
+  certificate?: { id: string; certificateCode: string; status: string };
+  subject: Ref & { label?: string };
+  relationships: { id: string; relationshipType: string; source: Ref; target: Ref; effectiveFrom?: string | null; effectiveTo?: string | null }[];
+  /** batch passports: the passports of the batches it came from or turned into */
+  lineage?: { relationshipType: 'DERIVED_FROM' | 'DERIVED_INTO'; lineageType: string; batchId: string; passport: { id: string; passportCode: string; status: string } }[];
+  /** certificates: the records the issued version was built from */
+  source?: { type: string; id: string; records: unknown } | null;
+}
+export interface BulkResult {
+  saved: number;
+  failed: number;
+  versionStatus: string;
+  items: { index: number; fieldId: string | null; key: string | null; status: 'SAVED' | 'FAILED'; error?: string }[];
 }
 export interface PassportVerification {
   valid?: boolean;
