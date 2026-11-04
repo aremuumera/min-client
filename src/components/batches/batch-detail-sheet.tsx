@@ -6,6 +6,7 @@ import { Alert, Button, ConfirmDialog, CopyableId, KeyValueList, PaginationBar, 
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { ENDED_STATUSES, OPERABLE_STATUSES, approvalRule, batchLabel, entryStatusLabel, formatQuantity, signedQuantity, toMicro, type Batch, type HistoryItem, type LedgerEntry, type TreeNode } from '@/lib/batches';
+import { SubjectRecords } from '@/components/traceability/subject-records';
 import { useGetBatchHistoryQuery, useGetBatchQuery, useGetBatchTreeQuery, useGetLedgerQuery, useGetUnitChoicesQuery, useQuarantineBatchMutation, useReleaseBatchMutation, useRetireBatchMutation } from '@/redux/features/batches/batches_api';
 import { BatchFormSheet } from './batch-form-sheet';
 import { MergeSheet, SplitSheet, TransformSheet } from './batch-operation-sheets';
@@ -272,6 +273,10 @@ export function BatchDetailSheet({
             </TabPanel>
             <TabPanel value="history">
               <HistoryPanel batch={b} />
+              {/* Step 2.8b: readings and events, declared by the company until checked */}
+              <div className="mt-6 border-t border-hairline pt-4">
+                <SubjectRecords subjectType="BATCH" subjectId={b.id} role="owner" />
+              </div>
             </TabPanel>
             {documents && <TabPanel value="documents">{documents(b)}</TabPanel>}
             {units && <TabPanel value="units">{units(b)}</TabPanel>}

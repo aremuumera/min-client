@@ -2,6 +2,7 @@
 
 import { WorkbenchLabels } from '@/components/traceability/workbench-labels';
 import { WorkbenchResults, batchesMissingFindings } from '@/components/traceability/inspection-results-panel';
+import { WorkbenchRecords } from '@/components/traceability/subject-records';
 import { useGetRoundResultsQuery, useGetWindowQuery } from '@/redux/features/traceability/traceability_api';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -755,6 +756,11 @@ export default function TradeWorkbenchPage() {
                     {/* Findings and lab results per batch (step 2.8a) */}
                     {(currentPhaseIndex >= 2 || isCompleted) && !isCancelledOrRejected && (
                         <WorkbenchResults assignmentId={assignmentId as string} />
+                    )}
+
+                    {/* Readings and events per batch (step 2.8b) */}
+                    {(currentPhaseIndex >= 2 || isCompleted) && !isCancelledOrRejected && (
+                        <WorkbenchRecords assignmentId={assignmentId as string} />
                     )}
 
                     {/* Lab Test Results Summary */}

@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
+import type { EventType, Reading, RecordSubject, TraceEvent } from '@/lib/records';
 import type { BatchUnits, Code, CustodyRow, FieldWindow, InspectionFile, PrintJob, RoundResults, ScanResult } from '@/lib/traceability';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -12,7 +13,7 @@ const CHANGES = ['Units', 'Custody'] as const;
 export const traceabilityApi = createApi({
   reducerPath: 'traceabilityApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Units', 'Custody', 'Window', 'Results'],
+  tagTypes: ['Units', 'Custody', 'Window', 'Results', 'Records'],
   endpoints: (builder) => ({
     getBatchUnits: builder.query<Single<BatchUnits>, { batchId: string; includeRetired?: boolean }>({
       query: ({ batchId, includeRetired }) => ({ url: '/handling-units', params: { batchId, ...(includeRetired ? { includeRetired: 'true' } : {}) } }),
@@ -53,6 +54,40 @@ export const traceabilityApi = createApi({
     /** What a scanned code is: genuine or not, its status, and only what the viewer may know of the goods */
     resolveCode: builder.query<Single<ScanResult>, { value: string; latitude?: number; longitude?: number; accuracyMeters?: number }>({
       query: ({ value, ...params }) => ({ url: `/identifiers/resolve/${encodeURIComponent(value)}`, params }),
+    }),
+    // ---- readings and events (step 2.8b, decision #70): never edited; corrections are new records ----
+    getReadings: builder.query<Paged<Reading>, { subjectType: RecordSubject; subjectId: string; includeHistory?: boolean }>({
+      query: ({ subjectType, subjectId, includeHistory }) => ({ url: '/measurements', params: { [subjectType === 'SHIPMENT' ? 'shipmentId' : subjectType === 'BATCH' ? 'batchId' : 'subjectId']: subjectId, ...(subjectType === 'HANDLING_UNIT' ? { subjectType } : {}), limit: 100, ...(includeHistory ? { includeHistory: 'true' } : {}) } }),
+      providesTags: ['Records'],
+    }),
+    getEvents: builder.query<Paged<TraceEvent>, { subjectType: RecordSubject; subjectId: string; includeHistory?: boolean }>({
+      query: ({ subjectType, subjectId, includeHistory }) => ({ url: '/events', params: { [subjectType === 'SHIPMENT' ? 'shipmentId' : subjectType === 'BATCH' ? 'batchId' : 'subjectId']: subjectId, ...(subjectType === 'HANDLING_UNIT' ? { subjectType } : {}), limit: 100, ...(includeHistory ? { includeHistory: 'true' } : {}) } }),
+      providesTags: ['Records'],
+    }),
+    getRecordableEventTypes: builder.query<Paged<EventType>, RecordSubject>({ query: (subjectType) => ({ url: '/event-types', params: { subjectType, recordable: 'true', active: 'true', limit: 100 } }) }),
+    recordReading: builder.mutation<Single<Reading>, { idempotencyKey: string } & Body>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/measurements', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Records'],
+    }),
+    checkReading: builder.mutation<Single<Reading>, { id: string; outcome: 'VERIFIED' | 'REJECTED'; note?: string }>({
+      query: ({ id, ...body }) => ({ url: `/measurements/${id}/verify`, method: 'POST', body }),
+      invalidatesTags: ['Records'],
+    }),
+    correctReading: builder.mutation<Single<Reading>, { id: string; idempotencyKey: string; reason: string; value: string }>({
+      query: ({ id, idempotencyKey, ...body }) => ({ url: `/measurements/${id}/correct`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Records'],
+    }),
+    recordEvent: builder.mutation<Single<TraceEvent>, { idempotencyKey: string } & Body>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/events', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Records'],
+    }),
+    checkEvent: builder.mutation<Single<TraceEvent>, { id: string; note?: string }>({
+      query: ({ id, ...body }) => ({ url: `/events/${id}/verify`, method: 'POST', body }),
+      invalidatesTags: ['Records'],
+    }),
+    withdrawEvent: builder.mutation<Single<TraceEvent>, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({ url: `/events/${id}/invalidate`, method: 'POST', body: { reason } }),
+      invalidatesTags: ['Records'],
     }),
     // ---- inspection results (step 2.8a): nothing reaches the buyer or supplier before MINMEG releases the round ----
     getRoundResults: builder.query<Single<RoundResults>, string>({ query: (assignmentId) => `/inspections/${assignmentId}/results`, providesTags: ['Results'] }),
@@ -113,6 +148,15 @@ export const {
   useCustodyActionMutation,
   useLazyResolveCodeQuery,
   useGetRoundResultsQuery,
+  useGetReadingsQuery,
+  useGetEventsQuery,
+  useGetRecordableEventTypesQuery,
+  useRecordReadingMutation,
+  useCheckReadingMutation,
+  useCorrectReadingMutation,
+  useRecordEventMutation,
+  useCheckEventMutation,
+  useWithdrawEventMutation,
   useUploadInspectionFilesMutation,
   useSubmitFindingsMutation,
   useSubmitLabResultMutation,

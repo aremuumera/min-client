@@ -9,6 +9,7 @@ import { DELIVERY_RECORDED, LINE_LABELS, MOVING, PLANNING, shipmentStatusLabel, 
 import { showQuantity } from '@/lib/trade-stock';
 import { useGetReadinessQuery, useGetShipmentQuery, useRemoveLineMutation, useShipmentActionMutation } from '@/redux/features/shipments/shipments_api';
 import { CustodyPanel } from '@/components/traceability/custody-panel';
+import { SubjectRecords } from '@/components/traceability/subject-records';
 import { ShipmentFormSheet } from './shipment-form-sheet';
 import { ShipmentTracking } from './shipment-tracking';
 
@@ -243,6 +244,8 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
           </section>
           {s.status !== 'CANCELLED' && <ShipmentTracking shipment={s} />}
           {s.status !== 'CANCELLED' && <CustodyPanel subjectType="SHIPMENT" subjectId={s.id} canHandOver={false} />}
+          {/* Step 2.8b D7: the shipment's history of readings and events */}
+          <SubjectRecords subjectType="SHIPMENT" subjectId={s.id} role="owner" title="History: readings and events" />
           {!!s.returnShipments?.length && (
             <section>
               <h3 className="mb-2 text-sm font-semibold text-ink">Returns</h3>
