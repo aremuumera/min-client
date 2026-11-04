@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { EmptyState, ErrorState } from '@/components/ui';
 import { BatchPassport } from '@/components/passports/passport-panel';
+import { TradeCarbon } from '@/components/esg/carbon-panel';
 import { CertificateDetail, CertificatesFor } from '@/components/passports/certificate-detail';
 import { SideSheet } from '@/components/ui';
 import { useGetBatchResultsQuery } from '@/redux/features/passports/passports_api';
@@ -43,9 +44,16 @@ export function TradePassportsTab({ inquiryId, itemType, extra }: { inquiryId: s
         ))}
       </section>
       <TradeCertificates tradeId={tradeId} batchIds={batches.map((b) => b.id)} />
+      <TradeCarbonSection tradeId={tradeId} batches={batches} seller={seller} />
       {extra?.(tradeId)}
     </div>
   );
+}
+
+/** Step 2.10a: the carbon of this trade's batches and shipments */
+function TradeCarbonSection({ tradeId, batches, seller }: { tradeId: string; batches: { id: string; batchCode: string }[]; seller: boolean }) {
+  const shipments = useGetShipmentsQuery({ tradeId, limit: 50 });
+  return <TradeCarbon batches={batches} shipments={(shipments.data?.data ?? []).filter((s) => s.status !== 'CANCELLED')} seller={seller} />;
 }
 
 /** The lab and inspection results of one batch, as certificate subjects */

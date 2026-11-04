@@ -136,6 +136,7 @@ export function BatchDetailSheet({
   documents,
   units,
   passport,
+  esgCarbon,
   staffFormProps,
   onClose,
   onOpenBatch,
@@ -150,6 +151,8 @@ export function BatchDetailSheet({
   units?: (batch: Batch) => React.ReactNode;
   /** Passport tab (step 2.9b) */
   passport?: (batch: Batch) => React.ReactNode;
+  /** ESG & carbon tab (step 2.10) */
+  esgCarbon?: (batch: Batch) => React.ReactNode;
   staffFormProps?: (batch: Batch) => { staffFields: React.ReactNode; staffBody: Record<string, unknown> };
   onClose: () => void;
   onOpenBatch: (id: string) => void;
@@ -211,6 +214,7 @@ export function BatchDetailSheet({
               {documents && <Tab value="documents" label="Documents" />}
               {units && <Tab value="units" label="Units and codes" />}
               {passport && <Tab value="passport" label="Passport" />}
+              {esgCarbon && <Tab value="esg" label="ESG & carbon" />}
             </TabList>
 
             <TabPanel value="details">
@@ -285,6 +289,7 @@ export function BatchDetailSheet({
             {documents && <TabPanel value="documents">{documents(b)}</TabPanel>}
             {units && <TabPanel value="units">{units(b)}</TabPanel>}
             {passport && <TabPanel value="passport">{passport(b)}</TabPanel>}
+            {esgCarbon && <TabPanel value="esg">{esgCarbon(b)}</TabPanel>}
           </Tabs>
         )}
       </SideSheet>

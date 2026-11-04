@@ -37,6 +37,8 @@ import {
   useSetPassportValueMutation,
 } from '@/redux/features/passports/passports_api';
 import { useGetReadingsQuery } from '@/redux/features/traceability/traceability_api';
+import { useGetCarbonAssessmentsQuery } from '@/redux/features/esg/esg_api';
+import { amount } from '@/lib/esg';
 import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
@@ -75,6 +77,7 @@ function ValueForm({ version, field, def, batchId, onClose }: { version: Passpor
   const readings = useGetReadingsQuery({ subjectType: 'BATCH', subjectId: batchId ?? '' }, { skip: !batchId || source !== 'MEASUREMENT' });
   const results = useGetBatchResultsQuery(batchId ?? '', { skip: !batchId || source !== 'INSPECTION' });
   const files = useGetFilesQuery({ limit: 100, page: 1 }, { skip: source !== 'DOCUMENT' });
+  const carbon = useGetCarbonAssessmentsQuery({ subjectType: 'BATCH', subjectId: batchId ?? '', status: 'VERIFIED', limit: 50 }, { skip: !batchId || source !== 'ASSESSMENT' });
   const policies = useGetVisibilityPoliciesQuery();
   const [save, { isLoading }] = useSetPassportValueMutation();
   const current = RANK[field.visibility ?? 'PUBLIC'] ?? 0;
@@ -85,6 +88,8 @@ function ValueForm({ version, field, def, batchId, onClose }: { version: Passpor
     ...(results.data?.data.inspectionResults ?? []).map((r) => ({ value: r.id, label: `Inspection findings${r.quantityVerified ? `: quantity verified ${numberText(r.quantityVerified)}` : ''}${r.status === 'VERIFIED' ? ' · checked' : ''}` })),
   ];
   const fileOptions = (files.data?.data ?? []).map((f) => ({ value: f.id, label: f.displayName }));
+  const carbonOptions = (carbon.data?.data ?? []).map((a) => ({ value: a.id, label: `${a.assessmentCode}: ${amount(a.totalEmissions.value)} ${a.totalEmissions.unit ?? ''}${a.intensity ? ` · ${amount(a.intensity.value)} ${a.intensity.unit ?? ''}` : ''}` }));
+  const numeric = def?.dataType === 'NUMBER' || def?.dataType === 'INTEGER';
   const problem = source === 'USER' ? (!typed.trim() ? 'Enter the value.' : null) : !sourceId ? 'Choose where the value comes from.' : null;
 
   const submit = async () => {
@@ -117,6 +122,7 @@ function ValueForm({ version, field, def, batchId, onClose }: { version: Passpor
     : [
         { value: 'USER', label: 'Type it' },
         ...(batchId ? [{ value: 'MEASUREMENT', label: 'From a reading on the batch' }, { value: 'INSPECTION', label: 'From a lab or inspection result' }] : []),
+        ...(batchId && numeric ? [{ value: 'ASSESSMENT', label: 'From a carbon assessment MINMEG confirmed' }] : []),
         { value: 'DOCUMENT', label: 'A document from your files' },
       ];
   return (
@@ -145,6 +151,11 @@ function ValueForm({ version, field, def, batchId, onClose }: { version: Passpor
         {source === 'INSPECTION' && (
           <FormField htmlFor="value-result" label="Lab or inspection result" required info="Only results MINMEG released to you are listed">
             <DropdownSelect id="value-result" aria-label="Lab or inspection result" value={sourceId} placeholder={resultOptions.length ? 'Choose' : 'No released results yet'} options={resultOptions} onValueChange={setSourceId} />
+          </FormField>
+        )}
+        {source === 'ASSESSMENT' && (
+          <FormField htmlFor="value-carbon" label="Carbon assessment" required info="The figure is copied and converted to this field's unit: the total for an emissions field, the figure per tonne for an intensity field. A carbon value can't be typed.">
+            <DropdownSelect id="value-carbon" aria-label="Carbon assessment" value={sourceId} placeholder={carbonOptions.length ? 'Choose' : 'No carbon assessment MINMEG confirmed for this batch'} options={carbonOptions} onValueChange={setSourceId} />
           </FormField>
         )}
         {source === 'DOCUMENT' && (

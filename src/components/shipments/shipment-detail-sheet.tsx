@@ -12,6 +12,7 @@ import { CustodyPanel } from '@/components/traceability/custody-panel';
 import { SubjectRecords } from '@/components/traceability/subject-records';
 import { ShipmentFormSheet } from './shipment-form-sheet';
 import { ShipmentTracking } from './shipment-tracking';
+import { CarbonFor } from '@/components/esg/carbon-panel';
 
 type LineAmounts = Record<string, { received: string; rejected: string }>;
 
@@ -246,6 +247,8 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
           {s.status !== 'CANCELLED' && <CustodyPanel subjectType="SHIPMENT" subjectId={s.id} canHandOver={false} />}
           {/* Step 2.8b D7: the shipment's history of readings and events */}
           <SubjectRecords subjectType="SHIPMENT" subjectId={s.id} role="owner" title="History: readings and events" />
+          {/* Step 2.10a: the seller declares the shipment's carbon; the buyer and carrier read it */}
+          {s.status !== 'CANCELLED' && (seller || buyer) && <CarbonFor subjectType="SHIPMENT" subjectId={s.id} mode={seller ? 'owner' : 'reader'} />}
           {!!s.returnShipments?.length && (
             <section>
               <h3 className="mb-2 text-sm font-semibold text-ink">Returns</h3>

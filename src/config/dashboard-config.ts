@@ -186,6 +186,14 @@ export const dashboardConfig: DashboardConfig = {
           matcher: { type: "startsWith", href: paths.dashboard.passports.requests },
           permission: "passports",
         },
+        {
+          key: "passports:esg",
+          title: "ESG & carbon",
+          href: paths.dashboard.esg,
+          icon: "leaf",
+          matcher: { type: "startsWith", href: paths.dashboard.esg },
+          permission: "esg",
+        },
       ],
     },
 
