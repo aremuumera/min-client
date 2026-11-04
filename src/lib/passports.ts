@@ -279,3 +279,115 @@ export const PASSPORT_STATUS_TEXT: Record<Passport['status'], string> = {
 };
 export const passportTone = (s: Passport['status']) => (s === 'PUBLISHED' ? 'ACTIVE' : s === 'DRAFT' ? 'PENDING' : s === 'SUSPENDED' ? 'ON_HOLD' : 'CANCELLED');
 export const valueText = (v: unknown): string => (v == null ? '' : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : typeof v === 'object' ? JSON.stringify(v) : String(v));
+
+// =========================== 2.9c compliance ===========================
+export const REQUIREMENT_RESULTS = ['SATISFIED', 'MISSING', 'NOT_APPLICABLE', 'PENDING_VERIFICATION', 'NO_EVIDENCE', 'NOT_SATISFIED'] as const;
+export const ACTOR_TYPES = ['SUPPLIER', 'BUYER', 'IMPORTER', 'EXPORTER', 'PRODUCER', 'PROCESSOR', 'CARRIER', 'OTHER'] as const;
+export type AssessmentStatus = 'PENDING' | 'IN_REVIEW' | 'COMPLIANT' | 'NON_COMPLIANT' | 'CONDITIONAL' | 'EXPIRED' | 'INVALIDATED';
+export type TrustLabel = 'SELF_ASSESSED' | 'VERIFIED_BY_MINMEG' | 'REJECTED_BY_MINMEG';
+export interface StandardRef {
+  id: string;
+  code: string;
+  version: string;
+  name: string;
+  status?: string;
+}
+export interface ComplianceProfile {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  jurisdiction: string | null;
+  buyerOrganizationId: string | null;
+  useCase: string | null;
+  active: boolean;
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
+  standards?: { id: string; passportStandardId: string; standard: (Omit<StandardRef, 'id'> & { status: string }) | null; required: boolean; effectiveTo: string | null }[];
+}
+export interface ApplicabilityRule {
+  id: string;
+  passportStandardId: string;
+  effect: 'APPLIES' | 'EXCLUDES';
+  subjectType: string | null;
+  categoryId: string | null;
+  materialId: string | null;
+  productModelId: string | null;
+  jurisdiction: string | null;
+  actorType: string | null;
+  organizationId: string | null;
+  conditionJson: Record<string, unknown>[];
+  priority: number;
+  active: boolean;
+}
+export interface Finding {
+  propertyId: string;
+  code: string;
+  key: string;
+  title: string;
+  required: boolean;
+  result: (typeof REQUIREMENT_RESULTS)[number];
+  reason: string;
+  fieldKeys: string[];
+  verificationStatus: string | null;
+}
+export interface Assessment {
+  id: string;
+  assessmentCode: string;
+  runCode: string | null;
+  complianceProfileId: string | null;
+  standard: StandardRef | null;
+  subjectId: string;
+  passportVersion: { id: string; versionNumber: number; status: string } | null;
+  status: AssessmentStatus;
+  verificationStatus: 'UNVERIFIED' | 'PARTIALLY_VERIFIED' | 'VERIFIED' | 'REJECTED';
+  trustLabel: TrustLabel;
+  assessmentMethod: string;
+  conditions: string | null;
+  findings: Finding[];
+  overrides: { propertyId: string; result: string; reason: string }[] | null;
+  assessedAt: string | null;
+  expiresAt: string | null;
+  supersededById: string | null;
+  verificationNote?: string | null;
+  invalidationReason?: string | null;
+}
+export interface ComplianceSummary {
+  certificateId: string;
+  passportCode: string;
+  currentVersionId: string | null;
+  activeDisqualifications: number;
+  note: string;
+  standards: {
+    standard: StandardRef | null;
+    complianceProfileId: string | null;
+    assessmentId: string;
+    assessmentCode: string;
+    status: AssessmentStatus;
+    trustLabel: TrustLabel;
+    conditions: string | null;
+    assessedAt: string | null;
+    expiresAt: string | null;
+    reassessmentNeeded: boolean;
+  }[];
+}
+export const TRUST_TEXT: Record<TrustLabel, string> = { SELF_ASSESSED: 'Self-checked by the company', VERIFIED_BY_MINMEG: 'Confirmed by MINMEG', REJECTED_BY_MINMEG: 'Rejected by MINMEG' };
+export const ASSESSMENT_TEXT: Record<AssessmentStatus, string> = {
+  PENDING: 'Waiting for checks',
+  IN_REVIEW: 'In review',
+  COMPLIANT: 'Meets the standard',
+  NON_COMPLIANT: 'Does not meet the standard',
+  CONDITIONAL: 'Meets it, with conditions',
+  EXPIRED: 'Expired',
+  INVALIDATED: 'Withdrawn',
+};
+export const assessmentTone = (s: AssessmentStatus) => (s === 'COMPLIANT' ? 'ACTIVE' : s === 'CONDITIONAL' || s === 'PENDING' || s === 'IN_REVIEW' ? 'PENDING' : 'CANCELLED');
+export const RESULT_TEXT: Record<(typeof REQUIREMENT_RESULTS)[number], string> = {
+  SATISFIED: 'Met',
+  MISSING: 'Missing',
+  NOT_APPLICABLE: 'Does not apply',
+  PENDING_VERIFICATION: 'Waiting for a check',
+  NO_EVIDENCE: 'No evidence',
+  NOT_SATISFIED: 'Not met',
+};
+export const resultTone = (r: (typeof REQUIREMENT_RESULTS)[number]) => (r === 'SATISFIED' || r === 'NOT_APPLICABLE' ? 'ACTIVE' : r === 'PENDING_VERIFICATION' ? 'PENDING' : 'CANCELLED');

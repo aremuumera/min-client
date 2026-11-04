@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { Paged, Passport, PassportType, PassportVersion, PassportVerification, Single, VisibilityPolicy, Template, TemplateRequest } from '@/lib/passports';
+import type { ApplicabilityRule, Assessment, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVersion, PassportVerification, Single, Standard, VisibilityPolicy, Template, TemplateRequest } from '@/lib/passports';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -11,8 +11,26 @@ const params = (q: Query) => Object.fromEntries(Object.entries(q).filter(([, v])
 export const passportsApi = createApi({
   reducerPath: 'passportsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Requests', 'Templates', 'Passports'],
+  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance'],
   endpoints: (builder) => ({
+    // ---------- 2.9c compliance ----------
+    getComplianceSummary: builder.query<Single<ComplianceSummary>, string>({ query: (id) => `/certificates/${id}/compliance-summary`, providesTags: ['Compliance'] }),
+    getAssessments: builder.query<Paged<Assessment>, Query>({ query: (q) => ({ url: '/compliance-assessments', params: params(q) }), providesTags: ['Compliance'] }),
+    getAssessment: builder.query<Single<Assessment>, string>({ query: (id) => `/compliance-assessments/${id}`, providesTags: ['Compliance'] }),
+    runAssessment: builder.mutation<Single<Assessment | Assessment[] | { assessments: Assessment[] }>, { idempotencyKey: string } & Body>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/compliance-assessments', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Compliance'],
+    }),
+    reassess: builder.mutation<Single<Assessment>, { id: string; idempotencyKey: string } & Body>({
+      query: ({ id, idempotencyKey, ...body }) => ({ url: `/compliance-assessments/${id}/reassess`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Compliance'],
+    }),
+    invalidateAssessment: builder.mutation<Single<Assessment>, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({ url: `/compliance-assessments/${id}/invalidate`, method: 'POST', body: { reason } }),
+      invalidatesTags: ['Compliance'],
+    }),
+    getComplianceProfiles: builder.query<Paged<ComplianceProfile>, Query>({ query: (q) => ({ url: '/compliance-profiles', params: params(q) }), providesTags: ['Compliance'] }),
+    getActiveStandards: builder.query<Paged<Standard>, void>({ query: () => ({ url: '/passport-standards', params: { status: 'ACTIVE', limit: 100 } }) }),
     // ---------- 2.9b passports (the passport kind of /certificates) ----------
     getPassports: builder.query<Paged<Passport>, Query>({ query: (q) => ({ url: '/certificates', params: params({ certificateKind: 'PASSPORT', ...q }) }), providesTags: ['Passports'] }),
     getPassport: builder.query<Single<Passport>, string>({ query: (id) => `/certificates/${id}`, providesTags: ['Passports'] }),
@@ -79,6 +97,14 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetComplianceSummaryQuery,
+  useGetAssessmentsQuery,
+  useGetAssessmentQuery,
+  useRunAssessmentMutation,
+  useReassessMutation,
+  useInvalidateAssessmentMutation,
+  useGetComplianceProfilesQuery,
+  useGetActiveStandardsQuery,
   useGetVisibilityPoliciesQuery,
   useGetPassportsQuery,
   useGetPassportQuery,
