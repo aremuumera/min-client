@@ -39,6 +39,7 @@ import {
 import { useGetReadingsQuery } from '@/redux/features/traceability/traceability_api';
 import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
+import { DownloadPdfButton, SharePanel } from './certificate-detail';
 
 /*
  * A batch's digital passport (step 2.9b, decisions #74, #108).
@@ -448,6 +449,12 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       {p.publishedVersion && (mode === 'reader' || !open || showPublished) && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <PublishedView passport={p} versionId={p.publishedVersion.id} />}
       {open && p.publishedVersion && <Button size="sm" variant="text" onClick={() => setShowPublished((s) => !s)}>{showPublished ? 'Hide' : 'Show'} the published version {p.publishedVersion.versionNumber}</Button>}
       {!p.publishedVersion && !open && mode === 'reader' && <p className="text-sm text-gray-500">Nothing published yet.</p>}
+      {p.publishedVersion && !['SUSPENDED', 'REVOKED'].includes(p.status) && (
+        <div className="flex flex-wrap gap-2">
+          <DownloadPdfButton id={p.id} code={p.passportCode} label="Download the published version (PDF)" />
+        </div>
+      )}
+      {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}
       <p className="text-xs text-gray-400">Passport ID <CopyableId value={p.id} /></p>
       <ConfirmDialog

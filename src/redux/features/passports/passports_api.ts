@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { ApplicabilityRule, Assessment, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVersion, PassportVerification, Single, Standard, VisibilityPolicy, Template, TemplateRequest } from '@/lib/passports';
+import type { ApplicabilityRule, Assessment, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVersion, PassportVerification, Single, Standard, VisibilityPolicy, Template, TemplateRequest } from '@/lib/passports';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -11,8 +11,12 @@ const params = (q: Query) => Object.fromEntries(Object.entries(q).filter(([, v])
 export const passportsApi = createApi({
   reducerPath: 'passportsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance'],
+  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates'],
   endpoints: (builder) => ({
+    // ---------- 2.9d certificates (the non-passport kind of /certificates) ----------
+    getCertificates: builder.query<Paged<Certificate>, Query>({ query: (q) => ({ url: '/certificates', params: params({ certificateKind: 'NON_PASSPORT', ...q }) }), providesTags: ['Certificates'] }),
+    getCertificate: builder.query<Single<Certificate>, string>({ query: (id) => `/certificates/${id}`, providesTags: ['Certificates'] }),
+    getCertificateTypes: builder.query<Paged<CertificateType>, Query>({ query: (q) => ({ url: '/non-passport-certificate-types', params: params({ limit: 100, ...q }) }), providesTags: ['Certificates'] }),
     // ---------- 2.9c compliance ----------
     getComplianceSummary: builder.query<Single<ComplianceSummary>, string>({ query: (id) => `/certificates/${id}/compliance-summary`, providesTags: ['Compliance'] }),
     getAssessments: builder.query<Paged<Assessment>, Query>({ query: (q) => ({ url: '/compliance-assessments', params: params(q) }), providesTags: ['Compliance'] }),
@@ -97,6 +101,9 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetCertificatesQuery,
+  useGetCertificateQuery,
+  useGetCertificateTypesQuery,
   useGetComplianceSummaryQuery,
   useGetAssessmentsQuery,
   useGetAssessmentQuery,

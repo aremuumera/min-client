@@ -391,3 +391,57 @@ export const RESULT_TEXT: Record<(typeof REQUIREMENT_RESULTS)[number], string> =
   NOT_SATISFIED: 'Not met',
 };
 export const resultTone = (r: (typeof REQUIREMENT_RESULTS)[number]) => (r === 'SATISFIED' || r === 'NOT_APPLICABLE' ? 'ACTIVE' : r === 'PENDING_VERIFICATION' ? 'PENDING' : 'CANCELLED');
+
+// =========================== 2.9d certificates ===========================
+export interface CertificateType {
+  id: string;
+  code: string;
+  codePrefix: string;
+  name: string;
+  subjectType: string;
+  allowedSourceTypes: string[];
+  description: string | null;
+  expiryPolicy: { validForDays?: number } | null;
+  verificationRequired: boolean;
+  active: boolean;
+  systemDefined: boolean;
+}
+export interface CertificateVersionSummary {
+  id: string;
+  versionNumber: number;
+  status: 'DRAFT' | 'VALIDATED' | 'READY' | 'PUBLISHED' | 'SUPERSEDED' | 'INVALIDATED' | 'EXPIRED';
+  sourceType: string;
+  sourceId: string;
+  changeReason: string | null;
+  issuedAt: string | null;
+  expiresAt: string | null;
+  invalidationReason: string | null;
+  createdAt: string;
+}
+export interface Certificate {
+  id: string;
+  certificateKind: 'NON_PASSPORT';
+  certificateCode: string;
+  certificateType: { id: string; code: string; name: string } | null;
+  subjectType: string;
+  subjectId: string;
+  holderOrganizationId: string | null;
+  status: 'ACTIVE' | 'SUSPENDED' | 'REVOKED' | 'ARCHIVED';
+  issued: boolean;
+  publishedVersion: CertificateVersionSummary | null;
+  openVersion?: CertificateVersionSummary | null;
+  suspensionReason?: string | null;
+  revocationReason?: string | null;
+  currentVersion?: (CertificateVersionSummary & { assertionData: Record<string, unknown> | null; remarks: string | null }) | null;
+  createdAt: string;
+}
+/** A statement object as label / value rows: nested keys joined, lists comma-separated */
+export function statementRows(value: unknown, prefix = ''): { label: string; value: string }[] {
+  const label = (k: string) => k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_.]/g, ' ').replace(/^./, (c) => c.toUpperCase());
+  if (value === null || value === undefined) return [];
+  if (Array.isArray(value)) return value.every((v) => typeof v !== 'object' || v === null) ? [{ label: label(prefix), value: value.join(', ') }] : value.flatMap((v, i) => statementRows(v, `${prefix} ${i + 1}`));
+  if (typeof value === 'object') return Object.entries(value as Record<string, unknown>).flatMap(([k, v]) => statementRows(v, prefix ? `${prefix}.${k}` : k));
+  return [{ label: label(prefix), value: typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value) }];
+}
+export const CERTIFICATE_STATUS_TEXT: Record<Certificate['status'], string> = { ACTIVE: 'Active', SUSPENDED: 'Suspended by MINMEG', REVOKED: 'Revoked by MINMEG', ARCHIVED: 'Archived' };
+export const certificateTone = (c: Pick<Certificate, 'status' | 'issued'>) => (c.status === 'ACTIVE' ? (c.issued ? 'ACTIVE' : 'PENDING') : c.status === 'SUSPENDED' ? 'ON_HOLD' : 'CANCELLED');

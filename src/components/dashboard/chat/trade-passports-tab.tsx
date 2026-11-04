@@ -3,6 +3,10 @@
 import * as React from 'react';
 import { EmptyState, ErrorState } from '@/components/ui';
 import { BatchPassport } from '@/components/passports/passport-panel';
+import { CertificateDetail, CertificatesFor } from '@/components/passports/certificate-detail';
+import { SideSheet } from '@/components/ui';
+import { useGetBatchResultsQuery } from '@/redux/features/passports/passports_api';
+import { useGetShipmentsQuery } from '@/redux/features/shipments/shipments_api';
 import { toApiError } from '@/lib/api/errors';
 import { useGetTradeAllocationsQuery, useGetTradeRecordQuery, useGetTradeStockQuery } from '@/redux/features/trade/trade_api';
 
@@ -38,7 +42,39 @@ export function TradePassportsTab({ inquiryId, itemType, extra }: { inquiryId: s
           </div>
         ))}
       </section>
+      <TradeCertificates tradeId={tradeId} batchIds={batches.map((b) => b.id)} />
       {extra?.(tradeId)}
     </div>
+  );
+}
+
+/** The lab and inspection results of one batch, as certificate subjects */
+function BatchResultCertificates({ batchId, onOpen }: { batchId: string; onOpen: (id: string) => void }) {
+  const results = useGetBatchResultsQuery(batchId);
+  const ids = [...(results.data?.data.assayResults ?? []).map((r) => r.id), ...(results.data?.data.inspectionResults ?? []).map((r) => r.id)];
+  return <>{ids.map((id) => <CertificatesFor key={id} subjectId={id} onOpen={onOpen} />)}</>;
+}
+
+/** MINMEG's certificates on this trade's goods and shipments (step 2.9d) */
+function TradeCertificates({ tradeId, batchIds }: { tradeId: string; batchIds: string[] }) {
+  const shipments = useGetShipmentsQuery({ tradeId, limit: 50 });
+  const [open, setOpen] = React.useState<string | null>(null);
+  return (
+    <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5" data-testid="trade-certificates">
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">Certificates</h3>
+        <p className="mt-0.5 text-xs text-gray-500">MINMEG&apos;s certificates on the lab and inspection results of these goods and on their shipments. Each downloads as a PDF.</p>
+      </div>
+      <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200" aria-label="Certificates on this trade">
+        {batchIds.map((id) => <BatchResultCertificates key={id} batchId={id} onOpen={setOpen} />)}
+        {(shipments.data?.data ?? []).map((s) => <CertificatesFor key={s.id} subjectId={s.id} onOpen={setOpen} />)}
+      </ul>
+      <p className="text-xs text-gray-400">Nothing listed means MINMEG has not issued a certificate on this trade yet.</p>
+      {open && (
+        <SideSheet open onClose={() => setOpen(null)} title="Certificate">
+          <CertificateDetail certificateId={open} />
+        </SideSheet>
+      )}
+    </section>
   );
 }
