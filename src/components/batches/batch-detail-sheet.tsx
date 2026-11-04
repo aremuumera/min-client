@@ -133,6 +133,7 @@ export function BatchDetailSheet({
   ownerNode,
   entryActions,
   documents,
+  units,
   staffFormProps,
   onClose,
   onOpenBatch,
@@ -143,6 +144,8 @@ export function BatchDetailSheet({
   /** Staff: reverse, approve or reject an entry */
   entryActions?: (entry: LedgerEntry, batch: Batch) => React.ReactNode;
   documents?: (batch: Batch) => React.ReactNode;
+  /** Units and codes tab (step 2.7c) */
+  units?: (batch: Batch) => React.ReactNode;
   staffFormProps?: (batch: Batch) => { staffFields: React.ReactNode; staffBody: Record<string, unknown> };
   onClose: () => void;
   onOpenBatch: (id: string) => void;
@@ -202,6 +205,7 @@ export function BatchDetailSheet({
               <Tab value="family" label="Family" />
               <Tab value="history" label="History" />
               {documents && <Tab value="documents" label="Documents" />}
+              {units && <Tab value="units" label="Units and codes" />}
             </TabList>
 
             <TabPanel value="details">
@@ -270,6 +274,7 @@ export function BatchDetailSheet({
               <HistoryPanel batch={b} />
             </TabPanel>
             {documents && <TabPanel value="documents">{documents(b)}</TabPanel>}
+            {units && <TabPanel value="units">{units(b)}</TabPanel>}
           </Tabs>
         )}
       </SideSheet>

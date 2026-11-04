@@ -1,5 +1,6 @@
 "use client";
 
+import { WorkbenchLabels } from '@/components/traceability/workbench-labels';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -388,6 +389,13 @@ export default function TradeWorkbenchPage() {
                     })}
                 </div>
             </div>
+
+            {/* Labels on the goods (step 2.7c): only the assigned inspector makes and applies MINMEG codes */}
+            {!isCancelledOrRejected && (
+                <div className="mb-6">
+                    <WorkbenchLabels assignmentId={assignmentId as string} />
+                </div>
+            )}
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

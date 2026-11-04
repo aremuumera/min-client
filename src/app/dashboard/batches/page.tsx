@@ -10,6 +10,8 @@ import { toApiError } from '@/lib/api/errors';
 import { BATCH_STATUSES, batchLabel, batchOptions, formatQuantity, type Batch } from '@/lib/batches';
 import { formatDate } from '@/lib/format';
 import { inventoryHelp } from '@/lib/help/inventory';
+import { BatchUnitsPanel } from '@/components/traceability/batch-units-panel';
+import { CustodyPanel } from '@/components/traceability/custody-panel';
 import { RequireAccess } from '@/lib/permissions';
 import { useGetBatchesQuery, useGetMaterialChoicesQuery } from '@/redux/features/batches/batches_api';
 import { useGetLocationsQuery } from '@/redux/features/locations/locations_api';
@@ -120,7 +122,7 @@ function InventoryPage() {
           setPage(1);
         }}
       />
-      <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
+      <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} units={(b) => (<div className="space-y-6"><BatchUnitsPanel batchId={b.id} unitSymbol={b.unit?.symbol} canManage /><CustodyPanel subjectType="BATCH" subjectId={b.id} canHandOver /></div>)} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
       <BatchFormSheet open={registering} batch={null} onClose={() => setRegistering(false)} onSaved={(b) => setSelectedId(b.id)} />
     </div>
   );

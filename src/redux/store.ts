@@ -19,6 +19,7 @@ import { locationsApi } from "./features/locations/locations_api";
 import { batchesApi } from "./features/batches/batches_api";
 import { supportApi } from "./features/support/support_api";
 import { shipmentsApi } from "./features/shipments/shipments_api";
+import { traceabilityApi } from "./features/traceability/traceability_api";
 import { listingsApi } from "./features/listings/listings_api";
 import inquiryApi from "./features/enquiry/enquiry_api";
 import supplierProductApi from "./features/supplier-products/products_api";
@@ -47,6 +48,7 @@ const persistConfig = {
     "batchesApi",
     "supportApi",
     "shipmentsApi",
+    "traceabilityApi",
     "listingsApi",
     "authApi",
     "supplierProfileApi",
@@ -100,6 +102,7 @@ export const makeStore = () => {
         batchesApi.middleware,
         supportApi.middleware,
         shipmentsApi.middleware,
+        traceabilityApi.middleware,
         listingsApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,

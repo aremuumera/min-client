@@ -85,6 +85,8 @@ export const paths = {
     sites: "/dashboard/sites",
     batches: "/dashboard/batches",
     shipments: "/dashboard/shipments",
+    scan: "/dashboard/scan",
+    handovers: "/dashboard/handovers",
     documents: { list: "/dashboard/documents", shared: "/dashboard/documents/shared", evidence: "/dashboard/documents/evidence" },
     wallet: "/dashboard/wallet",
     settings: {

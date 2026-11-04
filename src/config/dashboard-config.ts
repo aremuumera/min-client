@@ -241,6 +241,22 @@ export const dashboardConfig: DashboardConfig = {
           permission: "shipments",
         },
         {
+          key: "handovers",
+          title: "Handovers",
+          href: paths.dashboard.handovers,
+          icon: "users",
+          matcher: { type: "startsWith", href: "/dashboard/handovers" },
+          permission: "traceability",
+        },
+        {
+          key: "scan",
+          title: "Scan a code",
+          href: paths.dashboard.scan,
+          icon: "search",
+          matcher: { type: "startsWith", href: "/dashboard/scan" },
+          permission: "traceability",
+        },
+        {
           key: "inventory",
           title: "Inventory",
           href: paths.dashboard.batches,
