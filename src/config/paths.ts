@@ -83,6 +83,9 @@ export const paths = {
     companyInfoVerification: "/dashboard/company-info-verification",
     invoices: "/dashboard/invoices",
     sites: "/dashboard/sites",
+    // step 2.9: passports, compliance and certificates
+    passports: { list: "/dashboard/passports", requests: "/dashboard/passports/requests" },
+    certificates: "/dashboard/certificates",
     batches: "/dashboard/batches",
     shipments: "/dashboard/shipments",
     scan: "/dashboard/scan",
@@ -230,6 +233,10 @@ export const routeAccess = {
     paths.dashboard.sites,
     // inventory (step 2.5)
     paths.dashboard.batches,
+    // passports and certificates (step 2.9)
+    paths.dashboard.passports.list,
+    paths.dashboard.passports.requests,
+    paths.dashboard.certificates,
     // documents (step 2.3)
     paths.dashboard.documents.list,
     paths.dashboard.documents.shared,

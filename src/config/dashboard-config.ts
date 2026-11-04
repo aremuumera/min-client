@@ -157,6 +157,38 @@ export const dashboardConfig: DashboardConfig = {
       ],
     },
 
+    // step 2.9: passports, compliance and certificates (one section for now; the owner arranges it later)
+    {
+      key: "passports",
+      title: "PASSPORTS & CERTIFICATES",
+      items: [
+        {
+          key: "passports:list",
+          title: "Passports",
+          href: paths.dashboard.passports.list,
+          icon: "read-cv-logo",
+          matcher: { type: "equals", href: paths.dashboard.passports.list },
+          permission: "passports",
+        },
+        {
+          key: "passports:certificates",
+          title: "Certificates",
+          href: paths.dashboard.certificates,
+          icon: "graduation-cap",
+          matcher: { type: "startsWith", href: paths.dashboard.certificates },
+          permission: "passports",
+        },
+        {
+          key: "passports:requests",
+          title: "Template requests",
+          href: paths.dashboard.passports.requests,
+          icon: "file-dashed",
+          matcher: { type: "startsWith", href: paths.dashboard.passports.requests },
+          permission: "passports",
+        },
+      ],
+    },
+
     // section inspections
     {
       key: "inspections",

@@ -20,6 +20,7 @@ import { batchesApi } from "./features/batches/batches_api";
 import { supportApi } from "./features/support/support_api";
 import { shipmentsApi } from "./features/shipments/shipments_api";
 import { traceabilityApi } from "./features/traceability/traceability_api";
+import { passportsApi } from "./features/passports/passports_api";
 import { listingsApi } from "./features/listings/listings_api";
 import inquiryApi from "./features/enquiry/enquiry_api";
 import supplierProductApi from "./features/supplier-products/products_api";
@@ -49,6 +50,7 @@ const persistConfig = {
     "supportApi",
     "shipmentsApi",
     "traceabilityApi",
+    "passportsApi",
     "listingsApi",
     "authApi",
     "supplierProfileApi",
@@ -103,6 +105,7 @@ export const makeStore = () => {
         supportApi.middleware,
         shipmentsApi.middleware,
         traceabilityApi.middleware,
+        passportsApi.middleware,
         listingsApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,
