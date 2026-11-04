@@ -161,3 +161,121 @@ export const words = (v: string | null | undefined) => {
 };
 export const options = (values: readonly string[]) => values.map((v) => ({ value: v, label: words(v) }));
 export const openRevision = (t: Pick<Template, 'status'>) => t.status === 'DRAFT' || t.status === 'VALIDATED';
+
+// =========================== 2.9b passports ===========================
+export type VersionStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'SUPERSEDED' | 'INVALIDATED';
+export interface VersionSummary {
+  id: string;
+  versionNumber: number;
+  status: VersionStatus;
+  templateId: string;
+  changeReason: string | null;
+  createdAt: string;
+  validatedAt: string | null;
+  publishedAt: string | null;
+  supersededAt: string | null;
+  invalidatedAt: string | null;
+  invalidationReason: string | null;
+}
+export interface Passport {
+  id: string;
+  certificateKind: 'PASSPORT';
+  passportCode: string;
+  certificateType: { id: string; code: string; name: string } | null;
+  subjectType: string;
+  subjectId: string;
+  ownerOrganizationId: string;
+  status: 'DRAFT' | 'ACTIVE' | 'PUBLISHED' | 'SUSPENDED' | 'REVOKED' | 'ARCHIVED';
+  correctionPending: boolean;
+  publishedVersion: VersionSummary | null;
+  /** Owner and staff only */
+  openVersion?: VersionSummary | null;
+  versionCount?: number;
+  suspendedAt?: string | null;
+  suspensionReason?: string | null;
+  revokedAt?: string | null;
+  revocationReason?: string | null;
+  archivedAt?: string | null;
+  archiveReason?: string | null;
+  createdAt: string;
+}
+export type ValueSource = 'USER' | 'DOCUMENT' | 'MEASUREMENT' | 'INSPECTION' | 'ASSESSMENT' | 'SYSTEM';
+export interface PassportValue {
+  id: string;
+  templateFieldId: string;
+  key: string;
+  value: unknown;
+  valueType: string;
+  unitId: string | null;
+  visibilityPolicyId: string;
+  sourceType: ValueSource | null;
+  sourceId: string | null;
+  verificationStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'FAILED';
+  hashIncluded: boolean;
+}
+export interface VersionField {
+  fieldId: string;
+  key: string;
+  label: string;
+  dataType: string;
+  required: boolean;
+  dynamic: boolean;
+  group: string | null;
+  order: number;
+  unitId: string | null;
+  identifierBinding: string;
+  visibility: string | null;
+  value: PassportValue | null;
+  latestReading?: Record<string, unknown> | null;
+}
+export interface PassportMaterial {
+  id: string;
+  materialId: string;
+  material: { id: string; code: string; name: string } | null;
+  quantity: string | null;
+  unitId: string | null;
+  percentage: number | null;
+  role: string | null;
+}
+export interface PassportVersion extends VersionSummary {
+  passportId: string;
+  previousVersionId: string | null;
+  template: { id: string; code: string; version: number; name: string; status: string };
+  fields: VersionField[];
+  hiddenFieldCount?: number;
+  metadata: { id: string; key: string; value: unknown; description: string | null }[];
+  materials: PassportMaterial[];
+  validationReport?: { valid: boolean; issues: ValidationIssue[]; checkedAt: string } | null;
+}
+export interface PassportVerification {
+  valid?: boolean;
+  status?: string;
+  [key: string]: unknown;
+}
+
+/** How far a value can be trusted, in words (decision #74: typed values are declared) */
+export function valueTrust(v: PassportValue | null): { label: string; status: string } {
+  if (!v) return { label: 'Not filled', status: 'NEUTRAL' };
+  if (v.verificationStatus === 'VERIFIED') return { label: v.sourceType === 'SYSTEM' ? 'Filled by MINMEG' : 'Verified', status: 'VERIFIED' };
+  if (v.verificationStatus === 'FAILED') return { label: 'Check failed', status: 'FAILED' };
+  if (v.verificationStatus === 'PENDING') return { label: 'Waiting for a check', status: 'PENDING' };
+  return { label: v.sourceType === 'DOCUMENT' ? 'Declared, with a document' : 'Declared by the company', status: 'ON_HOLD' };
+}
+export const SOURCE_TEXT: Record<string, string> = {
+  USER: 'typed by the company',
+  DOCUMENT: 'a document',
+  MEASUREMENT: 'a reading',
+  INSPECTION: 'an inspection or lab result',
+  ASSESSMENT: 'an assessment',
+  SYSTEM: 'MINMEG',
+};
+export const PASSPORT_STATUS_TEXT: Record<Passport['status'], string> = {
+  DRAFT: 'Not published yet',
+  ACTIVE: 'Active',
+  PUBLISHED: 'Published',
+  SUSPENDED: 'Suspended by MINMEG',
+  REVOKED: 'Revoked by MINMEG',
+  ARCHIVED: 'Archived',
+};
+export const passportTone = (s: Passport['status']) => (s === 'PUBLISHED' ? 'ACTIVE' : s === 'DRAFT' ? 'PENDING' : s === 'SUSPENDED' ? 'ON_HOLD' : 'CANCELLED');
+export const valueText = (v: unknown): string => (v == null ? '' : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : typeof v === 'object' ? JSON.stringify(v) : String(v));

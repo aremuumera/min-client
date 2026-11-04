@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { Paged, PassportType, Single, Template, TemplateRequest } from '@/lib/passports';
+import type { Paged, Passport, PassportType, PassportVersion, PassportVerification, Single, VisibilityPolicy, Template, TemplateRequest } from '@/lib/passports';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -11,9 +11,54 @@ const params = (q: Query) => Object.fromEntries(Object.entries(q).filter(([, v])
 export const passportsApi = createApi({
   reducerPath: 'passportsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Requests', 'Templates'],
+  tagTypes: ['Requests', 'Templates', 'Passports'],
   endpoints: (builder) => ({
+    // ---------- 2.9b passports (the passport kind of /certificates) ----------
+    getPassports: builder.query<Paged<Passport>, Query>({ query: (q) => ({ url: '/certificates', params: params({ certificateKind: 'PASSPORT', ...q }) }), providesTags: ['Passports'] }),
+    getPassport: builder.query<Single<Passport>, string>({ query: (id) => `/certificates/${id}`, providesTags: ['Passports'] }),
+    getPassportVersion: builder.query<Single<PassportVersion>, { id: string; versionId: string }>({ query: ({ id, versionId }) => `/certificates/${id}/versions/${versionId}`, providesTags: ['Passports'] }),
+    getPassportVersions: builder.query<Paged<PassportVersion>, string>({ query: (id) => ({ url: `/certificates/${id}/versions`, params: { limit: 100 } }), providesTags: ['Passports'] }),
+    getPassportHistory: builder.query<Single<{ items: { id: string; occurredAt: string; eventType?: { code: string; name: string } | null; data?: Record<string, unknown> | null }[] }>, string>({ query: (id) => `/certificates/${id}/history`, providesTags: ['Passports'] }),
+    getPassportVerification: builder.query<Single<PassportVerification>, string>({ query: (id) => `/certificates/${id}/verification`, providesTags: ['Passports'] }),
+    getTemplate: builder.query<Single<Template>, string>({ query: (id) => `/passport-templates/${id}`, providesTags: ['Templates'] }),
+    getBatchResults: builder.query<Single<{ batchId: string; inspectionResults: { id: string; quantityVerified: string | null; summary: string | null; status: string; createdAt: string }[]; assayResults: { id: string; laboratoryName: string; sampleReference: string | null; grade: { parameter: string; value: string | number; unit: string } | null; status: string; testedAt: string | null }[] }>, string>({
+      query: (batchId) => `/batches/${batchId}/inspection-results`,
+    }),
+    createPassport: builder.mutation<Single<Passport>, { idempotencyKey: string; certificateType: string; subjectId: string; templateId?: string; changeReason?: string }>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/certificates', method: 'POST', body: { certificateKind: 'PASSPORT', ...body }, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Passports'],
+    }),
+    newPassportVersion: builder.mutation<Single<PassportVersion>, { id: string; changeReason: string; templateId?: string; idempotencyKey: string }>({
+      query: ({ id, idempotencyKey, ...body }) => ({ url: `/certificates/${id}/versions`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Passports'],
+    }),
+    checkPassportVersion: builder.mutation<Single<PassportVersion>, { id: string; versionId: string }>({
+      query: ({ id, versionId }) => ({ url: `/certificates/${id}/versions/${versionId}/validate`, method: 'POST' }),
+      invalidatesTags: ['Passports'],
+    }),
+    discardPassportVersion: builder.mutation<unknown, { id: string; versionId: string }>({
+      query: ({ id, versionId }) => ({ url: `/certificates/${id}/versions/${versionId}/discard`, method: 'POST' }),
+      invalidatesTags: ['Passports'],
+    }),
+    passportAction: builder.mutation<Single<Passport>, { id: string; action: 'publish' | 'invalidate' | 'archive' | 'suspend' | 'reinstate' | 'revoke'; reason?: string }>({
+      query: ({ id, action, reason }) => ({ url: `/certificates/${id}/${action}`, method: 'POST', body: reason ? { reason } : {} }),
+      invalidatesTags: ['Passports'],
+    }),
+    setPassportValue: builder.mutation<unknown, { versionId: string; fieldId: string } & Body>({
+      query: ({ versionId, fieldId, ...body }) => ({ url: `/passport-versions/${versionId}/fields/${fieldId}`, method: 'PUT', body }),
+      invalidatesTags: ['Passports'],
+    }),
+    clearPassportValue: builder.mutation<unknown, { versionId: string; fieldId: string }>({
+      query: ({ versionId, fieldId }) => ({ url: `/passport-versions/${versionId}/fields/${fieldId}`, method: 'DELETE' }),
+      invalidatesTags: ['Passports'],
+    }),
+    addPassportMaterial: builder.mutation<unknown, { versionId: string; idempotencyKey: string } & Body>({
+      query: ({ versionId, idempotencyKey, ...body }) => ({ url: `/passport-versions/${versionId}/materials`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Passports'],
+    }),
+    removePassportMaterial: builder.mutation<unknown, string>({ query: (id) => ({ url: `/passport-materials/${id}`, method: 'DELETE' }), invalidatesTags: ['Passports'] }),
     // ---------- 2.9a: what companies read of the rules, and their template requests ----------
+    getVisibilityPolicies: builder.query<Paged<VisibilityPolicy>, void>({ query: () => ({ url: '/visibility-policies', params: { limit: 100 } }) }),
     getPassportTypes: builder.query<Paged<PassportType>, void>({ query: () => ({ url: '/passport-types', params: { limit: 100 } }) }),
     getTemplates: builder.query<Paged<Template>, Query>({ query: (q) => ({ url: '/passport-templates', params: params(q) }), providesTags: ['Templates'] }),
     getTemplateRequests: builder.query<Paged<TemplateRequest>, Query>({ query: (q) => ({ url: '/passport-template-requests', params: params(q) }), providesTags: ['Requests'] }),
@@ -34,6 +79,24 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetVisibilityPoliciesQuery,
+  useGetPassportsQuery,
+  useGetPassportQuery,
+  useGetPassportVersionQuery,
+  useGetPassportVersionsQuery,
+  useGetPassportHistoryQuery,
+  useGetPassportVerificationQuery,
+  useGetBatchResultsQuery,
+  useCreatePassportMutation,
+  useNewPassportVersionMutation,
+  useCheckPassportVersionMutation,
+  useDiscardPassportVersionMutation,
+  usePassportActionMutation,
+  useSetPassportValueMutation,
+  useClearPassportValueMutation,
+  useAddPassportMaterialMutation,
+  useRemovePassportMaterialMutation,
+  useGetTemplateQuery,
   useGetPassportTypesQuery,
   useGetTemplatesQuery,
   useGetTemplateRequestsQuery,

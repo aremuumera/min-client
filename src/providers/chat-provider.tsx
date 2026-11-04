@@ -29,8 +29,8 @@ interface ChatContextType {
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
-  activeTab: 'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments';
-  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments'>>;
+  activeTab: 'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments' | 'passports';
+  setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments' | 'passports'>>;
   loading: boolean;
   loadingMessages: boolean;
   loadingAttachments: boolean;
@@ -93,7 +93,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeInquiryId, setActiveInquiryId] = useState<string | null>(null);
   const [roomInquiries, setRoomInquiries] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments' | 'passports'>('chat');
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);

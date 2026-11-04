@@ -1,5 +1,6 @@
 'use client';
 
+import { BatchPassport } from '@/components/passports/passport-panel';
 import * as React from 'react';
 import { Plus } from 'lucide-react';
 import { Button, Checkbox, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
@@ -122,7 +123,7 @@ function InventoryPage() {
           setPage(1);
         }}
       />
-      <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} units={(b) => (<div className="space-y-6"><BatchUnitsPanel batchId={b.id} unitSymbol={b.unit?.symbol} canManage /><CustodyPanel subjectType="BATCH" subjectId={b.id} canHandOver /></div>)} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
+      <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} units={(b) => (<div className="space-y-6"><BatchUnitsPanel batchId={b.id} unitSymbol={b.unit?.symbol} canManage /><CustodyPanel subjectType="BATCH" subjectId={b.id} canHandOver /></div>)} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} passport={(b) => <BatchPassport batchId={b.id} mode="owner" />} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
       <BatchFormSheet open={registering} batch={null} onClose={() => setRegistering(false)} onSaved={(b) => setSelectedId(b.id)} />
     </div>
   );

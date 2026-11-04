@@ -135,6 +135,7 @@ export function BatchDetailSheet({
   entryActions,
   documents,
   units,
+  passport,
   staffFormProps,
   onClose,
   onOpenBatch,
@@ -147,6 +148,8 @@ export function BatchDetailSheet({
   documents?: (batch: Batch) => React.ReactNode;
   /** Units and codes tab (step 2.7c) */
   units?: (batch: Batch) => React.ReactNode;
+  /** Passport tab (step 2.9b) */
+  passport?: (batch: Batch) => React.ReactNode;
   staffFormProps?: (batch: Batch) => { staffFields: React.ReactNode; staffBody: Record<string, unknown> };
   onClose: () => void;
   onOpenBatch: (id: string) => void;
@@ -207,6 +210,7 @@ export function BatchDetailSheet({
               <Tab value="history" label="History" />
               {documents && <Tab value="documents" label="Documents" />}
               {units && <Tab value="units" label="Units and codes" />}
+              {passport && <Tab value="passport" label="Passport" />}
             </TabList>
 
             <TabPanel value="details">
@@ -280,6 +284,7 @@ export function BatchDetailSheet({
             </TabPanel>
             {documents && <TabPanel value="documents">{documents(b)}</TabPanel>}
             {units && <TabPanel value="units">{units(b)}</TabPanel>}
+            {passport && <TabPanel value="passport">{passport(b)}</TabPanel>}
           </Tabs>
         )}
       </SideSheet>
