@@ -91,7 +91,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
   const openTab = useSearchParams().get('tab');
   useEffect(() => {
-    if (openTab === 'stock' || openTab === 'shipments') setActiveTab(openTab);
+    if (openTab === 'stock' || openTab === 'shipments' || openTab === 'inspections') setActiveTab(openTab);
   }, [openTab, setActiveTab]);
 
   const messagesRef = React.useRef<HTMLDivElement>(null);

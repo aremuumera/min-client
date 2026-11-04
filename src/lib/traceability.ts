@@ -138,3 +138,64 @@ export const SCAN_RESULT_TEXT: Record<ScanResult['result'], string> = {
   BAD_SIGNATURE: 'This label is a copy or has been changed. Do not accept the goods on it',
   REPLAYED: 'This tag reading was copied. Do not accept the goods on it',
 };
+
+// =========================== inspection results (step 2.8a) ===========================
+export interface MeasuredValue {
+  parameter: string;
+  value: number | string;
+  unit?: string;
+}
+export interface InspectionFile {
+  id: string;
+  photoUrl: string;
+  caption: string | null;
+  category: string | null;
+}
+export interface Findings {
+  id: string;
+  batchId: string;
+  quantityVerified: string | null;
+  observations: MeasuredValue[] | null;
+  summary: string | null;
+  status: 'SUBMITTED' | 'VERIFIED' | 'REJECTED' | 'SUPERSEDED';
+  verificationNote: string | null;
+  createdAt: string;
+  files: InspectionFile[];
+}
+export interface LabResult {
+  id: string;
+  batchId: string;
+  laboratoryName: string;
+  laboratoryReference: string | null;
+  sampleReference: string | null;
+  sampledAt: string | null;
+  testedAt: string | null;
+  grade: { parameter: string; value: string | number; unit: string } | null;
+  gradeComparison: { agreed: number; achieved: number; difference: number; position: 'ABOVE' | 'EQUAL' | 'BELOW' } | null;
+  values: MeasuredValue[] | null;
+  summary: string | null;
+  status: 'DRAFT' | 'FINAL' | 'VERIFIED' | 'REJECTED' | 'INVALIDATED';
+  verificationNote: string | null;
+  invalidationReason: string | null;
+  files: InspectionFile[];
+}
+export interface RoundResults {
+  inspectorAssignmentId: string;
+  released: boolean;
+  agreedGrade: string | number | null;
+  inspectionResults: Findings[];
+  assayResults: LabResult[];
+}
+export const RESULT_STATUS_LABELS: Record<string, string> = {
+  SUBMITTED: 'Waiting for MINMEG',
+  FINAL: 'Waiting for MINMEG',
+  DRAFT: 'Draft',
+  VERIFIED: 'Checked by MINMEG',
+  REJECTED: 'Sent back by MINMEG',
+  SUPERSEDED: 'Replaced',
+  INVALIDATED: 'Withdrawn by MINMEG',
+};
+export const POSITION_TEXT = { ABOVE: 'above the agreed grade', EQUAL: 'equal to the agreed grade', BELOW: 'below the agreed grade' } as const;
+/** "58.2000" → "58.2": the backend keeps fixed decimals; text values stay as they are */
+export const numberText = (v: string | number | null | undefined): string =>
+  v == null ? '' : typeof v === 'number' || /^-?\d+(\.\d+)?$/.test(v) ? String(Number(v)) : v;

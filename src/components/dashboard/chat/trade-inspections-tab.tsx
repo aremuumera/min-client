@@ -7,6 +7,7 @@ import { ShieldCheck, Clock, FileText, CheckCircle2, AlertTriangle, RefreshCw, X
 import RequestReinspectionModal from './modals/RequestReinspectionModal';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/helper';
+import { ReleasedResults } from '@/components/traceability/inspection-results-panel';
 
 interface TradeInspectionsTabProps {
     tradeId: string;
@@ -256,6 +257,9 @@ function InspectionReportPanel({ assignmentId, onClose }: { assignmentId: string
                         <p className="text-xs text-gray-400 font-medium">No inspection photos uploaded for this round.</p>
                     </div>
                 )}
+
+                {/* Per-batch findings and lab results, against the agreed grade (step 2.8a) */}
+                <ReleasedResults assignmentId={assignmentId} />
             </div>
 
             {/* Lightbox */}

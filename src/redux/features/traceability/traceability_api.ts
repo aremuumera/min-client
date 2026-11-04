@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import type { BatchUnits, Code, CustodyRow, FieldWindow, PrintJob, ScanResult } from '@/lib/traceability';
+import type { BatchUnits, Code, CustodyRow, FieldWindow, InspectionFile, PrintJob, RoundResults, ScanResult } from '@/lib/traceability';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Group 11 units, codes and custody (step 2.7c). Creates send an Idempotency-Key. */
@@ -12,7 +12,7 @@ const CHANGES = ['Units', 'Custody'] as const;
 export const traceabilityApi = createApi({
   reducerPath: 'traceabilityApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Units', 'Custody', 'Window'],
+  tagTypes: ['Units', 'Custody', 'Window', 'Results'],
   endpoints: (builder) => ({
     getBatchUnits: builder.query<Single<BatchUnits>, { batchId: string; includeRetired?: boolean }>({
       query: ({ batchId, includeRetired }) => ({ url: '/handling-units', params: { batchId, ...(includeRetired ? { includeRetired: 'true' } : {}) } }),
@@ -53,6 +53,19 @@ export const traceabilityApi = createApi({
     /** What a scanned code is: genuine or not, its status, and only what the viewer may know of the goods */
     resolveCode: builder.query<Single<ScanResult>, { value: string; latitude?: number; longitude?: number; accuracyMeters?: number }>({
       query: ({ value, ...params }) => ({ url: `/identifiers/resolve/${encodeURIComponent(value)}`, params }),
+    }),
+    // ---- inspection results (step 2.8a): nothing reaches the buyer or supplier before MINMEG releases the round ----
+    getRoundResults: builder.query<Single<RoundResults>, string>({ query: (assignmentId) => `/inspections/${assignmentId}/results`, providesTags: ['Results'] }),
+    uploadInspectionFiles: builder.mutation<{ data: InspectionFile[] }, { assignmentId: string; form: FormData }>({
+      query: ({ assignmentId, form }) => ({ url: `/inspector/assignments/${assignmentId}/photos`, method: 'POST', body: form }),
+    }),
+    submitFindings: builder.mutation<unknown, { assignmentId: string; idempotencyKey: string } & Body>({
+      query: ({ assignmentId, idempotencyKey, ...body }) => ({ url: `/inspections/${assignmentId}/results`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Results'],
+    }),
+    submitLabResult: builder.mutation<unknown, { idempotencyKey: string } & Body>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/assay-results', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Results'],
     }),
     // ---- the inspector's label work (decision #69: only the assigned inspector, or staff with a reason) ----
     getWindow: builder.query<Single<FieldWindow>, string>({ query: (assignmentId) => `/inspector-assignments/${assignmentId}/field-work-window`, providesTags: ['Window'] }),
@@ -99,6 +112,10 @@ export const {
   useTransferCustodyMutation,
   useCustodyActionMutation,
   useLazyResolveCodeQuery,
+  useGetRoundResultsQuery,
+  useUploadInspectionFilesMutation,
+  useSubmitFindingsMutation,
+  useSubmitLabResultMutation,
   useGetWindowQuery,
   useExtendWindowMutation,
   useMakeCodesMutation,

@@ -1,6 +1,8 @@
 "use client";
 
 import { WorkbenchLabels } from '@/components/traceability/workbench-labels';
+import { WorkbenchResults, batchesMissingFindings } from '@/components/traceability/inspection-results-panel';
+import { useGetRoundResultsQuery, useGetWindowQuery } from '@/redux/features/traceability/traceability_api';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -43,6 +45,10 @@ export default function TradeWorkbenchPage() {
     const [updateStatus, { isLoading: updatingStatus }] = useUpdateAssignmentStatusMutation();
     const [uploadPhotos, { isLoading: uploadingPhotos }] = useUploadAssignmentPhotosMutation();
     const [completeInspection, { isLoading: completingInspection }] = useCompleteInspectionMutation();
+    // Step 2.8a: every batch on the trade needs findings before the report goes to MINMEG
+    const { data: windowRes } = useGetWindowQuery(assignmentId as string);
+    const { data: roundResultsRes } = useGetRoundResultsQuery(assignmentId as string);
+    const batchesWithoutFindings = batchesMissingFindings(windowRes?.data?.batches ?? [], roundResultsRes?.data);
 
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -224,6 +230,10 @@ export default function TradeWorkbenchPage() {
         }
         if (!qualityRemarks.trim() || qualityRemarks.trim().length < 10) {
             toast.error('Laboratory Quality & Composition Report remarks are required (min 10 chars)');
+            return;
+        }
+        if (batchesWithoutFindings.length > 0) {
+            toast.error(`Record findings for every batch first: ${batchesWithoutFindings.map(b => b.batchCode ?? b.id).join(', ')}`);
             return;
         }
 
@@ -742,6 +752,11 @@ export default function TradeWorkbenchPage() {
                         </div>
                     )}
 
+                    {/* Findings and lab results per batch (step 2.8a) */}
+                    {(currentPhaseIndex >= 2 || isCompleted) && !isCancelledOrRejected && (
+                        <WorkbenchResults assignmentId={assignmentId as string} />
+                    )}
+
                     {/* Lab Test Results Summary */}
                     {(currentPhaseIndex >= 3 || isCompleted) && (
                         <div className="rounded-2xl border border-gray-200 p-5 space-y-4">
@@ -926,6 +941,11 @@ export default function TradeWorkbenchPage() {
                         </div>
 
                         <div className="p-6 space-y-4">
+                            {batchesWithoutFindings.length > 0 && (
+                                <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                                    Record findings for every batch first (Findings and lab results): {batchesWithoutFindings.map(b => b.batchCode ?? b.id).join(', ')}
+                                </p>
+                            )}
                             <div>
                                 <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Grade Achieved (%)</label>
                                 <input
