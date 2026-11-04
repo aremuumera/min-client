@@ -159,7 +159,7 @@ export function ShipmentTracking({ shipment }: { shipment: Shipment }) {
 
       <h4 className="text-sm font-semibold text-ink">Checkpoints</h4>
       {!view.checkpoints.length ? (
-        <p className="text-sm text-steel">MINMEG hasn't planned checkpoints for this shipment yet.</p>
+        <p className="text-sm text-steel">MINMEG has not planned checkpoints for this shipment yet.</p>
       ) : (
         <ol className="divide-y divide-hairline rounded-xl border border-hairline">
           {view.checkpoints.map((r) => (

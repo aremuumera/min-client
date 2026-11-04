@@ -121,7 +121,7 @@ test('tracking: MINMEG plans the checkpoints; the supplier can neither plan nor 
   const detail = page.getByRole('dialog').filter({ hasText: shipmentNumber });
   await expect(detail.getByText('No tracker on this shipment. Each step is recorded by hand.')).toBeVisible({ timeout: 30_000 });
   await expect(detail.locator('.leaflet-container')).toBeVisible();
-  await expect(detail.getByText("MINMEG hasn't planned checkpoints for this shipment yet.")).toBeVisible();
+  await expect(detail.getByText("MINMEG has not planned checkpoints for this shipment yet.")).toBeVisible();
   await expect(detail.getByRole('button', { name: 'Edit checkpoints' })).toHaveCount(0);
 
   // Staff plan the route (decision #106)

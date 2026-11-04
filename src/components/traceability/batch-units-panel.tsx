@@ -7,12 +7,15 @@ import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { CODE_STATUS_LABELS, LIVE_UNIT, UNIT_STATUS_LABELS, UNIT_TYPES, unitTypeLabel, type Code, type HandlingUnit } from '@/lib/traceability';
 import { formatQuantity } from '@/lib/batches';
 import { useGetShipmentsQuery } from '@/redux/features/shipments/shipments_api';
+import { CustodyPanel } from './custody-panel';
 import { useCodeActionMutation, useCreateUnitMutation, useGetBatchUnitsQuery, useUnitActionMutation } from '@/redux/features/traceability/traceability_api';
 
 type UnitForm = { mode: 'new' | 'inside'; parent?: HandlingUnit } | null;
 type Reasoned = { kind: 'open' | 'retire' | 'lost' | 'damaged'; unit?: HandlingUnit; code?: Code } | null;
 
-function NewUnitModal({ batchId, form, unitSymbol, onClose }: { batchId: string; form: NonNullable<UnitForm>; unitSymbol?: string; onClose: () => void }) {
+function NewUnitModal({ batchId, form, unitSymbol, candidates, onClose }: { batchId: string; form: NonNullable<UnitForm>; unitSymbol?: string; candidates: HandlingUnit[]; onClose: () => void }) {
+  const [which, setWhich] = React.useState<'new' | 'existing'>('new');
+  const [childId, setChildId] = React.useState('');
   const [type, setType] = React.useState('BAG');
   const [quantity, setQuantity] = React.useState('');
   const [serial, setSerial] = React.useState('');
@@ -22,7 +25,7 @@ function NewUnitModal({ batchId, form, unitSymbol, onClose }: { batchId: string;
   const [act, { isLoading: nesting }] = useUnitActionMutation();
   const submit = async () => {
     setError(null);
-    const body = { unitType: type, quantity, ...(serial.trim() ? { serialNumber: serial.trim() } : {}) };
+    const body = which === 'existing' ? { childHandlingUnitId: childId } : { unitType: type, quantity, ...(serial.trim() ? { serialNumber: serial.trim() } : {}) };
     try {
       if (form.mode === 'inside' && form.parent) await act({ id: form.parent.id, action: 'children', body }).unwrap();
       else await create({ batchId, ...body, idempotencyKey: key }).unwrap();
@@ -39,6 +42,17 @@ function NewUnitModal({ batchId, form, unitSymbol, onClose }: { batchId: string;
           <h3 className="text-lg font-bold text-gray-900">{form.mode === 'inside' ? `Add a unit inside ${unitTypeLabel(form.parent!.unitType).toLowerCase()} ${form.parent!.serialNumber ?? ''}` : 'Add a unit'}</h3>
           <p className="mt-1 text-sm text-gray-500">A bag, drum, pallet or container holding part of this batch. Units together cannot hold more than the batch.</p>
         </div>
+        {form.mode === 'inside' && candidates.length > 0 && (
+          <FormField htmlFor="unit-which" label="What goes inside" required>
+            <DropdownSelect id="unit-which" aria-label="What goes inside" value={which} onValueChange={(v) => setWhich(v as 'new' | 'existing')} options={[{ value: 'new', label: 'A new unit' }, { value: 'existing', label: 'A unit already packed' }]} />
+          </FormField>
+        )}
+        {which === 'existing' ? (
+          <FormField htmlFor="unit-existing" label="Unit" required>
+            <DropdownSelect id="unit-existing" aria-label="Unit" value={childId} onValueChange={setChildId} placeholder="Choose a unit" options={candidates.map((u) => ({ value: u.id, label: `${unitTypeLabel(u.unitType)}${u.serialNumber ? ` ${u.serialNumber}` : ''} · ${formatQuantity(u.quantity, unitSymbol)}` }))} />
+          </FormField>
+        ) : (
+        <>
         <FormField htmlFor="unit-type" label="Type" required>
           <DropdownSelect id="unit-type" aria-label="Type" value={type} onValueChange={setType} options={UNIT_TYPES.map((t) => ({ value: t, label: unitTypeLabel(t) }))} />
         </FormField>
@@ -48,10 +62,12 @@ function NewUnitModal({ batchId, form, unitSymbol, onClose }: { batchId: string;
         <FormField htmlFor="unit-serial" label="Your own number" optional info="A number already written on the bag or drum, if it has one.">
           <Input id="unit-serial" value={serial} maxLength={64} onChange={(e) => setSerial(e.target.value)} />
         </FormField>
+        </>
+        )}
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button disabled={!Number(quantity) || creating || nesting} onClick={submit}>Add unit</Button>
+          <Button disabled={(which === 'existing' ? !childId : !Number(quantity)) || creating || nesting} onClick={submit}>{which === 'existing' ? 'Move inside' : 'Add unit'}</Button>
         </div>
       </div>
     </Modal>
@@ -173,6 +189,7 @@ export function BatchUnitsPanel({ batchId, unitSymbol, canManage, codeTools, uni
   const query = useGetBatchUnitsQuery({ batchId, includeRetired: showRetired }, { refetchOnMountOrArgChange: true });
   const [form, setForm] = React.useState<UnitForm>(null);
   const [loading, setLoading] = React.useState<HandlingUnit | null>(null);
+  const [holder, setHolder] = React.useState<HandlingUnit | null>(null);
   const [reasoned, setReasoned] = React.useState<Reasoned>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [act] = useUnitActionMutation();
@@ -206,6 +223,7 @@ export function BatchUnitsPanel({ batchId, unitSymbol, canManage, codeTools, uni
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={u.status}>{UNIT_STATUS_LABELS[u.status] ?? u.status}</StatusBadge>
           {unitTools?.(u)}
+          <Button size="sm" variant="outlined" onClick={() => setHolder(u)}>Who holds it</Button>
           {canManage && ['ACTIVE', 'PACKED'].includes(u.status) && !u.parentHandlingUnitId && <Button size="sm" variant="outlined" onClick={() => setLoading(u)}>Load on shipment</Button>}
           {canManage && ['ACTIVE', 'PACKED'].includes(u.status) && !u.sealed && <Button size="sm" variant="outlined" onClick={() => setForm({ mode: 'inside', parent: u })}>Add inside</Button>}
           {canManage && ['PACKED', 'LOADED'].includes(u.status) && u.sealed && <Button size="sm" variant="outlined" onClick={() => setReasoned({ kind: 'open', unit: u })}>Open</Button>}
@@ -243,7 +261,26 @@ export function BatchUnitsPanel({ batchId, unitSymbol, canManage, codeTools, uni
         )}
         {canManage && <p className="text-xs text-steel">MINMEG codes are made, printed and put on the units by the inspector assigned to the trade, at your site.</p>}
       </section>
-      {form && <NewUnitModal batchId={batchId} form={form} unitSymbol={unitSymbol} onClose={() => setForm(null)} />}
+      {form && (
+        <NewUnitModal
+          batchId={batchId}
+          form={form}
+          unitSymbol={unitSymbol}
+          // Top-level units that can move inside: not the parent, not sealed, still holding goods
+          candidates={form.mode === 'inside' ? data.units.filter((u) => !u.parentHandlingUnitId && u.id !== form.parent?.id && !u.sealed && ['ACTIVE', 'PACKED'].includes(u.status)) : []}
+          onClose={() => setForm(null)}
+        />
+      )}
+      {holder && (
+        <Modal open onClose={() => setHolder(null)} size="md">
+          <div className="space-y-4 p-6">
+            <CustodyPanel subjectType="HANDLING_UNIT" subjectId={holder.id} canHandOver={canManage && LIVE_UNIT.includes(holder.status)} />
+            <div className="flex justify-end">
+              <Button variant="outlined" onClick={() => setHolder(null)}>Close</Button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {loading && <LoadModal unit={loading} onClose={() => setLoading(null)} />}
       {reasoned && <ReasonModal action={reasoned} onClose={() => setReasoned(null)} />}
     </div>

@@ -8,6 +8,7 @@ import { formatDateTime } from '@/lib/format';
 import { DELIVERY_RECORDED, LINE_LABELS, MOVING, PLANNING, shipmentStatusLabel, vehicleTypeLabel, type Shipment, type ShipmentLine } from '@/lib/shipments';
 import { showQuantity } from '@/lib/trade-stock';
 import { useGetReadinessQuery, useGetShipmentQuery, useRemoveLineMutation, useShipmentActionMutation } from '@/redux/features/shipments/shipments_api';
+import { CustodyPanel } from '@/components/traceability/custody-panel';
 import { ShipmentFormSheet } from './shipment-form-sheet';
 import { ShipmentTracking } from './shipment-tracking';
 
@@ -241,6 +242,7 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
             </ul>
           </section>
           {s.status !== 'CANCELLED' && <ShipmentTracking shipment={s} />}
+          {s.status !== 'CANCELLED' && <CustodyPanel subjectType="SHIPMENT" subjectId={s.id} canHandOver={false} />}
           {!!s.returnShipments?.length && (
             <section>
               <h3 className="mb-2 text-sm font-semibold text-ink">Returns</h3>

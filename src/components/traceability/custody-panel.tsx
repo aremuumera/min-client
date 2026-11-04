@@ -86,9 +86,13 @@ export function CustodyPanel({ subjectType, subjectId, canHandOver }: { subjectT
         {canHandOver && <Button size="sm" variant="outlined" onClick={() => setOpen(true)}>Hand over</Button>}
       </div>
       {history.isError ? (
-        <Alert severity="error">{toApiError(history.error).message}</Alert>
+        toApiError(history.error).status === 404 ? (
+          <p className="text-sm text-steel">Only the holders of these goods and MINMEG can see who holds them.</p>
+        ) : (
+          <Alert severity="error">{toApiError(history.error).message}</Alert>
+        )
       ) : !records.length ? (
-        <p className="text-sm text-steel">{history.isLoading ? 'Loading…' : 'Your company holds them. No handover yet.'}</p>
+        <p className="text-sm text-steel">{history.isLoading ? 'Loading…' : 'No handover yet. The owner holds them.'}</p>
       ) : (
         <ul className="divide-y divide-hairline rounded-xl border border-hairline">
           {records.map((r) => (

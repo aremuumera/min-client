@@ -332,7 +332,7 @@ export default function TradeWorkbenchPage() {
                     <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
                         <span className="shrink-0">Inspector Workbench</span>
                         <span>&bull;</span>
-                        <span className="text-gray-500 font-bold break-all">{displayId}</span>
+                        <span className="text-gray-500 font-bold break-all normal-case font-mono">{displayId}</span>
                     </div>
                     <h1 className="text-lg sm:text-2xl font-black text-gray-900 tracking-tight break-words">
                         {displayProductName}
