@@ -36,6 +36,7 @@ import {
 } from '@/redux/features/esg/esg_api';
 import { useGetReadingsQuery } from '@/redux/features/traceability/traceability_api';
 import { CODE, DECIMAL, SendForm, useFileOptions, useUnits, VerificationBox } from './shared';
+import { ProofSection } from '@/components/proof/proof-section';
 
 /*
  * Carbon assessments (step 2.10a, decisions #77 and #110). The owner declares its activities and its
@@ -488,6 +489,7 @@ export function CarbonDetail({ id, mode }: { id: string; mode: Mode }) {
       {a.invalidationReason && <p className="text-sm text-gray-600">Withdrawn: {a.invalidationReason}</p>}
       <Summary a={a} />
       <VerificationBox v={a.verification} />
+      {(a.status === 'VERIFIED' || a.status === 'SUPERSEDED') && <ProofSection subjectType="CARBON_ASSESSMENT" subjectId={a.id} />}
       <section className="space-y-2">
         <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Activities</h4>
         <InputsTable a={a} editable={owner && draft} />

@@ -36,6 +36,7 @@ import {
 } from '@/redux/features/esg/esg_api';
 import { useGetReadingsQuery } from '@/redux/features/traceability/traceability_api';
 import { CODE, SendForm, useFileOptions, useUnits, VerificationBox } from './shared';
+import { ProofSection } from '@/components/proof/proof-section';
 
 /*
  * ESG assessments (step 2.10b, decisions #77 and #110). The result is recorded as the scheme issued it
@@ -501,6 +502,7 @@ export function EsgDetail({ id, mode }: { id: string; mode: Mode }) {
       {a.invalidationReason && <p className="text-sm text-gray-600">Withdrawn: {a.invalidationReason}</p>}
       <ResultBox a={a} />
       <VerificationBox v={a.verification} />
+      {(a.status === 'VERIFIED' || a.status === 'SUPERSEDED') && <ProofSection subjectType="ESG_ASSESSMENT" subjectId={a.id} />}
       <section className="space-y-2">
         <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Indicators</h4>
         <IndicatorsTable a={a} editable={owner && draft} />

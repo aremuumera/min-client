@@ -22,6 +22,7 @@ import { shipmentsApi } from "./features/shipments/shipments_api";
 import { traceabilityApi } from "./features/traceability/traceability_api";
 import { passportsApi } from "./features/passports/passports_api";
 import { esgApi } from "./features/esg/esg_api";
+import { proofApi } from "./features/proof/proof_api";
 import { listingsApi } from "./features/listings/listings_api";
 import inquiryApi from "./features/enquiry/enquiry_api";
 import supplierProductApi from "./features/supplier-products/products_api";
@@ -53,6 +54,7 @@ const persistConfig = {
     "traceabilityApi",
     "passportsApi",
     "esgApi",
+    "proofApi",
     "listingsApi",
     "authApi",
     "supplierProfileApi",
@@ -109,6 +111,7 @@ export const makeStore = () => {
         traceabilityApi.middleware,
         passportsApi.middleware,
         esgApi.middleware,
+        proofApi.middleware,
         listingsApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,

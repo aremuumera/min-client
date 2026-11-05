@@ -43,6 +43,7 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
 import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
+import { ProofSection } from '@/components/proof/proof-section';
 
 /*
  * A batch's digital passport (step 2.9b, decisions #74, #108).
@@ -425,6 +426,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
           <DownloadPdfButton id={p.id} code={p.passportCode} label="Download the published version (PDF)" />
         </div>
       )}
+      {p.publishedVersion && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ProofSection subjectType="PASSPORT_VERSION" subjectId={p.publishedVersion.id} />}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}
       <RecordTrail id={p.id} />

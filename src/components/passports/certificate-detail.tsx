@@ -12,6 +12,7 @@ import { useGetCertificateQuery, useGetCertificatesQuery } from '@/redux/feature
 import { useCreateGrantMutation, useGetGrantsQuery, useRevokeGrantMutation } from '@/redux/features/vault/vaultApi';
 import { useAppSelector } from '@/redux/hooks';
 import { RecordTrail } from './passport-extras';
+import { ProofSection } from '@/components/proof/proof-section';
 
 /*
  * Certificates for companies (step 2.9d, decisions #76, #108): MINMEG's formal statements about
@@ -171,6 +172,7 @@ export function CertificateDetail({ certificateId }: { certificateId: string }) 
           {c.holderOrganizationId === orgId && <SharePanel resourceType="CERTIFICATE" resourceId={c.id} />}
         </>
       )}
+      {c.publishedVersion && <ProofSection subjectType="CERTIFICATE_VERSION" subjectId={c.publishedVersion.id} />}
       <RecordTrail id={c.id} />
     </div>
   );

@@ -7,6 +7,7 @@ import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
 import { ASSESSMENT_TEXT, assessmentTone, RESULT_TEXT, resultTone, TRUST_TEXT, type Assessment } from '@/lib/passports';
 import { useGetActiveStandardsQuery, useGetAssessmentsQuery, useGetComplianceProfilesQuery, useGetComplianceSummaryQuery, useReassessMutation, useRunAssessmentMutation } from '@/redux/features/passports/passports_api';
+import { ProofSection } from '@/components/proof/proof-section';
 
 /*
  * Compliance of a published passport (step 2.9c, decision #75): checked against a named standard
@@ -82,6 +83,7 @@ function AssessmentDetail({ a, canReassess }: { a: Assessment; canReassess: bool
         {a.expiresAt ? ` · valid until ${formatDateTime(a.expiresAt)}` : ''}
       </p>
       {a.conditions && <p className="text-sm text-gray-700">Conditions: {a.conditions}</p>}
+      {a.trustLabel === 'VERIFIED_BY_MINMEG' && <ProofSection subjectType="COMPLIANCE_ASSESSMENT" subjectId={a.id} />}
       {error && <Alert severity="error">{error}</Alert>}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="text" onClick={() => setOpen((v) => !v)}>{open ? 'Hide' : 'Show'} each requirement ({a.findings.length})</Button>
