@@ -31,6 +31,7 @@ import { traceabilityApi } from "./features/traceability/traceability_api";
 import { passportsApi } from "./features/passports/passports_api";
 import { esgApi } from "./features/esg/esg_api";
 import { proofApi } from "./features/proof/proof_api";
+import { notificationsApi } from "./features/notifications/notifications_api";
 import { listingsApi } from "./features/listings/listings_api";
 import activityApi from "./features/activity/activityApi";
 import definitionApi from "./features/definitions/definition_api";
@@ -89,6 +90,7 @@ const rootReducer = combineReducers({
   [passportsApi.reducerPath]: passportsApi.reducer,
   [esgApi.reducerPath]: esgApi.reducer,
   [proofApi.reducerPath]: proofApi.reducer,
+  [notificationsApi.reducerPath]: notificationsApi.reducer,
   [listingsApi.reducerPath]: listingsApi.reducer,
   [activityApi.reducerPath]: activityApi.reducer,
   [definitionApi.reducerPath]: definitionApi.reducer,

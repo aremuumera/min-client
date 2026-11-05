@@ -88,6 +88,8 @@ export const paths = {
     certificates: "/dashboard/certificates",
     // step 2.10: ESG and carbon
     esg: "/dashboard/esg",
+    // step 2.13b: operational alerts
+    alerts: "/dashboard/alerts",
     batches: "/dashboard/batches",
     shipments: "/dashboard/shipments",
     scan: "/dashboard/scan",
@@ -240,6 +242,7 @@ export const routeAccess = {
     paths.dashboard.passports.requests,
     paths.dashboard.certificates,
     paths.dashboard.esg,
+    paths.dashboard.alerts,
     // documents (step 2.3)
     paths.dashboard.documents.list,
     paths.dashboard.documents.shared,

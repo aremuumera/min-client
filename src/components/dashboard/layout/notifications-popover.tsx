@@ -33,6 +33,7 @@ interface Notification {
     message: string;
     timestamp: any;
     itemTitle?: string;
+    type?: string;
 }
 
 interface NotificationsPopoverProps {
@@ -46,7 +47,8 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
     const router = useRouter();
     const { user, effectiveUserId } = useAuthIdentity();
     const chatContext = useContext(ChatContext);
-    const notifications: Notification[] = chatContext?.notifications || [];
+    // Step 2.13 (decision #113): this popover shows chat messages only; every other notice is in the inbox (the bell)
+    const notifications: Notification[] = (chatContext?.notifications || []).filter((n: Notification) => !!n.conversationId || n.type === 'new_message');
     const clearSingleNotification = chatContext?.clearSingleNotification;
 
     const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -108,7 +110,7 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
             align={isMobile ? 'center' : 'end'}
         >
             <Stack direction="row" className="items-center justify-between px-4 py-2 border-b border-neutral-200">
-                <Typography variant="h6">Notifications</Typography>
+                <Typography variant="h6">Messages</Typography>
                 <Stack direction="row" spacing={1}>
                     {unreadCount > 0 && (
                         <Button size="sm" variant="text" onClick={handleMarkAllAsRead}>
@@ -122,7 +124,7 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
                 {notifications.length === 0 ? (
                     <Box className="p-4 flex justify-center">
                         <Typography variant="subtitle2" className="text-neutral-500">
-                            No notifications at this time...
+                            No new messages.
                         </Typography>
                     </Box>
                 ) : (
@@ -141,16 +143,16 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
 
             {notifications.length > 0 && (
                 <div className="p-2 border-t border-neutral-200">
-                    <Tooltip content="View all notifications">
+                    <Tooltip content="Open the chats">
                         <Button
                             onClick={() => {
-                                router.push('/dashboard/notifications');
+                                router.push('/dashboard/chat');
                                 onClose?.();
                             }}
                             variant="outlined"
                             className="w-full"
                         >
-                            <ChatTextIcon className="mr-2" /> View all
+                            <ChatTextIcon className="mr-2" /> Open the chats
                         </Button>
                     </Tooltip>
                 </div>

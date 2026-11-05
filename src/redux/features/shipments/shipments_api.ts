@@ -3,6 +3,7 @@ import { idempotencyHeaders } from '@/lib/api/idempotency';
 import type { Readiness, Shipment } from '@/lib/shipments';
 import type { Alert, Ping, PlanRow, TrackingView } from '@/lib/tracking';
 import baseQueryWithReauth from '@/redux/api/baseApi';
+import type { OperationalAlert } from '@/lib/alerts';
 
 /* Group 09 shipments (step 2.7a). Anything that moves stock sends an Idempotency-Key where the backend takes one. */
 type Body = Record<string, unknown>;
@@ -50,7 +51,10 @@ export const shipmentsApi = createApi({
       query: ({ id, checkpointId, body }) => ({ url: `/shipments/${id}/checkpoints/${checkpointId}/scan`, method: 'POST', body }),
       invalidatesTags: ['Tracking', 'Shipments'],
     }),
+    /** Step 2.13b: every alert on the company's shipments */
+    getAlerts: builder.query<Paged<OperationalAlert>, Record<string, string | number | boolean | undefined>>({ query: (q) => ({ url: '/alerts', params: Object.fromEntries(Object.entries(q).filter(([, v]) => v !== '' && v !== undefined)) }), providesTags: ['Tracking'] }),
     getShipmentAlerts: builder.query<Paged<Alert>, string>({ query: (shipmentId) => ({ url: '/alerts', params: { shipmentId, limit: 50 } }), providesTags: ['Tracking'] }),
+    getAlert: builder.query<{ success: boolean; data: OperationalAlert }, string>({ query: (id) => `/alerts/${id}`, providesTags: ['Tracking'] }),
     acknowledgeAlert: builder.mutation<unknown, { id: string; note?: string }>({
       query: ({ id, note }) => ({ url: `/alerts/${id}/acknowledge`, method: 'POST', body: note ? { note } : {} }),
       invalidatesTags: ['Tracking'],
@@ -58,4 +62,4 @@ export const shipmentsApi = createApi({
   }),
 });
 
-export const { useGetShipmentsQuery, useGetShipmentQuery, useGetReadinessQuery, useCreateShipmentMutation, useUpdateShipmentMutation, useRemoveLineMutation, useShipmentActionMutation, useGetTrackingQuery, useGetHistoryQuery, useSetCheckpointPlanMutation, useSkipCheckpointMutation, useScanCheckpointMutation, useGetShipmentAlertsQuery, useAcknowledgeAlertMutation } = shipmentsApi;
+export const { useGetShipmentsQuery, useGetShipmentQuery, useGetReadinessQuery, useCreateShipmentMutation, useUpdateShipmentMutation, useRemoveLineMutation, useShipmentActionMutation, useGetTrackingQuery, useGetHistoryQuery, useSetCheckpointPlanMutation, useSkipCheckpointMutation, useScanCheckpointMutation, useGetShipmentAlertsQuery, useAcknowledgeAlertMutation, useGetAlertsQuery, useGetAlertQuery } = shipmentsApi;

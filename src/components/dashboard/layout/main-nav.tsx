@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Bell, Menu, Search, User as UserIcon } from 'lucide-react';
+import { Menu, MessageCircle, Search, User as UserIcon } from 'lucide-react';
 import { usePopover } from '@/hooks/use-popover';
 import { useDialog } from '@/hooks/use-dialog';
 import { useChat } from '@/providers/chat-provider';
 import { MobileNav } from './mobile-nav';
 import { NotificationsPopover } from './notifications-popover';
+import { InboxBell } from '@/components/notifications/inbox';
 import { UserPopover } from './user-popover';
 import { NavItemConfig } from '@/config/dashboard-config';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
@@ -32,7 +33,8 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
     // Check if nav should be hidden/rendered based on verification
     const finalRelease = isBusinessVerified && (!isSupplier || isProfileCreated);
 
-    const unreadNotificationsCount = notifications.filter((n) => !n.isRead).length;
+    // chat messages only (the bell reads the notification inbox, step 2.13)
+    const unreadNotificationsCount = notifications.filter((n) => !n.isRead && (!!n.conversationId || (n as { type?: string }).type === 'new_message')).length;
 
     return (
         <header className={cn(
@@ -64,10 +66,10 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                     <button
                                         ref={notificationPopover.anchorRef}
                                         onClick={notificationPopover.handleOpen}
-                                        aria-label={unreadNotificationsCount > 0 ? `Notifications (${unreadNotificationsCount} unread)` : 'Notifications'}
+                                        aria-label={unreadNotificationsCount > 0 ? `Messages (${unreadNotificationsCount} unread)` : 'Messages'}
                                         className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate hover:bg-brand-green-soft hover:text-primary-pressed transition-colors relative group"
                                     >
-                                        <Bell size={20} strokeWidth={2.5} />
+                                        <MessageCircle size={20} strokeWidth={2.5} />
                                         {unreadNotificationsCount > 0 && (
                                             <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-semantic-error text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-subtle">
                                                 {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
@@ -79,7 +81,9 @@ export function MainNav({ items, isCollapsed }: MainNavProps) {
                                 open={notificationPopover.open}
                             />
                         </div>
+
                     )}
+                    {finalRelease && <InboxBell />}
 
                     <div className="w-px h-8 bg-hairline hidden sm:block" />
 

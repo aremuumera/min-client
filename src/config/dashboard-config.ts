@@ -281,6 +281,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "shipments",
         },
         {
+          key: "alerts",
+          title: "Alerts",
+          href: paths.dashboard.alerts,
+          icon: "warning-circle",
+          matcher: { type: "startsWith", href: paths.dashboard.alerts },
+          permission: "shipments",
+        },
+        {
           key: "handovers",
           title: "Handovers",
           href: paths.dashboard.handovers,
