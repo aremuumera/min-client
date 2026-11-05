@@ -172,7 +172,7 @@ export function CertificateDetail({ certificateId }: { certificateId: string }) 
           {c.holderOrganizationId === orgId && <SharePanel resourceType="CERTIFICATE" resourceId={c.id} />}
         </>
       )}
-      {c.publishedVersion && <ProofSection subjectType="CERTIFICATE_VERSION" subjectId={c.publishedVersion.id} />}
+      {c.publishedVersion && <ProofSection subjectType="CERTIFICATE_VERSION" subjectId={c.publishedVersion.id} publicCode={c.certificateCode} />}
       <RecordTrail id={c.id} />
     </div>
   );

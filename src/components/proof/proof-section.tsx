@@ -60,7 +60,10 @@ function Inclusion({ proofId }: { proofId: string }) {
 }
 
 /** The latest proof of one record: subjectType PASSPORT_VERSION, CERTIFICATE_VERSION, COMPLIANCE_ASSESSMENT, ESG_ASSESSMENT or CARBON_ASSESSMENT */
-export function ProofSection({ subjectType, subjectId }: { subjectType: ProofSubject; subjectId: string }) {
+/** The public verify site (Phase 3): anyone can check a passport or certificate there by its number */
+const VERIFY_SITE = (process.env.NEXT_PUBLIC_VERIFY_URL || 'https://verify.minmeg.com').replace(/\/+$/, '');
+
+export function ProofSection({ subjectType, subjectId, publicCode }: { subjectType: ProofSubject; subjectId: string; /** passport / certificate number: links to its public page */ publicCode?: string }) {
   const proofs = useGetRecordProofsQuery({ subjectType, subjectId });
   const proof = proofs.data?.data[0];
   const checks = useGetChainChecksQuery(proof?.id ?? '', { skip: !proof?.anchoring.onChain });
@@ -100,6 +103,11 @@ export function ProofSection({ subjectType, subjectId }: { subjectType: ProofSub
             </>
           )}
         </>
+      )}
+      {publicCode && (
+        <a href={`${VERIFY_SITE}/c/${encodeURIComponent(publicCode)}`} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline" data-testid="public-page-link">
+          Open the public page
+        </a>
       )}
     </section>
   );
