@@ -20,6 +20,8 @@ export interface TradeStockRecord {
   metadata?: { allocationNote?: string; typedQuantityTaken?: string } | null;
   allocationSummary: TradeStockSummary;
   viewerRole?: 'staff' | 'seller' | 'buyer';
+  sellerOrganizationId?: string;
+  buyerOrganizationId?: string;
 }
 
 export interface TradeAllocation {

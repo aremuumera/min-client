@@ -4,7 +4,7 @@ import type { PageHelpContent } from '@/components/ui';
 export const esgHelp: PageHelpContent = {
   title: 'ESG & carbon',
   purpose:
-    'Your carbon figures and ESG results, and those of the suppliers on your trades. For carbon you enter what you did (fuel, electricity, transport…) and your own emission factors, each with its source; MINMEG only adds them up and supplies no factor. You send the result to MINMEG with an independent verifier’s report, and MINMEG confirms it or returns it with notes. Buyers always see whose figures they are and how far they were checked: declared, declared with evidence, independently verified, or confirmed by MINMEG. MINMEG never rates the result.',
+    'Your ESG results and carbon figures, and those of the suppliers on your trades. An ESG result is recorded exactly as the scheme issued it (IRMA, EcoVadis, RMI…: its rating, scores and who issued it), with the indicators behind it; MINMEG never gives its own score. For carbon you enter what you did (fuel, electricity, transport…) and your own emission factors, each with its source; MINMEG only adds them up and supplies no factor. You send the result to MINMEG with an independent verifier’s report, and MINMEG confirms it or returns it with notes. Buyers always see whose figures they are and how far they were checked: declared, declared with evidence, independently verified, or confirmed by MINMEG. MINMEG never rates the result.',
   example: {
     title: 'the carbon of a batch of tin concentrate',
     steps: [

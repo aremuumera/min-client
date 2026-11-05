@@ -145,3 +145,63 @@ export function amount(v: string | null | undefined): string {
 
 /** Open = the owner can still change it */
 export const isOpen = (a: { status: AssessmentStatus }) => ['DRAFT', 'CALCULATED', 'ASSESSED', 'PENDING_VERIFICATION'].includes(a.status);
+
+// =========================== 2.10b ESG ===========================
+export type EsgSubject = 'ORGANIZATION' | 'LOCATION' | 'BATCH';
+export type Pillar = 'ENVIRONMENTAL' | 'SOCIAL' | 'GOVERNANCE';
+export const PILLARS: Pillar[] = ['ENVIRONMENTAL', 'SOCIAL', 'GOVERNANCE'];
+export const PILLAR_TEXT: Record<Pillar, string> = { ENVIRONMENTAL: 'Environmental', SOCIAL: 'Social', GOVERNANCE: 'Governance' };
+export const VALUE_TYPE_TEXT: Record<string, string> = { NUMBER: 'A number', BOOLEAN: 'Yes or no', STRING: 'Text', DATE: 'A date' };
+
+export interface EsgInput {
+  id: string;
+  category: Pillar;
+  indicatorCode: string;
+  indicatorName: string;
+  valueType: 'NUMBER' | 'BOOLEAN' | 'STRING' | 'DATE' | 'JSON';
+  value: unknown;
+  unitId: string | null;
+  sourceType: string;
+  sourceId: string | null;
+  dataQuality: string;
+  verificationStatus: 'UNVERIFIED' | 'VERIFIED' | 'REJECTED';
+  rejectionReason: string | null;
+  evidenceRequired: boolean;
+  evidenceFileId: string | null;
+}
+
+export interface EsgAssessment {
+  id: string;
+  assessmentCode: string;
+  kind: 'ESG';
+  subjectType: EsgSubject;
+  subjectId: string;
+  ownerOrganizationId: string;
+  version: number;
+  frameworkCode: string;
+  frameworkVersion: string;
+  assessmentScope: { pillars?: string[] } & Record<string, unknown>;
+  result: { environmentalScore: string | null; socialScore: string | null; governanceScore: string | null; overallScore: string | null; rating: string | null; resultData: Record<string, unknown> | null; issuedByName: string | null };
+  evidenceCompleteness: string | null;
+  dataQualityScore: string | null;
+  assessmentPeriodStart: string | null;
+  assessmentPeriodEnd: string | null;
+  assessedAt: string | null;
+  status: AssessmentStatus;
+  trust: { level: TrustLevel; label: string };
+  verification: Verification;
+  submittedAt: string | null;
+  returnNotes?: string | null;
+  invalidationReason: string | null;
+  inputs: EsgInput[];
+  createdAt: string;
+}
+
+/** An indicator's value as text */
+export function indicatorValue(i: Pick<EsgInput, 'valueType' | 'value'>, unit = ''): string {
+  if (i.value === null || i.value === undefined) return '—';
+  if (i.valueType === 'BOOLEAN') return i.value ? 'Yes' : 'No';
+  if (i.valueType === 'NUMBER') return `${amount(String(i.value))}${unit ? ` ${unit}` : ''}`;
+  if (i.valueType === 'JSON') return JSON.stringify(i.value);
+  return String(i.value);
+}

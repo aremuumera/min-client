@@ -32,6 +32,7 @@ export function LocationDetailSheet({
   can,
   note,
   ownerNode,
+  extra,
   onClose,
   onEdit,
   onToggleActive,
@@ -41,6 +42,8 @@ export function LocationDetailSheet({
   /** e.g. "Platform-wide site, managed by MINMEG" */
   note?: (location: Location) => string | null;
   ownerNode?: (location: Location) => React.ReactNode;
+  /** Extra sections at the end, e.g. the site's ESG (step 2.10b) */
+  extra?: (location: Location) => React.ReactNode;
   onClose: () => void;
   onEdit: (location: Location) => void;
   onToggleActive: (location: Location) => void;
@@ -160,6 +163,7 @@ export function LocationDetailSheet({
                 </ul>
               )}
             </section>
+            {extra?.(l)}
           </div>
         )}
       </SideSheet>

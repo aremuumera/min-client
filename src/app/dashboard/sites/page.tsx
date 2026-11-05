@@ -13,6 +13,7 @@ import { LOCATION_TYPES, locationLabel, locationOptions, type Location } from '@
 import { RequireAccess } from '@/lib/permissions';
 import { useAppSelector } from '@/redux/hooks';
 import { useGetLocationsQuery, useSetLocationActiveMutation } from '@/redux/features/locations/locations_api';
+import { EsgFor } from '@/components/esg/esg-panel';
 
 /*
  * My sites (step 2.4 B1–B2): the company's own sites, which it manages, and platform-wide ones, which
@@ -143,6 +144,7 @@ function SitesPage() {
       <LocationDetailSheet
         locationId={form.open ? null : selectedId}
         can={(l) => (isOwn(l) ? FULL_ACCESS : NO_ACCESS)}
+        extra={(l) => (isOwn(l) ? <EsgFor subjectType="LOCATION" subjectId={l.id} mode="owner" title="ESG of this site" /> : null)}
         note={(l) => (l.organizationId ? null : 'A shared site, added by MINMEG. You can use it, but not change it.')}
         onClose={() => setSelectedId(null)}
         onEdit={(location) => setForm({ open: true, location })}

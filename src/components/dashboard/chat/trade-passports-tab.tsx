@@ -4,6 +4,7 @@ import * as React from 'react';
 import { EmptyState, ErrorState } from '@/components/ui';
 import { BatchPassport } from '@/components/passports/passport-panel';
 import { TradeCarbon } from '@/components/esg/carbon-panel';
+import { TradeEsg } from '@/components/esg/esg-panel';
 import { CertificateDetail, CertificatesFor } from '@/components/passports/certificate-detail';
 import { SideSheet } from '@/components/ui';
 import { useGetBatchResultsQuery } from '@/redux/features/passports/passports_api';
@@ -44,6 +45,7 @@ export function TradePassportsTab({ inquiryId, itemType, extra }: { inquiryId: s
         ))}
       </section>
       <TradeCertificates tradeId={tradeId} batchIds={batches.map((b) => b.id)} />
+      <TradeEsg sellerId={trade.data?.data?.sellerOrganizationId ?? null} batches={batches} seller={seller} />
       <TradeCarbonSection tradeId={tradeId} batches={batches} seller={seller} />
       {extra?.(tradeId)}
     </div>

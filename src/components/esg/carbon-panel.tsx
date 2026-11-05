@@ -22,7 +22,6 @@ import {
   type CarbonAssessment,
   type CarbonInput,
   type CarbonSubject,
-  type UnitOption,
 } from '@/lib/esg';
 import { formatDate, formatDateTime } from '@/lib/format';
 import {
@@ -32,12 +31,11 @@ import {
   useCreateCarbonAssessmentMutation,
   useGetCarbonAssessmentQuery,
   useGetCarbonAssessmentsQuery,
-  useGetUnitOptionsQuery,
   useRemoveCarbonInputMutation,
   useReviseCarbonMutation,
 } from '@/redux/features/esg/esg_api';
 import { useGetReadingsQuery } from '@/redux/features/traceability/traceability_api';
-import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
+import { CODE, DECIMAL, SendForm, useFileOptions, useUnits, VerificationBox } from './shared';
 
 /*
  * Carbon assessments (step 2.10a, decisions #77 and #110). The owner declares its activities and its
@@ -47,23 +45,8 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
  *  - reader (the trade's buyer, the carrier): calculated and later versions, never drafts
  */
 type Mode = 'owner' | 'reader';
-const CODE = /^[A-Z][A-Z0-9_]{1,63}$/;
-const DECIMAL = /^\d{1,16}(\.\d{1,8})?$/;
+
 const NOT_A_RATING = 'MINMEG adds up your own figures. It supplies no emission factor and does not rate or certify the result.';
-
-function useUnits() {
-  const units = useGetUnitOptionsQuery();
-  const all = units.data?.data ?? [];
-  const emissions = all.filter((u) => u.measurementType?.code === 'EMISSIONS');
-  const label = (u: UnitOption) => `${u.name ?? u.code} (${u.symbol})`;
-  const symbol = (id: string | null | undefined) => all.find((u) => u.id === id)?.symbol ?? '';
-  return { all, emissions, label, symbol };
-}
-
-function useFileOptions(skip: boolean) {
-  const files = useGetFilesQuery({ limit: 100, page: 1 }, { skip });
-  return (files.data?.data ?? []).map((f) => ({ value: f.id, label: f.displayName }));
-}
 
 // =========================== start ===========================
 function StartCarbon({ subjectType, subjectId, onClose, onCreated }: { subjectType: CarbonSubject; subjectId: string; onClose: () => void; onCreated?: (id: string) => void }) {
@@ -167,7 +150,7 @@ function InputForm({ assessment, onClose }: { assessment: CarbonAssessment; onCl
   const [add, { isLoading }] = useAddCarbonInputMutation();
   const { key, done } = useIdempotencyKey();
   const [method, setMethod] = React.useState<'FACTOR' | 'DIRECT'>('FACTOR');
-  const files = useFileOptions(false);
+  const files = useFileOptions();
   const [f, setF] = React.useState({ name: '', type: 'FUEL', scope: '', value: '', unitId: '', factor: '', factorUnitId: '', source: '', sourceVersion: '', emissions: '', emissionsUnitId: '', evidence: '', quality: 'SECONDARY' });
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }));
   const [confirming, setConfirming] = React.useState(false);
@@ -381,64 +364,6 @@ function ReadingForm({ assessment, onClose }: { assessment: CarbonAssessment; on
   );
 }
 
-// =========================== send to MINMEG ===========================
-function SendForm({ assessment, onClose }: { assessment: CarbonAssessment; onClose: () => void }) {
-  const files = useFileOptions(false);
-  const [act, { isLoading }] = useCarbonActionMutation();
-  const [f, setF] = React.useState({ name: '', standard: '', file: '', on: '' });
-  const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }));
-  const [confirming, setConfirming] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const problem = !!f.name.trim() !== !!f.file ? 'The verifier’s name and their report go together.' : null;
-  const submit = async () => {
-    setError(null);
-    try {
-      await act({
-        id: assessment.id,
-        action: 'submit',
-        ...(f.file ? { verifierName: f.name.trim(), statementFileId: f.file, ...(f.standard.trim() ? { verificationStandard: f.standard.trim() } : {}), ...(f.on ? { verifierVerifiedOn: f.on } : {}) } : {}),
-      }).unwrap();
-      onClose();
-    } catch (err) {
-      setConfirming(false);
-      setError(toApiError(err).message);
-    }
-  };
-  return (
-    <Modal open onClose={onClose} size="md">
-      <div className="space-y-4 p-6">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900">Send to MINMEG</h3>
-          <p className="mt-1 text-sm text-gray-500">MINMEG confirms a carbon result only against an independent verifier’s report. Attach it now if you have it; MINMEG can also attach one it receives directly.</p>
-        </div>
-        {error && <Alert severity="error">{error}</Alert>}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <FormField htmlFor="cs-name" label="Verifier" optional info="The firm that checked the figures, for example Bureau Veritas Nigeria">
-            <Input id="cs-name" value={f.name} onChange={(e) => set({ name: e.target.value })} maxLength={255} />
-          </FormField>
-          <FormField htmlFor="cs-standard" label="Standard they used" optional info="For example ISO 14067:2018 or ISO 14064-3">
-            <Input id="cs-standard" value={f.standard} onChange={(e) => set({ standard: e.target.value })} maxLength={255} />
-          </FormField>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <FormField htmlFor="cs-file" label="Their report" optional>
-            <DropdownSelect id="cs-file" aria-label="Their report" value={f.file} placeholder={files.length ? 'Choose' : 'No files in your documents'} options={files} onValueChange={(v) => set({ file: v })} searchable={files.length > 8} />
-          </FormField>
-          <FormField htmlFor="cs-on" label="Verified on" optional>
-            <Input id="cs-on" type="date" value={f.on} onChange={(e) => set({ on: e.target.value })} />
-          </FormField>
-        </div>
-        {problem && <p className="text-sm text-gray-500">{problem}</p>}
-        <div className="flex justify-end gap-2">
-          <Button variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button disabled={!!problem} onClick={() => setConfirming(true)}>Send</Button>
-        </div>
-      </div>
-      <ConfirmDialog open={confirming} title={`Send ${assessment.assessmentCode} to MINMEG?`} description="MINMEG confirms it or returns it with notes. You can't change it while MINMEG looks at it." confirmLabel="Send" loading={isLoading} onConfirm={submit} onClose={() => setConfirming(false)} />
-    </Modal>
-  );
-}
-
 // =========================== the assessment ===========================
 function Summary({ a }: { a: CarbonAssessment }) {
   const period = a.calculationPeriodStart || a.calculationPeriodEnd ? `${a.calculationPeriodStart ? formatDate(a.calculationPeriodStart) : '…'} to ${a.calculationPeriodEnd ? formatDate(a.calculationPeriodEnd) : '…'}` : null;
@@ -530,7 +455,6 @@ export function CarbonDetail({ id, mode }: { id: string; mode: Mode }) {
   if (!a) return <Alert severity="error">{query.error ? toApiError(query.error).message : 'Not found'}</Alert>;
   const owner = mode === 'owner';
   const draft = a.status === 'DRAFT';
-  const v = a.verification;
   const canRevise = owner && ['VERIFIED', 'INVALIDATED'].includes(a.status);
   const canWithdraw = owner && isOpen(a);
   return (
@@ -563,18 +487,7 @@ export function CarbonDetail({ id, mode }: { id: string; mode: Mode }) {
       {a.status === 'CALCULATED' && owner && <p className="text-sm text-gray-600">The activities are frozen. Send it to MINMEG, or withdraw it and start a new version to change them.</p>}
       {a.invalidationReason && <p className="text-sm text-gray-600">Withdrawn: {a.invalidationReason}</p>}
       <Summary a={a} />
-      {(v.verifierName || v.confirmedAt) && (
-        <div className="space-y-1 rounded-lg border border-gray-200 p-3 text-sm" aria-label="Verification">
-          {v.verifierName && (
-            <p className="text-gray-700">
-              Checked by <span className="font-semibold text-gray-900">{v.verifierName}</span>
-              {v.verificationStandard ? ` against ${v.verificationStandard}` : ''}
-              {v.verifierVerifiedOn ? `, ${formatDate(v.verifierVerifiedOn)}` : ''}
-            </p>
-          )}
-          {v.confirmedAt && <p className="text-gray-700">Confirmed by MINMEG {formatDateTime(v.confirmedAt)}{v.notes ? `: ${v.notes}` : ''}</p>}
-        </div>
-      )}
+      <VerificationBox v={a.verification} />
       <section className="space-y-2">
         <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Activities</h4>
         <InputsTable a={a} editable={owner && draft} />
@@ -582,7 +495,7 @@ export function CarbonDetail({ id, mode }: { id: string; mode: Mode }) {
       <p className="text-xs text-gray-400">{NOT_A_RATING} Assessment ID <CopyableId value={a.id} /></p>
       {form === 'input' && <InputForm assessment={a} onClose={() => setForm(null)} />}
       {form === 'reading' && <ReadingForm assessment={a} onClose={() => setForm(null)} />}
-      {form === 'send' && <SendForm assessment={a} onClose={() => setForm(null)} />}
+      {form === 'send' && <SendForm code={a.assessmentCode} onSend={(body) => act({ id: a.id, action: 'submit', ...body }).unwrap()} onClose={() => setForm(null)} />}
       <ConfirmDialog
         open={!!dialog}
         title={{ calculate: 'Calculate the result?', withdraw: `Withdraw ${a.assessmentCode}?`, revise: 'Start a new version?', '': '' }[dialog ?? '']}
