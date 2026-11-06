@@ -55,6 +55,7 @@ const CategorySubProductsView = ({ mainCategoryId, mineralCategoryId }: Category
             quantity: filters?.quantity,
             review: filters?.rating,
       materialId: filters?.materialId,
+      locationType: filters?.locationType,
         },
         {
             refetchOnMountOrArgChange: true,

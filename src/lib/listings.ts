@@ -257,3 +257,8 @@ export const withCommas = (value: string) => {
   const [whole, ...rest] = value.split('.');
   return [whole.replace(/\B(?=(\d{3})+(?!\d))/g, ','), ...rest].join('.');
 };
+
+/** How the goods are handed over (the listing form's Fulfilment field) */
+export const FULFILMENT_LABELS: Record<string, string> = { pickup: 'Pickup', delivery: 'Delivery', both: 'Pickup and delivery' };
+/** The kind of place a listing is offered from, taken from its site (mine, warehouse...) */
+export const PLACE_LABELS: Record<string, string> = { mine: 'Mine', warehouse: 'Warehouse', processing_facility: 'Processing plant', port: 'Port', storage_facility: 'Storage', other: 'Other site' };

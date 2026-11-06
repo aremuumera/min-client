@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatNumberWithCommas } from '@/lib/number-format';
+import { FULFILMENT_LABELS, PLACE_LABELS } from '@/lib/listings';
 
 const ProductDetailTab = ({ products }: { products: any }) => {
   const {
@@ -17,6 +18,7 @@ const ProductDetailTab = ({ products }: { products: any }) => {
     sampling_method,
     material,
     fulfillment_type,
+    location_type,
     minimum_order_quantity,
     selected_shipping,
     selected_payments,
@@ -24,7 +26,6 @@ const ProductDetailTab = ({ products }: { products: any }) => {
     shippingTermsDescribed,
   } = products || {};
   const listOf = (v: unknown) => (Array.isArray(v) && v.length ? v.join(', ') : null);
-  const FULFILMENT: Record<string, string> = { pickup: 'Pickup', delivery: 'Delivery', both: 'Pickup and delivery' };
 
   const specifications = [
     { label: 'Material', value: material?.name },
@@ -39,7 +40,8 @@ const ProductDetailTab = ({ products }: { products: any }) => {
     { label: 'Location', value: selected_state && selected_country_name ? `${selected_state}, ${selected_country_name}` : (selected_country_name || selected_state || 'N/A') },
     { label: 'Available Quantity', value: `${formatNumberWithCommas(quantity ?? 0)} ${measure || ''}` },
     { label: 'Minimum Order', value: minimum_order_quantity ? `${formatNumberWithCommas(Number(minimum_order_quantity))} ${measure || ''}` : null },
-    { label: 'Fulfilment', value: FULFILMENT[fulfillment_type] },
+    { label: 'Offered From', value: PLACE_LABELS[location_type] },
+    { label: 'Fulfilment', value: FULFILMENT_LABELS[fulfillment_type] },
     { label: 'Payment Terms', value: listOf(selected_payments) },
     { label: 'Payment Details', value: paymentsTermsDescribed },
     { label: 'Shipping Terms', value: listOf(selected_shipping) },

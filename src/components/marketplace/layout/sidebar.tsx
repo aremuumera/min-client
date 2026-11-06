@@ -1,6 +1,7 @@
 
 "use client";
 
+import { PLACE_LABELS } from '@/lib/listings';
 import React, { useEffect, useState } from 'react';
 import { resetFilters, setFilter, setSort } from '@/redux/features/marketplace/marketplace_slice';
 import { useGetPublicMaterialsQuery } from '@/redux/features/listings/listings_api';
@@ -460,6 +461,18 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
             />
           </div>
         )}
+
+        {/* Mine, warehouse... (the kind of site the goods are offered from) */}
+        <div className="mt-6">
+          <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Offered from</h2>
+          <DropdownSelect
+            aria-label="Offered from"
+            value={filters.locationType ?? ''}
+            onValueChange={(value) => dispatch(setFilter({ filterType: 'locationType', value: value || null }))}
+            options={Object.entries(PLACE_LABELS).map(([value, label]) => ({ value, label }))}
+            placeholder="Any site"
+          />
+        </div>
 
         {/* Location Filter */}
         <div className="mt-6">

@@ -14,6 +14,8 @@ interface MarketplaceState {
         rfqsStatus: any;
         location: any;
         materialId: any;
+        /** mine, warehouse... (the kind of site a listing is offered from) */
+        locationType: string | null;
         measure: any;
         quantity: any;
     };
@@ -39,6 +41,7 @@ const initialState: MarketplaceState = {
         rfqsStatus: null,
         location: null,
         materialId: null,
+        locationType: null,
         measure: null,
         quantity: null,
     },

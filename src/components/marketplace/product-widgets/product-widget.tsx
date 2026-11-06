@@ -20,7 +20,9 @@ import LoginModal from '@/utils/login-modal';
 import { FaStar } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '@/redux';
 import { toggleComparison } from '@/redux/features/comparison/comparison-slice';
-import { GitCompare } from 'lucide-react';
+import { BadgeCheck, GitCompare, MapPin, ScrollText, Truck } from 'lucide-react';
+import { Chip } from '@/components/ui/chip';
+import { FULFILMENT_LABELS, PLACE_LABELS } from '@/lib/listings';
 
 // Temporary assets imports - standardizing assets
 // import CE from '/assets/CE_logo.png' // Need to make sure assets exist in public
@@ -74,7 +76,7 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
         transition: "transform 0.5s ease-in-out",
     }
 
-    const { product_name, prev_price, real_price, display_price, country, sold, productRating, delivery_period, reviews, storeProfile, quantity, measure, unitCurrency, images, id } = products || {};
+    const { product_name, prev_price, display_price, productRating, delivery_period, quantity, measure, unitCurrency, id, purity_grade, selected_state, selected_country_name, fulfillment_type, location_type, hasPublishedPassport } = products || {};
 
     const currencySymbol = unitCurrency === 'NGN' || !unitCurrency ? '₦' : (unitCurrency === 'USD' ? '$' : unitCurrency);
 
@@ -100,6 +102,8 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                             {/* images  */}
                             <div>
                                 <div className={`${isGridView ? 'w-full aspect-square md:h-[230px]' : 'w-full sm:max-w-[320px] aspect-[4/3] sm:h-[240px]'} widget_image_container relative h-auto overflow-hidden rounded-xl bg-gray-50 border border-gray-100`}>
+                                    {/* Every seller on the marketplace is a verified business; the name is on the listing page */}
+                                    <Chip size="sm" variant="soft" color="success" icon={<BadgeCheck size={14} />} label="Verified" className="absolute left-2 top-2 z-20 bg-white/90" />
                                     <div className="absolute inset-0 z-0">
                                         {/* Image & Video Carousel */}
                                         <Link href={productCardRoute} className="w-full h-full flex" style={imageContainerStyle}>
@@ -183,6 +187,18 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
                                     )}
                                 </div>
 
+                                {(purity_grade || hasPublishedPassport) && (
+                                    <div className='mt-1 flex flex-wrap items-center gap-2'>
+                                        {purity_grade && (
+                                            <span className='text-[13px]'>
+                                                <span className='text-gray-500 font-medium'>Grade:</span>
+                                                <span className='pl-[5px] text-gray-800'>{purity_grade}</span>
+                                            </span>
+                                        )}
+                                        {hasPublishedPassport && <Chip size="sm" variant="soft" color="primary" icon={<ScrollText size={14} />} label="Passport" title="The stock behind this listing has a published digital passport" />}
+                                    </div>
+                                )}
+
                                 {products.minimum_order_quantity && (
                                     <div className='mt-1 flex items-center'>
                                         <span className='text-[13px] text-gray-500 font-medium'>M.O.Q:</span>
@@ -234,12 +250,13 @@ const ProductWidgets = ({ products }: ProductWidgetsProps) => {
 
                                 </div>
 
-                                <div className="pt-[15px] flex items-center gap-[10px] border-t border-gray-100 mt-2">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    {country?.flagImage && <img src={country.flagImage} alt='Country' className='w-5 h-auto object-contain' />}
-                                    <Link href={`/dashboard/business/${formatCompanyNameForUrl(storeProfile?.company_name)}`} className='text-[13px] text-gray-600 hover:text-green-600 font-medium hover:underline truncate' >
-                                        {storeProfile?.company_name}
-                                    </Link>
+                                {/* How it is handed over, where it is, and what kind of place it is offered from */}
+                                <div className="pt-[12px] flex flex-wrap items-center gap-[6px] border-t border-gray-100 mt-2">
+                                    {fulfillment_type && FULFILMENT_LABELS[fulfillment_type] && <Chip size="sm" variant="outlined" icon={<Truck size={14} />} label={FULFILMENT_LABELS[fulfillment_type]} />}
+                                    {(selected_state || selected_country_name) && (
+                                        <Chip size="sm" variant="outlined" icon={<MapPin size={14} />} label={selected_country_name && selected_country_name !== 'Nigeria' ? [selected_state, selected_country_name].filter(Boolean).join(', ') : selected_state || selected_country_name} />
+                                    )}
+                                    {location_type && PLACE_LABELS[location_type] && <Chip size="sm" variant="outlined" label={PLACE_LABELS[location_type]} />}
                                 </div>
                             </div>
 
