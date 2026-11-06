@@ -36,7 +36,7 @@ describe('chatMatches: the chat search', () => {
     lastMessage: { content: 'Assay attached' },
   };
   it('finds a chat by product, any part of the full ID, alias, status or last message', () => {
-    for (const q of ['columbite', '9b04-6099', 'buyer #1', 'negotiation', 'assay', 'sales', 'nb2o5 columbite']) expect(chatMatches(chat, q)).toBe(true);
+    for (const q of ['in_negotiation', 'In Negotiation', 'columbite', '9b04-6099', 'buyer #1', 'negotiation', 'assay', 'sales', 'nb2o5 columbite']) expect(chatMatches(chat, q)).toBe(true);
   });
   it('needs every word to match, and copes with missing fields', () => {
     expect(chatMatches(chat, 'columbite lithium')).toBe(false);

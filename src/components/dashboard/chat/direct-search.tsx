@@ -37,6 +37,8 @@ function searchTextOf(thread: SearchableChat): string {
     thread?.aliasText,
     thread?.roleTag,
     m.status,
+    m.current_stage_slug,
+    m.current_sub_status,
     m.mineral_tag,
     m.inquiry_id,
     m.rfq_offer_id,
@@ -45,12 +47,14 @@ function searchTextOf(thread: SearchableChat): string {
   ]
     .filter((v) => typeof v === 'string' && v)
     .join(' \u0001 ')
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[_]+/g, ' ');
 }
 
 /** Does the chat match every word typed (in any order)? */
 export function chatMatches(thread: SearchableChat, query: string): boolean {
-  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  // "in_transit", "in transit" and "In Transit" are the same search
+  const words = query.trim().toLowerCase().replace(/[_]+/g, ' ').split(/\s+/).filter(Boolean);
   if (!words.length) return true;
   const text = searchTextOf(thread);
   return words.every((w) => text.includes(w));
