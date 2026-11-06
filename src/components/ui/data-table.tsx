@@ -64,7 +64,8 @@ export function DataTable<T>({ columns, rows, getRowId, onRowClick, selectedId, 
   const subtitle = columns.filter((c) => c.mobile === 'subtitle');
   const fields = columns.filter((c) => c !== title && c.mobile !== 'subtitle' && c.mobile !== 'hidden');
   const activate = (row: T) => (e: React.KeyboardEvent) => {
-    if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
+    // only when the row itself has focus: Enter on a button inside the row is that button's
+    if (onRowClick && e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       onRowClick(row);
     }
@@ -140,9 +141,10 @@ export function DataTable<T>({ columns, rows, getRowId, onRowClick, selectedId, 
           return (
             <li key={id} className={cn(selectedId === id && 'bg-brand-green-soft')}>
               {onRowClick ? (
-                <button type="button" onClick={() => onRowClick(row)} className="block min-h-11 w-full px-4 py-3 text-left active:bg-surface">
+                // not a <button>: a card may hold its own buttons (remove, a row menu), and buttons can't nest
+                <div role="button" tabIndex={0} onClick={() => onRowClick(row)} onKeyDown={activate(row)} className="block min-h-11 w-full cursor-pointer px-4 py-3 text-left active:bg-surface focus-visible:bg-surface">
                   {Body}
-                </button>
+                </div>
               ) : (
                 <div className="px-4 py-3">{Body}</div>
               )}
