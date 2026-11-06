@@ -18,7 +18,7 @@ export const teamRoleLabel = (role: string | null | undefined) => TEAM_ROLE_OPTI
 
 /** The 16 keys by area, for the picker (every key appears once) */
 export const TEAM_PERMISSION_GROUPS: { area: string; keys: TeamPermission[] }[] = [
-  { area: 'Trading', keys: ['products', 'rfq', 'enquiries', 'chat', 'invoices', 'inspectors'] },
+  { area: 'Trading', keys: ['products', 'rfq', 'enquiries', 'chat', 'invoices', 'wallet', 'inspectors'] },
   { area: 'Supply chain', keys: ['inventory', 'shipments', 'traceability', 'passports', 'esg', 'documents'] },
   { area: 'Account', keys: ['analytics', 'activity', 'settings', 'team_management'] },
 ];
@@ -50,6 +50,12 @@ export function memberLockReason(actor: Actor, meId: string | null | undefined, 
   return beyond.length ? `They have access you don't (${beyond.map(teamPermissionLabel).join(', ')}). Ask the account owner.` : null;
 }
 
+/** Menu areas open to every owner; a team member needs one of the keys (saved items: the backend's check-status / toggle rule) */
+export const AREA_KEYS: Record<string, TeamPermission[]> = {
+  savedItems: ['products', 'rfq', 'enquiries'],
+  inspectionsHub: ['inspectors'],
+};
+
 /**
  * May the actor open a menu area (a team key)? Team members: only the keys they were given.
  * Owners: products needs a supplier role, rfq a buyer role, inspectors the inspector role
@@ -59,6 +65,9 @@ export function canOpenArea(actor: Actor, key: string | undefined): boolean {
   if (!key) return true;
   // Batches: only supply companies own them, and a team member also needs the inventory key
   if (key === 'batches') return actor.isStaff || ((actor.role === 'supplier' || actor.role === 'buyer_supplier') && (!actor.isTeamMember || actor.teamKeys.includes('inventory')));
+  // Areas every company owner has, which a team member opens with one of these keys (the backend's rules)
+  const memberNeeds = AREA_KEYS[key];
+  if (memberNeeds) return !actor.isTeamMember || memberNeeds.some((k) => actor.teamKeys.includes(k));
   if (actor.isTeamMember) return actor.teamKeys.includes(key);
   if (actor.isStaff) return true;
   const r = actor.role;

@@ -11,7 +11,7 @@ import { actionsFor, asList, canBackListing, categoryPathOf, formatMoney, isNonM
 import { useGetBatchesQuery } from '@/redux/features/batches/batches_api';
 import { useAddListingBatchMutation, useChangeListingStatusMutation, useGetListingAvailabilityQuery, useGetListingBatchesQuery, useGetListingQuery, useRemoveListingBatchMutation, useSetListingBatchStatusMutation } from '@/redux/features/listings/listings_api';
 
-const ACTION_WORDS: Record<ListingAction, { button: string; title: string; description: string; tone?: 'error' }> = {
+export const ACTION_WORDS: Record<ListingAction, { button: string; title: string; description: string; tone?: 'error' }> = {
   publish: { button: 'Publish', title: 'Publish', description: 'Buyers will be able to see it and send inquiries. It needs stock behind it.' },
   pause: { button: 'Pause', title: 'Pause', description: "Buyers won't see it for now. Its batches stay linked." },
   close: { button: 'Close', title: 'Close', description: 'Buyers stop seeing it and its batches are freed for another listing. The stock itself is untouched, and you can relist it later.', tone: 'error' },
@@ -150,9 +150,15 @@ export function ListingDetailSheet({
   ownerNode,
   ownerFilter,
   extra,
+  startTab,
+  startAction,
   onClose,
 }: {
   listingId: string | null;
+  /** Open on this tab (the row menu's "Add a batch" opens Stock) */
+  startTab?: 'details' | 'stock';
+  /** Open straight on this action's confirm step (the row menu) */
+  startAction?: ListingAction | null;
   can: ListingPermissions;
   editHref: (listing: Listing) => string;
   ownerNode?: (listing: Listing) => React.ReactNode;
@@ -165,7 +171,10 @@ export function ListingDetailSheet({
   const [change, changeState] = useChangeListingStatusMutation();
   const [tab, setTab] = React.useState('details');
   const [action, setAction] = React.useState<ListingAction | null>(null);
-  React.useEffect(() => setTab('details'), [listingId]);
+  React.useEffect(() => {
+    setTab(startTab ?? 'details');
+    setAction(startAction ?? null);
+  }, [listingId, startTab, startAction]);
   if (!listingId) return null;
   const l = detail.data?.data;
   const nonMineral = isNonMineral(l);

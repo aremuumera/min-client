@@ -14,6 +14,7 @@ import {
   type TeamPermission,
   type TeamRole,
 } from '@/lib/permissions';
+import { pagesFor } from '@/lib/permissions/team-pages';
 import { useInviteTeamMemberMutation, useUpdateTeamMemberMutation, type TeamMember } from '@/redux/features/team/teamApi';
 
 export interface TeamMemberSheetProps {
@@ -187,7 +188,7 @@ export function TeamMemberSheet({ open, member, lockReason, onClose }: TeamMembe
                       <li key={k} className="flex min-h-11 items-center px-3 py-2">
                         <Checkbox
                           label={TEAM_PERMISSIONS[k]}
-                          description={allowed.includes(k) ? undefined : "You don't have this access"}
+                          description={[pagesFor(k).length ? `Opens: ${pagesFor(k).join(', ')}` : 'No menu page of its own; used inside other pages', allowed.includes(k) ? '' : "You don't have this access"].filter(Boolean).join('. ')}
                           checked={keys.includes(k)}
                           disabled={readOnly || !allowed.includes(k)}
                           onChange={() => toggle(k)}

@@ -13,7 +13,7 @@ export interface NavItemConfig {
   badge?: string;
   matcher?: { type: "startsWith" | "equals"; href: string };
   items?: NavItemConfig[];
-  permission?: PermissionKey | 'batches';
+  permission?: PermissionKey | 'batches' | 'savedItems' | 'inspectionsHub';
 }
 
 export interface DashboardConfig {
@@ -54,6 +54,7 @@ export const dashboardConfig: DashboardConfig = {
           href: paths.dashboard.wallet,
           icon: "wallet",
           badge: "Coming Soon",
+          permission: "wallet",
         },
         {
           key: "marketplace",
@@ -214,6 +215,7 @@ export const dashboardConfig: DashboardConfig = {
           title: "Inspections Hub",
           href: "/dashboard/inspections",
           icon: "receipt-long",
+          permission: "inspectionsHub",
         },
       ],
     },
@@ -305,7 +307,7 @@ export const dashboardConfig: DashboardConfig = {
           title: "Tools",
           icon: "kanban",
           items: [
-            { key: "Wishlist", title: "Saved items", href: paths.dashboard.savedProducts },
+            { key: "Wishlist", title: "Saved items", href: paths.dashboard.savedProducts, permission: "savedItems" },
             { key: "calculator", title: "Calculator", href: paths.dashboard.calculator },
             { key: "activity-log", title: "Activity Log", href: paths.dashboard.activity, permission: "activity" },
           ],

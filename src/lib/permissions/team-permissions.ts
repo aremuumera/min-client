@@ -21,6 +21,7 @@ export const TEAM_PERMISSIONS = {
   passports: 'Passports, certificates, compliance & proofs',
   esg: 'ESG & carbon assessments',
   documents: 'Document vault, evidence & sharing',
+  wallet: 'Wallet & payouts',
 } as const;
 
 export type TeamPermission = keyof typeof TEAM_PERMISSIONS;

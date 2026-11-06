@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { Package, Plus } from 'lucide-react';
 import { Button, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge, Thumbnail } from '@/components/ui';
 import { ListingDetailSheet, type ListingPermissions } from '@/components/listings/listing-detail-sheet';
+import { ListingRowMenu } from '@/components/listings/listing-row-menu';
 import { paths } from '@/config/paths';
 import { toApiError } from '@/lib/api/errors';
 import { formatQuantity } from '@/lib/batches';
 import { formatDate } from '@/lib/format';
 import { listingsHelp } from '@/lib/help/listings';
-import { LISTING_STATUSES, categoryPathOf, formatMoney, isNonMineral, listingStatusLabel, listingStatusTone, type Listing } from '@/lib/listings';
+import { LISTING_STATUSES, categoryPathOf, formatMoney, isNonMineral, listingStatusLabel, listingStatusTone, type Listing, type ListingAction } from '@/lib/listings';
 import { RequireAccess } from '@/lib/permissions';
 import { useGetListingsQuery, useGetMarketplaceMaterialsQuery } from '@/redux/features/listings/listings_api';
 
@@ -37,6 +38,12 @@ function ListingsPage() {
   const list = useGetListingsQuery({ mine: true, page, limit, search: debounced, status, materialId });
   const materials = useGetMarketplaceMaterialsQuery();
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  // the row menu opens the panel on a tab or straight on an action's confirm step
+  const [start, setStart] = React.useState<{ tab?: 'details' | 'stock'; action?: ListingAction | null }>({});
+  const open = (id: string, how: { tab?: 'details' | 'stock'; action?: ListingAction | null } = {}) => {
+    setStart(how);
+    setSelectedId(id);
+  };
   const filterCount = [status, materialId].filter(Boolean).length;
   const materialName = (id: string | null) => materials.data?.data.find((m) => m.id === id)?.name ?? '—';
 
@@ -77,7 +84,7 @@ function ListingsPage() {
             : { title: 'No listings yet', description: 'Create a listing to offer your stock to buyers.', action: <Link href={paths.dashboard.products.create}><Button>New listing</Button></Link> }
         }
         getRowId={(r) => r.id}
-        onRowClick={(r) => setSelectedId(r.id)}
+        onRowClick={(r) => open(r.id)}
         selectedId={selectedId}
         columns={[
           {
@@ -101,6 +108,7 @@ function ListingsPage() {
           { key: 'price', header: 'Price', cell: (r) => formatMoney(r.real_price, r.unitCurrency) },
           { key: 'status', header: 'Status', cell: (r) => <StatusBadge tone={listingStatusTone(r.status)}>{listingStatusLabel(r.status)}</StatusBadge> },
           { key: 'changed', header: 'Last changed', cell: (r) => formatDate(r.updatedAt) },
+          { key: 'actions', header: <span className="sr-only">Actions</span>, className: 'w-12', cell: (r) => <ListingRowMenu listing={r} editHref={paths.dashboard.products.update(r.id) ?? ''} onAction={(action) => open(r.id, { action })} onAddBatch={() => open(r.id, { tab: 'stock' })} /> },
         ]}
       />
       <PaginationBar
@@ -113,7 +121,10 @@ function ListingsPage() {
           setPage(1);
         }}
       />
-      <ListingDetailSheet listingId={selectedId} can={OWNER_ACCESS} editHref={(l) => paths.dashboard.products.update(l.id) ?? ''} onClose={() => setSelectedId(null)} />
+      <ListingDetailSheet listingId={selectedId} startTab={start.tab} startAction={start.action} can={OWNER_ACCESS} editHref={(l) => paths.dashboard.products.update(l.id) ?? ''} onClose={() => {
+          setSelectedId(null);
+          setStart({});
+        }} />
     </div>
   );
 }
