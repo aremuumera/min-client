@@ -43,7 +43,6 @@ export function ThreadToolbar({ thread }: any) {
     : 'bg-emerald-50 text-emerald-800 border-emerald-200';
 
   const fullTradeId = activeCycle?.reference || activeCycle?.id || thread?.metadata?.inquiry_id || '...';
-  const refCode = String(fullTradeId).slice(-6).toUpperCase();
 
   const handleCopyId = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,10 +106,10 @@ export function ThreadToolbar({ thread }: any) {
                 <Menu
                   trigger={
                     <button
-                      className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors shrink-0 whitespace-nowrap"
+                      className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors min-w-0"
                       title="Trade Ref ID (Click to copy / switch)"
                     >
-                      <span>REF: #{refCode}</span>
+                      <span className="break-all text-left">Ref: {String(fullTradeId)}</span>
                       <span onClick={handleCopyId} className="hover:text-emerald-700 p-0.5">
                         {copied ? <Check size={10} className="text-emerald-600" /> : <Copy size={10} className="text-gray-400" />}
                       </span>
@@ -141,10 +140,10 @@ export function ThreadToolbar({ thread }: any) {
               ) : (
                 <button
                   onClick={handleCopyId}
-                  className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors shrink-0 whitespace-nowrap"
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors min-w-0"
                   title="Click to copy Trade Ref ID"
                 >
-                  <span>REF: #{refCode}</span>
+                  <span className="break-all text-left">Ref: {String(fullTradeId)}</span>
                   {copied ? <Check size={10} className="text-emerald-600" /> : <Copy size={10} className="text-gray-400" />}
                 </button>
               )}

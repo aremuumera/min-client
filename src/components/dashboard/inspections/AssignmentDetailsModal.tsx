@@ -30,7 +30,6 @@ interface AssignmentDetailsModalProps {
 export function CopyableId({ id, className = "" }: { id: string; className?: string }) {
     const [copied, setCopied] = React.useState(false);
     if (!id) return null;
-    const shortDisplay = id.length > 8 ? `${id.substring(0, 8)}...` : id;
 
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -46,7 +45,7 @@ export function CopyableId({ id, className = "" }: { id: string; className?: str
             title={`Click to copy full ID: ${id}`}
             className={`inline-flex items-center gap-1 font-mono text-[10px] font-bold text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded cursor-pointer transition-colors ${className}`}
         >
-            <span>#{shortDisplay}</span>
+            <span className="break-all">{id}</span>
             {copied ? (
                 <Check size={11} className="text-green-600 shrink-0" />
             ) : (

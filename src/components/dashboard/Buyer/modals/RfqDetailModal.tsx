@@ -88,7 +88,7 @@ const RfqDetailModal: React.FC<RfqDetailModalProps> = ({ isOpen, onClose, rfq })
                         </h2>
                         <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                             <span className="flex items-center gap-1 font-mono bg-gray-100 px-1.5 py-0.5 rounded">
-                                <Hash size={12} /> {rfq.rfqId?.substring(0, 8).toUpperCase()}
+                                <Hash size={12} className="shrink-0" /> <span className="break-all">{rfq.rfqId}</span>
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">

@@ -135,8 +135,8 @@ export function TradeActivityTimeline({ inquiryId }: TradeActivityTimelineProps)
                     <span>{isExpanded ? 'Hide Payload' : 'View Payload & Details'}</span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
-                  <span className="text-[10px] font-mono text-gray-400">
-                    ID: {item.id ? String(item.id).substring(0, 8).toUpperCase() : 'LOG'}
+                  <span className="break-all text-[10px] font-mono text-gray-400">
+                    {item.id ? `ID: ${String(item.id)}` : null}
                   </span>
                 </div>
 

@@ -801,7 +801,7 @@ export const customerTradeChatService = {
               otherUserId: "admin",
               otherUserName: "Min-meg Trade Desk",
               otherCompanyName: "Platform Admin",
-              tradeRef: data.trade_ref || `TRM-${tradeId}`,
+              tradeRef: data.trade_ref || tradeId,
               aliasText: aliasText,
               roleTag: roleTag,
               avatarText: avatarText,
