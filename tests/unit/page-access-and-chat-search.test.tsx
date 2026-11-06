@@ -14,6 +14,10 @@ describe('pagePermission: the menu key that guards an address', () => {
     expect(pagePermission('/dashboard/inspections/workbench/abc')).toBe('inspectionsHub');
     expect(pagePermission('/dashboard/inspections/analytics')).toBe('inspectors');
   });
+  it('uses the backend key for pages whose menu key was wrong', () => {
+    expect(pagePermission('/dashboard/received-inquiries')).toBe('enquiries');
+    expect(pagePermission('/dashboard/my-submitted-offers')).toBe('submittedOffers');
+  });
   it('leaves pages with no menu key open, and share links always open', () => {
     expect(pagePermission('/dashboard/overview')).toBeUndefined();
     expect(pagePermission('/dashboard/notifications')).toBeUndefined();

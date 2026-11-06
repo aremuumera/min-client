@@ -13,7 +13,7 @@ export interface NavItemConfig {
   badge?: string;
   matcher?: { type: "startsWith" | "equals"; href: string };
   items?: NavItemConfig[];
-  permission?: PermissionKey | 'batches' | 'savedItems' | 'inspectionsHub';
+  permission?: PermissionKey | 'batches' | 'savedItems' | 'inspectionsHub' | 'submittedOffers';
 }
 
 export interface DashboardConfig {
@@ -74,7 +74,7 @@ export const dashboardConfig: DashboardConfig = {
           key: "supplier",
           title: "Supplier",
           icon: "shopping-bag-open",
-          permission: "products",
+          // no key on the folder: each page carries the backend's key (received inquiries need "enquiries")
           items: [
             {
               key: "products:create",
@@ -98,7 +98,7 @@ export const dashboardConfig: DashboardConfig = {
               key: "supplier-trade-inquiries",
               title: "Order Inquiries received",
               href: paths.dashboard.products.receivedInquiries,
-              permission: "products",
+              permission: "enquiries",
             },
             {
               key: "supplier-company-profile",
@@ -152,7 +152,7 @@ export const dashboardConfig: DashboardConfig = {
           key: "rfq-submitted-offers",
           title: "My Submitted Offers",
           href: paths.dashboard.rfqs.submittedOffers,
-          permission: "products",
+          permission: "submittedOffers",
           icon: "receipt-long",
         },
       ],

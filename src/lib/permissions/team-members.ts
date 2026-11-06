@@ -54,6 +54,8 @@ export function memberLockReason(actor: Actor, meId: string | null | undefined, 
 export const AREA_KEYS: Record<string, TeamPermission[]> = {
   savedItems: ['products', 'rfq', 'enquiries'],
   inspectionsHub: ['inspectors'],
+  // a supplier's offers on buyers' RFQs: the backend's /rfq routes need the rfq key (owners: the menu shows it to supply companies)
+  submittedOffers: ['rfq'],
 };
 
 /**
