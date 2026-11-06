@@ -9,7 +9,8 @@ import { CATEGORY_TEXT, needsAck, PRIORITY_TEXT } from '@/lib/notifications';
 import { useGetInboxQuery, useReadAllMutation } from '@/redux/features/notifications/notifications_api';
 
 /* Notifications (step 2.13a, decision #113): the company's inbox. Chat messages stay with the chat. */
-const CATEGORIES = Object.entries(CATEGORY_TEXT).map(([value, label]) => ({ value, label }));
+// CHAT is a settings topic only (chat message emails); no inbox notice has it
+const CATEGORIES = Object.entries(CATEGORY_TEXT).filter(([value]) => value !== 'CHAT').map(([value, label]) => ({ value, label }));
 const PRIORITIES = (['CRITICAL', 'HIGH', 'NORMAL'] as const).map((p) => ({ value: p, label: PRIORITY_TEXT[p] }));
 
 export default function NotificationsPage() {

@@ -59,6 +59,8 @@ export const CATEGORY_TEXT: Record<string, string> = {
   DEVICE: 'Devices',
   BLOCKCHAIN: 'Blockchain',
   SYSTEM: 'MINMEG',
+  // emails about new trade chat messages (settings only: chat messages show on the chat icon, not in the inbox)
+  CHAT: 'Chat messages',
 };
 export const PRIORITY_TEXT: Record<Priority, string> = { LOW: 'Low', NORMAL: 'Normal', HIGH: 'Important', CRITICAL: 'Critical' };
 export const priorityTone = (p: Priority): BadgeTone => (p === 'CRITICAL' ? 'error' : p === 'HIGH' ? 'warning' : 'neutral');
