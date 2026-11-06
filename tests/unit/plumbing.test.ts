@@ -50,8 +50,8 @@ describe('can()', () => {
     expect(can(member('supplier', ['products']), { teamKey: 'inventory' })).toBe(false);
     expect(can(member('buyer', ['inventory']), { role: 'supplier', teamKey: 'inventory' })).toBe(false);
   });
-  it('the catalogue mirrors the backend: 16 keys; presets only use known keys', () => {
-    expect(TEAM_PERMISSION_KEYS).toHaveLength(16);
+  it('the catalogue mirrors the backend: 17 keys (wallet added 2026-11-06); presets only use known keys', () => {
+    expect(TEAM_PERMISSION_KEYS).toHaveLength(17);
     for (const keys of Object.values(TEAM_ROLE_PRESETS)) for (const k of keys) expect(TEAM_PERMISSION_KEYS).toContain(k);
   });
 });

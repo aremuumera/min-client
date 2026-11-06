@@ -10,6 +10,8 @@ import { cn } from '@/utils/helper';
 import { usePathname } from '@/hooks/use-pathname';
 import { useBreakpoint } from '@/lib/ui/use-breakpoint';
 import { canOpenArea, useActor } from '@/lib/permissions';
+import { pagePermission } from '@/lib/permissions/page-access';
+import { NoAccess } from '@/components/ui/states';
 
 interface VerticalLayoutProps {
     children: React.ReactNode;
@@ -55,6 +57,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const hasPermission = React.useCallback((permission?: string) => canOpenArea(actor, permission), [actor]);
 
     const filterNavItems = React.useCallback((items: NavItemConfig[]) => visibleNavItems(items, hasPermission), [hasPermission]);
+    // A team member who types the address of a page their menu hides gets "no access", not a page of refused calls
+    const pageClosed = actor.isTeamMember && !hasPermission(pagePermission(pathname));
 
     const finalItems = React.useMemo(() => {
         let items = dashboardConfig.navItems;
@@ -196,7 +200,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                         pathname?.includes('/dashboard/products') || pathname?.includes('/dashboard/rfqs') || pathname?.includes('/dashboard/chat') ? "p-0 max-w-none" : "",
                         pathname?.includes('/dashboard/chat') ? "h-[calc(100vh-64px)]" : ""
                     )}>
-                        {children}
+                        {pageClosed ? <NoAccess /> : children}
                     </div>
                 </main>
             </div>
