@@ -4,7 +4,7 @@
 import React from 'react';
 import { MainNav } from './main-nav';
 import { SideNav } from './side-nav';
-import { dashboardConfig } from '@/config/dashboard-config';
+import { dashboardConfig, type NavItemConfig } from '@/config/dashboard-config';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { cn } from '@/utils/helper';
 import { usePathname } from '@/hooks/use-pathname';
@@ -13,6 +13,16 @@ import { canOpenArea, useActor } from '@/lib/permissions';
 
 interface VerticalLayoutProps {
     children: React.ReactNode;
+}
+
+/** The menu items the user may open; a folder whose pages are all closed to them is hidden */
+function visibleNavItems(items: NavItemConfig[], canOpen: (permission?: string) => boolean): NavItemConfig[] {
+    return items.flatMap((item) => {
+        if (!canOpen(item.permission)) return [];
+        if (!item.items) return [item];
+        const children = visibleNavItems(item.items, canOpen);
+        return children.length > 0 ? [{ ...item, items: children }] : [];
+    });
 }
 
 export function DynamicLayout({ children }: VerticalLayoutProps) {
@@ -44,46 +54,7 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
     const actor = useActor();
     const hasPermission = React.useCallback((permission?: string) => canOpenArea(actor, permission), [actor]);
 
-    // Recursive filtering function
-    const filterNavItems = React.useCallback((items: any[]) => {
-        return items.reduce((acc: any[], item: any) => {
-            // 1. Check item's own permission
-            if (!hasPermission(item.permission)) {
-                return acc;
-            }
-
-            // 2. If item has children, filter them
-            if (item.items) {
-                const filteredChildren = filterNavItems(item.items);
-
-                // If children were filtered out completely, and it was a specific group 
-                // that depends on children (like "Supplier" group), maybe hide it?
-                // But for now, just update the items.
-                // If this is a Section (top level), we want to keep it even if empty or handle it in UI?
-                // userRole logic below handles top level sections somewhat.
-
-                // For now, simple recursion:
-                if (filteredChildren.length > 0 || !item.items.length) { // keep if it had no items originally or has remaining items
-                    acc.push({ ...item, items: filteredChildren });
-                } else {
-                    // If all children removed, should we remove parent? 
-                    // Case: "Supplier" -> "Create", "List". If both denied, "Supplier" parent should probably go.
-                    // Let's assume yes for non-top-level items (sections).
-                    // Top level items in dashboardConfig are "Sections" (DASHBOARD, PRODUCT, etc)
-                    // They usually verify permission on the section itself implicitly.
-                    // But dashboard-config structure: navItems = [Section1, Section2...]
-                    // Section1 has `items: [...]`. 
-                    // So we are filtering the Section's items.
-
-                    // Actually, let's just assign filteredChildren.
-                    acc.push({ ...item, items: filteredChildren });
-                }
-            } else {
-                acc.push(item);
-            }
-            return acc;
-        }, []);
-    }, [hasPermission]);
+    const filterNavItems = React.useCallback((items: NavItemConfig[]) => visibleNavItems(items, hasPermission), [hasPermission]);
 
     const finalItems = React.useMemo(() => {
         let items = dashboardConfig.navItems;
@@ -94,26 +65,16 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
 
         // 1. Role-based sub-item filtering
         items = items.map((section) => {
-            // Role upgrade CTA customization in 'general' section
+            // Role upgrade link (inside the Settings folder): hidden for dual-role users, named for the role the user lacks
             if (section.key === 'general') {
-                if (isDualRole) {
-                    // Hide role upgrade CTA for dual-role users who already have both capabilities
-                    return {
-                        ...section,
-                        items: section.items?.filter((subItem) => subItem.key !== 'becomeasupplier'),
-                    };
-                }
                 return {
                     ...section,
-                    items: section.items?.map((subItem) => {
-                        if (subItem.key === 'becomeasupplier') {
-                            return {
-                                ...subItem,
-                                title: isSupplierOnly ? 'Become a Buyer' : 'Become a Supplier',
-                            };
-                        }
-                        return subItem;
-                    }),
+                    items: section.items?.map((item) => (item.key !== 'settings' ? item : {
+                        ...item,
+                        items: isDualRole
+                            ? item.items?.filter((child) => child.key !== 'becomeasupplier')
+                            : item.items?.map((child) => (child.key === 'becomeasupplier' ? { ...child, title: isSupplierOnly ? 'Become a Buyer' : 'Become a Supplier' } : child)),
+                    })),
                 };
             }
 
@@ -165,7 +126,9 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                     if (section.key === 'general') {
                         return {
                             ...section,
-                            items: section.items?.filter(item => ['chat', 'settings'].includes(item.key))
+                            items: section.items
+                                ?.filter(item => ['chat', 'settings'].includes(item.key))
+                                .map(item => (item.key === 'settings' ? { ...item, items: item.items?.filter(child => child.key !== 'becomeasupplier') } : item))
                         };
                     }
                     return section;
