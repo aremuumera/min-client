@@ -1,158 +1,90 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Avatar,
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Stack,
-  Typography,
-  Input as OutlinedInput,
-  Box
-} from '@/components/ui';
+import { Input } from '@/components/ui';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
-import { generateTextAvatar, stringToColor } from '@/utils/chat-utils';
+import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 
-interface ContactResult {
-  id: string;
-  itemType: string;
-  conversationId: string;
-  itemId: string;
-  otherUserName: string;
+/*
+ * The chat search (owner's question, 2026-11-06): it filters the company's own trade chats already loaded
+ * in the list, as you type. Nothing is sent to a server. Trade chat is hub and spoke, so every chat is with
+ * the MINMEG trade desk and searching "users" found nothing useful; it now matches what tells chats apart.
+ */
+
+/** The fields of a chat in the list the search reads (trade_chat_service builds them) */
+export interface SearchableChat {
+  itemTitle?: string;
+  itemType?: string;
+  conversationId?: string;
+  itemId?: string;
+  tradeRef?: string;
+  aliasText?: string;
+  roleTag?: string;
+  lastMessage?: string | { content?: string } | null;
+  metadata?: Record<string, unknown> | null;
 }
 
-interface DirectSearchProps {
-  isFocused?: boolean;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onClickAway?: () => void;
-  onFocus?: () => void;
-  onSelect?: (itemType: string, conversationId: string, itemId: string) => void;
-  query?: string;
-  results?: ContactResult[];
+/** The words a chat can be found by: product or mineral, exact trade / room / inquiry IDs, alias, status, purchase or sale, last message */
+function searchTextOf(thread: SearchableChat): string {
+  const m = thread?.metadata ?? {};
+  const last = typeof thread?.lastMessage === 'string' ? thread.lastMessage : thread?.lastMessage?.content;
+  return [
+    thread?.itemTitle,
+    thread?.itemType,
+    thread?.conversationId,
+    thread?.itemId,
+    thread?.tradeRef,
+    thread?.aliasText,
+    thread?.roleTag,
+    m.status,
+    m.mineral_tag,
+    m.inquiry_id,
+    m.rfq_offer_id,
+    m.trade_ref,
+    last,
+  ]
+    .filter((v) => typeof v === 'string' && v)
+    .join(' \u0001 ')
+    .toLowerCase();
 }
 
-// Simple ClickAwayListener replacement if needed, or just remove for now
-const ClickAwayListener = ({ children, onClickAway }: { children: React.ReactNode; onClickAway: () => void }) => {
-  const ref = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClickAway();
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [onClickAway]);
-  return <div ref={ref}>{children}</div>;
-};
+/** Does the chat match every word typed (in any order)? */
+export function chatMatches(thread: SearchableChat, query: string): boolean {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const text = searchTextOf(thread);
+  return words.every((w) => text.includes(w));
+}
 
-// Simple ListItemButton replacement
-const ListItemButton = ({ children, onClick, ...props }: { children: React.ReactNode; onClick?: () => void }) => (
-  <div
-    className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
-    onClick={onClick}
-    {...props}
-  >
-    {children}
-  </div>
-);
+interface ChatSearchProps {
+  query: string;
+  onQueryChange: (query: string) => void;
+}
 
-export const DirectSearch = React.forwardRef<HTMLDivElement, DirectSearchProps>(function ChatSidebarSearch(
-  {
-    isFocused,
-    onChange,
-    onClickAway = () => {
-      // noop
-    },
-    onFocus,
-    onSelect,
-    query = '',
-    results = [],
-  },
-  ref
-) {
-  const handleSelect = React.useCallback(
-    (itemType: string, conversationId: string, itemId: string) => {
-      onSelect?.(itemType, conversationId, itemId);
-    },
-    [onSelect]
-  );
-
-  const showTip = isFocused && !query;
-  const showResults = isFocused && query;
-  const hasResults = results.length > 0;
-
+export function DirectSearch({ query, onQueryChange }: ChatSearchProps) {
   return (
-    <ClickAwayListener onClickAway={onClickAway}>
-      <Stack ref={ref} spacing={2} className='mr-2 pt-2'
-        tabIndex={-1}>
-        <OutlinedInput
-          onChange={onChange}
-          onFocus={onFocus}
-          placeholder="Search users"
-          startAdornment={
-            <InputAdornment position="start">
-              <MagnifyingGlassIcon fontSize="var(--icon-fontSize-md)" />
-            </InputAdornment>
+    <div className="mr-2 pt-2">
+      <Input
+        type="search"
+        aria-label="Search your chats"
+        placeholder="Search product, trade ID, status"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape' && query) {
+            e.stopPropagation();
+            onQueryChange('');
           }
-          value={query}
-        />
-        {showTip ? <p className="text-sm text-gray-500 mt-2 ml-2 bg-white p-2 rounded-lg">
-          Enter a user name
-        </p> : null}
-        {showResults ? (
-          <React.Fragment>
-            {hasResults ? (
-              <Stack spacing={1}>
-                <Typography color="text.secondary" variant="subtitle2">
-                  {results.length} {results.length > 1 ? 'users' : 'user'} found
-                </Typography>
-                <List disablePadding>
-                  {results.map((contact) => (
-                    <ListItem disablePadding key={contact.id}>
-                      <ListItemButton
-                        onClick={() => {
-                          handleSelect(contact?.itemType, contact?.conversationId, contact?.itemId);
-                        }}
-                      >
-                        <Avatar
-                          style={{
-                            backgroundColor: stringToColor(contact?.otherUserName || ''),
-                            height: '36px',
-                            width: '36px',
-                            fontSize: 'var(--fontSize-sm)',
-                          }}
-                        >
-                          {generateTextAvatar(contact?.otherUserName)}
-                        </Avatar>
-                        <ListItemText
-                          primary={
-                            <Typography noWrap variant="subtitle2">
-                              {contact.otherUserName}
-                            </Typography>
-                          }
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  ))}
-                </List>
-              </Stack>
-            ) : (
-              <div>
-                <Typography color="text.secondary" variant="body2">
-                  We couldn&apos;t find any matches for &quot;{query}&quot;. Try checking for typos or using complete
-                  words.
-                </Typography>
-              </div>
-            )}
-          </React.Fragment>
-        ) : null}
-      </Stack>
-    </ClickAwayListener>
+        }}
+        startAdornment={<MagnifyingGlassIcon fontSize="var(--icon-fontSize-md)" />}
+        endAdornment={
+          query ? (
+            <button type="button" aria-label="Clear the search" className="flex items-center text-neutral-500 hover:text-neutral-800" onClick={() => onQueryChange('')}>
+              <XIcon size={14} />
+            </button>
+          ) : null
+        }
+      />
+    </div>
   );
-});
-
-DirectSearch.displayName = 'DirectSearch';
+}

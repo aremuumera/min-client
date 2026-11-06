@@ -9,7 +9,7 @@ import { ChatTeardropText } from '@phosphor-icons/react/dist/ssr/ChatTeardropTex
 
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-import { DirectSearch } from './direct-search';
+import { DirectSearch, chatMatches } from './direct-search';
 import { ThreadItem } from './thread-item';
 import { ConversationTypeFilter } from './type_filter';
 import Link from 'next/link';
@@ -98,9 +98,7 @@ function SidebarContent({
 }) {
   // If you want to persist the search states, you can move it to the Sidebar component or a context.
   // Otherwise, the search states will be reset when the window size changes between mobile and desktop.
-  const [searchFocused, setSearchFocused] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState([]);
   const [selectedType, setSelectedType] = React.useState('all');
 
   // Auto-set filter based on current conversation
@@ -160,66 +158,11 @@ function SidebarContent({
       });
     }
 
-    // Apply search filter if active
-    if (searchFocused && searchQuery) {
-      result = result.filter((contact: any) => {
-        return (
-          contact.itemTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          contact.otherUserName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          contact.itemType?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      });
-    }
+    // The search: product, trade ID, alias, status, last message (direct-search.tsx)
+    if (searchQuery.trim()) result = result.filter((thread: any) => chatMatches(thread, searchQuery));
 
     return result;
-  }, [conversations, selectedType, searchFocused, searchQuery]);
-
-  const typeShit = ['product', 'rfq', 'business', 'admin'];
-
-  const handleSearchChange = React.useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { value } = event.target;
-
-      setSearchQuery(value);
-
-      if (!value) {
-        setSearchResults([]);
-        return;
-      }
-
-      const results = conversations.filter((contact: any) => {
-        return (
-          contact.itemTitle.toLowerCase().includes(value.toLowerCase()) ||
-          contact.otherUserName.toLowerCase().includes(value.toLowerCase()) ||
-          contact.itemType.toLowerCase().includes(value.toLowerCase())
-        );
-      });
-
-      setSearchResults(results as any);
-    },
-    [conversations]
-  );
-
-  const handleSearchClickAway = React.useCallback(() => {
-    if (searchFocused) {
-      setSearchFocused(false);
-      setSearchQuery('');
-    }
-  }, [searchFocused]);
-
-  const handleSearchFocus = React.useCallback(() => {
-    setSearchFocused(true);
-  }, []);
-
-  const handleSearchSelect = React.useCallback(
-    (contact: any) => {
-      onSelectContact?.(contact.id);
-
-      setSearchFocused(false);
-      setSearchQuery('');
-    },
-    [onSelectContact]
-  );
+  }, [conversations, selectedType, searchQuery]);
 
   const handleThreadSelect = React.useCallback(
     (threadType: any, threadId: any, itemId: any) => {
@@ -244,15 +187,7 @@ function SidebarContent({
       </Stack>
 
       <Stack pt={1} pb={1} px={2} spacing={2}>
-        <DirectSearch
-          isFocused={searchFocused}
-          onChange={handleSearchChange}
-          onClickAway={handleSearchClickAway}
-          onFocus={handleSearchFocus}
-          onSelect={handleThreadSelect}
-          query={searchQuery}
-          results={searchResults}
-        />
+        <DirectSearch query={searchQuery} onQueryChange={setSearchQuery} />
         <ConversationTypeFilter
           selectedType={selectedType}
           onTypeChange={setSelectedType}
@@ -263,9 +198,9 @@ function SidebarContent({
         <Stack
           component="ul"
           spacing={1}
-          style={{ display: searchFocused ? 'none' : 'flex', listStyle: 'none', margin: 0, paddingLeft: 0 }}
+          style={{ display: 'flex', listStyle: 'none', margin: 0, paddingLeft: 0 }}
         >
-          {(selectedType === 'all' || selectedType === 'admin') && (
+          {(selectedType === 'all' || selectedType === 'admin') && (!searchQuery.trim() || chatMatches({ itemTitle: 'MINMEG Support', itemType: 'support', lastMessage: support.data?.data?.lastMessagePreview }, searchQuery)) && (
             <li>
               <Link
                 href="/dashboard/chat/support"
@@ -298,12 +233,16 @@ function SidebarContent({
                 <ChatTeardropText size={28} weight="duotone" />
               </div>
               <Typography variant="subtitle2" className="font-bold text-gray-900 text-sm mb-1">
-                {selectedType === 'all'
+                {searchQuery.trim()
+                  ? 'No chats match your search'
+                  : selectedType === 'all'
                   ? 'No conversations yet'
                   : `No ${selectedType.toUpperCase()} conversations`}
               </Typography>
               <Typography variant="caption" className="text-gray-500 max-w-[220px] leading-relaxed text-xs">
-                {selectedType === 'all'
+                {searchQuery.trim()
+                  ? 'Try a product, part of a trade ID, a status, Buyer #1 or Supplier #1.'
+                  : selectedType === 'all'
                   ? 'Your active trade inquiries and messages will appear here.'
                   : `Trade inquiries related to ${selectedType} will show up in this section.`}
               </Typography>
