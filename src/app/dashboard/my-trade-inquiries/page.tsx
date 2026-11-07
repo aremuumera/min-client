@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useGetMyTradeInquiriesQuery } from '@/redux/features/trade/trade_api';
+import { useGetMyTradeInquiriesQuery, useGetMyTradeInquiriesSummaryQuery } from '@/redux/features/trade/trade_api';
 import {
     Clock,
     Box,
@@ -10,8 +10,6 @@ import {
     RefreshCw,
     Search,
     Info,
-    Copy,
-    Check,
     MapPin,
     Zap,
     MoreVertical,
@@ -36,42 +34,42 @@ import {
 import { Drawer } from '@/components/ui/drawer';
 import { Menu, MenuItem } from '@/components/ui/menu';
 import { Button } from '@/components/ui/button';
+import { CopyableId, DropdownSelect, PageHeader, PaginationBar } from '@/components/ui';
+import { myInquiriesHelp } from '@/lib/help/trades';
 
-const CopyableId = ({ id }: { id: string }) => {
-    const [copied, setCopied] = React.useState(false);
-    const fullId = id?.toUpperCase() || '';
-    const shortId = fullId.length > 12 ? `${fullId.substring(0, 8)}...` : fullId;
+function useDebounced<T>(value: T, ms = 300): T {
+    const [v, setV] = React.useState(value);
+    React.useEffect(() => {
+        const t = setTimeout(() => setV(value), ms);
+        return () => clearTimeout(t);
+    }, [value, ms]);
+    return v;
+}
 
-    const handleCopy = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(fullId);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    return (
-        <div className="group/id relative flex items-center gap-2 w-fit">
-            <span
-                className="font-mono text-[11px] font-bold text-gray-500 bg-gray-100/70 px-2.5 py-1 rounded-md cursor-help"
-                title={fullId}
-            >
-                #{shortId}
-            </span>
-            <button
-                onClick={handleCopy}
-                className="p-1 hover:bg-gray-100 rounded-md transition-all text-gray-400 hover:text-green-600"
-                title="Copy reference ID"
-            >
-                {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
-            </button>
-        </div>
-    );
+/* Staff gave a rejected inquiry to another supplier (decision #103). The buyer sees both ends of the link. */
+const ReplacementLabel = ({ inquiry }: { inquiry: any }) => {
+    if (inquiry.replaced_by_inquiry_id) {
+        return (
+            <div className="mt-1 text-[11px] font-bold text-gray-500">
+                Replaced by
+                <CopyableId value={inquiry.replaced_by_inquiry_id} />
+            </div>
+        );
+    }
+    if (inquiry.replaces_inquiry_id) {
+        return (
+            <div className="mt-1 text-[11px] font-bold text-gray-500">
+                Replaces
+                <CopyableId value={inquiry.replaces_inquiry_id} />
+            </div>
+        );
+    }
+    return null;
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
     const configs: Record<string, { label: string; className: string; icon: any }> = {
         pending: { label: 'Awaiting Review', className: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
-        claimed: { label: 'In Review', className: 'bg-blue-50 text-blue-700 border-blue-200', icon: RefreshCw },
         acknowledged: { label: 'Acknowledged', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
         inspection_completed: { label: 'Inspection Completed', className: 'bg-purple-50 text-purple-700 border-purple-200', icon: CheckCircle2 },
         inspection_result_released: { label: 'Inspection Verified', className: 'bg-purple-50 text-purple-700 border-purple-200', icon: CheckCircle2 },
@@ -81,7 +79,6 @@ const StatusBadge = ({ status }: { status: string }) => {
         inspection_pending: { label: 'Inspection Scheduled', className: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Clock },
         completed: { label: 'Completed', className: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle2 },
         rejected: { label: 'Rejected', className: 'bg-red-50 text-red-700 border-red-200', icon: AlertCircle },
-        supplier_matched: { label: 'Supplier Matched', className: 'bg-cyan-50 text-cyan-700 border-cyan-200', icon: Box },
     };
 
     const key = (status || '').toLowerCase();
@@ -115,7 +112,8 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                         <h2 className="text-xl font-bold text-gray-900 tracking-tight">Inquiry Details</h2>
                         <StatusBadge status={inquiry.status} />
                     </div>
-                    <CopyableId id={inquiry.external_id} />
+                    <CopyableId value={inquiry.external_id} />
+                    <ReplacementLabel inquiry={inquiry} />
                 </div>
 
                 {/* Body */}
@@ -235,7 +233,7 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                         <div className="grid grid-cols-1 gap-1">
                             {Object.entries(inquiry).map(([key, value]) => {
                                 if (typeof value !== 'string' && typeof value !== 'number') return null;
-                                if (['id', 'external_id', 'status', 'mineral_tag', 'quantity', 'measure_type', 'delivery_location', 'delivery_state', 'delivery_country', 'delivery_address', 'timeline_type', 'createdAt', 'updatedAt', 'userId', 'supplierId', 'productId', 'product_id', 'entity_type', 'payment_plan', 'description', 'priority', 'recurring_frequency', 'recurring_duration', 'firebase_room_id'].includes(key)) return null;
+                                if (['id', 'external_id', 'status', 'mineral_tag', 'quantity', 'measure_type', 'delivery_location', 'delivery_state', 'delivery_country', 'delivery_address', 'timeline_type', 'createdAt', 'updatedAt', 'userId', 'supplierId', 'productId', 'product_id', 'entity_type', 'payment_plan', 'description', 'priority', 'recurring_frequency', 'recurring_duration', 'firebase_room_id', 'replaces_inquiry_id', 'replaced_by_inquiry_id'].includes(key)) return null;
                                 if (!value) return null;
                                 return (
                                     <div key={key} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-all">
@@ -262,12 +260,14 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                         <Button variant="outlined" onClick={onClose} className="flex-1 rounded-xl py-3 font-bold border border-gray-200 hover:bg-gray-50 text-gray-700 transition-all text-xs">
                             Return
                         </Button>
-                        <Link
-                            href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
-                            className="flex-1 bg-green-600 text-white rounded-xl flex items-center justify-center px-4 py-3 font-bold hover:bg-green-700 transition-all text-xs"
-                        >
-                            Enter Trade Room
-                        </Link>
+                        {!inquiry.replaced_by_inquiry_id && (
+                            <Link
+                                href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
+                                className="flex-1 bg-green-600 text-white rounded-xl flex items-center justify-center px-4 py-3 font-bold hover:bg-green-700 transition-all text-xs"
+                            >
+                                Enter Trade Room
+                            </Link>
+                        )}
                     </div>
                     {inquiry.product_id && (
                         <Link
@@ -289,42 +289,33 @@ export default function MyTradeInquiries() {
     const [selectedState, setSelectedState] = React.useState('');
     const [selectedStatus, setSelectedStatus] = React.useState('');
 
+    const [page, setPage] = React.useState(1);
+    const [limit, setLimit] = React.useState(20);
+    const debouncedSearch = useDebounced(searchTerm.trim());
+    React.useEffect(() => setPage(1), [debouncedSearch, selectedState, selectedStatus]);
+
     const { data, isLoading } = useGetMyTradeInquiriesQuery({
         state: selectedState || undefined,
         status: selectedStatus || undefined,
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
+        page,
+        limit,
     }, {
         refetchOnMountOrArgChange: true
     });
+    const { data: summary } = useGetMyTradeInquiriesSummaryQuery(undefined, { refetchOnMountOrArgChange: true });
 
     const [selectedInquiry, setSelectedInquiry] = React.useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = React.useState(false);
 
-    const allInquiries = data?.data || [];
-
-    // Client-side filtering as secondary layer for immediate feedback
-    const inquiries = allInquiries.filter((inq: any) => {
-        if (selectedState && (inq.delivery_state || '').toLowerCase() !== selectedState.toLowerCase()) {
-            return false;
-        }
-        if (selectedStatus && (inq.status || '').toLowerCase() !== selectedStatus.toLowerCase()) {
-            return false;
-        }
-        if (searchTerm.trim()) {
-            const term = searchTerm.toLowerCase();
-            const extMatch = (inq.external_id || '').toLowerCase().includes(term);
-            const prodMatch = (inq.product?.product_name || inq.item_name || inq.mineral_tag || '').toLowerCase().includes(term);
-            const locMatch = (inq.delivery_location || '').toLowerCase().includes(term) || (inq.delivery_state || '').toLowerCase().includes(term);
-            if (!extMatch && !prodMatch && !locMatch) return false;
-        }
-        return true;
-    });
+    const inquiries = data?.data || [];
 
     // Calculate Analytics status totals
-    const totalCount = allInquiries.length;
-    const ackCount = allInquiries.filter((inq: any) => (inq.status || '').toLowerCase() === 'acknowledged').length;
-    const inspectionCount = allInquiries.filter((inq: any) => ['inspection_completed', 'under_inspection', 'inspection_pending', 're_inspection_requested', 'contract_negotiation', 'inspection_result_released'].includes((inq.status || '').toLowerCase())).length;
-    const pendingCount = allInquiries.filter((inq: any) => ['pending', 'claimed'].includes((inq.status || '').toLowerCase())).length;
+    const count = (...statuses: string[]) => statuses.reduce((sum, st) => sum + (summary?.data?.[st] ?? 0), 0);
+    const totalCount = summary?.data?.total ?? 0;
+    const ackCount = count('ACKNOWLEDGED');
+    const inspectionCount = count('INSPECTION_COMPLETED', 'UNDER_INSPECTION', 'INSPECTION_PENDING', 'RE_INSPECTION_REQUESTED', 'CONTRACT_NEGOTIATION', 'INSPECTION_RESULT_RELEASED');
+    const pendingCount = count('PENDING', 'CLAIMED');
 
     // Analytics Cards configuration - UNIFIED GREEN THEME FOR ALL ICONS
     const analyticsCards = [
@@ -364,7 +355,7 @@ export default function MyTradeInquiries() {
 
     // Extract dynamic unique states for dropdown options
     const uniqueStatesFromData = Array.from(
-        new Set(allInquiries.map((inq: any) => inq.delivery_state).filter(Boolean))
+        new Set(inquiries.map((inq: any) => inq.delivery_state).filter(Boolean))
     ) as string[];
 
     const standardStates = [
@@ -391,13 +382,7 @@ export default function MyTradeInquiries() {
 
     return (
         <div className="p-6 lg:p-10 space-y-6">
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight">Trade Inquiries</h1>
-                    <p className="text-gray-500 mt-1 text-sm font-medium">Manage and track your procurement requests in real-time.</p>
-                </div>
-            </div>
+            <PageHeader title="Trade Inquiries" help={myInquiriesHelp} description="Manage and track your procurement requests in real-time." />
 
             {/* Analytics Style Status Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -408,7 +393,7 @@ export default function MyTradeInquiries() {
                             key={index}
                             onClick={() => setSelectedStatus(card.statusKey)}
                             className={`cursor-pointer rounded-xl border p-5 transition-all ${isSelected
-                                    ? 'bg-green-50/90 border-green-500 shadow-sm'
+                                    ? 'bg-green-50/90 border-green-500'
                                     : 'bg-green-50/40 border-green-200/60 hover:border-green-300 hover:bg-green-50/70'
                                 } group`}
                         >
@@ -450,36 +435,33 @@ export default function MyTradeInquiries() {
                 {/* State Filter */}
                 <div className="flex items-center gap-2 w-full md:w-56">
                     <MapPin size={16} className="text-gray-400 shrink-0 hidden sm:inline-block" />
-                    <select
+                    <DropdownSelect
+                        aria-label="State"
                         value={selectedState}
-                        onChange={(e) => setSelectedState(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none w-full cursor-pointer transition-all"
-                    >
-                        <option value="">All States</option>
-                        {allStateOptions.map((st) => (
-                            <option key={st} value={st}>
-                                {st}
-                            </option>
-                        ))}
-                    </select>
+                        onValueChange={setSelectedState}
+                        placeholder="All States"
+                        searchable
+                        options={allStateOptions.map((st) => ({ value: st, label: st }))}
+                        className="w-full"
+                    />
                 </div>
 
                 {/* Status Filter */}
                 <div className="flex items-center gap-2 w-full md:w-52">
                     <Filter size={16} className="text-gray-400 shrink-0 hidden sm:inline-block" />
-                    <select
+                    <DropdownSelect
+                        aria-label="Status"
                         value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none w-full cursor-pointer transition-all"
-                    >
-                        <option value="">All Statuses</option>
-                        <option value="ACKNOWLEDGED">Acknowledged</option>
-                        <option value="INSPECTION_COMPLETED">Inspection Completed</option>
-                        <option value="PENDING">Awaiting Review</option>
-                        <option value="CLAIMED">In Review</option>
-                        <option value="REJECTED">Rejected</option>
-                        <option value="SUPPLIER_MATCHED">Supplier Matched</option>
-                    </select>
+                        onValueChange={setSelectedStatus}
+                        placeholder="All Statuses"
+                        options={[
+                            { value: 'ACKNOWLEDGED', label: 'Acknowledged' },
+                            { value: 'INSPECTION_COMPLETED', label: 'Inspection Completed' },
+                            { value: 'PENDING', label: 'Awaiting Review' },
+                            { value: 'REJECTED', label: 'Rejected' },
+                        ]}
+                        className="w-full"
+                    />
                 </div>
 
                 {/* Reset Filters */}
@@ -553,7 +535,7 @@ export default function MyTradeInquiries() {
                                         <TableRow key={inquiry.id || inquiry.external_id || index} className="group hover:bg-gray-50/80 border-b border-gray-100 transition-colors">
                                             {/* Reference */}
                                             <TableCell className="py-4 px-6">
-                                                <CopyableId id={inquiry.external_id} />
+                                                <CopyableId value={inquiry.external_id} />
                                             </TableCell>
 
                                             {/* Product & Supplier */}
@@ -616,6 +598,7 @@ export default function MyTradeInquiries() {
                                             {/* Status */}
                                             <TableCell className="py-4 px-4">
                                                 <StatusBadge status={inquiry.status} />
+                                                <ReplacementLabel inquiry={inquiry} />
                                             </TableCell>
 
                                             {/* Actions */}
@@ -637,10 +620,12 @@ export default function MyTradeInquiries() {
                                                         <Eye size={15} className="text-blue-500" />
                                                         <span className="font-bold text-xs">View Progress</span>
                                                     </MenuItem>
-                                                    <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
-                                                        <MessageSquare size={15} className="text-green-500" />
-                                                        <span className="font-bold text-xs">Chat Room</span>
-                                                    </MenuItem>
+                                                    {!inquiry.replaced_by_inquiry_id && (
+                                                        <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
+                                                            <MessageSquare size={15} className="text-green-500" />
+                                                            <span className="font-bold text-xs">Chat Room</span>
+                                                        </MenuItem>
+                                                    )}
                                                 </Menu>
                                             </TableCell>
                                         </TableRow>
@@ -651,6 +636,17 @@ export default function MyTradeInquiries() {
                     </Table>
                 </TableContainer>
             </div>
+
+            <PaginationBar
+                meta={data?.meta}
+                page={page}
+                onPage={setPage}
+                limit={limit}
+                onLimit={(n) => {
+                    setLimit(n);
+                    setPage(1);
+                }}
+            />
 
             <DetailDrawer
                 isOpen={isDetailModalOpen}

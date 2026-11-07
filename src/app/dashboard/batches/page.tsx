@@ -1,8 +1,11 @@
 'use client';
 
+import { BatchPassport } from '@/components/passports/passport-panel';
+import { CarbonFor } from '@/components/esg/carbon-panel';
+import { EsgFor } from '@/components/esg/esg-panel';
 import * as React from 'react';
 import { Plus } from 'lucide-react';
-import { Button, Checkbox, DataTable, FilterBar, NativeSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
+import { Button, Checkbox, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { BatchDetailSheet, type BatchPermissions } from '@/components/batches/batch-detail-sheet';
 import { BatchDocumentsPanel } from '@/components/batches/batch-documents-panel';
 import { BatchFormSheet } from '@/components/batches/batch-form-sheet';
@@ -10,6 +13,8 @@ import { toApiError } from '@/lib/api/errors';
 import { BATCH_STATUSES, batchLabel, batchOptions, formatQuantity, type Batch } from '@/lib/batches';
 import { formatDate } from '@/lib/format';
 import { inventoryHelp } from '@/lib/help/inventory';
+import { BatchUnitsPanel } from '@/components/traceability/batch-units-panel';
+import { CustodyPanel } from '@/components/traceability/custody-panel';
 import { RequireAccess } from '@/lib/permissions';
 import { useGetBatchesQuery, useGetMaterialChoicesQuery } from '@/redux/features/batches/batches_api';
 import { useGetLocationsQuery } from '@/redux/features/locations/locations_api';
@@ -71,9 +76,9 @@ function InventoryPage() {
           setIncludeRetired(false);
         }}
       >
-        <NativeSelect aria-label="Material" value={materialId} onValueChange={setMaterialId} options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))} placeholder="All materials" className="md:w-48" />
-        <NativeSelect aria-label="Status" value={batchStatus} onValueChange={setBatchStatus} options={batchOptions(BATCH_STATUSES)} placeholder="All statuses" className="md:w-44" />
-        <NativeSelect aria-label="Where it is now" value={currentLocationId} onValueChange={setCurrentLocationId} options={(locations.data?.data ?? []).map((l) => ({ value: l.id, label: l.name }))} placeholder="All sites" className="md:w-44" />
+        <DropdownSelect aria-label="Material" value={materialId} onValueChange={setMaterialId} options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))} placeholder="All materials" className="md:w-48" />
+        <DropdownSelect aria-label="Status" value={batchStatus} onValueChange={setBatchStatus} options={batchOptions(BATCH_STATUSES)} placeholder="All statuses" className="md:w-44" />
+        <DropdownSelect aria-label="Where it is now" value={currentLocationId} onValueChange={setCurrentLocationId} options={(locations.data?.data ?? []).map((l) => ({ value: l.id, label: l.name }))} placeholder="All sites" className="md:w-44" />
         <Checkbox label="Include ended batches" checked={includeRetired} onChange={(e) => setIncludeRetired(e.target.checked)} />
       </FilterBar>
       <DataTable<Batch>
@@ -120,7 +125,7 @@ function InventoryPage() {
           setPage(1);
         }}
       />
-      <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
+      <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} units={(b) => (<div className="space-y-6"><BatchUnitsPanel batchId={b.id} unitSymbol={b.unit?.symbol} canManage /><CustodyPanel subjectType="BATCH" subjectId={b.id} canHandOver /></div>)} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} passport={(b) => <BatchPassport batchId={b.id} mode="owner" />} esgCarbon={(b) => (<div className="space-y-8"><EsgFor subjectType="BATCH" subjectId={b.id} mode="owner" /><CarbonFor subjectType="BATCH" subjectId={b.id} mode="owner" /></div>)} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
       <BatchFormSheet open={registering} batch={null} onClose={() => setRegistering(false)} onSaved={(b) => setSelectedId(b.id)} />
     </div>
   );

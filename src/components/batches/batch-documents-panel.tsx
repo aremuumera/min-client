@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, FormField, NativeSelect, StatusBadge, useConfirm } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, FormField, DropdownSelect, StatusBadge, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { batchLabel, type BatchAttachment } from '@/lib/batches';
@@ -83,10 +83,10 @@ export function BatchDocumentsPanel({ batchId, batchCode }: { batchId: string; b
         <div className="flex flex-col gap-3 rounded-xl border border-hairline p-4">
           {error && <Alert severity="error">{error}</Alert>}
           <FormField label="File" htmlFor="batch-doc-file" required help={files.isSuccess && !files.data.data.length ? 'No files yet: upload one in My documents first.' : undefined}>
-            <NativeSelect id="batch-doc-file" value={fileId} onValueChange={setFileId} options={(files.data?.data ?? []).map((f) => ({ value: f.id, label: f.displayName }))} placeholder={files.isLoading ? 'Loading…' : 'Choose a file'} />
+            <DropdownSelect id="batch-doc-file" value={fileId} onValueChange={setFileId} options={(files.data?.data ?? []).map((f) => ({ value: f.id, label: f.displayName }))} placeholder={files.isLoading ? 'Loading…' : 'Choose a file'} />
           </FormField>
           <FormField label="What it proves" htmlFor="batch-doc-type">
-            <NativeSelect id="batch-doc-type" value={type} onValueChange={setType} options={ATTACHMENT_TYPES.map((t) => ({ value: t, label: label(t) }))} />
+            <DropdownSelect id="batch-doc-type" value={type} onValueChange={setType} options={ATTACHMENT_TYPES.map((t) => ({ value: t, label: label(t) }))} />
           </FormField>
           <div className="flex gap-2">
             <Button variant="outlined" color="secondary" onClick={() => setAdding(false)} disabled={attachState.isLoading}>

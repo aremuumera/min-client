@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, Checkbox, FormField, IconButton, Input, MapPicker, NativeSelect, SideSheet, Textarea, useConfirm } from '@/components/ui';
+import { Alert, Button, Checkbox, FormField, IconButton, Input, MapPicker, DropdownSelect, SideSheet, Textarea, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { CHECKPOINT_TYPES, codeFromName, CODE_PATTERN, locationOptions, outlinePoints, outlineToBoundary, positionErrors, type Checkpoint, type LngLat, type Location, type RequiredMeasurement } from '@/lib/locations';
@@ -159,7 +159,7 @@ export function CheckpointFormSheet({ open, location, checkpoint, onClose }: Che
             <Input id="cp-name" value={name} onChange={(e) => setName(e.target.value)} error={!!errors.name} maxLength={255} autoComplete="off" placeholder="e.g. Main weighbridge" />
           </FormField>
           <FormField label="What happens here" htmlFor="cp-type" required error={errors.checkpointType}>
-            <NativeSelect id="cp-type" value={type} onValueChange={setType} options={locationOptions(CHECKPOINT_TYPES)} placeholder="Choose…" error={!!errors.checkpointType} />
+            <DropdownSelect id="cp-type" value={type} onValueChange={setType} options={locationOptions(CHECKPOINT_TYPES)} placeholder="Choose…" error={!!errors.checkpointType} />
           </FormField>
           <FormField label="Code" htmlFor="cp-code" help={checkpoint ? 'Fixed once created' : `Empty: ${codeFromName(name) || 'made from the name'}`} error={errors.code}>
             <Input id="cp-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} disabled={!!checkpoint} error={!!errors.code} maxLength={64} autoComplete="off" />
@@ -185,7 +185,7 @@ export function CheckpointFormSheet({ open, location, checkpoint, onClose }: Che
           <h3 className="text-sm font-semibold text-ink">Measurements to record here</h3>
           {measurements.map((m, i) => (
             <div key={i} className="flex flex-col gap-2 rounded-lg border border-hairline p-3 sm:flex-row sm:items-center">
-              <NativeSelect
+              <DropdownSelect
                 aria-label={`Measurement ${i + 1}`}
                 value={m.measurementTypeCode}
                 onValueChange={(v) => setMeasurements((prev) => prev.map((x, j) => (j === i ? { ...x, measurementTypeCode: v } : x)))}

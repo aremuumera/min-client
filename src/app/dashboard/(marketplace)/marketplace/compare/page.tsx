@@ -156,7 +156,8 @@ const ComparisonPage = () => {
                         <ComparisonRow label="Category" products={comparisonList} field="product_category" />
                         <ComparisonRow label="Sub Category" products={comparisonList} field="product_sub_category" placeholder="Not specified" />
                         <ComparisonRow label="Supplier" products={comparisonList} render={(p: any) => p.supplier?.company_name || 'Individual Supplier'} />
-                        <ComparisonRow label="M.O.Q" products={comparisonList} render={(p: any) => `${p.quantity} ${p.measure}`} />
+                        <ComparisonRow label="Available" products={comparisonList} render={(p: any) => `${p.quantity} ${p.measure}`} />
+                        <ComparisonRow label="M.O.Q" products={comparisonList} render={(p: any) => (p.minimum_order_quantity ? `${Number(p.minimum_order_quantity)} ${p.measure}` : 'Not specified')} />
                         <ComparisonRow label="Delivery Period" products={comparisonList} field="delivery_period" placeholder="Not specified" />
                         <ComparisonRow label="Color" products={comparisonList} field="color" placeholder="Not specified" />
                         <ComparisonRow label="Composition" products={comparisonList} field="composition" placeholder="Not specified" />

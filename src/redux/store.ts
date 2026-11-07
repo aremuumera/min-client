@@ -17,6 +17,15 @@ import { teamApi } from "./features/team/teamApi";
 import { vaultApi } from "./features/vault/vaultApi";
 import { locationsApi } from "./features/locations/locations_api";
 import { batchesApi } from "./features/batches/batches_api";
+import { supportApi } from "./features/support/support_api";
+import { shipmentsApi } from "./features/shipments/shipments_api";
+import { traceabilityApi } from "./features/traceability/traceability_api";
+import { passportsApi } from "./features/passports/passports_api";
+import { esgApi } from "./features/esg/esg_api";
+import { proofApi } from "./features/proof/proof_api";
+import { notificationsApi } from "./features/notifications/notifications_api";
+import { analyticsApi } from "./features/analytics/analytics_api";
+import { listingsApi } from "./features/listings/listings_api";
 import inquiryApi from "./features/enquiry/enquiry_api";
 import supplierProductApi from "./features/supplier-products/products_api";
 import rfqApi from "./features/buyer-rfq/rfq-api";
@@ -42,6 +51,15 @@ const persistConfig = {
     "vaultApi",
     "locationsApi",
     "batchesApi",
+    "supportApi",
+    "shipmentsApi",
+    "traceabilityApi",
+    "passportsApi",
+    "esgApi",
+    "proofApi",
+    "notificationsApi",
+    "analyticsApi",
+    "listingsApi",
     "authApi",
     "supplierProfileApi",
     "rfqApi",
@@ -92,6 +110,15 @@ export const makeStore = () => {
         vaultApi.middleware,
         locationsApi.middleware,
         batchesApi.middleware,
+        supportApi.middleware,
+        shipmentsApi.middleware,
+        traceabilityApi.middleware,
+        passportsApi.middleware,
+        esgApi.middleware,
+        proofApi.middleware,
+        notificationsApi.middleware,
+        analyticsApi.middleware,
+        listingsApi.middleware,
         activityApi.middleware,
         tradeApi.middleware,
         docHubApi.middleware,

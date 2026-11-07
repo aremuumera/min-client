@@ -13,7 +13,7 @@ export interface NavItemConfig {
   badge?: string;
   matcher?: { type: "startsWith" | "equals"; href: string };
   items?: NavItemConfig[];
-  permission?: PermissionKey | 'batches';
+  permission?: PermissionKey | 'batches' | 'savedItems' | 'inspectionsHub' | 'submittedOffers';
 }
 
 export interface DashboardConfig {
@@ -54,6 +54,7 @@ export const dashboardConfig: DashboardConfig = {
           href: paths.dashboard.wallet,
           icon: "wallet",
           badge: "Coming Soon",
+          permission: "wallet",
         },
         {
           key: "marketplace",
@@ -73,25 +74,31 @@ export const dashboardConfig: DashboardConfig = {
           key: "supplier",
           title: "Supplier",
           icon: "shopping-bag-open",
-          permission: "products",
+          // no key on the folder: each page carries the backend's key (received inquiries need "enquiries")
           items: [
             {
               key: "products:create",
-              title: "Create product",
+              title: "New listing",
               href: paths.dashboard.products.create,
               permission: "products",
             },
             {
               key: "supplier-list",
-              title: "Listed products",
+              title: "My listings",
               href: paths.dashboard.products.list,
+              permission: "products",
+            },
+            {
+              key: "supplier-material-requests",
+              title: "My requests",
+              href: paths.dashboard.products.materialRequests,
               permission: "products",
             },
             {
               key: "supplier-trade-inquiries",
               title: "Order Inquiries received",
               href: paths.dashboard.products.receivedInquiries,
-              permission: "products",
+              permission: "enquiries",
             },
             {
               key: "supplier-company-profile",
@@ -123,13 +130,13 @@ export const dashboardConfig: DashboardConfig = {
           items: [
             {
               key: "rfq:create",
-              title: "Create Rfq",
+              title: "New RFQ",
               href: paths.dashboard.rfqs.create,
               permission: "rfq",
             },
             {
               key: "rfq",
-              title: "Listed RFQs",
+              title: "My RFQs",
               href: paths.dashboard.rfqs.list,
               permission: "rfq",
             },
@@ -145,8 +152,48 @@ export const dashboardConfig: DashboardConfig = {
           key: "rfq-submitted-offers",
           title: "My Submitted Offers",
           href: paths.dashboard.rfqs.submittedOffers,
-          permission: "products",
+          permission: "submittedOffers",
           icon: "receipt-long",
+        },
+      ],
+    },
+
+    // step 2.9: passports, compliance and certificates (one section for now; the owner arranges it later)
+    {
+      key: "passports",
+      title: "PASSPORTS & CERTIFICATES",
+      items: [
+        {
+          key: "passports:list",
+          title: "Passports",
+          href: paths.dashboard.passports.list,
+          icon: "read-cv-logo",
+          matcher: { type: "equals", href: paths.dashboard.passports.list },
+          permission: "passports",
+        },
+        {
+          key: "passports:certificates",
+          title: "Certificates",
+          href: paths.dashboard.certificates,
+          icon: "graduation-cap",
+          matcher: { type: "startsWith", href: paths.dashboard.certificates },
+          permission: "passports",
+        },
+        {
+          key: "passports:requests",
+          title: "Template requests",
+          href: paths.dashboard.passports.requests,
+          icon: "file-dashed",
+          matcher: { type: "startsWith", href: paths.dashboard.passports.requests },
+          permission: "passports",
+        },
+        {
+          key: "passports:esg",
+          title: "ESG & carbon",
+          href: paths.dashboard.esg,
+          icon: "leaf",
+          matcher: { type: "startsWith", href: paths.dashboard.esg },
+          permission: "esg",
         },
       ],
     },
@@ -168,6 +215,7 @@ export const dashboardConfig: DashboardConfig = {
           title: "Inspections Hub",
           href: "/dashboard/inspections",
           icon: "receipt-long",
+          permission: "inspectionsHub",
         },
       ],
     },
@@ -213,7 +261,7 @@ export const dashboardConfig: DashboardConfig = {
       ],
     },
 
-    // section d (Dashboard)
+    // section d (General): grouped into folders; a folder shows only when one of its pages is open to the user
     {
       key: "general",
       title: "GENERAL",
@@ -227,20 +275,24 @@ export const dashboardConfig: DashboardConfig = {
           permission: "chat",
         },
         {
-          key: "inventory",
-          title: "Inventory",
-          href: paths.dashboard.batches,
+          key: "stock",
+          title: "Stock & traceability",
           icon: "package",
-          matcher: { type: "startsWith", href: "/dashboard/batches" },
-          permission: "batches",
+          items: [
+            { key: "batches", title: "Inventory", href: paths.dashboard.batches, matcher: { type: "startsWith", href: "/dashboard/batches" }, permission: "batches" },
+            { key: "sites", title: "My sites", href: paths.dashboard.sites, matcher: { type: "startsWith", href: "/dashboard/sites" }, permission: "inventory" },
+            { key: "handovers", title: "Handovers", href: paths.dashboard.handovers, matcher: { type: "startsWith", href: "/dashboard/handovers" }, permission: "traceability" },
+            { key: "scan", title: "Scan a code", href: paths.dashboard.scan, matcher: { type: "startsWith", href: "/dashboard/scan" }, permission: "traceability" },
+          ],
         },
         {
-          key: "sites",
-          title: "My sites",
-          href: paths.dashboard.sites,
-          icon: "map-pin",
-          matcher: { type: "startsWith", href: "/dashboard/sites" },
-          permission: "inventory",
+          key: "logistics",
+          title: "Shipments & alerts",
+          icon: "truck",
+          items: [
+            { key: "shipments", title: "Shipments", href: paths.dashboard.shipments, matcher: { type: "startsWith", href: "/dashboard/shipments" }, permission: "shipments" },
+            { key: "alerts", title: "Alerts", href: paths.dashboard.alerts, matcher: { type: "startsWith", href: paths.dashboard.alerts }, permission: "shipments" },
+          ],
         },
         {
           key: "documents",
@@ -251,16 +303,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "documents",
         },
         {
-          key: "becomeasupplier",
-          title: "Become a supplier",
-          href: paths.dashboard.becomeASupplier,
-          icon: "user-plus",
-        },
-        {
-          key: "Wishlist",
-          title: "Wishlist",
-          href: paths.dashboard.savedProducts,
-          icon: "star-border",
+          key: "tools",
+          title: "Tools",
+          icon: "kanban",
+          items: [
+            { key: "Wishlist", title: "Saved items", href: paths.dashboard.savedProducts, permission: "savedItems" },
+            { key: "calculator", title: "Calculator", href: paths.dashboard.calculator },
+            { key: "activity-log", title: "Activity Log", href: paths.dashboard.activity, permission: "activity" },
+          ],
         },
         {
           key: "settings",
@@ -268,56 +318,14 @@ export const dashboardConfig: DashboardConfig = {
           icon: "gear",
           matcher: { type: "startsWith", href: "/dashboard/settings" },
           items: [
-            {
-              key: "settings:account",
-              title: "Account",
-              href: paths.dashboard.settings.account,
-              permission: "settings",
-            },
-            {
-              key: "settings:notifications",
-              title: "Notifications",
-              href: paths.dashboard.settings.notifications,
-              permission: "settings",
-            },
-            {
-              key: "settings:security",
-              title: "Security",
-              href: paths.dashboard.settings.security,
-              permission: "settings",
-            },
-            {
-              key: "settings:business",
-              title: "Business",
-              href: paths.dashboard.settings.business,
-              permission: "team_management",
-            },
-            {
-              key: "settings:team",
-              title: "Team",
-              href: paths.dashboard.settings.team,
-              permission: "team_management",
-            },
-            {
-              key: "settings:legals",
-              title: "Legals",
-              href: paths.dashboard.settings.legals,
-              permission: "team_management",
-            },
+            { key: "settings:account", title: "Account", href: paths.dashboard.settings.account, permission: "settings" },
+            { key: "settings:notifications", title: "Notifications", href: paths.dashboard.settings.notifications, permission: "settings" },
+            { key: "settings:security", title: "Security", href: paths.dashboard.settings.security, permission: "settings" },
+            { key: "settings:business", title: "Business", href: paths.dashboard.settings.business, permission: "team_management" },
+            { key: "settings:team", title: "Team", href: paths.dashboard.settings.team, permission: "team_management" },
+            { key: "settings:legals", title: "Legals", href: paths.dashboard.settings.legals, permission: "team_management" },
+            { key: "becomeasupplier", title: "Become a supplier", href: paths.dashboard.becomeASupplier },
           ],
-        },
-        {
-          key: "calculator",
-          title: "Calculator",
-          href: paths.dashboard.calculator,
-          icon: "calculator",
-        },
-        {
-          key: "activity-log",
-          title: "Activity Log",
-          href: paths.dashboard.activity,
-          icon: "receipt-long",
-          permission: "activity",
         },
       ],
     },

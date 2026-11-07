@@ -7,7 +7,7 @@ import { Button, ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/com
 import { TeamMemberSheet } from '@/components/team/team-member-sheet';
 import { toApiError } from '@/lib/api/errors';
 import { formatDate } from '@/lib/format';
-import { memberLockReason, RequireAccess, teamRoleLabel, useActor } from '@/lib/permissions';
+import { memberLockReason, RequireAccess, TEAM_PERMISSION_KEYS, teamRoleLabel, useActor } from '@/lib/permissions';
 import { useAppSelector } from '@/redux/hooks';
 import { useDeleteTeamMemberMutation, useGetTeamMembersQuery, useResendInviteMutation, type TeamMember } from '@/redux/features/team/teamApi';
 
@@ -90,7 +90,7 @@ function TeamPage() {
             ),
           },
           { key: 'role', header: 'Team role', mobile: 'subtitle', cell: (m) => teamRoleLabel(m.team_role) },
-          { key: 'access', header: 'Access', cell: (m) => `${m.permissions.length} of 16` },
+          { key: 'access', header: 'Access', cell: (m) => `${m.permissions.length} of ${TEAM_PERMISSION_KEYS.length}` },
           { key: 'status', header: 'Status', cell: (m) => <StatusBadge status={m.status} /> },
           { key: 'added', header: 'Added', cell: (m) => formatDate(m.createdAt) },
           {

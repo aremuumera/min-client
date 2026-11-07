@@ -53,6 +53,8 @@ const SubCategoriesProductsView = ({ mainCategoryId, mineralCategoryId, subMiner
             measure: filters?.measure,
             quantity: filters?.quantity,
             review: filters?.rating,
+      materialId: filters?.materialId,
+      locationType: filters?.locationType,
         },
         {
             refetchOnMountOrArgChange: true,

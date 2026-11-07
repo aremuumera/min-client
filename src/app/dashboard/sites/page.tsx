@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Plus } from 'lucide-react';
 import { Country } from 'country-state-city';
 import { toast } from 'sonner';
-import { Button, ConfirmDialog, DataTable, FilterBar, NativeSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
+import { Button, ConfirmDialog, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { LocationDetailSheet, type LocationPermissions } from '@/components/locations/location-detail-sheet';
 import { LocationFormSheet } from '@/components/locations/location-form-sheet';
 import { toApiError } from '@/lib/api/errors';
@@ -13,6 +13,7 @@ import { LOCATION_TYPES, locationLabel, locationOptions, type Location } from '@
 import { RequireAccess } from '@/lib/permissions';
 import { useAppSelector } from '@/redux/hooks';
 import { useGetLocationsQuery, useSetLocationActiveMutation } from '@/redux/features/locations/locations_api';
+import { EsgFor } from '@/components/esg/esg-panel';
 
 /*
  * My sites (step 2.4 B1–B2): the company's own sites, which it manages, and platform-wide ones, which
@@ -86,8 +87,8 @@ function SitesPage() {
           setActive('');
         }}
       >
-        <NativeSelect aria-label="Kind of site" value={locationType} onValueChange={setLocationType} options={locationOptions(LOCATION_TYPES)} placeholder="All kinds" className="md:w-48" />
-        <NativeSelect aria-label="Status" value={active} onValueChange={setActive} options={ACTIVE_FILTERS} placeholder="All statuses" className="md:w-36" />
+        <DropdownSelect aria-label="Kind of site" value={locationType} onValueChange={setLocationType} options={locationOptions(LOCATION_TYPES)} placeholder="All kinds" className="md:w-48" />
+        <DropdownSelect aria-label="Status" value={active} onValueChange={setActive} options={ACTIVE_FILTERS} placeholder="All statuses" className="md:w-36" />
       </FilterBar>
       <DataTable<Location>
         caption="Sites"
@@ -143,6 +144,7 @@ function SitesPage() {
       <LocationDetailSheet
         locationId={form.open ? null : selectedId}
         can={(l) => (isOwn(l) ? FULL_ACCESS : NO_ACCESS)}
+        extra={(l) => (isOwn(l) ? <EsgFor subjectType="LOCATION" subjectId={l.id} mode="owner" title="ESG of this site" /> : null)}
         note={(l) => (l.organizationId ? null : 'A shared site, added by MINMEG. You can use it, but not change it.')}
         onClose={() => setSelectedId(null)}
         onEdit={(location) => setForm({ open: true, location })}

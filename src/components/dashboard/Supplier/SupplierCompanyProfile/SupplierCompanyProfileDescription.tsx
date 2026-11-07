@@ -49,10 +49,11 @@ import { TextEditor } from '@/components/core/text-editor/text-editor';
 import { useAppDispatch, useAppSelector, useAppStore } from '@/redux';
 import { supplierBusinessData as businessData } from '@/lib/marketplace-data';
 
-import { paymentTerms, shippingTerms } from '../CreateProducts/paymentTerms';
+import { paymentTerms, shippingTerms } from '@/lib/trade-terms';
 
 import { z } from 'zod';
 import { MultiCheckboxSelect, SearchableSelect } from '@/components/ui';
+import { compressImage } from '@/lib/images/compress';
 
 const steps = ['Company Description', 'Contact Info', 'Location', 'Confirm details'];
 
@@ -172,7 +173,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
     const files = event.target.files;
 
     if (files && files.length === 1) {
-      const file = files[0]; // Get the first file
+      const file = await compressImage(files[0]);
       const isValidFile = (file: File) => {
         if (file.size > 5 * 1024 * 1024) {
           toast.error('File size must not exceed 5MB');
@@ -230,7 +231,7 @@ const SupplierCompanyProfileDescription: React.FC<SupplierProfileDescriptionProp
     const files = event.target.files;
 
     if (files && files.length === 1) {
-      const file = files[0]; // Get the first file
+      const file = await compressImage(files[0]);
       const isValidFile = (file: File) => {
         if (file.size > 5 * 1024 * 1024) {
           toast.error('File size must not exceed 5MB');

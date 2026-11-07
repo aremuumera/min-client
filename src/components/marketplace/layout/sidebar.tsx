@@ -1,16 +1,18 @@
 
 "use client";
 
+import { PLACE_LABELS } from '@/lib/listings';
 import React, { useEffect, useState } from 'react';
 import { resetFilters, setFilter, setSort } from '@/redux/features/marketplace/marketplace_slice';
+import { useGetPublicMaterialsQuery } from '@/redux/features/listings/listings_api';
+import { DropdownSelect } from '@/components/ui';
 import { useDispatch, useSelector } from 'react-redux';
 import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { useAlert } from '@/providers/alert-provider';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { links, real, Category, SubCategory, countries, MoqUnits } from '@/lib/marketplace-data';
+import { links, real, Category, SubCategory, countries } from '@/lib/marketplace-data';
 import { ChevronDown, ChevronUp, Search, X, Star } from 'lucide-react';
-import { IoSearch } from 'react-icons/io5';
 
 // Assets
 const ca = '/assets/flag-ca.svg'; // Check assets
@@ -68,6 +70,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
 
   const mdUp = useMediaQuery('up', 'md');
   const { showAlert } = useAlert();
+  const publicMaterials = useGetPublicMaterialsQuery();
 
   const { limit, page, category, mainCategory, subCategory, filters, search, sort, supplierId, profileId } =
     useSelector((state: any) => state.marketplace);
@@ -80,10 +83,8 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   // Local UI states
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
   const [filteredCountries, setFilteredCountries] = useState(countries);
-  const [moqValue, setMoqValue] = useState(filters.quantity || '');
   const [minPrice, setMinPrice] = useState(filters.minPrice || '');
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice || '');
-  const [selectedMoqUnit, setSelectedMoqUnit] = useState(filters.measure || '');
 
   useEffect(() => {
     if (locationSearchTerm) {
@@ -112,8 +113,6 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
     setFilteredCountries(countries);
     setMinPrice('');
     setMaxPrice('');
-    setSelectedMoqUnit('');
-    setMoqValue('');
     setActiveCategory(null);
     setActiveSubCategory(null);
   };
@@ -156,21 +155,6 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
     dispatch(setFilter({ filterType: 'rating', value: checked ? name : null }));
-  };
-
-  const handleSelectMoqChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedMoqUnit(e.target.value);
-  };
-
-  const handleMoqSearch = () => {
-    if (selectedMoqUnit && moqValue) {
-      dispatch(setFilter({ filterType: 'measure', value: selectedMoqUnit }));
-      dispatch(setFilter({ filterType: 'quantity', value: moqValue }));
-    } else {
-      dispatch(setFilter({ filterType: 'measure', value: null }));
-      dispatch(setFilter({ filterType: 'quantity', value: null }));
-    }
-    if (isMobile) onClose();
   };
 
   const handlePriceChange = () => {
@@ -463,6 +447,33 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
           </div>
         )}
 
+        {/* Material Filter */}
+        {(
+          <div className="mt-6">
+            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Material</h2>
+            <DropdownSelect
+              aria-label="Material"
+              searchable
+              value={filters.materialId ?? ''}
+              onValueChange={(value) => dispatch(setFilter({ filterType: 'materialId', value: value || null }))}
+              options={(publicMaterials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))}
+              placeholder="All materials"
+            />
+          </div>
+        )}
+
+        {/* Mine, warehouse... (the kind of site the goods are offered from) */}
+        <div className="mt-6">
+          <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Offered from</h2>
+          <DropdownSelect
+            aria-label="Offered from"
+            value={filters.locationType ?? ''}
+            onValueChange={(value) => dispatch(setFilter({ filterType: 'locationType', value: value || null }))}
+            options={Object.entries(PLACE_LABELS).map(([value, label]) => ({ value, label }))}
+            placeholder="Any site"
+          />
+        </div>
+
         {/* Location Filter */}
         <div className="mt-6">
           <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Location</h2>
@@ -551,40 +562,6 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
             >
               Apply Price Filter
             </button>
-          </div>
-        )}
-
-        {/* MOQ Filter */}
-        {prodCheck && (
-          <div className="mt-8">
-            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Minimum Order Quantity</h2>
-            <div className="h-px bg-gray-200 mb-3"></div>
-            <div className="flex items-center gap-2 p-1.5 border border-gray-300 rounded-xl bg-gray-50/50 hover:bg-white transition-colors focus-within:ring-2 focus-within:ring-green-500/20 focus-within:border-green-600">
-              <select
-                value={selectedMoqUnit}
-                onChange={handleSelectMoqChange}
-                className="bg-transparent text-[0.8rem] font-semibold focus:outline-none max-w-[80px] cursor-pointer text-gray-700"
-              >
-                <option value="">Unit</option>
-                {MoqUnits?.map(unit => (
-                  <option key={unit} value={unit.toLowerCase()}>{unit}</option>
-                ))}
-              </select>
-              <div className="w-px h-6 bg-gray-300 shrink-0"></div>
-              <input
-                type="text"
-                placeholder="Value"
-                value={moqValue}
-                onChange={(e) => setMoqValue(e.target.value)}
-                className="bg-transparent text-sm w-full focus:outline-none placeholder:text-gray-400 font-medium"
-              />
-              <button
-                onClick={handleMoqSearch}
-                className="p-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md active:scale-95"
-              >
-                <IoSearch size={16} />
-              </button>
-            </div>
           </div>
         )}
 

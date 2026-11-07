@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { quietLogins } from './quiet-login';
 import { test, expect, type Page } from '@playwright/test';
+import { pick } from './pick';
 
 /*
  * Step 2.4 My sites with a real buyer account against the local backend (desktop only). Makes one
@@ -72,8 +73,8 @@ test('add a site: fields are checked, the map drops a pin, it asks first, then i
   await expect(sheet.getByText('Choose the kind of site')).toBeVisible();
 
   await sheet.getByLabel('Name').fill(siteName);
-  await sheet.getByLabel('Kind of site').selectOption('MINE_LOCATION');
-  await sheet.getByLabel('State or region').selectOption({ index: 1 });
+  await pick(sheet.getByLabel('Kind of site'), 'MINE_LOCATION');
+  await pick(sheet.getByLabel('State or region'), { index: 1 });
   await sheet.getByLabel('City or town').fill('Barkin Ladi');
   await clickMap();
   await expect(sheet.getByLabel('Latitude')).not.toHaveValue('');
@@ -103,14 +104,14 @@ test('a checkpoint with requirements and its own zone; a repeated code is refuse
     await detail.getByRole('button', { name: 'Add checkpoint' }).click();
     const form = page.getByRole('dialog').filter({ hasText: 'Add a checkpoint' });
     await form.getByLabel('Name').fill(name);
-    await form.getByLabel('What happens here').selectOption('WEIGHBRIDGE');
+    await pick(form.getByLabel('What happens here'), 'WEIGHBRIDGE');
     return form;
   };
   const form = await addOne('Main weighbridge');
   await form.getByText('Scan a code (QR, NFC or seal)').click();
   await form.getByText('Be inside the zone (GPS)').click();
   await form.getByRole('button', { name: 'Add a measurement' }).click();
-  await form.getByLabel('Measurement 1', { exact: true }).selectOption('MASS');
+  await pick(form.getByLabel('Measurement 1', { exact: true }), 'MASS');
   await form.getByText('Compare with the quantity shipped').click();
   await form.getByText(/has its own zone/).click();
   await clickMap();

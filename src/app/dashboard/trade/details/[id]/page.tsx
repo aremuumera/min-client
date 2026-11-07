@@ -4,6 +4,7 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     useGetTradeInquiryQuery,
+    useGetTradeStockQuery,
     useAcknowledgeInquiryMutation
 } from '@/redux/features/trade/trade_api';
 import { useSelector } from 'react-redux';
@@ -27,6 +28,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui';
+import { toApiError } from '@/lib/api/errors';
+import { showQuantity } from '@/lib/trade-stock';
 import { toast } from '@/components/core/toaster';
 import { cn } from '@/utils/helper';
 import { paths } from '@/config/paths';
@@ -40,18 +44,27 @@ export default function TradeDetailPage() {
     const { user } = useSelector((state: any) => state.auth);
     const { data: inquiryResult, isLoading, refetch } = useGetTradeInquiryQuery(tradeId);
     const [acknowledge] = useAcknowledgeInquiryMutation();
+    const { data: stockResult } = useGetTradeStockQuery({ productInquiryId: tradeId }, { skip: !tradeId, refetchOnMountOrArgChange: true });
+    const stock = stockResult?.data?.[0];
+    const { confirm, dialog } = useConfirm();
 
     const inquiry = inquiryResult?.data;
     const isSupplier = user?.role === 'supplier';
     const isBuyer = user?.role === 'buyer' || user?.id === inquiry?.user_id;
 
     const handleAcknowledge = async () => {
+        const ok = await confirm({
+            title: 'Acknowledge this inquiry?',
+            description: "The trade opens and the quantity is held on your listing's batches. If there isn't enough stock, you'll see what is available.",
+            confirmLabel: 'Acknowledge',
+        });
+        if (!ok) return;
         try {
             await acknowledge(tradeId).unwrap();
             toast.success('Inquiry acknowledged successfully');
             refetch();
         } catch (err) {
-            toast.error('Failed to acknowledge inquiry');
+            toast.error(toApiError(err).message || 'Failed to acknowledge inquiry');
         }
     };
 
@@ -80,7 +93,7 @@ export default function TradeDetailPage() {
                         <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
                             <span>Trade Reference</span>
                             <ChevronRight size={10} />
-                            <span className="text-emerald-700 font-mono">#{inquiry.external_id?.toUpperCase()}</span>
+                            <span className="text-emerald-700 font-mono normal-case">{inquiry.external_id}</span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Trade Details</h1>
                     </div>
@@ -369,6 +382,21 @@ export default function TradeDetailPage() {
                         </div>
                     )}
 
+                    {/* Stock held for this trade */}
+                    {stock && (
+                        <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-2">
+                            <h3 className="text-sm font-extrabold text-gray-900">Stock held</h3>
+                            <p className="text-xs text-gray-600">
+                                {showQuantity(stock.allocationSummary.reserved, stock.unit?.symbol)} held, {showQuantity(stock.allocationSummary.committed, stock.unit?.symbol)} committed, of {showQuantity(stock.quantity, stock.unit?.symbol)}
+                            </p>
+                            {inquiry.firebase_room_id && !inquiry.replaced_by_inquiry_id && (
+                                <Link href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}?tab=stock`} className="text-xs font-bold text-emerald-700 hover:underline">
+                                    Open the Stock tab
+                                </Link>
+                            )}
+                        </div>
+                    )}
+
                     {/* Verified Parties Box (Privacy Safe) */}
                     <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block border-b border-gray-100 pb-2">
@@ -463,6 +491,7 @@ export default function TradeDetailPage() {
                 </div>
 
             </div>
+            {dialog}
         </div>
     );
 }

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { quietLogins } from './quiet-login';
 import { test, expect, type Page } from '@playwright/test';
+import { pick } from './pick';
 
 /*
  * Step 2.5 Inventory with a real supplier account against the local backend (desktop only). Registers
@@ -50,10 +51,10 @@ const detail = () => page.getByRole('dialog').filter({ has: page.getByRole('tab'
 async function register(batchCode: string, quantity: string) {
   await page.getByRole('button', { name: 'Register batch' }).first().click();
   const sheet = page.getByRole('dialog').filter({ hasText: 'Register a batch' });
-  await sheet.getByLabel('Material').selectOption({ index: 1 });
+  await pick(sheet.getByLabel('Material'), { index: 1 });
   await sheet.getByLabel('Quantity').fill(quantity);
-  await sheet.getByLabel('Unit').selectOption({ label: 'Metric tonne (t)' });
-  await sheet.getByLabel('Where it came from').selectOption('MINED');
+  await pick(sheet.getByLabel('Unit'), { label: 'Metric tonne (t)' });
+  await pick(sheet.getByLabel('Where it came from'), 'MINED');
   await sheet.getByLabel('Batch code').fill(batchCode);
   await sheet.getByRole('button', { name: 'Register batch' }).click();
   await confirmIn(/Register [\d.,]+ t of /, 'Register batch');
@@ -176,7 +177,7 @@ test('process: the whole batch becomes the output, which can be another quantity
   await register(`${code}-P`, '10');
   await detail().getByRole('button', { name: 'Process' }).click();
   const sheet = page.getByRole('dialog').filter({ hasText: `Process ${code}-P` });
-  await sheet.getByLabel('Material').selectOption({ index: 1 });
+  await pick(sheet.getByLabel('Material'), { index: 1 });
   await sheet.getByLabel('Quantity').fill('8');
   await sheet.getByLabel('Batch code').fill(`${code}-O`);
   await sheet.getByRole('button', { name: 'Record processing' }).click();
@@ -204,7 +205,7 @@ test('documents: a vault file is attached, then backs a quantity change, and can
   await register(`${code}-D`, '5');
   await detail().getByRole('tab', { name: 'Documents' }).click();
   await detail().getByRole('button', { name: 'Attach a document' }).click();
-  await detail().getByLabel('File').selectOption({ label: fileName });
+  await pick(detail().getByLabel('File'), { label: fileName });
   await detail().getByRole('button', { name: 'Attach', exact: true }).click();
   await confirmIn(`Attach ${fileName}?`, 'Attach');
   await expect(page.getByRole('list', { name: 'Batch documents' }).getByText(fileName)).toBeVisible({ timeout: 15_000 });
@@ -215,7 +216,7 @@ test('documents: a vault file is attached, then backs a quantity change, and can
   const sheet = page.getByRole('dialog').filter({ hasText: `Change quantity of ${code}-D` });
   await sheet.getByLabel('Amount').fill('1');
   await sheet.getByLabel('Reason').fill('E2E weighbridge correction');
-  await sheet.getByLabel('Supporting document').selectOption({ label: fileName });
+  await pick(sheet.getByLabel('Supporting document'), { label: fileName });
   await sheet.getByRole('button', { name: 'Record change' }).click();
   await confirmIn(/Record a reduction of 1 t/, 'Record change');
   await expect(detail().getByText('4 t').first()).toBeVisible({ timeout: 15_000 });

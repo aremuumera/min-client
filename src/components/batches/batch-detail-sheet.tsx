@@ -6,6 +6,7 @@ import { Alert, Button, ConfirmDialog, CopyableId, KeyValueList, PaginationBar, 
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { ENDED_STATUSES, OPERABLE_STATUSES, approvalRule, batchLabel, entryStatusLabel, formatQuantity, signedQuantity, toMicro, type Batch, type HistoryItem, type LedgerEntry, type TreeNode } from '@/lib/batches';
+import { SubjectRecords } from '@/components/traceability/subject-records';
 import { useGetBatchHistoryQuery, useGetBatchQuery, useGetBatchTreeQuery, useGetLedgerQuery, useGetUnitChoicesQuery, useQuarantineBatchMutation, useReleaseBatchMutation, useRetireBatchMutation } from '@/redux/features/batches/batches_api';
 import { BatchFormSheet } from './batch-form-sheet';
 import { MergeSheet, SplitSheet, TransformSheet } from './batch-operation-sheets';
@@ -133,6 +134,9 @@ export function BatchDetailSheet({
   ownerNode,
   entryActions,
   documents,
+  units,
+  passport,
+  esgCarbon,
   staffFormProps,
   onClose,
   onOpenBatch,
@@ -143,6 +147,12 @@ export function BatchDetailSheet({
   /** Staff: reverse, approve or reject an entry */
   entryActions?: (entry: LedgerEntry, batch: Batch) => React.ReactNode;
   documents?: (batch: Batch) => React.ReactNode;
+  /** Units and codes tab (step 2.7c) */
+  units?: (batch: Batch) => React.ReactNode;
+  /** Passport tab (step 2.9b) */
+  passport?: (batch: Batch) => React.ReactNode;
+  /** ESG & carbon tab (step 2.10) */
+  esgCarbon?: (batch: Batch) => React.ReactNode;
   staffFormProps?: (batch: Batch) => { staffFields: React.ReactNode; staffBody: Record<string, unknown> };
   onClose: () => void;
   onOpenBatch: (id: string) => void;
@@ -202,6 +212,9 @@ export function BatchDetailSheet({
               <Tab value="family" label="Family" />
               <Tab value="history" label="History" />
               {documents && <Tab value="documents" label="Documents" />}
+              {units && <Tab value="units" label="Units and codes" />}
+              {passport && <Tab value="passport" label="Passport" />}
+              {esgCarbon && <Tab value="esg" label="ESG & carbon" />}
             </TabList>
 
             <TabPanel value="details">
@@ -231,6 +244,7 @@ export function BatchDetailSheet({
                     { label: 'Origin evidence', value: batchLabel(b.provenanceStatus) },
                     { label: 'Verification', value: batchLabel(b.verificationStatus) },
                     { label: 'Can be listed', value: batchLabel(b.listingEligibilityStatus) },
+                    { label: 'On listing', value: b.listing ? `${b.listing.product_name} (${b.listing.listingCode ?? b.listing.status})` : 'Not listed' },
                     { label: 'Quantity approval', value: approvalRule(b.quantityApproval) },
                     { label: 'Last changed', value: formatDateTime(b.updatedAt) },
                   ]}
@@ -267,8 +281,15 @@ export function BatchDetailSheet({
             </TabPanel>
             <TabPanel value="history">
               <HistoryPanel batch={b} />
+              {/* Step 2.8b: readings and events, declared by the company until checked */}
+              <div className="mt-6 border-t border-hairline pt-4">
+                <SubjectRecords subjectType="BATCH" subjectId={b.id} role="owner" />
+              </div>
             </TabPanel>
             {documents && <TabPanel value="documents">{documents(b)}</TabPanel>}
+            {units && <TabPanel value="units">{units(b)}</TabPanel>}
+            {passport && <TabPanel value="passport">{passport(b)}</TabPanel>}
+            {esgCarbon && <TabPanel value="esg">{esgCarbon(b)}</TabPanel>}
           </Tabs>
         )}
       </SideSheet>

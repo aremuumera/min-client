@@ -152,15 +152,18 @@ const ProductWidgets = ({ products }: ProductProps) => {
                   )}
                 </div>
 
-                {quantity && (
+                {(products as { minimum_order_quantity?: string | null }).minimum_order_quantity && (
                   <div className="py-[px]">
                     <span className="sm:text-[15px] text-[12px] font-[400]">M.O.Q:</span>
                     <span className="sm:text-[15px] text-[12px] font-[400] pl-[10px]">
-                      {quantity}
-                      {measure}
+                      {Number((products as { minimum_order_quantity?: string | null }).minimum_order_quantity)} {measure}
                     </span>
                   </div>
                 )}
+                <div className="py-[px]">
+                  <span className="sm:text-[15px] text-[12px] font-[400]">Available:</span>
+                  <span className="sm:text-[15px] text-[12px] font-[400] pl-[10px]">{quantity ?? 0} {measure}</span>
+                </div>
 
                 {delivery_period && (
                   <div className="py-[px]">

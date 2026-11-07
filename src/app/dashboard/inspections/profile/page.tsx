@@ -48,6 +48,7 @@ import { paths } from "@/config/paths";
 import { getErrorMessage } from "@/utils/helper";
 import InspectorProfilePreview from "@/components/dashboard/inspections/profile-preview";
 import EditCoverageSpecialtiesModal from "@/components/dashboard/inspections/EditCoverageSpecialtiesModal";
+import { compressImage } from '@/lib/images/compress';
 
 export default function InspectorProfilePage() {
     const { data: companyRes, isLoading, refetch } = useGetMyCompanyDetailsQuery();
@@ -109,9 +110,10 @@ export default function InspectorProfilePage() {
         }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
-        const file = e.target.files?.[0];
-        if (file) {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
+        const picked = e.target.files?.[0];
+        if (picked) {
+            const file = await compressImage(picked);
             if (file.size > 2 * 1024 * 1024) {
                 toast.error("File size must be less than 2MB");
                 return;

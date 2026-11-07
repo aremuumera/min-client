@@ -161,8 +161,8 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
           {/* Row 2: Ref ID + Copy Button (Left) | Alias Pill Badge (Right: Supplier #1) */}
           <div className="flex items-center justify-between gap-1 min-w-0 my-0.5">
             {thread.tradeRef ? (
-              <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-gray-700 bg-gray-100/80 px-1.5 py-0.5 rounded border border-gray-200/60 shrink-0">
-                <span>TRM-{conversationId.substring(0, 8).toUpperCase()}...</span>
+              <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-gray-700 bg-gray-100/80 px-1.5 py-0.5 rounded border border-gray-200/60 min-w-0">
+                <span className="break-all">{conversationId}</span>
                 <button
                   type="button"
                   onClick={(e) => {

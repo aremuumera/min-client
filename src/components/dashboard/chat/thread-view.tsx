@@ -16,11 +16,14 @@ import { InspectorActionPanel } from './inspector-action-panel';
 import { TradeInspectionsTab } from './trade-inspections-tab';
 import { DocumentVault } from './document-vault';
 import { TradeActivityTimeline } from './trade-activity-timeline';
+import { TradeStockNotice, TradeStockTab } from './trade-stock-tab';
+import { TradeShipmentsTab } from './trade-shipments-tab';
+import { TradePassportsTab } from './trade-passports-tab';
 import { ChatContext } from '@/providers/chat-provider';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
 import { VoiceNoteWaveSkeleton } from './voice-note-player';
@@ -82,7 +85,15 @@ export function ThreadView({ threadId }: ThreadViewProps) {
   }, [threadId, conversations, setActiveConversation, thread, activeConversation?.conversationId]);
 
   const isInspector = user?.id && thread?.metadata?.inspector_id && String(user.id) === String(thread.metadata.inspector_id);
-  const isSupplier = user?.id && thread?.metadata?.supplier_id && String(user.id) === String(thread.metadata.supplier_id);
+  // The cycle's supplier first: a room can hold a replacement supplier's cycle (decision #103)
+  const activeCycleForRole = roomInquiries?.find((i: any) => isMatch(i.id || undefined, activeInquiryId || undefined));
+  const sameId = (a?: string, b?: string) => !!a && !!b && String(a).replace(/-/g, '').toLowerCase() === String(b).replace(/-/g, '').toLowerCase();
+  const isSupplier = sameId(user?.id, activeCycleForRole?.supplier_id || thread?.metadata?.supplier_id);
+
+  const openTab = useSearchParams().get('tab');
+  useEffect(() => {
+    if (openTab === 'stock' || openTab === 'shipments' || openTab === 'inspections' || openTab === 'passports') setActiveTab(openTab);
+  }, [openTab, setActiveTab]);
 
   const messagesRef = React.useRef<HTMLDivElement>(null);
 
@@ -197,7 +208,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
                 )}
                 {/* Always show ref suffix for differentiation */}
                 {inq.id && (
-                  <> • Ref: ..{String(inq.id).slice(-4).toUpperCase()}</>
+                  <> • Ref: {String(inq.id)}</>
                 )}
                 )
               </span>
@@ -244,7 +255,44 @@ export function ThreadView({ threadId }: ThreadViewProps) {
         >
           Activity Log
         </button>
+        {!isInspector && (
+          <button
+            onClick={() => setActiveTab('stock')}
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'stock'
+              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            Stock
+          </button>
+        )}
+        {!isInspector && (
+          <button
+            onClick={() => setActiveTab('shipments')}
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'shipments'
+              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            Shipments
+          </button>
+        )}
+        {!isInspector && (
+          <button
+            onClick={() => setActiveTab('passports')}
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'passports'
+              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            Passport & certificates
+          </button>
+        )}
       </div>
+
+      {!isInspector && activeTab !== 'stock' && threadType === 'rfq' && activeInquiryId && (
+        <TradeStockNotice inquiryId={activeInquiryId} itemType="rfq" onOpen={() => setActiveTab('stock')} />
+      )}
 
       {activeTab === 'vault' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
@@ -267,11 +315,24 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               return (inq?.type === 'rfq' || inq?.type === 'rfq_offer') ? 'rfq' : 'product';
             })()}
             isBuyer={Boolean(user?.id && thread?.metadata?.buyer_id && user.id === thread.metadata.buyer_id) || (!user?.id || user?.id !== thread?.metadata?.supplier_id && user?.id !== thread?.metadata?.inspector_id)}
+            showReleased={!isInspector}
           />
         </div>
       ) : activeTab === 'activity' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
           <TradeActivityTimeline inquiryId={activeInquiryId || ''} />
+        </div>
+      ) : activeTab === 'shipments' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradeShipmentsTab inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} />
+        </div>
+      ) : activeTab === 'passports' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradePassportsTab inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} />
+        </div>
+      ) : activeTab === 'stock' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradeStockTab inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} />
         </div>
       ) : (
         <>
@@ -286,7 +347,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             const activeInq = roomInquiries.find((i: any) => isMatch(i.id || undefined, activeInquiryId || undefined)) || roomInquiries[0];
             const currentStatus = activeInq?.status || thread?.metadata?.status || null;
             const isPending = currentStatus === 'PENDING' || currentStatus === 'pending' || currentStatus === 'pending_negotiation' || currentStatus === 'PENDING_NEGOTIATION';
-            const _isSupplier = user?.id && (thread?.metadata?.supplier_id && user.id === thread.metadata.supplier_id);
+            const _isSupplier = sameId(user?.id, activeInq?.supplier_id || thread?.metadata?.supplier_id);
             const _isInspector = user?.id && (thread?.metadata?.inspector_id && user.id === thread.metadata.inspector_id);
 
             if (isPending && _isSupplier && thread?.metadata?.entity_type !== 'rfq') {

@@ -5,6 +5,26 @@ import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/utils/helper';
 import { Portal } from './portal';
 
+const LIST_MAX_HEIGHT = 250;
+const LIST_GAP = 4;
+const SCREEN_MARGIN = 8;
+
+/** Opens below the field, or above it when there is more room there, and never runs off the screen */
+function listPosition(field: HTMLElement | null): React.CSSProperties {
+  if (!field) return { position: 'fixed', top: 0, left: 0, width: 0 };
+  const box = field.getBoundingClientRect();
+  const below = window.innerHeight - box.bottom - LIST_GAP - SCREEN_MARGIN;
+  const above = box.top - LIST_GAP - SCREEN_MARGIN;
+  const upward = below < LIST_MAX_HEIGHT && above > below;
+  return {
+    position: 'fixed',
+    left: box.left,
+    width: box.width,
+    maxHeight: Math.min(LIST_MAX_HEIGHT, Math.max(upward ? above : below, 0)),
+    ...(upward ? { bottom: window.innerHeight - box.top + LIST_GAP } : { top: box.bottom + LIST_GAP }),
+  };
+}
+
 export interface SelectOption {
   value: string;
   label: React.ReactNode;
@@ -54,6 +74,11 @@ export interface SelectProps {
   onOpen?: () => void;
   /** Callback when select closes */
   onClose?: () => void;
+  /** The trigger's id, so a label can point at it */
+  id?: string;
+  'aria-label'?: string;
+  'aria-invalid'?: boolean;
+  'aria-describedby'?: string;
 }
 
 const sizeClasses = {
@@ -81,6 +106,10 @@ function Select({
   open: controlledOpen,
   onOpen,
   onClose,
+  id,
+  'aria-label': ariaLabel,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
 }: SelectProps) {
   const [internalIsOpen, setInternalIsOpen] = React.useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalIsOpen;
@@ -96,6 +125,7 @@ function Select({
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLUListElement>(null);
+  const listId = React.useId();
 
   // If children are provided instead of options array
   const derivedOptions = React.useMemo(() => {
@@ -187,6 +217,9 @@ function Select({
         setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
         break;
       case 'Escape':
+        // Closes the list only, not the sheet or modal around it
+        if (isOpen) e.nativeEvent.stopImmediatePropagation();
+        if (isOpen) e.stopPropagation();
         setIsOpen(false);
         break;
     }
@@ -205,7 +238,15 @@ function Select({
 
       {/* Trigger */}
       <button
+        id={id}
         type="button"
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-controls={listId}
+        aria-label={ariaLabel}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
         data-select-trigger="true"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
@@ -244,19 +285,18 @@ function Select({
         <Portal>
           <ul
             ref={listRef}
+            id={listId}
+            role="listbox"
             data-select-list="true"
-            style={{
-              position: 'fixed',
-              top: `${containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 0}px`,
-              left: `${containerRef.current ? containerRef.current.getBoundingClientRect().left : 0}px`,
-              width: `${containerRef.current ? containerRef.current.getBoundingClientRect().width : 0}px`,
-              zIndex: 15000,
+            style={{ ...listPosition(containerRef.current), zIndex: 15000 }}
+            onKeyDown={(e) => {
+              // From the search box inside the list: Escape closes the list only, not the sheet around it
+              if (e.key !== 'Escape') return;
+              e.nativeEvent.stopImmediatePropagation();
+              e.stopPropagation();
+              setIsOpen(false);
             }}
-            className={cn(
-              'overflow-auto rounded-lg border border-hairline',
-              'bg-canvas',
-              'max-h-[250px]'
-            )}
+            className={cn('overflow-auto rounded-lg border border-hairline', 'bg-canvas')}
           >
             {derivedOptions.map((option, index) => {
               if (!option.isSelectable) {
@@ -266,6 +306,10 @@ function Select({
               return (
                 <li
                   key={option.value || index}
+                  role="option"
+                  aria-selected={option.value === value}
+                  aria-disabled={option.disabled || undefined}
+                  data-value={option.value}
                   onMouseDown={(e) => {
                     // Use onMouseDown to prevent blur from happening before click
                     e.preventDefault();

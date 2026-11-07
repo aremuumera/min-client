@@ -16,6 +16,7 @@ import { ChatContext } from '@/providers/chat-provider';
 
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { VoiceNoteRecorder } from './voice-note-recorder';
+import { compressImage } from '@/lib/images/compress';
 
 interface MessageAddProps {
   disabled?: boolean;
@@ -58,7 +59,7 @@ export function MessageAdd({ disabled = false, onSend }: MessageAddProps) {
       try {
         setIsUploading(true);
         for (let i = 0; i < files.length; i++) {
-          const file = files[i];
+          const file = await compressImage(files[i]);
           const attachment = await uploadAttachment?.(file);
           if (attachment) {
             onSend?.('file', attachment);

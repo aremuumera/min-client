@@ -83,7 +83,17 @@ export const paths = {
     companyInfoVerification: "/dashboard/company-info-verification",
     invoices: "/dashboard/invoices",
     sites: "/dashboard/sites",
+    // step 2.9: passports, compliance and certificates
+    passports: { list: "/dashboard/passports", requests: "/dashboard/passports/requests" },
+    certificates: "/dashboard/certificates",
+    // step 2.10: ESG and carbon
+    esg: "/dashboard/esg",
+    // step 2.13b: operational alerts
+    alerts: "/dashboard/alerts",
     batches: "/dashboard/batches",
+    shipments: "/dashboard/shipments",
+    scan: "/dashboard/scan",
+    handovers: "/dashboard/handovers",
     documents: { list: "/dashboard/documents", shared: "/dashboard/documents/shared", evidence: "/dashboard/documents/evidence" },
     wallet: "/dashboard/wallet",
     settings: {
@@ -128,6 +138,7 @@ export const paths = {
       create: "/dashboard/supplier-list/create",
       update: (listedSupplierProductId?: string | number) =>
         listedSupplierProductId ? `/dashboard/supplier-list/update/${listedSupplierProductId}` : "/dashboard/supplier-list/update",
+      materialRequests: "/dashboard/supplier-list/material-requests",
       companyProfile: "/dashboard/supplier-list/company-profile/create",
       receivedInquiries: "/dashboard/received-inquiries",
     },
@@ -205,6 +216,7 @@ export const routeAccess = {
     paths.dashboard.products.list,
     paths.dashboard.products.create,
     paths.dashboard.products.update,
+    paths.dashboard.products.materialRequests,
     paths.dashboard.products.companyProfile,
     paths.dashboard.products.receivedInquiries,
     paths.dashboard.myTradeInquiries,
@@ -225,6 +237,12 @@ export const routeAccess = {
     paths.dashboard.sites,
     // inventory (step 2.5)
     paths.dashboard.batches,
+    // passports and certificates (step 2.9)
+    paths.dashboard.passports.list,
+    paths.dashboard.passports.requests,
+    paths.dashboard.certificates,
+    paths.dashboard.esg,
+    paths.dashboard.alerts,
     // documents (step 2.3)
     paths.dashboard.documents.list,
     paths.dashboard.documents.shared,

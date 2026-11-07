@@ -9,7 +9,7 @@ import { differenceInDays, differenceInHours, differenceInMinutes, differenceInS
 import Link from 'next/link';
 import LoginModal from '@/utils/login-modal';
 // import QuoteRequestModal from '@/components/marketplace/modals/quote-request-modal';
-import ProductInquiryModal from '@/components/marketplace/modals/ProductInquiryModal';
+import { OfferForm } from '@/components/rfqs/offer-form';
 import { useAlert } from '@/providers';
 import { formatCompanyNameForUrl } from '@/utils/url-formatter';
 import ToggleSaveButton from '@/components/marketplace/product-widgets/saved-button';
@@ -244,17 +244,10 @@ const RfqWidget = ({ rfqProduct }: { rfqProduct: any }) => {
       /> 
       */}
 
-      <ProductInquiryModal
-        isOpen={showQuoteModal}
+      <OfferForm
+        open={showQuoteModal}
         onClose={closeQuoteModal}
-        product={{
-          id: effectiveRfqId.toString(),
-          rfqId: effectiveRfqId.toString(),
-          name: rfqProductName,
-          mineral_tag: rfqProduct?.mineral_tag || 'mineral',
-          supplier_id: userId?.toString()
-        }}
-        itemType="rfq"
+        rfq={{ rfqId: String(effectiveRfqId), name: rfqProductName, quantityRequired, quantityMeasure, purity_grade: rfqProduct?.purity_grade, moisture_max: rfqProduct?.moisture_max, packaging: rfqProduct?.packaging, productDestination }}
       />
     </>
   );

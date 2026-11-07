@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useCloseOnEscape } from '@/lib/ui/use-close-on-escape';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/utils/helper';
 
@@ -79,6 +80,9 @@ function Popover({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open, setOpen]);
+
+  // Escape closes it too, as keyboard users expect
+  useCloseOnEscape(open, React.useCallback(() => setOpen(false), [setOpen]));
 
   return (
     <div className="relative inline-block" ref={containerRef}>

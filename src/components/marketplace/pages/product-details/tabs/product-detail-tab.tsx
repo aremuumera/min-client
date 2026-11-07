@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatNumberWithCommas } from '@/lib/number-format';
+import { FULFILMENT_LABELS, PLACE_LABELS } from '@/lib/listings';
 
 const ProductDetailTab = ({ products }: { products: any }) => {
   const {
@@ -15,19 +16,36 @@ const ProductDetailTab = ({ products }: { products: any }) => {
     moisture_max,
     packaging,
     sampling_method,
+    material,
+    fulfillment_type,
+    location_type,
+    minimum_order_quantity,
+    selected_shipping,
+    selected_payments,
+    paymentsTermsDescribed,
+    shippingTermsDescribed,
   } = products || {};
+  const listOf = (v: unknown) => (Array.isArray(v) && v.length ? v.join(', ') : null);
 
   const specifications = [
+    { label: 'Material', value: material?.name },
     { label: 'Composition', value: composition },
     { label: 'Density', value: density },
     { label: 'Hardness', value: hardness },
     { label: 'Color', value: color },
     { label: 'Purity / Grade', value: purity_grade },
-    { label: 'Max Moisture (%)', value: moisture_max ? `${moisture_max}%` : null },
+    { label: 'Max Moisture (%)', value: moisture_max === null || moisture_max === undefined ? null : `${moisture_max}%` },
     { label: 'Packaging', value: packaging },
     { label: 'Sampling Method', value: sampling_method },
     { label: 'Location', value: selected_state && selected_country_name ? `${selected_state}, ${selected_country_name}` : (selected_country_name || selected_state || 'N/A') },
-    { label: 'Available Quantity', value: quantity ? `${formatNumberWithCommas(quantity)} ${measure || ''}` : 'N/A' }
+    { label: 'Available Quantity', value: `${formatNumberWithCommas(quantity ?? 0)} ${measure || ''}` },
+    { label: 'Minimum Order', value: minimum_order_quantity ? `${formatNumberWithCommas(Number(minimum_order_quantity))} ${measure || ''}` : null },
+    { label: 'Offered From', value: PLACE_LABELS[location_type] },
+    { label: 'Fulfilment', value: FULFILMENT_LABELS[fulfillment_type] },
+    { label: 'Payment Terms', value: listOf(selected_payments) },
+    { label: 'Payment Details', value: paymentsTermsDescribed },
+    { label: 'Shipping Terms', value: listOf(selected_shipping) },
+    { label: 'Shipping Details', value: shippingTermsDescribed },
   ];
 
   return (

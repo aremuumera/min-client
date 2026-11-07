@@ -1,40 +1,74 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "../../api/baseApi";
+import { idempotencyHeaders } from "@/lib/api/idempotency";
+import type { TradeAllocation, TradeStockRecord } from "@/lib/trade-stock";
+
+type InquiryListQuery = { state?: string; status?: string; search?: string; page?: number; limit?: number };
+
+const inquiryListParams = (params: InquiryListQuery | void) => {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value) searchParams.append(key, String(value));
+  }
+  const q = searchParams.toString();
+  return q ? `?${q}` : "";
+};
 
 export const tradeApi = createApi({
   reducerPath: "tradeApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["TradeInquiry", "TradeChat", "RfqOffer"],
+  tagTypes: ["TradeInquiry", "TradeChat", "RfqOffer", "TradeStock"],
 
   endpoints: (builder) => ({
+    /* The stock behind a trade (step 2.6c). The trade room stays the authority for its status. */
+    getTradeStock: builder.query<{ data: TradeStockRecord[] }, { productInquiryId?: string; rfqOfferId?: string }>({
+      query: (params) => ({ url: "/trades", params }),
+      providesTags: ["TradeStock"],
+    }),
+    /** The company's trades as seller, for planning a shipment */
+    getSellerTrades: builder.query<{ data: TradeStockRecord[] }, void>({
+      query: () => ({ url: "/trades", params: { role: "seller", limit: 100 } }),
+      providesTags: ["TradeStock"],
+    }),
+    getTradeRecord: builder.query<{ data: TradeStockRecord }, string>({
+      query: (id) => `/trades/${id}`,
+      providesTags: ["TradeStock"],
+    }),
+    getTradeAllocations: builder.query<{ data: TradeAllocation[] }, string>({
+      query: (id) => `/trades/${id}/allocations`,
+      providesTags: ["TradeStock"],
+    }),
+    holdBatch: builder.mutation<unknown, { tradeId: string; batchId: string; quantity: string; idempotencyKey: string }>({
+      query: ({ tradeId, idempotencyKey, ...body }) => ({ url: `/trades/${tradeId}/allocations`, method: "POST", body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ["TradeStock"],
+    }),
+    releaseHold: builder.mutation<unknown, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({ url: `/allocations/${id}/release`, method: "POST", body: { reason } }),
+      invalidatesTags: ["TradeStock"],
+    }),
+
     getTradeInquiry: builder.query<any, string>({
       query: (id) => `/trade/inquiries/${id}`,
       providesTags: (result, error, id) => [{ type: "TradeInquiry", id }],
     }),
 
-    getMyTradeInquiries: builder.query<any, { state?: string; status?: string; search?: string } | void>({
-      query: (params) => {
-        if (!params) return "/trade/my-inquiries";
-        const searchParams = new URLSearchParams();
-        if (params.state) searchParams.append("state", params.state);
-        if (params.status) searchParams.append("status", params.status);
-        if (params.search) searchParams.append("search", params.search);
-        const q = searchParams.toString();
-        return `/trade/my-inquiries${q ? `?${q}` : ""}`;
-      },
+    getMyTradeInquiries: builder.query<any, InquiryListQuery | void>({
+      query: (params) => `/trade/my-inquiries${inquiryListParams(params)}`,
       providesTags: ["TradeInquiry"],
     }),
 
-    getReceivedInquiries: builder.query<any, { state?: string; status?: string; search?: string } | void>({
-      query: (params) => {
-        if (!params) return "/trade/received-inquiries";
-        const searchParams = new URLSearchParams();
-        if (params.state) searchParams.append("state", params.state);
-        if (params.status) searchParams.append("status", params.status);
-        if (params.search) searchParams.append("search", params.search);
-        const q = searchParams.toString();
-        return `/trade/received-inquiries${q ? `?${q}` : ""}`;
-      },
+    getMyTradeInquiriesSummary: builder.query<{ data: Record<string, number> }, void>({
+      query: () => "/trade/my-inquiries/summary",
+      providesTags: ["TradeInquiry"],
+    }),
+
+    getReceivedInquiries: builder.query<any, InquiryListQuery | void>({
+      query: (params) => `/trade/received-inquiries${inquiryListParams(params)}`,
+      providesTags: ["TradeInquiry"],
+    }),
+
+    getReceivedInquiriesSummary: builder.query<{ data: Record<string, number> }, void>({
+      query: () => "/trade/received-inquiries/summary",
       providesTags: ["TradeInquiry"],
     }),
 
@@ -111,8 +145,20 @@ export const tradeApi = createApi({
       query: (offerId) => `/rfq/offers/${offerId}`,
       providesTags: (result, error, id) => [{ type: "RfqOffer", id }],
     }),
-    getMyRfqOffers: builder.query<any, void>({
-      query: () => "/rfq/offers/my-offers",
+    getMyRfqOffers: builder.query<any, { page?: number; limit?: number; status?: string; search?: string; state?: string }>({
+      query: (params) => {
+        const q = new URLSearchParams();
+        for (const [k, v] of Object.entries(params)) if (v) q.append(k, String(v));
+        return `/rfq/offers/my-offers?${q.toString()}`;
+      },
+      providesTags: ["RfqOffer"],
+    }),
+    getMyRfqOfferSummary: builder.query<any, void>({
+      query: () => "/rfq/offers/my-offers/summary",
+      providesTags: ["RfqOffer"],
+    }),
+    getOfferHistory: builder.query<any, string>({
+      query: (offerId) => `/rfq/offers/${offerId}/history`,
       providesTags: ["RfqOffer"],
     }),
     shortlistRfqOffer: builder.mutation<
@@ -178,12 +224,22 @@ export const {
   useGetTradeInquiryQuery,
   useGetMyTradeInquiriesQuery,
   useGetReceivedInquiriesQuery,
+  useGetMyTradeInquiriesSummaryQuery,
+  useGetReceivedInquiriesSummaryQuery,
+  useGetTradeStockQuery,
+  useGetTradeRecordQuery,
+  useGetTradeAllocationsQuery,
+  useGetSellerTradesQuery,
+  useHoldBatchMutation,
+  useReleaseHoldMutation,
   useCreateProductInquiryMutation,
   useCreateBusinessInquiryMutation,
   useResolveTradeChatMutation,
   useAcknowledgeInquiryMutation,
   useRejectInquiryMutation,
   useGetOffersByRfqQuery,
+  useGetMyRfqOfferSummaryQuery,
+  useGetOfferHistoryQuery,
   // RFQ Offer hooks
   useSubmitRfqOfferMutation,
   useGetRfqOffersQuery,

@@ -146,6 +146,15 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
             </span>
           </div>
 
+          {products.minimum_order_quantity && (
+            <div className="flex gap-3 items-center">
+              <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Minimum Order:</span>
+              <span className="text-gray-800 text-sm sm:text-base font-medium">
+                {formatNumberWithCommas(Number(products.minimum_order_quantity))} {measure || ''}
+              </span>
+            </div>
+          )}
+
           {/* Delivery */}
           <div className="flex gap-3 items-center">
             <span className="text-gray-500 font-medium text-sm sm:text-base min-w-[140px] shrink-0">Delivery Period:</span>
@@ -213,9 +222,13 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
             <ShareButton productName={product_name} />
           </div>
 
+          {products.status && products.status !== 'published' && (
+            <p className="mb-3 text-sm text-gray-500">This listing is not on sale right now.</p>
+          )}
           <button
             onClick={handleRequestQuote}
-            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm sm:text-base transition-all shadow-sm hover:shadow active:scale-[0.99]"
+            disabled={!!products.status && products.status !== 'published'}
+            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm sm:text-base transition-all disabled:cursor-not-allowed disabled:bg-gray-300 active:scale-[0.99]"
           >
             Request Quote
           </button>
@@ -261,6 +274,7 @@ const DetailsInfo = ({ products }: DetailsInfoProps) => {
           sampling_method: products.sampling_method,
           quantity: products.quantity,
           measure: products.measure,
+          minimum_order_quantity: products.minimum_order_quantity,
         }}
         productData={{
           purity_grade: products.purity_grade,

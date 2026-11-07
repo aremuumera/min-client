@@ -19,7 +19,7 @@ import { MdEdit } from 'react-icons/md';
 // import { Option } from '@/components/core/option';
 
 import { supplierBusinessData } from '@/lib/marketplace-data';
-import { paymentTerms, shippingTerms as shippingTermsFields } from '../../CreateProducts/paymentTerms';
+import { paymentTerms, shippingTerms as shippingTermsFields } from '@/lib/trade-terms';
 import SupplierProfileInputEditModal from './SupplierInputEditModal';
 
 const EditCompanyProfile = ({ open, rows, onClose }: any) => {

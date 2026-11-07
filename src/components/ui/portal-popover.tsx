@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useCloseOnEscape } from '@/lib/ui/use-close-on-escape';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/utils/helper';
 import { Portal } from './portal';
@@ -85,6 +86,9 @@ export function PortalPopover({
         }
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [open, setOpen]);
+
+    // Escape closes it too, as keyboard users expect
+    useCloseOnEscape(open, React.useCallback(() => setOpen(false), [setOpen]));
 
     const getPopPos = () => {
         const space = 4;

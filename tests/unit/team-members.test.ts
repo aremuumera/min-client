@@ -9,18 +9,18 @@ const me = '935dc217-daa9-4e33-9b04-60996aa29181';
 const other = '4b1c2d3e-4f5a-4b60-8c71-9d2e3f4a5b62';
 
 describe('team keys', () => {
-  it('the picker groups hold all 16 keys exactly once', () => {
+  it('the picker groups hold all 17 keys exactly once', () => {
     const keys = TEAM_PERMISSION_GROUPS.flatMap((g) => g.keys);
-    expect(keys).toHaveLength(16);
+    expect(keys).toHaveLength(17);
     expect(new Set(keys)).toEqual(new Set(TEAM_PERMISSION_KEYS));
   });
   it('the owner may give every key; a member only their own', () => {
-    expect(grantableKeys(owner)).toHaveLength(16);
+    expect(grantableKeys(owner)).toHaveLength(17);
     expect(grantableKeys(member)).toEqual(['products', 'chat', 'team_management']);
   });
   it('presets follow the backend, minus keys a member cannot give', () => {
     expect(presetFor(owner, 'marketer')).toEqual(['products', 'rfq', 'analytics']);
-    expect(presetFor(owner, 'admin')).toHaveLength(16);
+    expect(presetFor(owner, 'admin')).toHaveLength(17);
     expect(presetFor(member, 'marketer')).toEqual(['products']);
     expect(presetFor(member, 'customer_care')).toEqual(['chat']);
   });

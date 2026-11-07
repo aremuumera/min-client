@@ -53,7 +53,7 @@ export interface CreateShareLinkBody {
 }
 
 export interface CreateGrantBody {
-  resourceType: 'FILE_ASSET';
+  resourceType: 'FILE_ASSET' | 'CERTIFICATE' | 'PASSPORT';
   resourceId: string;
   granteeType: GranteeType;
   granteeId: string;

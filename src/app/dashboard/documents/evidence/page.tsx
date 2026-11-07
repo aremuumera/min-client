@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, FormField, Input, NativeSelect, PageHeader, SideSheet, StatusBadge, useConfirm } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, FormField, Input, DropdownSelect, PageHeader, SideSheet, StatusBadge, useConfirm } from '@/components/ui';
 import { DocumentsTabs } from '@/components/documents/documents-tabs';
 import { paths } from '@/config/paths';
 import { toApiError } from '@/lib/api/errors';
@@ -82,10 +82,10 @@ function AttachSheet({ open, orgId, onClose }: { open: boolean; orgId: string; o
       <form id="evidence-form" onSubmit={submit} noValidate className="flex flex-col gap-4">
         {formError && <Alert severity="error">{formError}</Alert>}
         <FormField label="File" htmlFor="evidence-file" required error={errors.fileAssetId} help={files.isSuccess && !files.data.data.length ? 'No files yet: upload one in My documents first' : undefined}>
-          <NativeSelect id="evidence-file" value={fileId} onValueChange={setFileId} options={(files.data?.data ?? []).map((f) => ({ value: f.id, label: f.displayName }))} placeholder={files.isLoading ? 'Loading…' : 'Choose…'} error={!!errors.fileAssetId} />
+          <DropdownSelect id="evidence-file" value={fileId} onValueChange={setFileId} options={(files.data?.data ?? []).map((f) => ({ value: f.id, label: f.displayName }))} placeholder={files.isLoading ? 'Loading…' : 'Choose…'} error={!!errors.fileAssetId} />
         </FormField>
         <FormField label="What it proves" htmlFor="evidence-type">
-          <NativeSelect id="evidence-type" value={type} onValueChange={setType} options={ATTACHMENT_TYPES.map((t) => ({ value: t, label: label(t) }))} />
+          <DropdownSelect id="evidence-type" value={type} onValueChange={setType} options={ATTACHMENT_TYPES.map((t) => ({ value: t, label: label(t) }))} />
         </FormField>
         <FormField label="Title" htmlFor="evidence-title" help="Empty: the file's name" error={errors.title}>
           <Input id="evidence-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={255} autoComplete="off" />

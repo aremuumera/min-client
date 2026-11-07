@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useGetInspectorAnalyticsQuery } from '@/redux/features/inspector/inspector_api';
+import { MyInspections } from '@/components/analytics/inspector-section';
 import { Card, CardContent } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
 import { Box } from '@/components/ui/box';
@@ -10,7 +11,6 @@ import {
     BarChart3,
     Zap,
     Trophy,
-    Clock,
     CheckCircle2,
     AlertCircle,
     Timer,
@@ -156,22 +156,8 @@ export default function InspectorAnalyticsPage() {
                 </Card>
             </div>
 
-            <Card outlined className="bg-neutral-50/30">
-                <CardContent className="p-8">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-10 h-10 bg-white border border-neutral-100 rounded-xl flex items-center justify-center shadow-sm">
-                            <Clock className="w-5 h-5 text-neutral-400" />
-                        </div>
-                        <div>
-                            <Typography variant="h6" className="text-neutral-800">Historical Performance Logs</Typography>
-                            <Typography variant="caption" className="text-neutral-500 font-medium tracking-tight">Systematic record of all concluded trade orchestrations.</Typography>
-                        </div>
-                    </div>
-                    <div className="p-20 text-center bg-white rounded-2xl border border-neutral-100 border-dashed">
-                        <Typography variant="body2" className="text-neutral-400 italic">Advanced historical audit logs arriving in next cycle.</Typography>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* step 2.14: the inspection work for a chosen period (replaces the "arriving in next cycle" placeholder) */}
+            <MyInspections />
         </div>
     );
 }
