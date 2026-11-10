@@ -1,10 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, DropdownSelect, FormField, Input, Modal, StatusBadge, Textarea, Timeline, type TimelineEntry } from '@/components/ui';
+import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, DropdownSelect, FormField, Input, LineageGraph, Modal, StatusBadge, Textarea, Timeline, type TimelineEntry } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
-import { valueText, words, type MetadataEntry, type PassportVersion, type RecordHistoryItem, type TemplateField, type VersionField } from '@/lib/passports';
+import { relationshipPicture, valueText, words, type MetadataEntry, type PassportVersion, type RecordHistoryItem, type TemplateField, type VersionField } from '@/lib/passports';
 import { numberText } from '@/lib/traceability';
 import {
   useAddPassportMaterialMutation,
@@ -453,8 +453,10 @@ function LinkedRecords({ id }: { id: string }) {
       ))}
     </ul>
   );
+  const picture = relationshipPicture(t, id);
   return (
     <div className="space-y-3 text-sm" data-testid="linked-records">
+      {picture.edges.length > 0 && <LineageGraph nodes={picture.nodes} edges={picture.edges} label="This record and the records it is linked to" />}
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-gray-500">About</p>
         <p className="text-gray-700">{t.subject.label ?? words(t.subject.type)}</p>

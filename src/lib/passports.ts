@@ -488,3 +488,36 @@ export function statementRows(value: unknown, prefix = ''): { label: string; val
 }
 export const CERTIFICATE_STATUS_TEXT: Record<Certificate['status'], string> = { ACTIVE: 'Active', SUSPENDED: 'Suspended by MINMEG', REVOKED: 'Revoked by MINMEG', ARCHIVED: 'Archived' };
 export const certificateTone = (c: Pick<Certificate, 'status' | 'issued'>) => (c.status === 'ACTIVE' ? (c.issued ? 'ACTIVE' : 'PENDING') : c.status === 'SUSPENDED' ? 'ON_HOLD' : 'CANCELLED');
+
+/** A box and an arrow of the family picture (the shapes LineageGraph draws) */
+export interface PictureNode { id: string; title: string; subtitle?: string; statusLabel?: string; focus?: boolean; restricted?: boolean }
+export interface PictureEdge { from: string; to: string; label?: string }
+
+/**
+ * The relationship tree as a picture: the passports of the batches it came from (left) and went into
+ * (right), the record it was issued from, and its other links, each pointing the way the link was recorded
+ */
+export function relationshipPicture(t: RelationshipTree, id: string): { nodes: PictureNode[]; edges: PictureEdge[] } {
+  const nodes = new Map<string, PictureNode>();
+  const edges: PictureEdge[] = [];
+  const self = t.passport ?? (t.certificate ? { id: t.certificate.id, passportCode: t.certificate.certificateCode, status: t.certificate.status } : { id, passportCode: id, status: '' });
+  nodes.set(id, { id, focus: true, title: self.passportCode, subtitle: t.subject.label ?? words(t.subject.type) });
+  for (const l of t.lineage ?? []) {
+    if (!nodes.has(l.passport.id)) nodes.set(l.passport.id, { id: l.passport.id, title: l.passport.passportCode, subtitle: 'Passport of a related batch', statusLabel: words(l.passport.status) });
+    edges.push(l.relationshipType === 'DERIVED_FROM' ? { from: l.passport.id, to: id, label: words(l.lineageType) } : { from: id, to: l.passport.id, label: words(l.lineageType) });
+  }
+  if (t.source) {
+    const key = `${t.source.type}:${t.source.id}`;
+    nodes.set(key, { id: key, title: words(t.source.type), subtitle: t.source.id });
+    edges.push({ from: key, to: id, label: 'Issued from' });
+  }
+  for (const r of t.relationships) {
+    const selfIsSource = r.source.id === id || r.source.id === t.passport?.id;
+    const other = selfIsSource ? r.target : r.source;
+    const key = other.id === id ? id : `${other.type}:${other.id}`;
+    if (key === id) continue;
+    if (!nodes.has(key)) nodes.set(key, { id: key, title: words(other.type), subtitle: other.id });
+    edges.push(selfIsSource ? { from: id, to: key, label: words(r.relationshipType) } : { from: key, to: id, label: words(r.relationshipType) });
+  }
+  return { nodes: [...nodes.values()], edges };
+}

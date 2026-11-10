@@ -201,3 +201,4 @@ export { PageHelp, type PageHelpContent, type PageHelpLink } from "./page-help";
 export { MapPicker, type MapPickerProps } from "./map-picker";
 export { TrackMap, type TrackMapProps, type TrackMapPlace } from "./track-map";
 export { QrScanner, type QrScannerProps } from "./qr-scanner";
+export { LineageGraph, layoutLineage, type LineageGraphProps, type LineageNode, type LineageEdge } from "./lineage-graph";

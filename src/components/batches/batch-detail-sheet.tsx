@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, CopyableId, KeyValueList, PaginationBar, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs, Timeline, type TimelineEntry } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, KeyValueList, LineageGraph, PaginationBar, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs, Timeline, ToggleButton, ToggleButtonGroup, type LineageEdge, type LineageNode, type TimelineEntry } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { ENDED_STATUSES, OPERABLE_STATUSES, approvalRule, batchLabel, entryStatusLabel, formatQuantity, signedQuantity, toMicro, type Batch, type HistoryItem, type LedgerEntry, type TreeNode } from '@/lib/batches';
 import { SubjectRecords } from '@/components/traceability/subject-records';
-import { useGetBatchHistoryQuery, useGetBatchQuery, useGetBatchTreeQuery, useGetLedgerQuery, useGetUnitChoicesQuery, useQuarantineBatchMutation, useReleaseBatchMutation, useRetireBatchMutation } from '@/redux/features/batches/batches_api';
+import { useGetBatchHistoryQuery, useGetBatchLineageQuery, useGetBatchQuery, useGetBatchTreeQuery, useGetLedgerQuery, useGetUnitChoicesQuery, useQuarantineBatchMutation, useReleaseBatchMutation, useRetireBatchMutation } from '@/redux/features/batches/batches_api';
 import { BatchFormSheet } from './batch-form-sheet';
 import { MergeSheet, SplitSheet, TransformSheet } from './batch-operation-sheets';
 import { AdjustSheet, ReconcileSheet } from './quantity-sheets';
@@ -67,7 +67,7 @@ function LedgerPanel({ batch, entryActions }: { batch: Batch; entryActions?: (en
   );
 }
 
-function FamilyPanel({ batchId, onOpen }: { batchId: string; onOpen: (id: string) => void }) {
+function FamilyList({ batchId, onOpen }: { batchId: string; onOpen: (id: string) => void }) {
   const tree = useGetBatchTreeQuery(batchId);
   const units = useGetUnitChoicesQuery();
   const symbol = (id?: string) => units.data?.data.find((u) => u.id === id)?.symbol;
@@ -105,6 +105,51 @@ function FamilyPanel({ batchId, onOpen }: { batchId: string; onOpen: (id: string
         <h3 className="mb-1 text-sm font-semibold text-ink">Became</h3>
         {downstream.length ? <ul>{downstream.map((n) => row(n, n.children ?? [], 'children'))}</ul> : <p className="text-sm text-steel">Nothing yet.</p>}
       </section>
+    </div>
+  );
+}
+
+/** The family as a picture: every batch once, merges with all their parents (GET /batches/{id}/lineage) */
+function FamilyPicture({ batchId, onOpen }: { batchId: string; onOpen: (id: string) => void }) {
+  const lineage = useGetBatchLineageQuery(batchId);
+  const units = useGetUnitChoicesQuery();
+  const symbol = (id?: string | null) => units.data?.data.find((u) => u.id === id)?.symbol;
+  const graph = React.useMemo(() => {
+    const d = lineage.data?.data;
+    if (!d) return null;
+    const nodes: LineageNode[] = d.nodes.map((n) => ({
+      id: n.id,
+      restricted: n.restricted,
+      focus: n.id === d.batchId,
+      title: n.batchCode ?? n.id,
+      subtitle: n.restricted ? n.id : `${batchLabel(n.batchType)} · ${formatQuantity(n.initialQuantity, symbol(n.quantityUnitId))}`,
+      statusLabel: n.restricted ? undefined : batchLabel(n.batchStatus),
+    }));
+    const edges: LineageEdge[] = d.edges.map((e) => ({
+      from: e.parentBatchId,
+      to: e.childBatchId,
+      label: `${batchLabel(e.relationshipType)}${e.quantityContributed ? ` · ${formatQuantity(e.quantityContributed, symbol(e.unitId))}` : ''}`,
+    }));
+    return { nodes, edges };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineage.data, units.data]);
+
+  if (lineage.isError) return <Alert severity="error">{toApiError(lineage.error).message}</Alert>;
+  if (!graph) return <p className="text-sm text-steel">Loading…</p>;
+  if (!graph.edges.length) return <p className="text-sm text-steel">This batch has no parents or children. It was registered directly and hasn&apos;t been split, merged or processed.</p>;
+  return <LineageGraph nodes={graph.nodes} edges={graph.edges} onSelect={onOpen} label="Family tree of this batch: the batches it came from and became" restrictedText="A batch not shared with you" />;
+}
+
+/** Came from / became, as a picture or as the list it always was */
+function FamilyPanel({ batchId, onOpen }: { batchId: string; onOpen: (id: string) => void }) {
+  const [view, setView] = React.useState<'picture' | 'list'>('picture');
+  return (
+    <div className="flex flex-col gap-3">
+      <ToggleButtonGroup value={view} exclusive size="sm" onChange={(_, v) => v && setView(v)} aria-label="Show the family as">
+        <ToggleButton value="picture">Picture</ToggleButton>
+        <ToggleButton value="list">List</ToggleButton>
+      </ToggleButtonGroup>
+      {view === 'picture' ? <FamilyPicture batchId={batchId} onOpen={onOpen} /> : <FamilyList batchId={batchId} onOpen={onOpen} />}
     </div>
   );
 }

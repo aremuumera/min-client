@@ -121,6 +121,21 @@ export interface TreeNode {
   parents?: TreeNode[];
   children?: TreeNode[];
 }
+/** GET /batches/{id}/lineage: every batch in the family once, and each parent → child link */
+export interface LineageGraphNode {
+  id: string;
+  restricted?: boolean;
+  batchCode?: string;
+  batchType?: string;
+  batchStatus?: string;
+  initialQuantity?: string;
+  quantityUnitId?: string;
+}
+export interface BatchLineage {
+  batchId: string;
+  nodes: LineageGraphNode[];
+  edges: { id: string; parentBatchId: string; childBatchId: string; relationshipType: string; quantityContributed?: string | null; unitId?: string | null }[];
+}
 export interface BatchTree {
   batch: TreeNode;
   upstream: TreeNode[];
