@@ -127,6 +127,19 @@ export type GranteeType = (typeof GRANTEE_TYPES)[number] | 'TRADE_PARTICIPANT';
 export const GRANT_PERMISSIONS = ['READ', 'VIEW_EVIDENCE', 'DOWNLOAD'] as const;
 export type GrantPermission = (typeof GRANT_PERMISSIONS)[number] | 'VIEW_PRIVATE_DATA' | 'SHARE' | 'MANAGE_ACCESS';
 
+/** A certificate or passport shared with an email address (decision #119). The same whether or not the address is a MINMEG account */
+export interface EmailShare {
+  id: string;
+  resourceType: 'CERTIFICATE' | 'PASSPORT';
+  resourceId: string;
+  email: string;
+  expiresAt: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+  reason: string | null;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
 export interface Grant {
   id: string;
   resourceType: string;
