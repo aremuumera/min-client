@@ -145,6 +145,17 @@ export function StockSection({ q, opt, window }: { q: Q; opt: Opt; window?: Wind
               { label: 'Changes waiting for MINMEG', value: number(d.ledger.waitingForApproval) },
             ]}
           />
+          {!!d.conflictAreas && d.conflictAreas.sites + d.conflictAreas.batches > 0 && (
+            <div data-testid="analytics-conflict-areas" className="space-y-2">
+              <p className="text-sm font-medium text-ink">From conflict-affected and high-risk areas, today</p>
+              <Tiles
+                items={[
+                  { label: 'Your sites in such an area', value: number(d.conflictAreas.sites) },
+                  { label: 'Batches in stock from one', value: number(d.conflictAreas.batches), hint: d.conflictAreas.quantity.map((r) => `${number(Number(r.quantity))} ${r.unit ?? ''}`.trim()).join(' · ') || undefined },
+                ]}
+              />
+            </div>
+          )}
           <Pair>
             <Trend title="Batches created" series={d.batches.created} window={window} />
             <Breakdown title="Batches, by status" counts={d.batches.byStatus} />

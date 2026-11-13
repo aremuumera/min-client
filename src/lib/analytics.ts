@@ -26,6 +26,8 @@ export type TraceabilityAnalytics = Answer<{
   ledger: { entriesByType: Counts; waitingForApproval: number };
   shipments: { byStatus: Counts; dispatched: Series };
   events: { byStatus: Counts; recorded: Series };
+  /** Decision #125: stock from conflict-affected and high-risk areas, as of now. `onHold` is for staff only */
+  conflictAreas?: { sites: number; batches: number; quantity: { unitId: string; unit: string | null; quantity: string }[]; onHold?: number };
 }>;
 export type LogisticsAnalytics = Answer<{
   shipments: { inMotion: number; byStatus: Counts; arrivedWithPlan: number; onTimeArrivals: number; onTimeRate: number | null; averageTransitHours: number | null };
