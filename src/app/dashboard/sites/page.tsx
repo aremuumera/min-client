@@ -114,6 +114,7 @@ function SitesPage() {
               <div>
                 <p className="font-medium text-ink">{r.name}</p>
                 <p className="text-sm text-steel">{r.code}</p>
+                {r.cahra?.inArea && <p className="text-xs font-medium text-semantic-warning-text">In a conflict-affected or high-risk area</p>}
               </div>
             ),
           },

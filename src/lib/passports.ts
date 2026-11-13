@@ -187,6 +187,8 @@ export interface Passport {
   ownerOrganizationId: string;
   status: 'DRAFT' | 'ACTIVE' | 'PUBLISHED' | 'SUSPENDED' | 'REVOKED' | 'ARCHIVED';
   correctionPending: boolean;
+  /** Decision #125 (GET /certificates/:id, batch passports): the batch comes from a conflict-affected or high-risk area */
+  originCahra?: boolean | null;
   publishedVersion: VersionSummary | null;
   /** Owner and staff only */
   openVersion?: VersionSummary | null;

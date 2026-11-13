@@ -402,6 +402,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
           <p className="text-sm font-bold text-gray-900">{p.certificateType?.name ?? 'Passport'} · {p.passportCode}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <StatusBadge status={passportTone(p.status)}>{PASSPORT_STATUS_TEXT[p.status]}</StatusBadge>
+            {p.originCahra && <StatusBadge tone="warning" data-testid="origin-cahra">From a conflict-affected or high-risk area</StatusBadge>}
             {p.correctionPending && <StatusBadge status="ON_HOLD">Correction in progress</StatusBadge>}
           </div>
           {p.suspensionReason && p.status === 'SUSPENDED' && <p className="mt-1 text-sm text-gray-600">MINMEG: {p.suspensionReason}</p>}

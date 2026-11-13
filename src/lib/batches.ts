@@ -65,6 +65,10 @@ export interface Batch {
   grade: string | null;
   purity: string | null;
   provenanceStatus: string;
+  /** Decision #125 (GET /batches/:id): the batch comes from a conflict-affected or high-risk area */
+  originCahra?: boolean;
+  /** Staff only: the conflict-area hold is why it cannot sell */
+  cahraHold?: boolean;
   verificationStatus: string;
   inspectionStatus: string | null;
   listingEligibilityStatus: string;

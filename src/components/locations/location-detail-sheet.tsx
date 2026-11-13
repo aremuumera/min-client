@@ -163,6 +163,11 @@ export function LocationDetailSheet({
                 </ul>
               )}
             </section>
+            {l.cahra?.inArea && (
+              <Alert severity="warning" data-testid="site-cahra">
+                MINMEG treats this site as in a conflict-affected or high-risk area. Batches mined here and their passports say so, and buyers may ask for extra due diligence. If you think this is wrong, contact MINMEG support.
+              </Alert>
+            )}
             {extra?.(l)}
           </div>
         )}

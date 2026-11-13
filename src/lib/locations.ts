@@ -36,6 +36,8 @@ export interface Location {
   updatedAt: string;
   /** GET /locations/:id only */
   checkpointCount?: number;
+  /** Decision #125: whether the site is in a conflict-affected or high-risk area, by MINMEG's list or a MINMEG ruling */
+  cahra?: { inArea: boolean; basis: 'OVERRIDE' | 'LIST' | 'NONE'; area: { region: string | null; source: string } | null };
 }
 
 export interface RequiredMeasurement {

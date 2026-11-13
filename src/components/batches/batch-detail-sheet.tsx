@@ -282,6 +282,7 @@ export function BatchDetailSheet({
                     { label: 'How it was created', value: batchLabel(b.batchType) },
                     { label: 'Source', value: batchLabel(b.sourceType) },
                     { label: 'Origin site', value: b.sourceLocation?.name },
+                    ...(b.originCahra ? [{ label: 'Origin area', value: <StatusBadge tone="warning" data-testid="origin-cahra">Conflict-affected or high-risk area</StatusBadge> }] : []),
                     { label: 'Where it is now', value: b.currentLocation?.name },
                     { label: 'Physical form', value: b.physicalForm ? batchLabel(b.physicalForm) : null },
                     { label: 'Grade', value: b.grade ? formatQuantity(b.grade) : null },
