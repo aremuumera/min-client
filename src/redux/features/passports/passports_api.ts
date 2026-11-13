@@ -124,6 +124,7 @@ export const {
   useGetActiveStandardsQuery,
   useGetVisibilityPoliciesQuery,
   useGetPassportsQuery,
+  useLazyGetPassportsQuery,
   useGetPassportQuery,
   useGetPassportVersionQuery,
   useGetPassportVersionsQuery,
