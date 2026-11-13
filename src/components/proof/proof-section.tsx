@@ -59,6 +59,25 @@ function Inclusion({ proofId }: { proofId: string }) {
   );
 }
 
+/**
+ * Decision #123: a published passport version is sealed twice. This is the second seal: the
+ * fingerprint of the public values alone, which anyone can recompute from the public page.
+ */
+function PublicFingerprint({ versionId }: { versionId: string }) {
+  const proofs = useGetRecordProofsQuery({ subjectType: 'PASSPORT_PUBLIC_LAYER', subjectId: versionId });
+  const proof = proofs.data?.data[0];
+  if (!proof || proof.status === 'INVALIDATED') return null;
+  return (
+    <div className="space-y-1 rounded-lg bg-gray-50 p-3" data-testid="public-fingerprint" data-anchored={proof.anchoring.onChain ? 'yes' : 'no'}>
+      <p className="text-xs font-semibold text-gray-700">Public fingerprint</p>
+      <p className="text-xs text-gray-500">
+        Covers only the values anyone can see. The public page shows how to check it without an account. {proof.anchoring.onChain ? 'It is on the blockchain.' : 'It is waiting to be written on the blockchain.'}
+      </p>
+      <p className="text-xs text-gray-500">({proof.hashAlgorithm}) <CopyableId value={proof.dataHash} /></p>
+    </div>
+  );
+}
+
 /** The latest proof of one record: subjectType PASSPORT_VERSION, CERTIFICATE_VERSION, COMPLIANCE_ASSESSMENT, ESG_ASSESSMENT or CARBON_ASSESSMENT */
 /** The public verify site (Phase 3): anyone can check a passport or certificate there by its number */
 const VERIFY_SITE = (process.env.NEXT_PUBLIC_VERIFY_URL || 'https://verify.minmeg.com').replace(/\/+$/, '');
@@ -88,6 +107,7 @@ export function ProofSection({ subjectType, subjectId, publicCode }: { subjectTy
       {proof && (
         <>
           <p className="text-xs text-gray-500">Fingerprint ({proof.hashAlgorithm}) <CopyableId value={proof.dataHash} /> · sealed {formatDateTime(proof.createdAt)}</p>
+          {subjectType === 'PASSPORT_VERSION' && proof.status !== 'INVALIDATED' && <PublicFingerprint versionId={subjectId} />}
           {proof.anchoring.onChain && (
             <>
               {last ? <ChainLine check={last} /> : <p className="text-sm text-gray-500">Not checked on the blockchain yet.</p>}

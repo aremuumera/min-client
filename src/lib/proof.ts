@@ -5,7 +5,8 @@
 export type Paged<T> = { data: T[]; meta: { currentPage: number; totalPages: number; totalItems: number; itemsPerPage?: number } };
 export type Single<T> = { data: T };
 
-export type ProofSubject = 'PASSPORT_VERSION' | 'CERTIFICATE_VERSION' | 'COMPLIANCE_ASSESSMENT' | 'ESG_ASSESSMENT' | 'CARBON_ASSESSMENT';
+/** PASSPORT_PUBLIC_LAYER (decision #123): the seal of a passport version's public values alone; its id is the version's */
+export type ProofSubject = 'PASSPORT_VERSION' | 'PASSPORT_PUBLIC_LAYER' | 'CERTIFICATE_VERSION' | 'COMPLIANCE_ASSESSMENT' | 'ESG_ASSESSMENT' | 'CARBON_ASSESSMENT';
 
 export interface Proof {
   id: string;
