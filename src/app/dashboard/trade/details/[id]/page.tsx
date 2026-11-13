@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useConfirm } from '@/components/ui';
+import { Alert, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { showQuantity } from '@/lib/trade-stock';
 import { toast } from '@/components/core/toaster';
@@ -122,6 +122,13 @@ export default function TradeDetailPage() {
 
             {/* Trade Progress Stepper */}
             <TradeStageTracker inquiryId={inquiry.id} currentStatus={inquiry.status} />
+
+            {/* Decision #125: the buyer is told when the goods come from a conflict-affected or high-risk area (only while MINMEG switched that on) */}
+            {stock?.originCahra && (
+                <Alert severity="warning" data-testid="trade-conflict-notice">
+                    The goods held for this trade come from a conflict-affected or high-risk area. Ask MINMEG for the due diligence record in this trade&apos;s chat.
+                </Alert>
+            )}
 
             {/* Main Content Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
