@@ -5,7 +5,7 @@ import { CarbonFor } from '@/components/esg/carbon-panel';
 import { EsgFor } from '@/components/esg/esg-panel';
 import * as React from 'react';
 import { Plus } from 'lucide-react';
-import { Button, Checkbox, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
+import { Button, Checkbox, DataTable, DownloadButton, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { BatchDetailSheet, type BatchPermissions } from '@/components/batches/batch-detail-sheet';
 import { BatchDocumentsPanel } from '@/components/batches/batch-documents-panel';
 import { BatchFormSheet } from '@/components/batches/batch-form-sheet';
@@ -59,9 +59,12 @@ function InventoryPage() {
         help={inventoryHelp}
         description="The material your company physically has, kept as batches with their origin and quantity history."
         actions={
-          <Button onClick={() => setRegistering(true)} startIcon={<Plus className="h-4 w-4" aria-hidden />}>
-            Register batch
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <DownloadButton path="/batches/export.csv" params={{ search: debounced, materialId, batchStatus, currentLocationId, includeRetired: includeRetired || undefined }} fileName="batches.csv" data-testid="export-batches">Export CSV</DownloadButton>
+            <Button onClick={() => setRegistering(true)} startIcon={<Plus className="h-4 w-4" aria-hidden />}>
+              Register batch
+            </Button>
+          </div>
         }
       />
       <FilterBar

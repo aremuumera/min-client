@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Alert, Button, ConfirmDialog, CopyableId, DropdownSelect, FormField, Modal, StatusBadge } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, DownloadButton, DropdownSelect, FormField, Modal, StatusBadge } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
@@ -425,6 +425,8 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       {p.publishedVersion && !['SUSPENDED', 'REVOKED'].includes(p.status) && (
         <div className="flex flex-wrap gap-2">
           <DownloadPdfButton id={p.id} code={p.passportCode} label="Download the published version (PDF)" />
+          <DownloadButton path={`/certificates/${p.id}/package`} params={{ format: 'zip' }} fileName={`${p.passportCode}.zip`} data-testid="export-package">Download the package (ZIP)</DownloadButton>
+          <DownloadButton path={`/certificates/${p.id}/history.csv`} fileName={`${p.passportCode}-history.csv`} variant="text" data-testid="export-passport-history">History (CSV)</DownloadButton>
         </div>
       )}
       {p.publishedVersion && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ProofSection subjectType="PASSPORT_VERSION" subjectId={p.publishedVersion.id} publicCode={p.passportCode} />}

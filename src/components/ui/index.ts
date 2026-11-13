@@ -1,5 +1,6 @@
 // Form Components
 export { Button, buttonVariants, type ButtonProps } from "./button";
+export { DownloadButton, type DownloadButtonProps } from "./download-button";
 export {
   IconButton,
   iconButtonVariants,

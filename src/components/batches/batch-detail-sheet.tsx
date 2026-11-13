@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, CopyableId, KeyValueList, LineageGraph, PaginationBar, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs, Timeline, ToggleButton, ToggleButtonGroup, type LineageEdge, type LineageNode, type TimelineEntry } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, DownloadButton, KeyValueList, LineageGraph, PaginationBar, SideSheet, Skeleton, StatusBadge, Tab, TabList, TabPanel, Tabs, Timeline, ToggleButton, ToggleButtonGroup, type LineageEdge, type LineageNode, type TimelineEntry } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { ENDED_STATUSES, OPERABLE_STATUSES, approvalRule, batchLabel, entryStatusLabel, formatQuantity, signedQuantity, toMicro, type Batch, type HistoryItem, type LedgerEntry, type TreeNode } from '@/lib/batches';
@@ -169,7 +169,12 @@ function HistoryPanel({ batch }: { batch: Batch }) {
   const history = useGetBatchHistoryQuery(batch.id);
   if (history.isError) return <Alert severity="error">{toApiError(history.error).message}</Alert>;
   if (!history.data) return <p className="text-sm text-steel">Loading…</p>;
-  return <Timeline entries={history.data.data.items.map((item, i) => historyEntry(item, i, batch.unit?.symbol))} />;
+  return (
+    <div className="space-y-3">
+      <DownloadButton path={`/batches/${batch.id}/history.csv`} params={{ limit: 500 }} fileName={`${batch.batchCode}-history.csv`} variant="text" data-testid="export-batch-history">Export the history (CSV)</DownloadButton>
+      <Timeline entries={history.data.data.items.map((item, i) => historyEntry(item, i, batch.unit?.symbol))} />
+    </div>
+  );
 }
 
 /** One batch: what it is, its quantity movements, its family and its history. What can be done comes from `can`; the backend decides in the end. */

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CopyableId, DataTable, DropdownSelect, FilterBar, PageHeader, PaginationBar, SideSheet, StatusBadge } from '@/components/ui';
+import { CopyableId, DataTable, DownloadButton, DropdownSelect, FilterBar, PageHeader, PaginationBar, SideSheet, StatusBadge } from '@/components/ui';
 import { PassportDetail } from '@/components/passports/passport-panel';
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
@@ -27,7 +27,7 @@ function PassportsPage() {
   const [selected, setSelected] = React.useState<Passport | null>(null);
   return (
     <div>
-      <PageHeader title="Passports" help={passportsHelp} description="The digital passport of each of your batches. Issue one from the batch's Passport tab. A supplier's passport on your trade opens from that trade's Passport & certificates tab." />
+      <PageHeader title="Passports" help={passportsHelp} description="The digital passport of each of your batches. Issue one from the batch's Passport tab. A supplier's passport on your trade opens from that trade's Passport & certificates tab." actions={<DownloadButton path="/certificates/export.csv" params={{ status, ...(q.length >= 2 ? { q } : {}) }} fileName="passports.csv" data-testid="export-passports">Export CSV</DownloadButton>} />
       <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="Search by passport code" activeCount={status ? 1 : 0} onClear={() => setStatus('')}>
         <DropdownSelect aria-label="Status" value={status} onValueChange={setStatus} options={STATUSES} placeholder="All statuses" className="md:w-52" />
       </FilterBar>
