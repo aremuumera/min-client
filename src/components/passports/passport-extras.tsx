@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, DropdownSelect, FormField, Input, LineageGraph, Modal, StatusBadge, Textarea, Timeline, type TimelineEntry } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
-import { relationshipPicture, valueText, words, type MetadataEntry, type PassportVersion, type RecordHistoryItem, type TemplateField, type VersionField } from '@/lib/passports';
+import { relationshipPicture, valueText, words, type MetadataEntry, type PassportVersion, type RecordHistoryItem, type TemplateField, type VersionField, choicesOf, type ChoiceOption } from '@/lib/passports';
 import { numberText } from '@/lib/traceability';
 import {
   useAddPassportMaterialMutation,
@@ -27,9 +27,9 @@ import { useGetUnitChoicesQuery } from '@/redux/features/batches/batches_api';
  */
 
 /** Typed input for one field, by its kind */
-export function TypedInput({ id = 'value-input', label = 'Value', def, value, onChange }: { id?: string; label?: string; def: { dataType: string; enumValues?: string[] | null } | undefined; value: string; onChange: (v: string) => void }) {
+export function TypedInput({ id = 'value-input', label = 'Value', def, value, onChange }: { id?: string; label?: string; def: { dataType: string; enumValues?: string[] | null; options?: ChoiceOption[] | null } | undefined; value: string; onChange: (v: string) => void }) {
   const type = def?.dataType ?? 'STRING';
-  if (type === 'ENUM') return <DropdownSelect id={id} aria-label={label} value={value} placeholder="Choose" options={(def?.enumValues ?? []).map((v) => ({ value: v, label: v }))} onValueChange={onChange} />;
+  if (type === 'ENUM') return <DropdownSelect id={id} aria-label={label} value={value} placeholder="Choose" options={choicesOf(def).map((o) => ({ value: o.value, label: o.label }))} onValueChange={onChange} />;
   if (type === 'BOOLEAN') return <DropdownSelect id={id} aria-label={label} value={value} placeholder="Choose" options={[{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]} onValueChange={onChange} />;
   if (type === 'OBJECT' || type === 'ARRAY') return <Textarea id={id} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} rows={4} placeholder={type === 'ARRAY' ? '["a", "b"]' : '{"key": "value"}'} />;
   return (

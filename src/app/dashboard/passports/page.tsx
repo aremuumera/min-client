@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button, CopyableId, DataTable, DownloadButton, DropdownSelect, FilterBar, PageHeader, PaginationBar, SideSheet, StatusBadge } from '@/components/ui';
 import { BulkJobPanel } from '@/components/bulk/bulk-job-panel';
 import { ImportSheet } from '@/components/bulk/import-sheet';
+import { ShareSeveralSheet } from '@/components/bulk/share-several-sheet';
 import { bulk, type BulkJob } from '@/lib/bulk';
 import { PassportDetail } from '@/components/passports/passport-panel';
 import { toApiError } from '@/lib/api/errors';
@@ -34,6 +35,7 @@ function PassportsPage() {
   const templates = useGetTemplatesQuery({ status: 'PUBLISHED', limit: 100 });
   const [fetchPassports] = useLazyGetPassportsQuery();
   const [importing, setImporting] = React.useState(false);
+  const [sharing, setSharing] = React.useState(false);
   const [publishing, setPublishing] = React.useState<BulkJob | null>(null);
   const [starting, setStarting] = React.useState(false);
   const publishDrafts = async () => {
@@ -55,7 +57,7 @@ function PassportsPage() {
   };
   return (
     <div>
-      <PageHeader title="Passports" help={passportsHelp} description="The digital passport of each of your batches. Issue one from the batch's Passport tab. A supplier's passport on your trade opens from that trade's Passport & certificates tab." actions={<div className="flex flex-wrap items-center gap-2"><Button variant="outlined" color="secondary" size="sm" onClick={() => setImporting(true)} data-testid="open-import-passports">Import</Button><Button variant="outlined" color="secondary" size="sm" loading={starting} onClick={publishDrafts} data-testid="publish-drafts">Publish all drafts</Button><DownloadButton path="/certificates/export.csv" params={{ status, ...(q.length >= 2 ? { q } : {}) }} fileName="passports.csv" data-testid="export-passports">Export CSV</DownloadButton></div>} />
+      <PageHeader title="Passports" help={passportsHelp} description="The digital passport of each of your batches. Issue one from the batch's Passport tab. A supplier's passport on your trade opens from that trade's Passport & certificates tab." actions={<div className="flex flex-wrap items-center gap-2"><Button variant="outlined" color="secondary" size="sm" onClick={() => setImporting(true)} data-testid="open-import-passports">Import</Button><Button variant="outlined" color="secondary" size="sm" loading={starting} onClick={publishDrafts} data-testid="publish-drafts">Publish all drafts</Button><Button variant="outlined" color="secondary" size="sm" onClick={() => setSharing(true)} data-testid="open-share-several">Share several</Button><DownloadButton path="/certificates/export.csv" params={{ status, ...(q.length >= 2 ? { q } : {}) }} fileName="passports.csv" data-testid="export-passports">Export CSV</DownloadButton></div>} />
       <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="Search by passport code" activeCount={status ? 1 : 0} onClear={() => setStatus('')}>
         <DropdownSelect aria-label="Status" value={status} onValueChange={setStatus} options={STATUSES} placeholder="All statuses" className="md:w-52" />
       </FilterBar>
@@ -80,6 +82,7 @@ function PassportsPage() {
           <PassportDetail passportId={selected.id} mode={selected.ownerOrganizationId === orgId ? 'owner' : 'reader'} batchId={selected.subjectType === 'BATCH' ? selected.subjectId : null} />
         </SideSheet>
       )}
+      <ShareSeveralSheet open={sharing} onClose={() => setSharing(false)} />
       <ImportSheet kind="passports" open={importing} onClose={() => setImporting(false)} onImported={() => list.refetch()} templates={(templates.data?.data ?? []).map((t) => ({ value: t.id, label: `${t.name} (${t.code} v${t.version})` }))} />
       {publishing && (
         <SideSheet open onClose={() => setPublishing(null)} title="Publish all drafts" subtitle="Check first, then publish" size="lg">

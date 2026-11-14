@@ -169,6 +169,11 @@ export const vaultApi = createApi({
       query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/grants', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
       invalidatesTags: ['Grants'],
     }),
+    /** Decision #134: pass a grant received with permission on to one more company (named by an email of someone there) */
+    reshareGrant: builder.mutation<Single<Grant>, { id: string; granteeEmail: string; expiresAt?: string; reason: string; idempotencyKey: string }>({
+      query: ({ id, idempotencyKey, ...body }) => ({ url: `/resource-acl/grants/${id}/reshare`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Grants'],
+    }),
     revokeGrant: builder.mutation<Single<Grant>, { id: string; reason: string }>({
       query: ({ id, reason }) => ({ url: `/resource-acl/grants/${id}/revoke`, method: 'POST', body: { reason } }),
       invalidatesTags: ['Grants'],
@@ -209,4 +214,5 @@ export const {
   useGetGrantsQuery,
   useCreateGrantMutation,
   useRevokeGrantMutation,
+  useReshareGrantMutation,
 } = vaultApi;

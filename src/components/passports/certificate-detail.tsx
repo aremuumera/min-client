@@ -120,6 +120,8 @@ export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIF
           <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span>
               {g.granteeType === 'ORGANIZATION' ? 'Company' : 'Person'} <CopyableId value={g.granteeId} /> · {g.expiresAt ? `until ${formatDate(g.expiresAt)}` : 'no end date'}
+              {g.canTransfer && <span className="text-gray-500"> · may pass it on</span>}
+              {g.grantedViaId && <span className="text-gray-500"> · passed on by company <CopyableId value={g.granterOrganizationId} /></span>}
             </span>
             <Button size="sm" variant="text" onClick={() => setRemoving({ kind: 'grant', id: g.id })}>Remove</Button>
           </li>

@@ -16,6 +16,8 @@ import {
   type PassportVersion,
   type TemplateField,
   type VersionField,
+  choiceText,
+  VISIBILITY_LEVEL_TEXT,
 } from '@/lib/passports';
 import { numberText } from '@/lib/traceability';
 import {
@@ -43,6 +45,7 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
 import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
+import { PassOnPanel } from './pass-on-panel';
 import { PassportCompletenessCard } from './completeness';
 import { ProofSection } from '@/components/proof/proof-section';
 
@@ -64,7 +67,7 @@ function shown(f: VersionField) {
     const r = f.latestReading as { value?: string; unit?: { symbol?: string } | null; measuredAt?: string } | null | undefined;
     return r?.value ? `${numberText(r.value)} ${r.unit?.symbol ?? ''} (latest reading${r.measuredAt ? `, ${formatDateTime(r.measuredAt)}` : ''})` : 'No reading yet';
   }
-  return f.value ? valueText(f.value.value) : '';
+  return f.value ? (f.dataType === 'ENUM' ? choiceText(f.value.value, f.options) : valueText(f.value.value)) : '';
 }
 
 /** Set one field: typed, from a reading, from a released lab or inspection result, or a document */
@@ -207,6 +210,7 @@ function FieldsView({ version, editable, defs, batchId }: { version: PassportVer
                     {f.value && <p className="text-xs text-gray-500">From {SOURCE_TEXT[f.value.sourceType ?? 'USER'] ?? 'the company'} · visible to {words(f.visibility)}</p>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {f.visibilityLevel && <span title={VISIBILITY_LEVEL_TEXT[f.visibilityLevel].hint}><StatusBadge tone={VISIBILITY_LEVEL_TEXT[f.visibilityLevel].tone} data-testid={`pfield-level-${f.key}`}>{VISIBILITY_LEVEL_TEXT[f.visibilityLevel].label}</StatusBadge></span>}
                     <StatusBadge status={trust.status}>{trust.label}</StatusBadge>
                     {editable && !f.dynamic && !system && <Button size="sm" variant="outlined" onClick={() => setEditing(f)}>{f.value ? 'Change' : 'Fill in'}</Button>}
                     {editable && f.value && !system && !f.required && <Button size="sm" variant="text" onClick={() => setClearing(f)}>Clear</Button>}
@@ -433,6 +437,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       )}
       {p.publishedVersion && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ProofSection subjectType="PASSPORT_VERSION" subjectId={p.publishedVersion.id} publicCode={p.passportCode} />}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
+      {mode === 'reader' && p.publishedVersion && !closed && <PassOnPanel passportId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}
       <RecordTrail id={p.id} />
       <p className="text-xs text-gray-400">Passport ID <CopyableId value={p.id} /></p>

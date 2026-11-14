@@ -98,6 +98,8 @@ export interface TemplateField {
   required: boolean;
   dynamic: boolean;
   enumValues: string[] | null;
+  /** Decision #134: labelled choices */
+  options?: ChoiceOption[] | null;
   validationRules: Record<string, unknown>;
   identifierBinding: (typeof IDENTIFIER_BINDINGS)[number];
   identifierType: string | null;
@@ -227,6 +229,10 @@ export interface VersionField {
   unitId: string | null;
   identifierBinding: string;
   visibility: string | null;
+  /** Decision #134: PUBLIC, PARTNERS or PRIVATE */
+  visibilityLevel?: VisibilityLevel | null;
+  /** Decision #134: a choice field's labelled options */
+  options?: ChoiceOption[];
   value: PassportValue | null;
   latestReading?: Record<string, unknown> | null;
 }
@@ -523,3 +529,24 @@ export function relationshipPicture(t: RelationshipTree, id: string): { nodes: P
   }
   return { nodes: [...nodes.values()], edges };
 }
+
+// =========================== decision #134: access words and choice labels ===========================
+export type VisibilityLevel = 'PUBLIC' | 'PARTNERS' | 'PRIVATE';
+export interface ChoiceOption {
+  value: string;
+  label: string;
+  order?: number;
+}
+export const VISIBILITY_LEVEL_TEXT: Record<VisibilityLevel, { label: string; tone: 'success' | 'neutral' | 'dark'; hint: string }> = {
+  PUBLIC: { label: 'Public', tone: 'success', hint: 'Anyone, also on the public check page' },
+  PARTNERS: { label: 'Partners', tone: 'neutral', hint: 'Trade parties, inspectors and companies you gave access' },
+  PRIVATE: { label: 'Private', tone: 'dark', hint: 'Your company and MINMEG only' },
+};
+/** The choices of a field as people read them: its labels, else its values */
+export const choicesOf = (def: { enumValues?: string[] | null; options?: ChoiceOption[] | null } | undefined): ChoiceOption[] =>
+  def?.options?.length ? [...def.options].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : (def?.enumValues ?? []).map((v) => ({ value: v, label: v }));
+/** A choice value shown with its label */
+export const choiceText = (value: unknown, options: ChoiceOption[] | undefined): string => {
+  const hit = options?.find((o) => o.value === value);
+  return hit ? hit.label : valueText(value);
+};

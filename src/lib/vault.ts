@@ -154,6 +154,10 @@ export interface Grant {
   reason: string | null;
   createdAt: string;
   revokedAt: string | null;
+  /** Decision #134: the receiving company may pass it on one step */
+  canTransfer?: boolean;
+  /** Decision #134: the grant this one was passed on from */
+  grantedViaId?: string | null;
 }
 
 export const ATTACHMENT_TYPES = ['LICENSE', 'CERTIFICATE', 'COMPLIANCE_EVIDENCE', 'ORIGIN_EVIDENCE', 'ASSAY', 'INSPECTION_REPORT', 'CONTRACT', 'SHIPPING_DOCUMENT', 'PHOTO', 'OTHER'] as const;
