@@ -73,7 +73,7 @@ export function PassportCompletenessSection({ q, window, organizationId }: { q: 
   const totals = useGetFieldAggregateQuery({ ...q, fieldKey: chosen, ...scope }, { skip: !chosen });
   const r = report.data?.data;
   const t = totals.data?.data;
-  const missing = Object.fromEntries((r?.missingByGroup ?? []).map((g) => [g.group, g.required]));
+  const missing = Object.fromEntries((r?.missingByGroup ?? []).filter((g) => g.required > 0).map((g) => [g.group, g.required]));
   return (
     <>
       <Section title="How complete your passports are" description="Today, on the version being worked on: the open draft, else the published one. Archived and revoked passports are left out." query={report} testId="analytics-completeness">
