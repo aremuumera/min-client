@@ -6,6 +6,7 @@ import { Bell } from 'lucide-react';
 import { Button, Popover, StatusBadge } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
+import { useActor } from '@/lib/permissions/react';
 import { CATEGORY_TEXT, isUnread, needsAck, noticeHref, PRIORITY_TEXT, priorityTone, type InboxItem } from '@/lib/notifications';
 import { useSse } from '@/lib/realtime/use-sse';
 import { cn } from '@/utils/helper';
@@ -28,6 +29,7 @@ export function useLiveInbox() {
 /** One notice: what, when, how important; opening it marks it read and goes to its record */
 export function InboxRow({ n, onOpened }: { n: InboxItem; onOpened?: () => void }) {
   const router = useRouter();
+  const actor = useActor();
   const [read] = useReadOneMutation();
   const [dismiss] = useDismissOneMutation();
   const [ack, ackState] = useAcknowledgeOneMutation();
@@ -35,7 +37,7 @@ export function InboxRow({ n, onOpened }: { n: InboxItem; onOpened?: () => void 
   const unread = isUnread(n);
   const open = async () => {
     if (unread) await read(n.id).unwrap().catch(() => undefined);
-    const href = noticeHref(n.link);
+    const href = noticeHref(n.link, actor.role);
     if (href) {
       router.push(href);
       onOpened?.();
