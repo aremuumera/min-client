@@ -27,6 +27,8 @@ export const analyticsApi = createApi({
     getPassportCompleteness: builder.query<PassportCompletenessAnalytics, { attention?: number; organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports', params: params(q as Query) }), keepUnusedDataFor: 60 }),
     getPassportNumberFields: builder.query<NumberFields, { organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports/number-fields', params: params(q as Query) }) }),
     getFieldAggregate: builder.query<FieldAggregate, Query & { fieldKey: string; organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports/field-aggregate', params: params(q) }), keepUnusedDataFor: 120 }),
+    // decision #135: the company's limits and what it uses, and which switchable features it has
+    getMyCompanyControls: builder.query<{ success: boolean; data: { organizationId: string; limits: { maximumUsers: number | null; maximumStorageBytes: number | null; maximumFileBytes: number | null; note: string | null }; usage: { teamMembers: number; storageBytes: number }; features: Record<string, boolean> } }, void>({ query: () => '/company-controls/me', keepUnusedDataFor: 60 }),
     getOnePassportCompleteness: builder.query<{ success: boolean; data: import('@/lib/analytics').PassportCompleteness }, string>({ query: (id) => `/certificates/${id}/completeness`, keepUnusedDataFor: 0 }),
   }),
 });
@@ -47,4 +49,5 @@ export const {
   useGetPassportNumberFieldsQuery,
   useGetFieldAggregateQuery,
   useGetOnePassportCompletenessQuery,
+  useGetMyCompanyControlsQuery,
 } = analyticsApi;

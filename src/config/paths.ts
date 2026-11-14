@@ -103,6 +103,7 @@ export const paths = {
       business: "/dashboard/settings/business",
       legals: "/dashboard/settings/legals",
       team: "/dashboard/settings/team",
+      usage: "/dashboard/settings/usage",
     },
     analytics: "/dashboard/analytics",
     chat: {
@@ -233,6 +234,7 @@ export const routeAccess = {
     paths.dashboard.settings.business,
     paths.dashboard.settings.legals,
     paths.dashboard.settings.team,
+    paths.dashboard.settings.usage,
     // sites (step 2.4)
     paths.dashboard.sites,
     // inventory (step 2.5)
