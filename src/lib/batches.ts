@@ -89,6 +89,17 @@ export interface Batch {
   pendingLedgerEntries?: number;
   quantityApproval?: { policy: 'TOLERANCE' | 'NOT_REQUIRED'; tolerancePercent?: string | null; source?: string } | null;
   activeDisqualifications?: { id: string; reasonText?: string }[];
+  /** Owner's view: whether the caller may change it. False for a buyer-only company reading a batch it received (decision #126) */
+  canOperate?: boolean;
+  /** Decision #130 — a RECEIVED batch: the delivery it came from and the handover's proof */
+  receivedFrom?: {
+    shipment: { id: string; shipmentNumber: string } | null;
+    trade: { id: string; tradeCode: string } | null;
+    shipmentAllocationId: string | null;
+    quantity: string;
+    receivedAt: string;
+    eventId: string | null;
+  } | null;
 }
 
 export interface LedgerEntry {
@@ -138,7 +149,7 @@ export interface LineageGraphNode {
 export interface BatchLineage {
   batchId: string;
   nodes: LineageGraphNode[];
-  edges: { id: string; parentBatchId: string; childBatchId: string; relationshipType: string; quantityContributed?: string | null; unitId?: string | null }[];
+  edges: { id: string; parentBatchId: string; childBatchId: string; relationshipType: string; quantityContributed?: string | null; unitId?: string | null; eventId?: string | null; createdAt?: string }[];
 }
 export interface BatchTree {
   batch: TreeNode;
@@ -168,6 +179,8 @@ const LABELS: Record<string, string> = {
   SPLIT: 'From a split',
   MERGED: 'From a merge',
   TRANSFORMED: 'From processing',
+  RECEIVED: 'Received from a trade',
+  PURCHASED: 'Bought',
   MINED: 'Mined',
   PENDING_VERIFICATION: 'Waiting for verification',
   NOT_ELIGIBLE: 'Not eligible',
@@ -181,6 +194,8 @@ const LABELS: Record<string, string> = {
   SPLIT_FROM: 'Split',
   MERGED_FROM: 'Merged',
   TRANSFORMED_FROM: 'Processed',
+  RECEIVED_FROM: 'Received from',
+  RECEIPT: 'Received',
   MANUAL: 'Counted or estimated by hand',
   LAB: 'Laboratory',
 };

@@ -67,6 +67,8 @@ export function canOpenArea(actor: Actor, key: string | undefined): boolean {
   if (!key) return true;
   // Batches: only supply companies own them, and a team member also needs the inventory key
   if (key === 'batches') return actor.isStaff || ((actor.role === 'supplier' || actor.role === 'buyer_supplier') && (!actor.isTeamMember || actor.teamKeys.includes('inventory')));
+  // Received materials (decision #126): a buyer-only company's batch records; supply companies see them in Inventory
+  if (key === 'receivedMaterials') return actor.role === 'buyer' && (!actor.isTeamMember || actor.teamKeys.includes('inventory'));
   // Areas every company owner has, which a team member opens with one of these keys (the backend's rules)
   const memberNeeds = AREA_KEYS[key];
   if (memberNeeds) return !actor.isTeamMember || memberNeeds.some((k) => actor.teamKeys.includes(k));
