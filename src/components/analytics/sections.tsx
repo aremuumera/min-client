@@ -18,6 +18,7 @@ import {
 import { useGetMeasurementChoicesQuery } from '@/redux/features/locations/locations_api';
 import { useGetActiveStandardsQuery } from '@/redux/features/passports/passports_api';
 import { Breakdown, Pair, Section, Tiles, Trend } from './charts';
+import { PassportCompletenessSection } from '@/components/passports/completeness';
 
 /*
  * The sections of the Analytics page (step 2.14, D3/D4). Each reads one Group 27 view for the
@@ -304,6 +305,7 @@ export function PassportsSection({ q, opt, window }: { q: Q; opt: Opt; window?: 
           </>
         )}
       </Section>
+      <PassportCompletenessSection q={q} window={window} />
       <Section title="Compliance checks" description="The current compliance checks on your passports, and MINMEG’s verification of them." query={comp} testId="analytics-compliance">
         {k && window && (
           <>

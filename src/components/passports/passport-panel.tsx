@@ -43,6 +43,7 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
 import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
+import { PassportCompletenessCard } from './completeness';
 import { ProofSection } from '@/components/proof/proof-section';
 
 /*
@@ -418,6 +419,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       </div>
       {error && <Alert severity="error">{error}</Alert>}
       {(p.status === 'SUSPENDED' || p.status === 'REVOKED') && mode === 'reader' && <p className="text-sm text-gray-500">MINMEG has {p.status === 'SUSPENDED' ? 'suspended' : 'revoked'} this passport, so its content is not shown.</p>}
+      {mode === 'owner' && <PassportCompletenessCard passportId={p.id} />}
       {open && <VersionEditor passport={p} versionId={open.id} batchId={batchId} />}
       {p.publishedVersion && (mode === 'reader' || !open || showPublished) && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <PublishedView passport={p} versionId={p.publishedVersion.id} />}
       {open && p.publishedVersion && <Button size="sm" variant="text" onClick={() => setShowPublished((s) => !s)}>{showPublished ? 'Hide' : 'Show'} the published version {p.publishedVersion.versionNumber}</Button>}

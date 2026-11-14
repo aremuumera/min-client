@@ -159,3 +159,35 @@ function periodLabel(d: Date, interval: Interval): string {
 }
 export const windowText = (w: Window | undefined) =>
   w ? `${new Date(w.from).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })} to ${new Date(new Date(w.to).getTime() - 1).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
+
+/** Decision #133: how complete passports are (now, not over a window) */
+export interface CompletenessPart {
+  completed: number;
+  total: number;
+  percentage: number;
+}
+export interface PassportCompleteness {
+  passportId: string;
+  passportCode: string;
+  passportStatus: string;
+  ownerOrganizationId: string;
+  subjectId: string;
+  version: { id: string; versionNumber: number; status: string; createdAt: string } | null;
+  mandatory: CompletenessPart;
+  optional: CompletenessPart;
+  full: CompletenessPart;
+  unverified: number;
+  missing?: { fieldKey: string; label: string; group: string | null; required: boolean; since: string }[];
+}
+export interface CompletenessSummary {
+  passports: number;
+  mandatoryComplete: number;
+  mandatoryIncomplete: number;
+  averageMandatory: number | null;
+  averageFull: number | null;
+  drafts: number;
+  unverifiedValues: number;
+}
+export type PassportCompletenessAnalytics = { success: boolean; data: { organizationId: string | null; summary: CompletenessSummary; requiresAttention: PassportCompleteness[]; missingByGroup: { group: string; required: number; optional: number }[]; byOrganization?: (CompletenessSummary & { organizationId: string })[]; note?: string } };
+export type FieldAggregate = { success: boolean; data: { window: Window; fieldKey: string; byUnit: { unitId: string | null; unit: string | null; count: number; sum: number | null; average: number | null; min: number | null; max: number | null }[]; series: { period: string; unitId: string | null; count: number; sum: number | null; average: number | null }[]; note: string } };
+export type NumberFields = { success: boolean; data: { key: string; label: string; passports: number }[] };
