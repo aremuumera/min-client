@@ -202,8 +202,31 @@ export interface Passport {
   archivedAt?: string | null;
   archiveReason?: string | null;
   createdAt: string;
+  /** Owner only (decisions #129, #132): show the supply chain on the public page; the owner's name key */
+  showSupplyChain?: boolean;
+  showCompanyNames?: boolean;
+  /** Batch passports: from the batch up to the origin (decisions #129, #131) */
+  supplyChain?: SupplyChainStep | null;
 }
-export type ValueSource = 'USER' | 'DOCUMENT' | 'MEASUREMENT' | 'INSPECTION' | 'ASSESSMENT' | 'SYSTEM';
+/** One step of a passport's supply chain; `from` goes up towards the origin */
+export interface SupplyChainStep {
+  step: 'REGISTERED' | 'SPLIT' | 'MERGED' | 'PROCESSED' | 'RECEIVED';
+  source: string | null;
+  at: string;
+  material: string | null;
+  origin: { countryCode: string; stateRegion: string | null } | null;
+  verifiedByMinmeg: { origin: boolean; batch: boolean; inspection: boolean };
+  /** null when names are not shown */
+  company: string | null;
+  handover: { status: string; dataHash: string | null; anchoredOnBlockchain: boolean; transactionHash: string | null; explorerUrl: string | null } | null;
+  passport: { passportCode: string; type: string | null } | null;
+  /** Only where the reader may open that batch */
+  batch?: { id: string; batchCode: string; quantity: string; unit: string | null } | null;
+  from: SupplyChainStep[];
+}
+export const STEP_TEXT: Record<SupplyChainStep['step'], string> = { REGISTERED: 'Where it starts', SPLIT: 'Split off a larger lot', MERGED: 'Combined from several lots', PROCESSED: 'Processed', RECEIVED: 'Handed over to a new owner' };
+export const ORIGIN_SOURCE_TEXT: Record<string, string> = { MINED: 'Mined', PRODUCED: 'Produced', PURCHASED: 'Bought', IMPORTED: 'Imported', OTHER: 'Registered' };
+export type ValueSource = 'USER' | 'DOCUMENT' | 'MEASUREMENT' | 'INSPECTION' | 'ASSESSMENT' | 'SYSTEM' | 'PASSPORT';
 export interface PassportValue {
   id: string;
   templateFieldId: string;
@@ -319,6 +342,8 @@ export const SOURCE_TEXT: Record<string, string> = {
   INSPECTION: 'an inspection or lab result',
   ASSESSMENT: 'an assessment',
   SYSTEM: 'MINMEG',
+  // decision #132: carried from the seller's published passport at delivery
+  PASSPORT: 'the seller’s passport',
 };
 export const PASSPORT_STATUS_TEXT: Record<Passport['status'], string> = {
   DRAFT: 'Not published yet',

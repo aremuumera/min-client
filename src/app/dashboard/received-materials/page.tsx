@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { DataTable, DropdownSelect, FilterBar, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { BatchDetailSheet, type BatchPermissions } from '@/components/batches/batch-detail-sheet';
+import { BatchPassport } from '@/components/passports/passport-panel';
 import { toApiError } from '@/lib/api/errors';
 import { batchLabel, formatQuantity, type Batch } from '@/lib/batches';
 import { formatDate } from '@/lib/format';
@@ -92,7 +93,8 @@ function ReceivedMaterialsPage() {
           setPage(1);
         }}
       />
-      <BatchDetailSheet batchId={selectedId} can={READ_ONLY} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
+      {/* decision #131: the buyer completes and publishes the draft passport made at delivery, or creates one */}
+      <BatchDetailSheet batchId={selectedId} can={READ_ONLY} passport={(b) => <BatchPassport batchId={b.id} mode="owner" />} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
     </div>
   );
 }
