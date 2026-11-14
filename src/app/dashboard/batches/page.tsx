@@ -4,6 +4,7 @@ import { BatchPassport } from '@/components/passports/passport-panel';
 import { CarbonFor } from '@/components/esg/carbon-panel';
 import { EsgFor } from '@/components/esg/esg-panel';
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { Button, Checkbox, DataTable, DownloadButton, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { BatchDetailSheet, type BatchPermissions } from '@/components/batches/batch-detail-sheet';
@@ -49,7 +50,8 @@ function InventoryPage() {
   const list = useGetBatchesQuery({ page, limit, search: debounced, materialId, batchStatus, currentLocationId, includeRetired: includeRetired || undefined });
   const materials = useGetMaterialChoicesQuery();
   const locations = useGetLocationsQuery({ active: true, limit: 100 });
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  // ?batch= opens one, e.g. from a shipment line's batch record (decision #130)
+  const [selectedId, setSelectedId] = React.useState<string | null>(useSearchParams().get('batch'));
   const [registering, setRegistering] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
   const filterCount = [materialId, batchStatus, currentLocationId, includeRetired].filter(Boolean).length;
@@ -141,7 +143,9 @@ function InventoryPage() {
 export default function Page() {
   return (
     <RequireAccess role={['supplier', 'buyer_supplier']} teamKey="inventory">
-      <InventoryPage />
+      <React.Suspense fallback={null}>
+        <InventoryPage />
+      </React.Suspense>
     </RequireAccess>
   );
 }

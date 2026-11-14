@@ -10,7 +10,7 @@ import type { TeamPermission } from './team-permissions';
 /** The team keys a menu permission stands for */
 function keysOf(permission: NavItemConfig['permission']): string[] {
   if (!permission) return [];
-  if (permission === 'batches') return ['inventory'];
+  if (permission === 'batches' || permission === 'receivedMaterials') return ['inventory'];
   return AREA_KEYS[permission] ?? [permission];
 }
 

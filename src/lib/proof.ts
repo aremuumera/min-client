@@ -6,7 +6,8 @@ export type Paged<T> = { data: T[]; meta: { currentPage: number; totalPages: num
 export type Single<T> = { data: T };
 
 /** PASSPORT_PUBLIC_LAYER (decision #123): the seal of a passport version's public values alone; its id is the version's */
-export type ProofSubject = 'PASSPORT_VERSION' | 'PASSPORT_PUBLIC_LAYER' | 'CERTIFICATE_VERSION' | 'COMPLIANCE_ASSESSMENT' | 'ESG_ASSESSMENT' | 'CARBON_ASSESSMENT';
+/** TRACEABILITY_EVENT: a handover between two companies (decision #126, the BATCH_RECEIVED event) */
+export type ProofSubject = 'PASSPORT_VERSION' | 'PASSPORT_PUBLIC_LAYER' | 'CERTIFICATE_VERSION' | 'COMPLIANCE_ASSESSMENT' | 'ESG_ASSESSMENT' | 'CARBON_ASSESSMENT' | 'TRACEABILITY_EVENT';
 
 export interface Proof {
   id: string;

@@ -36,6 +36,11 @@ export const shipmentsApi = createApi({
       query: ({ id, action, body, idempotencyKey }) => ({ url: `/shipments/${id}/${action}`, method: 'POST', body: body ?? {}, headers: idempotencyKey ? idempotencyHeaders(idempotencyKey) : undefined }),
       invalidatesTags: ['Shipments'],
     }),
+    // decision #130: "Create my batch record" — the buyer's own batch for delivered lines that have none
+    receiveIntoStock: builder.mutation<Single<Shipment & { created: { shipmentAllocationId: string; batchId: string; batchCode: string }[] }>, { id: string; lines?: string[]; idempotencyKey: string }>({
+      query: ({ id, lines, idempotencyKey }) => ({ url: `/shipments/${id}/received-batches`, method: 'POST', body: lines?.length ? { lines } : {}, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['Shipments'],
+    }),
     // ---- tracking (step 2.7b) ----
     getTracking: builder.query<Single<TrackingView>, string>({ query: (id) => `/shipments/${id}/tracking`, providesTags: ['Tracking'] }),
     getHistory: builder.query<Single<Ping[]>, string>({ query: (id) => `/shipments/${id}/location-history?limit=2000`, providesTags: ['Tracking'] }),
@@ -62,4 +67,5 @@ export const shipmentsApi = createApi({
   }),
 });
 
-export const { useGetShipmentsQuery, useGetShipmentQuery, useGetReadinessQuery, useCreateShipmentMutation, useUpdateShipmentMutation, useRemoveLineMutation, useShipmentActionMutation, useGetTrackingQuery, useGetHistoryQuery, useSetCheckpointPlanMutation, useSkipCheckpointMutation, useScanCheckpointMutation, useGetShipmentAlertsQuery, useAcknowledgeAlertMutation, useGetAlertsQuery, useGetAlertQuery } = shipmentsApi;
+export const { useGetShipmentsQuery, useGetShipmentQuery, useGetReadinessQuery, useCreateShipmentMutation, useUpdateShipmentMutation, useRemoveLineMutation, useShipmentActionMutation,
+  useReceiveIntoStockMutation, useGetTrackingQuery, useGetHistoryQuery, useSetCheckpointPlanMutation, useSkipCheckpointMutation, useScanCheckpointMutation, useGetShipmentAlertsQuery, useAcknowledgeAlertMutation, useGetAlertsQuery, useGetAlertQuery } = shipmentsApi;
