@@ -80,6 +80,7 @@ const SCREENS: [RegExp, (id: string) => string][] = [
   [/^\/passport-template-requests\//, () => '/dashboard/passports/requests'],
   [/^\/certificates\//, () => '/dashboard/certificates'],
   [/^\/custody\//, () => '/dashboard/handovers'],
+  [/^\/data-requests\/([^/?]+)/, (id) => `/dashboard/data-requests/${id}`],
   [/^\/listings\//, () => '/dashboard/supplier-list'],
   [/^\/disqualifications\//, () => '/dashboard/documents'],
 ];
