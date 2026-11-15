@@ -2,6 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
 import type { ApplicabilityRule, Assessment, BulkResult, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVerification, PassportVersion, RecordHistory, RelationshipTree, Single, Standard, Template, TemplateRequest, VisibilityPolicy } from '@/lib/passports';
 import type { DataRequestDetail, DataRequestRow } from '@/lib/data-requests';
+import type { EuHeader, EuHeaderInput } from '@/lib/eu-header';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -12,8 +13,11 @@ const params = (q: Query) => Object.fromEntries(Object.entries(q).filter(([, v])
 export const passportsApi = createApi({
   reducerPath: 'passportsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates', 'DataRequests'],
+  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates', 'DataRequests', 'EuHeader'],
   endpoints: (builder) => ({
+    // ---------- decisions #138, #139: the EU header of a passport (public by the owner's choice) ----------
+    getEuHeader: builder.query<Single<EuHeader>, string>({ query: (id) => `/certificates/${id}/eu-header`, providesTags: ['EuHeader'] }),
+    setEuHeader: builder.mutation<Single<EuHeader>, { id: string } & EuHeaderInput>({ query: ({ id, ...body }) => ({ url: `/certificates/${id}/eu-header`, method: 'PUT', body }), invalidatesTags: ['EuHeader'] }),
     // ---------- decision #137: requests for a passport's data from people without an account ----------
     getDataRequests: builder.query<Paged<DataRequestRow>, Query>({ query: (q) => ({ url: '/merchant/data-requests', params: params(q) }), providesTags: ['DataRequests'] }),
     getDataRequest: builder.query<Single<DataRequestDetail>, string>({ query: (id) => `/merchant/data-requests/${id}`, providesTags: ['DataRequests'] }),
@@ -123,6 +127,8 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetEuHeaderQuery,
+  useSetEuHeaderMutation,
   useGetDataRequestsQuery,
   useGetDataRequestQuery,
   useApproveDataRequestMutation,

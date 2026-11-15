@@ -45,6 +45,7 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
 import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
+import { EuHeaderPanel } from './eu-header-panel';
 import { PassOnPanel } from './pass-on-panel';
 import { PassportCompletenessCard } from './completeness';
 import { ProofSection } from '@/components/proof/proof-section';
@@ -436,6 +437,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
         </div>
       )}
       {p.publishedVersion && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ProofSection subjectType="PASSPORT_VERSION" subjectId={p.publishedVersion.id} publicCode={p.passportCode} />}
+      {mode === 'owner' && <EuHeaderPanel passportId={p.id} canEdit={!closed} />}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
       {mode === 'reader' && p.publishedVersion && !closed && <PassOnPanel passportId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}
