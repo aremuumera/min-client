@@ -38,3 +38,28 @@ export const certificatesHelp: PageHelpContent = {
     steps: ['MINMEG checks and releases the lab result of your batch, then issues an assay certificate.', 'It shows here; download the PDF or share it with a bank by its company ID.'],
   },
 };
+
+/* "About this page" for data requests (decision #137). Keep in step with what the pages do. */
+export const dataRequestsHelp: PageHelpContent = {
+  title: 'Data requests',
+  purpose:
+    'Someone without a MINMEG account, such as a regulator, an auditor or a customer of your customer, asked for more of one of your passports than its public page shows. MINMEG checked the request before passing it to you. You decide whether to share, how much, and until when.',
+  example: {
+    title: 'a customs officer checks an origin',
+    steps: [
+      'The officer finds your passport on verify.minmeg.com and asks for more data, saying who they are and why.',
+      'MINMEG checks the request and passes it to you with a note.',
+      'You approve partner data for 30 days. MINMEG emails the officer a link.',
+      'The officer opens the data with a code sent to their email each time. You see every open here.',
+    ],
+  },
+  links: [{ label: 'Passports', href: '/dashboard/passports', why: 'Each field of a passport is Public, Partners or Private. That decides what a request can show.' }],
+  goodToKnow: [
+    'Only you can approve. MINMEG staff can decline a request or end an approval, never approve one.',
+    'Partner data is what you already share with trade partners. Private data is what only your company sees. Public data is on the public page already.',
+    'They get a copy of the passport as published on the day you approve. It does not change if you publish a new version later.',
+    'Documents are named in the copy. The files themselves are never handed out.',
+    'Access lasts 90 days at most. You can end it earlier at any time, with a reason they will read.',
+    'When you decline, they read your reason by email.',
+  ],
+};

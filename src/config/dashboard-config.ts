@@ -188,6 +188,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "passports",
         },
         {
+          key: "passports:data-requests",
+          title: "Data requests",
+          href: paths.dashboard.dataRequests,
+          icon: "tray",
+          matcher: { type: "startsWith", href: paths.dashboard.dataRequests },
+          permission: "passports",
+        },
+        {
           key: "passports:esg",
           title: "ESG & carbon",
           href: paths.dashboard.esg,

@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
 import type { ApplicabilityRule, Assessment, BulkResult, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVerification, PassportVersion, RecordHistory, RelationshipTree, Single, Standard, Template, TemplateRequest, VisibilityPolicy } from '@/lib/passports';
+import type { DataRequestDetail, DataRequestRow } from '@/lib/data-requests';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -11,8 +12,19 @@ const params = (q: Query) => Object.fromEntries(Object.entries(q).filter(([, v])
 export const passportsApi = createApi({
   reducerPath: 'passportsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates'],
+  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates', 'DataRequests'],
   endpoints: (builder) => ({
+    // ---------- decision #137: requests for a passport's data from people without an account ----------
+    getDataRequests: builder.query<Paged<DataRequestRow>, Query>({ query: (q) => ({ url: '/merchant/data-requests', params: params(q) }), providesTags: ['DataRequests'] }),
+    getDataRequest: builder.query<Single<DataRequestDetail>, string>({ query: (id) => `/merchant/data-requests/${id}`, providesTags: ['DataRequests'] }),
+    approveDataRequest: builder.mutation<Single<DataRequestDetail>, { id: string; scope: string; expiresAt: string; note?: string | null; idempotencyKey: string }>({
+      query: ({ id, idempotencyKey, ...body }) => ({ url: `/merchant/data-requests/${id}/approve`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['DataRequests'],
+    }),
+    endDataRequest: builder.mutation<Single<DataRequestDetail>, { id: string; step: 'decline' | 'revoke'; reason: string }>({
+      query: ({ id, step, reason }) => ({ url: `/merchant/data-requests/${id}/${step}`, method: 'POST', body: { reason } }),
+      invalidatesTags: ['DataRequests'],
+    }),
     // ---------- 2.9d certificates (the non-passport kind of /certificates) ----------
     getCertificates: builder.query<Paged<Certificate>, Query>({ query: (q) => ({ url: '/certificates', params: params({ certificateKind: 'NON_PASSPORT', ...q }) }), providesTags: ['Certificates'] }),
     getCertificate: builder.query<Single<Certificate>, string>({ query: (id) => `/certificates/${id}`, providesTags: ['Certificates'] }),
@@ -111,6 +123,10 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetDataRequestsQuery,
+  useGetDataRequestQuery,
+  useApproveDataRequestMutation,
+  useEndDataRequestMutation,
   useGetCertificatesQuery,
   useGetCertificateQuery,
   useGetCertificateTypesQuery,

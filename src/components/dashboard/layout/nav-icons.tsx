@@ -33,6 +33,7 @@ import {
   Sparkles,
   Search,
   Wallet,
+  Inbox,
 } from 'lucide-react';
 
 export const icons = {
@@ -45,6 +46,7 @@ export const icons = {
   'currency-eth': Globe, // Placeholder/Alternative
   'envelope-simple': Mail,
   'file-dashed': FileText,
+  tray: Inbox,
   'file-x': FileWarning,
   'graduation-cap': GraduationCap,
   leaf: Leaf,

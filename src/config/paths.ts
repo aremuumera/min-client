@@ -85,6 +85,8 @@ export const paths = {
     sites: "/dashboard/sites",
     // step 2.9: passports, compliance and certificates
     passports: { list: "/dashboard/passports", requests: "/dashboard/passports/requests" },
+    // decision #137: people without an account ask for more of a passport
+    dataRequests: "/dashboard/data-requests",
     certificates: "/dashboard/certificates",
     // step 2.10: ESG and carbon
     esg: "/dashboard/esg",
@@ -242,6 +244,7 @@ export const routeAccess = {
     // passports and certificates (step 2.9)
     paths.dashboard.passports.list,
     paths.dashboard.passports.requests,
+    paths.dashboard.dataRequests,
     paths.dashboard.certificates,
     paths.dashboard.esg,
     paths.dashboard.alerts,
