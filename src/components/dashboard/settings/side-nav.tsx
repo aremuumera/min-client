@@ -18,7 +18,7 @@ const navItems = [
     { key: 'security', title: 'Security', href: paths.dashboard.settings.security, icon: ShieldCheck },
     { key: 'business', title: 'Business', href: paths.dashboard.settings.business, icon: Users },
     { key: 'team', title: 'Team', href: paths.dashboard.settings.team, icon: Users },
-    { key: 'usage', title: 'Plan and usage', href: paths.dashboard.settings.usage, icon: Gauge },
+    { key: 'usage', title: 'Usage and limits', href: paths.dashboard.settings.usage, icon: Gauge },
     { key: 'legal', title: 'Legals', href: paths.dashboard.settings.legals, icon: Scale },
 ];
 
