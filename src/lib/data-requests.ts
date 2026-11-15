@@ -38,9 +38,11 @@ export interface DataRequestRow {
 export interface DisclosedField {
   key: string;
   label: string;
+  group?: string | null;
   visibilityLevel: 'PUBLIC' | 'PARTNERS' | 'PRIVATE';
   value: unknown;
   document?: string;
+  verifiedByMinmeg?: boolean;
 }
 export interface DataRequestDetail extends DataRequestRow {
   purpose: string;
@@ -48,6 +50,8 @@ export interface DataRequestDetail extends DataRequestRow {
   disclosureHash: string | null;
   disclosure: { versionNumber: number; approvedAt: string; fields: DisclosedField[] } | null;
   openCount: number;
+  /** While the request waits for the owner: every field of the published version, with its value and level */
+  preview?: DisclosedField[];
   shareable: { published: boolean; publicFields: number; partnersFields: number; privateFields: number };
   events: { id: string; type: string; actorType: string; note: string | null; createdAt: string }[];
   nextSteps: ('APPROVE' | 'DECLINE' | 'REVOKE')[];

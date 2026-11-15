@@ -52,6 +52,10 @@ test('menu, the list, one request with who asks and MINMEG\'s note, and approvin
   const decide = page.getByTestId('data-request-decide');
   await expect(decide.getByText('Partner data', { exact: true })).toBeVisible();
   await expect(decide.getByText('Partner and private data', { exact: true })).toBeVisible();
+  // every field of the passport with its value and level; choosing the other option changes what is shared
+  const preview = decide.getByTestId('data-request-preview');
+  await expect(preview).toContainText('What they will get');
+  await expect(preview.locator('li').first()).toBeVisible();
   await page.screenshot({ path: 'tests/e2e/.results/data-request-owner.png', fullPage: true });
   await decide.getByTestId('data-request-approve').click();
   const dialog = page.getByRole('dialog');
