@@ -138,6 +138,10 @@ export interface EmailShare {
   reason: string | null;
   createdAt: string;
   revokedAt: string | null;
+  /** Decision #134: the owner let the receiving company pass it on one step */
+  allowPassOn?: boolean;
+  /** Decision #134: the company that passed it on (null when the holder shared it) */
+  passedOnBy?: string | null;
 }
 
 export interface Grant {

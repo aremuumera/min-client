@@ -156,7 +156,7 @@ export const vaultApi = createApi({
     }),
     // certificates and passports shared by email (decision #119)
     getEmailShares: builder.query<Single<EmailShare[]>, { resourceType: 'CERTIFICATE' | 'PASSPORT'; resourceId: string }>({ query: (q) => `/resource-acl/email-shares${listParams(q)}`, providesTags: ['EmailShares'] }),
-    createEmailShare: builder.mutation<Single<EmailShare>, { resourceType: 'CERTIFICATE' | 'PASSPORT'; resourceId: string; email: string; expiresAt: string; reason?: string; idempotencyKey: string }>({
+    createEmailShare: builder.mutation<Single<EmailShare>, { resourceType: 'CERTIFICATE' | 'PASSPORT'; resourceId: string; email: string; expiresAt: string; reason?: string; allowPassOn?: boolean; idempotencyKey: string }>({
       query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/email-shares', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
       invalidatesTags: ['EmailShares'],
     }),
@@ -169,11 +169,12 @@ export const vaultApi = createApi({
       query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/grants', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
       invalidatesTags: ['Grants'],
     }),
-    /** Decision #134: pass a grant received with permission on to one more company (named by an email of someone there) */
-    reshareGrant: builder.mutation<Single<Grant>, { id: string; granteeEmail: string; expiresAt?: string; reason: string; idempotencyKey: string }>({
-      query: ({ id, idempotencyKey, ...body }) => ({ url: `/resource-acl/grants/${id}/reshare`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
-      invalidatesTags: ['Grants'],
+    /** Decision #134: pass a passport your company received on, by email (the same answer whether or not the address has an account) */
+    passOnByEmail: builder.mutation<Single<EmailShare>, { grantId: string; email: string; expiresAt?: string; reason: string; idempotencyKey: string }>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/email-shares/pass-on', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['EmailShares', 'Grants'],
     }),
+    getPassedOn: builder.query<Single<{ grantId: string; canPassOn: boolean; expiresAt: string | null; shares: EmailShare[] }>, string>({ query: (grantId) => `/resource-acl/email-shares/passed-on?grantId=${grantId}`, providesTags: ['EmailShares'] }),
     revokeGrant: builder.mutation<Single<Grant>, { id: string; reason: string }>({
       query: ({ id, reason }) => ({ url: `/resource-acl/grants/${id}/revoke`, method: 'POST', body: { reason } }),
       invalidatesTags: ['Grants'],
@@ -214,5 +215,6 @@ export const {
   useGetGrantsQuery,
   useCreateGrantMutation,
   useRevokeGrantMutation,
-  useReshareGrantMutation,
+  usePassOnByEmailMutation,
+  useGetPassedOnQuery,
 } = vaultApi;

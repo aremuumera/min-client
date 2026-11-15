@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, CopyableId, FormField, Input, KeyValueList, StatusBadge, useConfirm } from '@/components/ui';
+import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, FormField, Input, KeyValueList, StatusBadge, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { downloadCertificatePdf } from '@/lib/download-pdf';
@@ -73,6 +73,8 @@ export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIF
   const [email, setEmail] = React.useState('');
   const [until, setUntil] = React.useState(() => dayInput(new Date(Date.now() + 30 * 86400000)));
   const [reason, setReason] = React.useState('');
+  // decision #134: a company that receives it may pass it on one step (passports only)
+  const [passOn, setPassOn] = React.useState(false);
   const [removing, setRemoving] = React.useState<{ kind: 'share' | 'grant'; id: string } | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const live = (shares.data?.data ?? []).filter((x) => x.status === 'ACTIVE');
@@ -90,12 +92,13 @@ export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIF
     if (end.getTime() > Date.now() + MAX_DAYS * 86400000) return setError(`A share by email can last at most ${MAX_DAYS} days`);
     if (!(await confirm({ title: `Share this ${thing} with ${address}?`, description: `They can read it until ${formatDate(end.toISOString())}. They cannot change or download it. You can remove it at any time.`, confirmLabel: 'Share' }))) return;
     try {
-      const res = await create({ resourceType, resourceId, email: address, expiresAt: end.toISOString(), ...(reason.trim() ? { reason: reason.trim() } : {}), idempotencyKey: key }).unwrap();
+      const res = await create({ resourceType, resourceId, email: address, expiresAt: end.toISOString(), ...(reason.trim() ? { reason: reason.trim() } : {}), ...(resourceType === 'PASSPORT' && passOn ? { allowPassOn: true } : {}), idempotencyKey: key }).unwrap();
       done();
       toast.success(res.message ?? "Shared. We've emailed them.");
       setAdding(false);
       setEmail('');
       setReason('');
+      setPassOn(false);
     } catch (err) {
       setError(toApiError(err).message);
     }
@@ -112,6 +115,8 @@ export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIF
           <li key={x.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="break-all">
               <span className="font-medium text-gray-900">{x.email}</span> · until {formatDate(x.expiresAt)}
+              {x.allowPassOn && <span className="text-gray-500"> · may pass it on</span>}
+              {x.passedOnBy && <span className="text-gray-500"> · passed on by company <CopyableId value={x.passedOnBy} /></span>}
             </span>
             <Button size="sm" variant="text" onClick={() => setRemoving({ kind: 'share', id: x.id })}>Remove</Button>
           </li>
@@ -140,6 +145,9 @@ export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIF
               <Input id={`share-reason-${resourceId}`} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. due diligence for lot 12" />
             </FormField>
           </div>
+          {resourceType === 'PASSPORT' && (
+            <Checkbox label="They may pass it on to one more company" description="Only if the address belongs to a company on MINMEG. What they pass on can't be passed on again, never lasts longer than their access, and you can remove it." checked={passOn} onChange={(e) => setPassOn(e.target.checked)} />
+          )}
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outlined" onClick={() => setAdding(false)}>Cancel</Button>
             <Button size="sm" loading={createState.isLoading} onClick={give}>Share</Button>

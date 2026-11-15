@@ -21,8 +21,9 @@ export function ShareSeveralSheet({ open, onClose }: { open: boolean; onClose: (
   const [chosen, setChosen] = React.useState<string[]>([]);
   const [mode, setMode] = React.useState<'give' | 'take'>('give');
   const [email, setEmail] = React.useState('');
-  const [until, setUntil] = React.useState(() => dayInput(new Date(Date.now() + 90 * 86_400_000)));
+  const [until, setUntil] = React.useState(() => dayInput(new Date(Date.now() + 89 * 86_400_000)));
   const [reason, setReason] = React.useState('');
+  const [passOn, setPassOn] = React.useState(false);
   const [job, setJob] = React.useState<BulkJob | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -36,11 +37,12 @@ export function ShareSeveralSheet({ open, onClose }: { open: boolean; onClose: (
   const start = async () => {
     setError(null);
     if (!chosen.length) return setError('Choose at least one passport');
-    if (!EMAIL.test(email.trim())) return setError('Enter the email address of someone at that company');
+    if (!EMAIL.test(email.trim())) return setError('Enter a valid email address');
+    if (mode === 'give' && !until) return setError('Choose until when they can see them (at most 90 days)');
     setBusy(true);
     try {
       const grant = mode === 'give'
-        ? { granteeType: 'ORGANIZATION', granteeEmail: email.trim(), permissions: ['READ'], ...(until ? { expiresAt: new Date(`${until}T23:59:59`).toISOString() } : {}), ...(reason.trim() ? { reason: reason.trim() } : {}) }
+        ? { granteeType: 'ORGANIZATION', granteeEmail: email.trim(), permissions: ['READ'], expiresAt: new Date(`${until}T23:59:59`).toISOString(), ...(reason.trim() ? { reason: reason.trim() } : {}), ...(passOn ? { allowPassOn: true } : {}) }
         : { granteeType: 'ORGANIZATION', granteeEmail: email.trim(), ...(reason.trim() ? { reason: reason.trim() } : {}) };
       setJob(await bulk.startAction({ kind: mode === 'give' ? 'GRANT_PASSPORT_ACCESS' : 'REVOKE_PASSPORT_ACCESS', passportIds: chosen, grant }, token));
     } catch (err) {
@@ -61,13 +63,16 @@ export function ShareSeveralSheet({ open, onClose }: { open: boolean; onClose: (
               <Button size="sm" variant={mode === 'give' ? 'contained' : 'outlined'} color={mode === 'give' ? 'primary' : 'secondary'} onClick={() => setMode('give')}>Give access</Button>
               <Button size="sm" variant={mode === 'take' ? 'contained' : 'outlined'} color={mode === 'take' ? 'primary' : 'secondary'} onClick={() => setMode('take')}>Take access away</Button>
             </div>
-            <FormField htmlFor="share-several-email" label="Email of someone at that company" required info="Their company must already use MINMEG. The whole company gets access.">
+            <FormField htmlFor="share-several-email" label="Email address" required info="If they have a MINMEG account, their company can read the passports in MINMEG. If not, MINMEG emails them a link for each passport, opened with a code sent to that address.">
               <Input id="share-several-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" autoComplete="off" />
             </FormField>
             {mode === 'give' && (
-              <FormField htmlFor="share-several-until" label="Until" optional info="Read only. Empty: until you take it away.">
-                <Input id="share-several-until" type="date" value={until} min={dayInput(new Date(Date.now() + 86_400_000))} onChange={(e) => setUntil(e.target.value)} />
-              </FormField>
+              <>
+                <FormField htmlFor="share-several-until" label="Until" required info="Read only, at most 90 days.">
+                  <Input id="share-several-until" type="date" value={until} min={dayInput(new Date(Date.now() + 86_400_000))} max={dayInput(new Date(Date.now() + 89 * 86_400_000))} onChange={(e) => setUntil(e.target.value)} />
+                </FormField>
+                <Checkbox label="They may pass them on to one more company" description="Only if the address belongs to a company on MINMEG." checked={passOn} onChange={(e) => setPassOn(e.target.checked)} />
+              </>
             )}
             <FormField htmlFor="share-several-reason" label="Why" optional>
               <Textarea id="share-several-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
