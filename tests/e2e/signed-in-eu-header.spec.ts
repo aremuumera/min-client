@@ -49,4 +49,6 @@ test('the owner sees the EU header on a passport; the form warns that everything
   await panel.screenshot({ path: 'tests/e2e/.results/eu-header.png' });
   await panel.getByRole('button', { name: 'Cancel' }).click();
   await expect(panel.getByTestId('eu-header-save')).toHaveCount(0);
+  // decision #140: the independent backup section (the local backend has no backup store, so it says so, or lists the copies)
+  await expect(page.getByTestId('passport-backup')).toContainText(/separate store/);
 });

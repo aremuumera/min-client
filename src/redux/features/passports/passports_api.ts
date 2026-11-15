@@ -3,6 +3,7 @@ import { idempotencyHeaders } from '@/lib/api/idempotency';
 import type { ApplicabilityRule, Assessment, BulkResult, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVerification, PassportVersion, RecordHistory, RelationshipTree, Single, Standard, Template, TemplateRequest, VisibilityPolicy } from '@/lib/passports';
 import type { DataRequestDetail, DataRequestRow } from '@/lib/data-requests';
 import type { EuHeader, EuHeaderInput } from '@/lib/eu-header';
+import type { PassportBackups, RecoveryLink } from '@/lib/passport-backups';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -15,6 +16,9 @@ export const passportsApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates', 'DataRequests', 'EuHeader'],
   endpoints: (builder) => ({
+    // ---------- decision #140: the independent copy of each published version ----------
+    getPassportBackups: builder.query<Single<PassportBackups>, string>({ query: (id) => `/certificates/${id}/backups`, keepUnusedDataFor: 0 }),
+    createRecoveryLink: builder.mutation<Single<RecoveryLink>, { id: string; versionId: string; idempotencyKey: string }>({ query: ({ id, versionId, idempotencyKey }) => ({ url: `/certificates/${id}/backups/${versionId}/recovery-link`, method: 'POST', headers: idempotencyHeaders(idempotencyKey) }) }),
     // ---------- decisions #138, #139: the EU header of a passport (public by the owner's choice) ----------
     getEuHeader: builder.query<Single<EuHeader>, string>({ query: (id) => `/certificates/${id}/eu-header`, providesTags: ['EuHeader'] }),
     setEuHeader: builder.mutation<Single<EuHeader>, { id: string } & EuHeaderInput>({ query: ({ id, ...body }) => ({ url: `/certificates/${id}/eu-header`, method: 'PUT', body }), invalidatesTags: ['EuHeader'] }),
@@ -127,6 +131,8 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetPassportBackupsQuery,
+  useCreateRecoveryLinkMutation,
   useGetEuHeaderQuery,
   useSetEuHeaderMutation,
   useGetDataRequestsQuery,
