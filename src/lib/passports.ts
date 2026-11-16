@@ -45,6 +45,9 @@ export interface StandardProperty {
   active: boolean;
 }
 export interface Standard {
+  /** Decision #142: the markets this standard is for, and its own logo */
+  markets?: import('./markets').MarketBrief[];
+  logoUrl?: string | null;
   id: string;
   code: string;
   version: string;
@@ -129,6 +132,8 @@ export interface ValidationIssue {
   standardCode?: string;
 }
 export interface Template {
+  /** Decision #142: the markets this template is for (a flag or a picture each) */
+  markets?: import('./markets').MarketBrief[];
   id: string;
   passportTypeId: string;
   code: string;

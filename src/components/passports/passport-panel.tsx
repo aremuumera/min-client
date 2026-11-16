@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { Alert, Button, ConfirmDialog, CopyableId, DownloadButton, DropdownSelect, FormField, Modal, StatusBadge } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, DownloadButton, DropdownSelect, FormField, Modal, StatusBadge, MarketMarks } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
+import { flagOf } from '@/lib/markets';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
 import {
@@ -268,6 +269,7 @@ function VersionEditor({ passport, versionId, batchId }: { passport: Passport; v
         <div>
           <h3 className="text-sm font-bold text-gray-900">Version {v.versionNumber} · {v.status === 'VALIDATED' ? 'checked, not published' : 'draft'}</h3>
           <p className="text-xs text-gray-500">Template {v.template.name} ({v.template.code} revision {v.template.version}){v.changeReason ? ` · ${v.changeReason}` : ''}</p>
+          <MarketMarks markets={template.data?.data.markets} className="mt-1" />
         </div>
         <div className="flex flex-wrap gap-2">
           <FillSeveral version={v} defs={template.data?.data.fields ?? []} />
@@ -343,7 +345,9 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
   const types = useGetPassportTypesQuery();
   const batchType = types.data?.data.find((t) => t.code === 'BATCH_PASSPORT');
   const templates = useGetTemplatesQuery({ passportTypeId: batchType?.id, status: 'PUBLISHED', limit: 100 }, { skip: !batchType });
-  const options = (templates.data?.data ?? []).filter((t) => t.active).map((t) => ({ value: t.id, label: `${t.name} (revision ${t.version})${t.isDefault ? ' · default' : ''}` }));
+  // decision #142: the flags of the markets a template is for lead its name, so the right one is easy to pick
+  const options = (templates.data?.data ?? []).filter((t) => t.active).map((t) => ({ value: t.id, label: `${(t.markets ?? []).map((m) => flagOf(m.countryCode)).filter(Boolean).join(' ')} ${t.name} (revision ${t.version})${t.isDefault ? ' · default' : ''}${t.markets?.length ? ` · ${t.markets.map((m) => m.name).join(', ')}` : ''}`.trim() }));
+  const chosenMarkets = (templates.data?.data ?? []).find((t) => t.id === (templateId || (templates.data?.data ?? []).find((x) => x.isDefault)?.id))?.markets;
   const fallback = (templates.data?.data ?? []).find((t) => t.isDefault)?.id ?? '';
   const [templateId, setTemplateId] = React.useState('');
   const [confirming, setConfirming] = React.useState(false);
@@ -363,6 +367,7 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
           <FormField htmlFor="issue-template" label="Template" required>
             <DropdownSelect id="issue-template" aria-label="Template" value={chosen} options={options} onValueChange={setTemplateId} />
           </FormField>
+          {!!chosenMarkets?.length && <p className="flex flex-wrap items-center gap-2 text-xs text-gray-500" data-testid="issue-template-markets">For <MarketMarks markets={chosenMarkets} /></p>}
           <Button disabled={!chosen} onClick={() => setConfirming(true)}>Issue passport</Button>
         </>
       )}
