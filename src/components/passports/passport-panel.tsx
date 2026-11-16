@@ -269,7 +269,7 @@ function VersionEditor({ passport, versionId, batchId }: { passport: Passport; v
         <div>
           <h3 className="text-sm font-bold text-gray-900">Version {v.versionNumber} · {v.status === 'VALIDATED' ? 'checked, not published' : 'draft'}</h3>
           <p className="text-xs text-gray-500">Template {v.template.name} ({v.template.code} revision {v.template.version}){v.changeReason ? ` · ${v.changeReason}` : ''}</p>
-          <MarketMarks markets={template.data?.data.markets} className="mt-1" />
+          <MarketMarks markets={v.template.markets} className="mt-1" />
         </div>
         <div className="flex flex-wrap gap-2">
           <FillSeveral version={v} defs={template.data?.data.fields ?? []} />
@@ -332,6 +332,7 @@ export function PublishedView({ passport, versionId }: { passport: Passport; ver
         Version {v.versionNumber}, published {v.publishedAt ? formatDateTime(v.publishedAt) : ''} · template {v.template.name}
         {counts?.total ? ` · ${counts.verified ?? 0} of ${counts.total} values verified` : ''}
       </p>
+      <MarketMarks markets={v.template.markets} />
       <FieldsView version={v} editable={false} defs={[]} batchId={null} />
       {!!v.hiddenFieldCount && <p className="text-sm text-gray-500">{v.hiddenFieldCount} field{v.hiddenFieldCount === 1 ? '' : 's'} not shared with you.</p>}
       <MaterialsSection version={v} editable={false} />

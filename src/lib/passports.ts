@@ -253,7 +253,7 @@ export interface PassportMaterial {
 export interface PassportVersion extends VersionSummary {
   passportId: string;
   previousVersionId: string | null;
-  template: { id: string; code: string; version: number; name: string; status: string };
+  template: { id: string; code: string; version: number; name: string; status: string; markets?: import('./markets').MarketBrief[] };
   fields: VersionField[];
   hiddenFieldCount?: number;
   metadata: MetadataEntry[];
