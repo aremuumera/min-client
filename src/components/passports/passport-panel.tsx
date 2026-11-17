@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { Alert, Button, ConfirmDialog, CopyableId, DownloadButton, DropdownSelect, FormField, Modal, StatusBadge, MarketMarks } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
-import { flagOf } from '@/lib/markets';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
 import {
@@ -346,8 +345,8 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
   const types = useGetPassportTypesQuery();
   const batchType = types.data?.data.find((t) => t.code === 'BATCH_PASSPORT');
   const templates = useGetTemplatesQuery({ passportTypeId: batchType?.id, status: 'PUBLISHED', limit: 100 }, { skip: !batchType });
-  // decision #142: the flags of the markets a template is for lead its name, so the right one is easy to pick
-  const options = (templates.data?.data ?? []).filter((t) => t.active).map((t) => ({ value: t.id, label: `${(t.markets ?? []).map((m) => flagOf(m.countryCode)).filter(Boolean).join(' ')} ${t.name} (revision ${t.version})${t.isDefault ? ' · default' : ''}${t.markets?.length ? ` · ${t.markets.map((m) => m.name).join(', ')}` : ''}`.trim() }));
+  // decision #142: each template names the markets it is for; their flags show under the list for the one chosen
+  const options = (templates.data?.data ?? []).filter((t) => t.active).map((t) => ({ value: t.id, label: `${t.name} (revision ${t.version})${t.isDefault ? ' · default' : ''}${t.markets?.length ? ` · ${t.markets.map((m) => m.name).join(', ')}` : ''}` }));
   const chosenMarkets = (templates.data?.data ?? []).find((t) => t.id === (templateId || (templates.data?.data ?? []).find((x) => x.isDefault)?.id))?.markets;
   const fallback = (templates.data?.data ?? []).find((t) => t.isDefault)?.id ?? '';
   const [templateId, setTemplateId] = React.useState('');
