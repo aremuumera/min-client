@@ -28,12 +28,15 @@ export const analyticsApi = createApi({
     getPassportNumberFields: builder.query<NumberFields, { organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports/number-fields', params: params(q as Query) }) }),
     getFieldAggregate: builder.query<FieldAggregate, Query & { fieldKey: string; organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports/field-aggregate', params: params(q) }), keepUnusedDataFor: 120 }),
     // decision #135: the company's limits and what it uses, and which switchable features it has
+    // decision #143: the company's own key on the blockchain (read only)
+    getMyBlockchainIdentity: builder.query<{ success: boolean; data: { mode: 'OFF' | 'B2' | 'B'; address: string | null; keyNumber: number | null; activeFrom: string | null; replacedKeys: number } }, void>({ query: () => '/company-controls/me/blockchain-identity' }),
     getMyCompanyControls: builder.query<{ success: boolean; data: { organizationId: string; limits: { maximumUsers: number | null; maximumStorageBytes: number | null; maximumFileBytes: number | null; note: string | null }; usage: { teamMembers: number; storageBytes: number }; features: Record<string, boolean> } }, void>({ query: () => '/company-controls/me', keepUnusedDataFor: 60 }),
     getOnePassportCompleteness: builder.query<{ success: boolean; data: import('@/lib/analytics').PassportCompleteness }, string>({ query: (id) => `/certificates/${id}/completeness`, keepUnusedDataFor: 0 }),
   }),
 });
 
 export const {
+  useGetMyBlockchainIdentityQuery,
   useGetTradeAnalyticsQuery,
   useGetTraceabilityAnalyticsQuery,
   useGetLogisticsAnalyticsQuery,

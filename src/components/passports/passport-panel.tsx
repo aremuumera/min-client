@@ -45,6 +45,7 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
 import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
+import { CompanySignatureBlock } from '@/components/proof/company-signature';
 import { BackupPanel } from './backup-panel';
 import { EuHeaderPanel } from './eu-header-panel';
 import { PassOnPanel } from './pass-on-panel';
@@ -453,6 +454,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
         </div>
       )}
       {p.publishedVersion && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ProofSection subjectType="PASSPORT_VERSION" subjectId={p.publishedVersion.id} publicCode={p.passportCode} />}
+      {mode === 'owner' && p.publishedVersion && <CompanySignatureBlock passportId={p.id} />}
       {mode === 'owner' && <EuHeaderPanel passportId={p.id} canEdit={!closed} />}
       {mode === 'owner' && p.publishedVersion && <BackupPanel passportId={p.id} passportCode={p.passportCode} />}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}

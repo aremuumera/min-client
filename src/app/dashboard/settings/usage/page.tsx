@@ -1,4 +1,4 @@
-import { UsagePanel } from '@/components/settings/usage-panel';
+import { BlockchainIdentityPanel, UsagePanel } from '@/components/settings/usage-panel';
 
 export const metadata = {
   title: 'Usage and limits | Dashboard',
@@ -13,6 +13,7 @@ export default function UsageSettingsPage() {
         <p className="text-lg font-medium text-gray-500">How much your company uses, and the limits MINMEG set for it.</p>
       </div>
       <UsagePanel />
+      <BlockchainIdentityPanel />
     </div>
   );
 }
