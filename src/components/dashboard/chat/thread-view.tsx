@@ -19,6 +19,7 @@ import { TradeActivityTimeline } from './trade-activity-timeline';
 import { TradeStockNotice, TradeStockTab } from './trade-stock-tab';
 import { TradeShipmentsTab } from './trade-shipments-tab';
 import { TradePassportsTab } from './trade-passports-tab';
+import { RecurringLine, TradeDeliveriesTab, useRecurringTrade } from './trade-deliveries-tab';
 import { ChatContext } from '@/providers/chat-provider';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
@@ -90,9 +91,12 @@ export function ThreadView({ threadId }: ThreadViewProps) {
   const sameId = (a?: string, b?: string) => !!a && !!b && String(a).replace(/-/g, '').toLowerCase() === String(b).replace(/-/g, '').toLowerCase();
   const isSupplier = sameId(user?.id, activeCycleForRole?.supplier_id || thread?.metadata?.supplier_id);
 
+  // Recurring trades (⚠️ not released): the Deliveries tab only for a recurring trade, and never for the inspector
+  const recurring = useRecurringTrade(activeInquiryId || roomInquiries[0]?.id || '', threadType === 'rfq' ? 'rfq' : 'product', !!isInspector);
+
   const openTab = useSearchParams().get('tab');
   useEffect(() => {
-    if (openTab === 'stock' || openTab === 'shipments' || openTab === 'inspections' || openTab === 'passports') setActiveTab(openTab);
+    if (openTab === 'stock' || openTab === 'shipments' || openTab === 'inspections' || openTab === 'passports' || openTab === 'deliveries') setActiveTab(openTab);
   }, [openTab, setActiveTab]);
 
   const messagesRef = React.useRef<HTMLDivElement>(null);
@@ -183,6 +187,9 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           />
         );
       })()}
+      {thread && !isInspector && (
+        <RecurringLine inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} onOpen={() => setActiveTab('deliveries')} />
+      )}
 
       {/* Inquiry Sub-Tabs (Cycles) */}
       {roomInquiries && roomInquiries.length > 1 && (
@@ -288,6 +295,17 @@ export function ThreadView({ threadId }: ThreadViewProps) {
             Passport & certificates
           </button>
         )}
+        {!isInspector && recurring.schedule && (
+          <button
+            onClick={() => setActiveTab('deliveries')}
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'deliveries'
+              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            Deliveries ({recurring.schedule.summary.delivered}/{recurring.schedule.summary.deliveries})
+          </button>
+        )}
       </div>
 
       {!isInspector && activeTab !== 'stock' && threadType === 'rfq' && activeInquiryId && (
@@ -329,6 +347,10 @@ export function ThreadView({ threadId }: ThreadViewProps) {
       ) : activeTab === 'passports' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
           <TradePassportsTab inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} />
+        </div>
+      ) : activeTab === 'deliveries' ? (
+        <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">
+          <TradeDeliveriesTab inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} />
         </div>
       ) : activeTab === 'stock' ? (
         <div className="flex-auto overflow-y-auto bg-gray-50 relative p-3 sm:p-6">

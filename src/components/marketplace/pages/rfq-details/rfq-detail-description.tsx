@@ -557,7 +557,7 @@ const RfqDetailDescription = ({ rfqProduct }: { rfqProduct: any }) => {
       <OfferForm
         open={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
-        rfq={{ rfqId: String(effectiveRfqId), name: rfqProductName, quantityRequired, quantityMeasure, purity_grade: rfqProduct.purity_grade, moisture_max: rfqProduct.moisture_max, packaging: rfqProduct.packaging, productDestination }}
+        rfq={{ rfqId: String(effectiveRfqId), name: rfqProductName, quantityRequired, quantityMeasure, purity_grade: rfqProduct.purity_grade, moisture_max: rfqProduct.moisture_max, packaging: rfqProduct.packaging, productDestination, recurring: inquiry_type === 'recurring', recurringFrequency: recurring_frequency, recurringDuration: rfqProduct.recurring_duration }}
       />
       <MediaModal
         isOpen={mediaModal.isOpen}

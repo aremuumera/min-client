@@ -53,6 +53,8 @@ const initialState = {
     timeline_type: 'immediate',
     recurring_duration: '',
     recurring_frequency: 'monthly',
+    // recurring trades (owner, 2026-11-21): the quantity is the total; this is one delivery
+    quantity_per_delivery: '',
     inspection_intent: true,
     description: '',
     urgency: 'standard',
@@ -219,6 +221,15 @@ const ProductInquiryModal = ({
         );
     }
 
+    // recurring: total ÷ the number of deliveries (monthly: one a month; weekly: about four a month)
+    const suggestedPerDelivery = (() => {
+        const total = Number(formData.quantity);
+        const months = Number(formData.recurring_duration);
+        if (formData.timeline_type !== 'recurring' || !total || !months) return '';
+        const deliveries = Math.max(1, Math.round(formData.recurring_frequency === 'weekly' ? months * 4 : months));
+        return String(Math.floor((total / deliveries) * 1000) / 1000);
+    })();
+
     const handleSubmit = async () => {
         if (submitting || loading) return;
         setSubmitting(true);
@@ -255,6 +266,7 @@ const ProductInquiryModal = ({
                     timeline_type: inquiryData.timeline_type,
                     recurring_frequency: isRecurring ? (inquiryData.recurring_frequency || null) : null,
                     recurring_duration: isRecurring && inquiryData.recurring_duration ? (Math.round(Number(inquiryData.recurring_duration)) || null) : null,
+                    quantity_per_delivery: isRecurring ? (Number(inquiryData.quantity_per_delivery) || null) : null,
                     inspection_intent: inquiryData.inspection_intent,
                     preferred_grade: inquiryData.preferred_grade,
                     urgency: inquiryData.urgency,
@@ -280,6 +292,17 @@ const ProductInquiryModal = ({
             if (!formData.quantity || !formData.delivery_location || !formData.delivery_address || !formData.delivery_state || !formData.delivery_country) {
                 showAlert('Please fill in required fields (Quantity, LGA, Country, State and Address)', 'error');
                 return;
+            }
+            if (itemType !== 'business' && formData.timeline_type === 'recurring') {
+                const perDelivery = Number(formData.quantity_per_delivery);
+                if (!perDelivery || perDelivery <= 0) {
+                    showAlert('Enter the quantity per delivery', 'error');
+                    return;
+                }
+                if (perDelivery > Number(formData.quantity)) {
+                    showAlert('The quantity per delivery cannot be more than the total quantity', 'error');
+                    return;
+                }
             }
         }
         setStep(step + 1);
@@ -311,7 +334,7 @@ const ProductInquiryModal = ({
                                     {/* Quantity & Measure */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2">Quantity Required *</label>
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">{formData.timeline_type === 'recurring' && itemType !== 'business' ? 'Total Quantity *' : 'Quantity Required *'}</label>
                                             <input
                                                 type="text"
                                                 className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
@@ -611,6 +634,27 @@ const ProductInquiryModal = ({
                                                         onChange={e => setFormData({ ...formData, recurring_duration: e.target.value })}
                                                     />
                                                 </div>
+                                                {itemType !== 'business' && (
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block">Quantity Per Delivery *</label>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="decimal"
+                                                            className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-sm h-10 outline-none focus:border-green-500"
+                                                            placeholder={suggestedPerDelivery ? `e.g. ${formatNumberWithCommas(suggestedPerDelivery)}` : 'e.g. 50'}
+                                                            value={formatNumberWithCommas(formData.quantity_per_delivery)}
+                                                            onChange={e => setFormData({ ...formData, quantity_per_delivery: stripCommas(e.target.value) })}
+                                                        />
+                                                        <p className="mt-1 text-xs text-gray-500">
+                                                            The total above is the whole order. Only one delivery is reserved when the supplier accepts; MINMEG agrees the dates of each delivery with both of you.
+                                                            {suggestedPerDelivery && !formData.quantity_per_delivery && (
+                                                                <button type="button" className="ml-1 font-semibold text-green-700 hover:underline" onClick={() => setFormData({ ...formData, quantity_per_delivery: suggestedPerDelivery })}>
+                                                                    Use {formatNumberWithCommas(suggestedPerDelivery)} {formData.measure_type?.replace(/_/g, ' ')}
+                                                                </button>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -690,8 +734,14 @@ const ProductInquiryModal = ({
                                     </div>
                                     <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
                                         <span className="text-gray-500">Quantity:</span>
-                                        <span className="font-bold text-gray-900">{formatNumberWithCommas(formData.quantity)} {formData.measure_type?.replace(/_/g, ' ')}</span>
+                                        <span className="font-bold text-gray-900">{formatNumberWithCommas(formData.quantity)} {formData.measure_type?.replace(/_/g, ' ')}{formData.timeline_type === 'recurring' && itemType !== 'business' && ' in total'}</span>
                                     </div>
+                                    {formData.timeline_type === 'recurring' && itemType !== 'business' && formData.quantity_per_delivery && (
+                                        <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
+                                            <span className="text-gray-500">Per Delivery:</span>
+                                            <span className="font-bold text-gray-900">{formatNumberWithCommas(formData.quantity_per_delivery)} {formData.measure_type?.replace(/_/g, ' ')}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center py-1 border-b border-dashed border-gray-200">
                                         <span className="text-gray-500">Grade Required:</span>
                                         <span className="font-bold text-gray-900">{formData.purity_grade || formData.preferred_grade || 'Standard'}</span>

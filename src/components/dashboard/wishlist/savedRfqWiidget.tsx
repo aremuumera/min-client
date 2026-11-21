@@ -180,7 +180,7 @@ const SavedRfqWidget = ({ rfqProduct, onDelete, isSaved }: any) => {
       <OfferForm
         open={showQuoteModal}
         onClose={closeQuoteModal}
-        rfq={{ rfqId: String(rfqIdentifier), name: productName, quantityRequired: rfqProduct.quantityRequired, quantityMeasure: rfqProduct.quantityMeasure, purity_grade: rfqProduct.purity_grade, moisture_max: rfqProduct.moisture_max, packaging: rfqProduct.packaging, productDestination: rfqProduct.productDestination }}
+        rfq={{ rfqId: String(rfqIdentifier), name: productName, quantityRequired: rfqProduct.quantityRequired, quantityMeasure: rfqProduct.quantityMeasure, purity_grade: rfqProduct.purity_grade, moisture_max: rfqProduct.moisture_max, packaging: rfqProduct.packaging, productDestination: rfqProduct.productDestination, recurring: rfqProduct.inquiry_type === 'recurring', recurringFrequency: rfqProduct.recurring_frequency, recurringDuration: rfqProduct.recurring_duration }}
       />
     </>
   );

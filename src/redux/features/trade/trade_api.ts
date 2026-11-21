@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "../../api/baseApi";
 import { idempotencyHeaders } from "@/lib/api/idempotency";
 import type { TradeAllocation, TradeStockRecord } from "@/lib/trade-stock";
+import type { TradeScheduleView } from "@/lib/delivery-schedule";
 
 type InquiryListQuery = { state?: string; status?: string; search?: string; page?: number; limit?: number };
 
@@ -17,7 +18,7 @@ const inquiryListParams = (params: InquiryListQuery | void) => {
 export const tradeApi = createApi({
   reducerPath: "tradeApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["TradeInquiry", "TradeChat", "RfqOffer", "TradeStock"],
+  tagTypes: ["TradeInquiry", "TradeChat", "RfqOffer", "TradeStock", "DeliverySchedule"],
 
   endpoints: (builder) => ({
     /* The stock behind a trade (step 2.6c). The trade room stays the authority for its status. */
@@ -29,6 +30,11 @@ export const tradeApi = createApi({
     getSellerTrades: builder.query<{ data: TradeStockRecord[] }, void>({
       query: () => ({ url: "/trades", params: { role: "seller", limit: 100 } }),
       providesTags: ["TradeStock"],
+    }),
+    /** Recurring trades (decision #120) — ⚠️ NOT RELEASED: 404 while the backend switch is off */
+    getDeliverySchedule: builder.query<{ data: TradeScheduleView }, string>({
+      query: (tradeId) => `/trades/${tradeId}/delivery-schedule`,
+      providesTags: ["DeliverySchedule"],
     }),
     getTradeRecord: builder.query<{ data: TradeStockRecord }, string>({
       query: (id) => `/trades/${id}`,
@@ -228,6 +234,7 @@ export const {
   useGetReceivedInquiriesSummaryQuery,
   useGetTradeStockQuery,
   useGetTradeRecordQuery,
+  useGetDeliveryScheduleQuery,
   useGetTradeAllocationsQuery,
   useGetSellerTradesQuery,
   useHoldBatchMutation,

@@ -68,6 +68,8 @@ export interface RfqOffer {
   quantity: number | string;
   measure_type: string;
   unitId?: string | null;
+  /** Recurring offers: one delivery (the quantity is the total) */
+  quantity_per_delivery?: string | number | null;
   unit_price: number | string;
   currency: string;
   purity_grade?: string | null;
