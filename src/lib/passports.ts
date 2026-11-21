@@ -134,6 +134,8 @@ export interface ValidationIssue {
 export interface Template {
   /** Decision #142: the markets this template is for (a flag or a picture each) */
   markets?: import('./markets').MarketBrief[];
+  /** Decision #144: the markets for which this revision is the default now */
+  defaultFor?: import('./markets').MarketBrief[];
   id: string;
   passportTypeId: string;
   code: string;

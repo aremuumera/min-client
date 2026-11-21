@@ -345,16 +345,21 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
   const types = useGetPassportTypesQuery();
   const batchType = types.data?.data.find((t) => t.code === 'BATCH_PASSPORT');
   const templates = useGetTemplatesQuery({ passportTypeId: batchType?.id, status: 'PUBLISHED', limit: 100 }, { skip: !batchType });
-  // decision #142: each template names the markets it is for; their flags show under the list for the one chosen
-  const options = (templates.data?.data ?? []).filter((t) => t.active).map((t) => ({ value: t.id, label: `${t.name} (revision ${t.version})${t.isDefault ? ' · default' : ''}${t.markets?.length ? ` · ${t.markets.map((m) => m.name).join(', ')}` : ''}` }));
-  const chosenMarkets = (templates.data?.data ?? []).find((t) => t.id === (templateId || (templates.data?.data ?? []).find((x) => x.isDefault)?.id))?.markets;
-  const fallback = (templates.data?.data ?? []).find((t) => t.isDefault)?.id ?? '';
+  const [marketId, setMarketId] = React.useState('');
   const [templateId, setTemplateId] = React.useState('');
   const [confirming, setConfirming] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const { key, done } = useIdempotencyKey();
   const [create, { isLoading }] = useCreatePassportMutation();
-  const chosen = templateId || fallback;
+  const live = (templates.data?.data ?? []).filter((t) => t.active);
+  // decision #144: the company first says which market the passport is for; that market's default
+  // template is then picked, and any other template can still be chosen
+  const markets = [...new Map(live.flatMap((t) => t.markets ?? []).map((m) => [m.id, m])).values()].sort((x, y) => x.name.localeCompare(y.name));
+  const shown = marketId ? live.filter((t) => t.markets?.some((m) => m.id === marketId)) : live;
+  const options = shown.map((t) => ({ value: t.id, label: `${t.name} (revision ${t.version})${marketId ? (t.defaultFor?.some((m) => m.id === marketId) ? ' · default for this market' : '') : t.isDefault ? ' · default' : ''}${!marketId && t.markets?.length ? ` · ${t.markets.map((m) => m.name).join(', ')}` : ''}` }));
+  const fallback = (marketId ? shown.find((t) => t.defaultFor?.some((m) => m.id === marketId)) : shown.find((t) => t.isDefault))?.id ?? shown[0]?.id ?? '';
+  const chosen = shown.some((t) => t.id === templateId) ? templateId : fallback;
+  const chosenMarkets = live.find((t) => t.id === chosen)?.markets;
   if (!batchType) return null;
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-gray-300 p-4">
@@ -364,6 +369,11 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
         <p className="text-sm text-gray-500">No batch passport template is published yet. Ask MINMEG for one under Template requests.</p>
       ) : (
         <>
+          {!!markets.length && (
+            <FormField htmlFor="issue-market" label="Market" info="Where this passport is meant to be used. MINMEG picks that market's default template; you can choose another one.">
+              <DropdownSelect id="issue-market" aria-label="Market" value={marketId} options={[{ value: '', label: 'Any market' }, ...markets.map((m) => ({ value: m.id, label: m.name }))]} onValueChange={(v) => { setMarketId(v); setTemplateId(''); }} />
+            </FormField>
+          )}
           <FormField htmlFor="issue-template" label="Template" required>
             <DropdownSelect id="issue-template" aria-label="Template" value={chosen} options={options} onValueChange={setTemplateId} />
           </FormField>
