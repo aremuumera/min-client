@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Alert, Button, ConfirmDialog, CopyableId, DropdownSelect, FormField, Modal, StatusBadge } from '@/components/ui';
+import { Alert, Button, ConfirmDialog, CopyableId, DownloadButton, DropdownSelect, FormField, Modal, StatusBadge, MarketMarks } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
@@ -16,6 +16,8 @@ import {
   type PassportVersion,
   type TemplateField,
   type VersionField,
+  choiceText,
+  VISIBILITY_LEVEL_TEXT,
 } from '@/lib/passports';
 import { numberText } from '@/lib/traceability';
 import {
@@ -43,7 +45,13 @@ import { useGetFilesQuery } from '@/redux/features/vault/vaultApi';
 import { ComplianceSection } from './compliance-section';
 import { DownloadPdfButton, SharePanel } from './certificate-detail';
 import { DetailsSection, FillSeveral, MaterialsSection, parseTyped, RecordTrail, TypedInput } from './passport-extras';
+import { CompanySignatureBlock } from '@/components/proof/company-signature';
+import { BackupPanel } from './backup-panel';
+import { EuHeaderPanel } from './eu-header-panel';
+import { PassOnPanel } from './pass-on-panel';
+import { PassportCompletenessCard } from './completeness';
 import { ProofSection } from '@/components/proof/proof-section';
+import { SupplyChainSection } from './supply-chain-section';
 
 /*
  * A batch's digital passport (step 2.9b, decisions #74, #108).
@@ -63,7 +71,7 @@ function shown(f: VersionField) {
     const r = f.latestReading as { value?: string; unit?: { symbol?: string } | null; measuredAt?: string } | null | undefined;
     return r?.value ? `${numberText(r.value)} ${r.unit?.symbol ?? ''} (latest reading${r.measuredAt ? `, ${formatDateTime(r.measuredAt)}` : ''})` : 'No reading yet';
   }
-  return f.value ? valueText(f.value.value) : '';
+  return f.value ? (f.dataType === 'ENUM' ? choiceText(f.value.value, f.options) : valueText(f.value.value)) : '';
 }
 
 /** Set one field: typed, from a reading, from a released lab or inspection result, or a document */
@@ -206,6 +214,7 @@ function FieldsView({ version, editable, defs, batchId }: { version: PassportVer
                     {f.value && <p className="text-xs text-gray-500">From {SOURCE_TEXT[f.value.sourceType ?? 'USER'] ?? 'the company'} · visible to {words(f.visibility)}</p>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {f.visibilityLevel && <span title={VISIBILITY_LEVEL_TEXT[f.visibilityLevel].hint}><StatusBadge tone={VISIBILITY_LEVEL_TEXT[f.visibilityLevel].tone} data-testid={`pfield-level-${f.key}`}>{VISIBILITY_LEVEL_TEXT[f.visibilityLevel].label}</StatusBadge></span>}
                     <StatusBadge status={trust.status}>{trust.label}</StatusBadge>
                     {editable && !f.dynamic && !system && <Button size="sm" variant="outlined" onClick={() => setEditing(f)}>{f.value ? 'Change' : 'Fill in'}</Button>}
                     {editable && f.value && !system && !f.required && <Button size="sm" variant="text" onClick={() => setClearing(f)}>Clear</Button>}
@@ -261,6 +270,7 @@ function VersionEditor({ passport, versionId, batchId }: { passport: Passport; v
         <div>
           <h3 className="text-sm font-bold text-gray-900">Version {v.versionNumber} · {v.status === 'VALIDATED' ? 'checked, not published' : 'draft'}</h3>
           <p className="text-xs text-gray-500">Template {v.template.name} ({v.template.code} revision {v.template.version}){v.changeReason ? ` · ${v.changeReason}` : ''}</p>
+          <MarketMarks markets={v.template.markets} className="mt-1" />
         </div>
         <div className="flex flex-wrap gap-2">
           <FillSeveral version={v} defs={template.data?.data.fields ?? []} />
@@ -323,6 +333,7 @@ export function PublishedView({ passport, versionId }: { passport: Passport; ver
         Version {v.versionNumber}, published {v.publishedAt ? formatDateTime(v.publishedAt) : ''} · template {v.template.name}
         {counts?.total ? ` · ${counts.verified ?? 0} of ${counts.total} values verified` : ''}
       </p>
+      <MarketMarks markets={v.template.markets} />
       <FieldsView version={v} editable={false} defs={[]} batchId={null} />
       {!!v.hiddenFieldCount && <p className="text-sm text-gray-500">{v.hiddenFieldCount} field{v.hiddenFieldCount === 1 ? '' : 's'} not shared with you.</p>}
       <MaterialsSection version={v} editable={false} />
@@ -336,14 +347,21 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
   const types = useGetPassportTypesQuery();
   const batchType = types.data?.data.find((t) => t.code === 'BATCH_PASSPORT');
   const templates = useGetTemplatesQuery({ passportTypeId: batchType?.id, status: 'PUBLISHED', limit: 100 }, { skip: !batchType });
-  const options = (templates.data?.data ?? []).filter((t) => t.active).map((t) => ({ value: t.id, label: `${t.name} (revision ${t.version})${t.isDefault ? ' · default' : ''}` }));
-  const fallback = (templates.data?.data ?? []).find((t) => t.isDefault)?.id ?? '';
+  const [marketId, setMarketId] = React.useState('');
   const [templateId, setTemplateId] = React.useState('');
   const [confirming, setConfirming] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const { key, done } = useIdempotencyKey();
   const [create, { isLoading }] = useCreatePassportMutation();
-  const chosen = templateId || fallback;
+  const live = (templates.data?.data ?? []).filter((t) => t.active);
+  // decision #144: the company first says which market the passport is for; that market's default
+  // template is then picked, and any other template can still be chosen
+  const markets = [...new Map(live.flatMap((t) => t.markets ?? []).map((m) => [m.id, m])).values()].sort((x, y) => x.name.localeCompare(y.name));
+  const shown = marketId ? live.filter((t) => t.markets?.some((m) => m.id === marketId)) : live;
+  const options = shown.map((t) => ({ value: t.id, label: `${t.name} (revision ${t.version})${marketId ? (t.defaultFor?.some((m) => m.id === marketId) ? ' · default for this market' : '') : t.isDefault ? ' · default' : ''}${!marketId && t.markets?.length ? ` · ${t.markets.map((m) => m.name).join(', ')}` : ''}` }));
+  const fallback = (marketId ? shown.find((t) => t.defaultFor?.some((m) => m.id === marketId)) : shown.find((t) => t.isDefault))?.id ?? shown[0]?.id ?? '';
+  const chosen = shown.some((t) => t.id === templateId) ? templateId : fallback;
+  const chosenMarkets = live.find((t) => t.id === chosen)?.markets;
   if (!batchType) return null;
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-gray-300 p-4">
@@ -353,9 +371,15 @@ function IssuePassport({ subjectId }: { subjectId: string }) {
         <p className="text-sm text-gray-500">No batch passport template is published yet. Ask MINMEG for one under Template requests.</p>
       ) : (
         <>
+          {!!markets.length && (
+            <FormField htmlFor="issue-market" label="Market" info="Where this passport is meant to be used. MINMEG picks that market's default template; you can choose another one.">
+              <DropdownSelect id="issue-market" aria-label="Market" value={marketId} options={[{ value: '', label: 'Any market' }, ...markets.map((m) => ({ value: m.id, label: m.name }))]} onValueChange={(v) => { setMarketId(v); setTemplateId(''); }} />
+            </FormField>
+          )}
           <FormField htmlFor="issue-template" label="Template" required>
             <DropdownSelect id="issue-template" aria-label="Template" value={chosen} options={options} onValueChange={setTemplateId} />
           </FormField>
+          {!!chosenMarkets?.length && <p className="flex flex-wrap items-center gap-2 text-xs text-gray-500" data-testid="issue-template-markets">For <MarketMarks markets={chosenMarkets} /></p>}
           <Button disabled={!chosen} onClick={() => setConfirming(true)}>Issue passport</Button>
         </>
       )}
@@ -402,6 +426,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
           <p className="text-sm font-bold text-gray-900">{p.certificateType?.name ?? 'Passport'} · {p.passportCode}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <StatusBadge status={passportTone(p.status)}>{PASSPORT_STATUS_TEXT[p.status]}</StatusBadge>
+            {p.originCahra && <StatusBadge tone="warning" data-testid="origin-cahra">From a conflict-affected or high-risk area</StatusBadge>}
             {p.correctionPending && <StatusBadge status="ON_HOLD">Correction in progress</StatusBadge>}
           </div>
           {p.suspensionReason && p.status === 'SUSPENDED' && <p className="mt-1 text-sm text-gray-600">MINMEG: {p.suspensionReason}</p>}
@@ -417,6 +442,7 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       </div>
       {error && <Alert severity="error">{error}</Alert>}
       {(p.status === 'SUSPENDED' || p.status === 'REVOKED') && mode === 'reader' && <p className="text-sm text-gray-500">MINMEG has {p.status === 'SUSPENDED' ? 'suspended' : 'revoked'} this passport, so its content is not shown.</p>}
+      {mode === 'owner' && <PassportCompletenessCard passportId={p.id} />}
       {open && <VersionEditor passport={p} versionId={open.id} batchId={batchId} />}
       {p.publishedVersion && (mode === 'reader' || !open || showPublished) && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <PublishedView passport={p} versionId={p.publishedVersion.id} />}
       {open && p.publishedVersion && <Button size="sm" variant="text" onClick={() => setShowPublished((s) => !s)}>{showPublished ? 'Hide' : 'Show'} the published version {p.publishedVersion.versionNumber}</Button>}
@@ -424,10 +450,18 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       {p.publishedVersion && !['SUSPENDED', 'REVOKED'].includes(p.status) && (
         <div className="flex flex-wrap gap-2">
           <DownloadPdfButton id={p.id} code={p.passportCode} label="Download the published version (PDF)" />
+          <DownloadButton path={`/certificates/${p.id}/package`} params={{ format: 'zip' }} fileName={`${p.passportCode}.zip`} data-testid="export-package">Download the package (ZIP)</DownloadButton>
+          <DownloadButton path={`/certificates/${p.id}/history.csv`} fileName={`${p.passportCode}-history.csv`} variant="text" data-testid="export-passport-history">History (CSV)</DownloadButton>
         </div>
       )}
       {p.publishedVersion && !(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ProofSection subjectType="PASSPORT_VERSION" subjectId={p.publishedVersion.id} publicCode={p.passportCode} />}
+      {mode === 'owner' && p.publishedVersion && <CompanySignatureBlock passportId={p.id} />}
+      {mode === 'owner' && <EuHeaderPanel passportId={p.id} canEdit={!closed} />}
+      {mode === 'owner' && p.publishedVersion && <BackupPanel passportId={p.id} passportCode={p.passportCode} />}
+      {/* decisions #129, #131: the supply chain up to the origin; the owner decides whether the public page shows it */}
+      {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <SupplyChainSection passport={p} owner={mode === 'owner' && !closed} />}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
+      {mode === 'reader' && p.publishedVersion && !closed && <PassOnPanel passportId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}
       <RecordTrail id={p.id} />
       <p className="text-xs text-gray-400">Passport ID <CopyableId value={p.id} /></p>

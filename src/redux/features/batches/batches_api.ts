@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
-import { listParams, type Batch, type BatchAttachment, type BatchTree, type HistoryItem, type LedgerEntry, type NamedRecord, type Paged, type ReviewEntry, type UnitChoice } from '@/lib/batches';
+import { listParams, type Batch, type BatchAttachment, type BatchLineage, type BatchTree, type HistoryItem, type LedgerEntry, type NamedRecord, type Paged, type ReviewEntry, type UnitChoice } from '@/lib/batches';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Group 05 batches and the quantity ledger (step 2.5). Anything that moves quantity sends an Idempotency-Key; nothing here deletes. */
@@ -48,6 +48,7 @@ export const batchesApi = createApi({
       invalidatesTags: [...CHANGES],
     }),
     getBatchTree: builder.query<Single<BatchTree>, string>({ query: (id) => `/batches/${id}/traceability-tree?depth=25`, providesTags: ['Tree'] }),
+    getBatchLineage: builder.query<Single<BatchLineage>, string>({ query: (id) => `/batches/${id}/lineage?direction=both&depth=25`, providesTags: ['Tree'] }),
     getBatchHistory: builder.query<Single<{ items: HistoryItem[] }>, string>({ query: (id) => `/batches/${id}/history?limit=100`, providesTags: ['History'] }),
     quarantineBatch: builder.mutation<Single<Batch>, { id: string; reason: string }>({
       query: ({ id, reason }) => ({ url: `/batches/${id}/quarantine`, method: 'POST', body: { reason } }),
@@ -102,6 +103,7 @@ export const {
   useAdjustBatchMutation,
   useReconcileBatchMutation,
   useGetBatchTreeQuery,
+  useGetBatchLineageQuery,
   useGetBatchHistoryQuery,
   useQuarantineBatchMutation,
   useReleaseBatchMutation,

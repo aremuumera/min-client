@@ -2,25 +2,23 @@
 
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Alert, Button, ConfirmDialog, CopyableId, FormField, Input, KeyValueList, StatusBadge, useConfirm } from '@/components/ui';
+import { Alert, Button, Checkbox, ConfirmDialog, CopyableId, FormField, Input, KeyValueList, StatusBadge, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { downloadCertificatePdf } from '@/lib/download-pdf';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { CERTIFICATE_STATUS_TEXT, certificateTone, statementRows } from '@/lib/passports';
 import { useGetCertificateQuery, useGetCertificatesQuery } from '@/redux/features/passports/passports_api';
-import { useCreateGrantMutation, useGetGrantsQuery, useRevokeGrantMutation } from '@/redux/features/vault/vaultApi';
+import { useCreateEmailShareMutation, useGetEmailSharesQuery, useGetGrantsQuery, useRevokeEmailShareMutation, useRevokeGrantMutation } from '@/redux/features/vault/vaultApi';
 import { useAppSelector } from '@/redux/hooks';
 import { RecordTrail } from './passport-extras';
 import { ProofSection } from '@/components/proof/proof-section';
 
 /*
  * Certificates for companies (step 2.9d, decisions #76, #108): MINMEG's formal statements about
- * what it already checked. Only MINMEG issues them. The holder downloads the PDF and shares it with
- * another company by its ID, read-only, until a date (D10, access grants).
+ * what it already checked. Only MINMEG issues them. The holder downloads the PDF and shares it by email,
+ * read only, until a date (decision #119).
  */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export function useOrgId() {
   const { isTeamMember, ownerUserId, user } = useAppSelector((s) => s.auth);
   return ((isTeamMember ? ownerUserId : user?.id) as string | undefined) ?? null;
@@ -50,72 +48,113 @@ export function DownloadPdfButton({ id, code, label = 'Download PDF' }: { id: st
   );
 }
 
-/** Share a certificate or passport with another company, read-only, by its MINMEG ID */
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** A share by email lasts at most 90 days (decision #119) */
+const MAX_DAYS = 90;
+const dayInput = (d: Date) => d.toISOString().slice(0, 10);
+const endOf = (day: string) => new Date(`${day}T23:59:00`);
+
+/**
+ * Share a certificate or passport, read only, by email (decision #119). If the address is a MINMEG account
+ * (an owner, or a team member → their company), that company gets it; otherwise MINMEG emails a link that
+ * opens with a code sent to the address. The panel says the same either way. Shares made earlier by
+ * company ID still show here and can be removed.
+ */
 export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIFICATE' | 'PASSPORT'; resourceId: string }) {
+  const thing = resourceType === 'PASSPORT' ? 'passport' : 'certificate';
+  const shares = useGetEmailSharesQuery({ resourceType, resourceId });
   const grants = useGetGrantsQuery({ resourceType, resourceId, limit: 100 });
-  const [create, createState] = useCreateGrantMutation();
-  const [revoke, revokeState] = useRevokeGrantMutation();
+  const [create, createState] = useCreateEmailShareMutation();
+  const [revokeShare, revokeShareState] = useRevokeEmailShareMutation();
+  const [revokeGrant, revokeGrantState] = useRevokeGrantMutation();
   const { key, done } = useIdempotencyKey();
   const { confirm, dialog } = useConfirm();
   const [adding, setAdding] = React.useState(false);
-  const [companyId, setCompanyId] = React.useState('');
-  const [until, setUntil] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [until, setUntil] = React.useState(() => dayInput(new Date(Date.now() + 30 * 86400000)));
   const [reason, setReason] = React.useState('');
-  const [removing, setRemoving] = React.useState<string | null>(null);
+  // decision #134: a company that receives it may pass it on one step (passports only)
+  const [passOn, setPassOn] = React.useState(false);
+  const [removing, setRemoving] = React.useState<{ kind: 'share' | 'grant'; id: string } | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const active = (grants.data?.data ?? []).filter((g) => g.status === 'ACTIVE');
+  const live = (shares.data?.data ?? []).filter((x) => x.status === 'ACTIVE');
+  const older = (grants.data?.data ?? []).filter((g) => g.status === 'ACTIVE');
+  // the date picker's range, from when the panel opened
+  const [{ today, latest }] = React.useState(() => ({ today: dayInput(new Date(Date.now() + 86400000)), latest: dayInput(new Date(Date.now() + (MAX_DAYS - 1) * 86400000)) }));
+
   const give = async () => {
     setError(null);
-    if (!UUID.test(companyId.trim())) return setError('Paste the company’s full MINMEG ID');
-    if (until && new Date(`${until}T23:59:00`).getTime() <= Date.now()) return setError('Choose a date in the future');
-    if (!(await confirm({ title: 'Share with this company?', description: `They can read it${until ? ` until ${new Date(until).toLocaleDateString()}` : ' until you remove it'}. They cannot change it.`, confirmLabel: 'Share' }))) return;
+    const address = email.trim();
+    if (!EMAIL.test(address)) return setError('Enter a valid email address');
+    if (!until) return setError('Choose until when they can see it');
+    const end = endOf(until);
+    if (end.getTime() <= Date.now()) return setError('Choose a date in the future');
+    if (end.getTime() > Date.now() + MAX_DAYS * 86400000) return setError(`A share by email can last at most ${MAX_DAYS} days`);
+    if (!(await confirm({ title: `Share this ${thing} with ${address}?`, description: `They can read it until ${formatDate(end.toISOString())}. They cannot change or download it. You can remove it at any time.`, confirmLabel: 'Share' }))) return;
     try {
-      await create({ resourceType, resourceId, granteeType: 'ORGANIZATION', granteeId: companyId.trim(), permissions: ['READ'], ...(until ? { expiresAt: new Date(`${until}T23:59:00`).toISOString() } : {}), ...(reason.trim() ? { reason: reason.trim() } : {}), idempotencyKey: key }).unwrap();
+      const res = await create({ resourceType, resourceId, email: address, expiresAt: end.toISOString(), ...(reason.trim() ? { reason: reason.trim() } : {}), ...(resourceType === 'PASSPORT' && passOn ? { allowPassOn: true } : {}), idempotencyKey: key }).unwrap();
       done();
-      toast.success('Shared');
+      toast.success(res.message ?? "Shared. We've emailed them.");
       setAdding(false);
-      setCompanyId('');
-      setUntil('');
+      setEmail('');
       setReason('');
+      setPassOn(false);
     } catch (err) {
       setError(toApiError(err).message);
     }
   };
+
   return (
     <section className="space-y-2 border-t border-gray-200 pt-4" aria-labelledby={`share-${resourceId}`}>
       <h4 id={`share-${resourceId}`} className="text-sm font-bold text-gray-900">Shared with</h4>
       {error && <Alert severity="error">{error}</Alert>}
-      {!active.length && <p className="text-sm text-gray-500">Not shared with any other company.</p>}
+      {(shares.isError || grants.isError) && <Alert severity="error">{toApiError(shares.error ?? grants.error).message}</Alert>}
+      {!live.length && !older.length && !shares.isLoading && <p className="text-sm text-gray-500">Not shared with anyone.</p>}
       <ul className="space-y-1">
-        {active.map((g) => (
+        {live.map((x) => (
+          <li key={x.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="break-all">
+              <span className="font-medium text-gray-900">{x.email}</span> · until {formatDate(x.expiresAt)}
+              {x.allowPassOn && <span className="text-gray-500"> · may pass it on</span>}
+              {x.passedOnBy && <span className="text-gray-500"> · passed on by company <CopyableId value={x.passedOnBy} /></span>}
+            </span>
+            <Button size="sm" variant="text" onClick={() => setRemoving({ kind: 'share', id: x.id })}>Remove</Button>
+          </li>
+        ))}
+        {older.map((g) => (
           <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span>
-              <CopyableId value={g.granteeId} /> · {g.expiresAt ? `until ${formatDate(g.expiresAt)}` : 'no end date'}
+              {g.granteeType === 'ORGANIZATION' ? 'Company' : 'Person'} <CopyableId value={g.granteeId} /> · {g.expiresAt ? `until ${formatDate(g.expiresAt)}` : 'no end date'}
+              {g.canTransfer && <span className="text-gray-500"> · may pass it on</span>}
+              {g.grantedViaId && <span className="text-gray-500"> · passed on by company <CopyableId value={g.granterOrganizationId} /></span>}
             </span>
-            <Button size="sm" variant="text" onClick={() => setRemoving(g.id)}>Remove</Button>
+            <Button size="sm" variant="text" onClick={() => setRemoving({ kind: 'grant', id: g.id })}>Remove</Button>
           </li>
         ))}
       </ul>
       {adding ? (
         <div className="space-y-3 rounded-lg border border-gray-200 p-3">
-          <FormField htmlFor={`share-id-${resourceId}`} label="Company ID" required info="The company’s MINMEG ID: ask them for it">
-            <Input id={`share-id-${resourceId}`} value={companyId} onChange={(e) => setCompanyId(e.target.value)} className="font-mono" autoComplete="off" />
+          <FormField htmlFor={`share-email-${resourceId}`} label="Email address" required info={`If they have a MINMEG account, their company gets the ${thing}. If not, MINMEG emails them a link that opens with a code sent to that address.`}>
+            <Input id={`share-email-${resourceId}`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" placeholder="name@company.com" />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField htmlFor={`share-until-${resourceId}`} label="Until" optional>
-              <Input id={`share-until-${resourceId}`} type="date" value={until} onChange={(e) => setUntil(e.target.value)} />
+            <FormField htmlFor={`share-until-${resourceId}`} label="Until" required info={`At most ${MAX_DAYS} days`}>
+              <Input id={`share-until-${resourceId}`} type="date" value={until} min={today} max={latest} onChange={(e) => setUntil(e.target.value)} />
             </FormField>
             <FormField htmlFor={`share-reason-${resourceId}`} label="Reason" optional>
-              <Input id={`share-reason-${resourceId}`} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. trade finance for lot 12" />
+              <Input id={`share-reason-${resourceId}`} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. due diligence for lot 12" />
             </FormField>
           </div>
+          {resourceType === 'PASSPORT' && (
+            <Checkbox label="They may pass it on to one more company" description="Only if the address belongs to a company on MINMEG. What they pass on can't be passed on again, never lasts longer than their access, and you can remove it." checked={passOn} onChange={(e) => setPassOn(e.target.checked)} />
+          )}
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outlined" onClick={() => setAdding(false)}>Cancel</Button>
             <Button size="sm" loading={createState.isLoading} onClick={give}>Share</Button>
           </div>
         </div>
       ) : (
-        <Button size="sm" variant="outlined" onClick={() => setAdding(true)}>Share with a company</Button>
+        <Button size="sm" variant="outlined" onClick={() => setAdding(true)}>Share by email</Button>
       )}
       <ConfirmDialog
         open={!!removing}
@@ -124,9 +163,10 @@ export function SharePanel({ resourceType, resourceId }: { resourceType: 'CERTIF
         confirmLabel="Stop sharing"
         tone="error"
         reason={{ label: 'Reason', minLength: 3 }}
-        loading={revokeState.isLoading}
+        loading={revokeShareState.isLoading || revokeGrantState.isLoading}
         onConfirm={async (why) => {
-          if (removing) await revoke({ id: removing, reason: why ?? '' }).unwrap().catch((err) => setError(toApiError(err).message));
+          if (removing?.kind === 'share') await revokeShare({ id: removing.id, reason: why ?? '' }).unwrap().catch((err) => setError(toApiError(err).message));
+          if (removing?.kind === 'grant') await revokeGrant({ id: removing.id, reason: why ?? '' }).unwrap().catch((err) => setError(toApiError(err).message));
           setRemoving(null);
         }}
         onClose={() => setRemoving(null)}

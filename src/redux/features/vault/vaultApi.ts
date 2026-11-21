@@ -9,6 +9,7 @@ import {
   type ContentLink,
   type FileClass,
   type FolderTree,
+  type EmailShare,
   type Grant,
   type GranteeType,
   type GrantPermission,
@@ -66,7 +67,7 @@ export interface CreateGrantBody {
 export const vaultApi = createApi({
   reducerPath: 'vaultApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Folders', 'Files', 'ShareLinks', 'AccessLog', 'Grants', 'Visibility', 'Evidence'],
+  tagTypes: ['Folders', 'Files', 'ShareLinks', 'AccessLog', 'Grants', 'EmailShares', 'Visibility', 'Evidence'],
   endpoints: (builder) => ({
     // ---------- folders ----------
     getFolderTree: builder.query<Single<FolderTree>, void>({ query: () => '/storage/folders', providesTags: ['Folders'] }),
@@ -153,11 +154,27 @@ export const vaultApi = createApi({
       query: ({ fileId, ...body }) => ({ url: `/resource-visibility/FILE_ASSET/${fileId}`, method: 'PUT', body: { ...body, contextType: 'DEFAULT' } }),
       invalidatesTags: ['Visibility'],
     }),
+    // certificates and passports shared by email (decision #119)
+    getEmailShares: builder.query<Single<EmailShare[]>, { resourceType: 'CERTIFICATE' | 'PASSPORT'; resourceId: string }>({ query: (q) => `/resource-acl/email-shares${listParams(q)}`, providesTags: ['EmailShares'] }),
+    createEmailShare: builder.mutation<Single<EmailShare>, { resourceType: 'CERTIFICATE' | 'PASSPORT'; resourceId: string; email: string; expiresAt: string; reason?: string; allowPassOn?: boolean; idempotencyKey: string }>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/email-shares', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['EmailShares'],
+    }),
+    revokeEmailShare: builder.mutation<Single<EmailShare>, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({ url: `/resource-acl/email-shares/${id}/revoke`, method: 'POST', body: reason ? { reason } : {} }),
+      invalidatesTags: ['EmailShares'],
+    }),
     getGrants: builder.query<Paged<Grant>, Query>({ query: (q) => `/resource-acl/grants${listParams(q)}`, providesTags: ['Grants'] }),
     createGrant: builder.mutation<Single<Grant>, CreateGrantBody>({
       query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/grants', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
       invalidatesTags: ['Grants'],
     }),
+    /** Decision #134: pass a passport your company received on, by email (the same answer whether or not the address has an account) */
+    passOnByEmail: builder.mutation<Single<EmailShare>, { grantId: string; email: string; expiresAt?: string; reason: string; idempotencyKey: string }>({
+      query: ({ idempotencyKey, ...body }) => ({ url: '/resource-acl/email-shares/pass-on', method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['EmailShares', 'Grants'],
+    }),
+    getPassedOn: builder.query<Single<{ grantId: string; canPassOn: boolean; expiresAt: string | null; shares: EmailShare[] }>, string>({ query: (grantId) => `/resource-acl/email-shares/passed-on?grantId=${grantId}`, providesTags: ['EmailShares'] }),
     revokeGrant: builder.mutation<Single<Grant>, { id: string; reason: string }>({
       query: ({ id, reason }) => ({ url: `/resource-acl/grants/${id}/revoke`, method: 'POST', body: { reason } }),
       invalidatesTags: ['Grants'],
@@ -192,7 +209,12 @@ export const {
   useGetVisibilityPoliciesQuery,
   useGetVisibilityQuery,
   useSetVisibilityMutation,
+  useGetEmailSharesQuery,
+  useCreateEmailShareMutation,
+  useRevokeEmailShareMutation,
   useGetGrantsQuery,
   useCreateGrantMutation,
   useRevokeGrantMutation,
+  usePassOnByEmailMutation,
+  useGetPassedOnQuery,
 } = vaultApi;

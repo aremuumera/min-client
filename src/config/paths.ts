@@ -85,12 +85,16 @@ export const paths = {
     sites: "/dashboard/sites",
     // step 2.9: passports, compliance and certificates
     passports: { list: "/dashboard/passports", requests: "/dashboard/passports/requests" },
+    // decision #137: people without an account ask for more of a passport
+    dataRequests: "/dashboard/data-requests",
     certificates: "/dashboard/certificates",
     // step 2.10: ESG and carbon
     esg: "/dashboard/esg",
     // step 2.13b: operational alerts
     alerts: "/dashboard/alerts",
     batches: "/dashboard/batches",
+    // decision #126: a buyer-only company's batch records, read only
+    receivedMaterials: "/dashboard/received-materials",
     shipments: "/dashboard/shipments",
     scan: "/dashboard/scan",
     handovers: "/dashboard/handovers",
@@ -103,6 +107,7 @@ export const paths = {
       business: "/dashboard/settings/business",
       legals: "/dashboard/settings/legals",
       team: "/dashboard/settings/team",
+      usage: "/dashboard/settings/usage",
     },
     analytics: "/dashboard/analytics",
     chat: {
@@ -233,6 +238,7 @@ export const routeAccess = {
     paths.dashboard.settings.business,
     paths.dashboard.settings.legals,
     paths.dashboard.settings.team,
+    paths.dashboard.settings.usage,
     // sites (step 2.4)
     paths.dashboard.sites,
     // inventory (step 2.5)
@@ -240,6 +246,7 @@ export const routeAccess = {
     // passports and certificates (step 2.9)
     paths.dashboard.passports.list,
     paths.dashboard.passports.requests,
+    paths.dashboard.dataRequests,
     paths.dashboard.certificates,
     paths.dashboard.esg,
     paths.dashboard.alerts,

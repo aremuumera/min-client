@@ -1,6 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { idempotencyHeaders } from '@/lib/api/idempotency';
 import type { ApplicabilityRule, Assessment, BulkResult, Certificate, CertificateType, ComplianceProfile, ComplianceSummary, Paged, Passport, PassportType, PassportVerification, PassportVersion, RecordHistory, RelationshipTree, Single, Standard, Template, TemplateRequest, VisibilityPolicy } from '@/lib/passports';
+import type { DataRequestDetail, DataRequestRow } from '@/lib/data-requests';
+import type { EuHeader, EuHeaderInput } from '@/lib/eu-header';
+import type { PassportBackups, RecoveryLink } from '@/lib/passport-backups';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
 /* Step 2.9: passports, compliance and certificates for companies (Groups 14 to 17). Creates send an Idempotency-Key. */
@@ -11,8 +14,25 @@ const params = (q: Query) => Object.fromEntries(Object.entries(q).filter(([, v])
 export const passportsApi = createApi({
   reducerPath: 'passportsApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates'],
+  tagTypes: ['Requests', 'Templates', 'Passports', 'Compliance', 'Certificates', 'DataRequests', 'EuHeader'],
   endpoints: (builder) => ({
+    // ---------- decision #140: the independent copy of each published version ----------
+    getPassportBackups: builder.query<Single<PassportBackups>, string>({ query: (id) => `/certificates/${id}/backups`, keepUnusedDataFor: 0 }),
+    createRecoveryLink: builder.mutation<Single<RecoveryLink>, { id: string; versionId: string; idempotencyKey: string }>({ query: ({ id, versionId, idempotencyKey }) => ({ url: `/certificates/${id}/backups/${versionId}/recovery-link`, method: 'POST', headers: idempotencyHeaders(idempotencyKey) }) }),
+    // ---------- decisions #138, #139: the EU header of a passport (public by the owner's choice) ----------
+    getEuHeader: builder.query<Single<EuHeader>, string>({ query: (id) => `/certificates/${id}/eu-header`, providesTags: ['EuHeader'] }),
+    setEuHeader: builder.mutation<Single<EuHeader>, { id: string } & EuHeaderInput>({ query: ({ id, ...body }) => ({ url: `/certificates/${id}/eu-header`, method: 'PUT', body }), invalidatesTags: ['EuHeader'] }),
+    // ---------- decision #137: requests for a passport's data from people without an account ----------
+    getDataRequests: builder.query<Paged<DataRequestRow>, Query>({ query: (q) => ({ url: '/merchant/data-requests', params: params(q) }), providesTags: ['DataRequests'] }),
+    getDataRequest: builder.query<Single<DataRequestDetail>, string>({ query: (id) => `/merchant/data-requests/${id}`, providesTags: ['DataRequests'] }),
+    approveDataRequest: builder.mutation<Single<DataRequestDetail>, { id: string; scope: string; expiresAt: string; note?: string | null; idempotencyKey: string }>({
+      query: ({ id, idempotencyKey, ...body }) => ({ url: `/merchant/data-requests/${id}/approve`, method: 'POST', body, headers: idempotencyHeaders(idempotencyKey) }),
+      invalidatesTags: ['DataRequests'],
+    }),
+    endDataRequest: builder.mutation<Single<DataRequestDetail>, { id: string; step: 'decline' | 'revoke'; reason: string }>({
+      query: ({ id, step, reason }) => ({ url: `/merchant/data-requests/${id}/${step}`, method: 'POST', body: { reason } }),
+      invalidatesTags: ['DataRequests'],
+    }),
     // ---------- 2.9d certificates (the non-passport kind of /certificates) ----------
     getCertificates: builder.query<Paged<Certificate>, Query>({ query: (q) => ({ url: '/certificates', params: params({ certificateKind: 'NON_PASSPORT', ...q }) }), providesTags: ['Certificates'] }),
     getCertificate: builder.query<Single<Certificate>, string>({ query: (id) => `/certificates/${id}`, providesTags: ['Certificates'] }),
@@ -68,6 +88,17 @@ export const passportsApi = createApi({
       query: ({ id, action, reason }) => ({ url: `/certificates/${id}/${action}`, method: 'POST', body: reason ? { reason } : {} }),
       invalidatesTags: ['Passports'],
     }),
+    // decision #132: a company's own key for its name on supply chains (the screens keep it hidden for now)
+    getCompanySupplyChainSetting: builder.query<Single<{ nameOnSupplyChains: boolean }>, void>({ query: () => '/organizations/me/supply-chain-settings', providesTags: ['Passports'] }),
+    setCompanySupplyChainSetting: builder.mutation<Single<{ nameOnSupplyChains: boolean }>, { nameOnSupplyChains: boolean }>({
+      query: (body) => ({ url: '/organizations/me/supply-chain-settings', method: 'PUT', body }),
+      invalidatesTags: ['Passports'],
+    }),
+    // decisions #129, #132: the owner's supply chain switches
+    setSupplyChain: builder.mutation<Single<{ showSupplyChain: boolean; showCompanyNames: boolean }>, { id: string; showSupplyChain?: boolean; showCompanyNames?: boolean }>({
+      query: ({ id, ...body }) => ({ url: `/certificates/${id}/supply-chain`, method: 'PATCH', body }),
+      invalidatesTags: ['Passports'],
+    }),
     setPassportValue: builder.mutation<unknown, { versionId: string; fieldId: string } & Body>({
       query: ({ versionId, fieldId, ...body }) => ({ url: `/passport-versions/${versionId}/fields/${fieldId}`, method: 'PUT', body }),
       invalidatesTags: ['Passports'],
@@ -111,6 +142,14 @@ export const passportsApi = createApi({
 });
 
 export const {
+  useGetPassportBackupsQuery,
+  useCreateRecoveryLinkMutation,
+  useGetEuHeaderQuery,
+  useSetEuHeaderMutation,
+  useGetDataRequestsQuery,
+  useGetDataRequestQuery,
+  useApproveDataRequestMutation,
+  useEndDataRequestMutation,
   useGetCertificatesQuery,
   useGetCertificateQuery,
   useGetCertificateTypesQuery,
@@ -124,6 +163,7 @@ export const {
   useGetActiveStandardsQuery,
   useGetVisibilityPoliciesQuery,
   useGetPassportsQuery,
+  useLazyGetPassportsQuery,
   useGetPassportQuery,
   useGetPassportVersionQuery,
   useGetPassportVersionsQuery,
@@ -136,6 +176,9 @@ export const {
   useCheckPassportVersionMutation,
   useDiscardPassportVersionMutation,
   usePassportActionMutation,
+  useSetSupplyChainMutation,
+  useGetCompanySupplyChainSettingQuery,
+  useSetCompanySupplyChainSettingMutation,
   useSetPassportValueMutation,
   useClearPassportValueMutation,
   useAddPassportMaterialMutation,

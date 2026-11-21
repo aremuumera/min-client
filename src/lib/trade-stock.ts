@@ -11,6 +11,8 @@ export interface TradeStockSummary {
 }
 
 export interface TradeStockRecord {
+  /** Decision #125: the goods held for this trade come from a conflict-affected or high-risk area. Absent when this viewer is not told */
+  originCahra?: boolean;
   id: string;
   tradeCode: string;
   status: string;

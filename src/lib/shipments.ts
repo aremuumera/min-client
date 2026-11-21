@@ -56,6 +56,12 @@ export interface ShipmentLine {
   material: { id: string; name: string } | null;
   batch: { id: string; batchCode: string } | null;
   metadata?: { reconciliation?: { status: 'RECORDED' | 'PENDING_APPROVAL' | 'APPROVED'; difference: string }; rejectionReason?: string | null } | null;
+  /** Decision #130 — the buyer's and staff's only (the seller never gets these): the buyer's own batch this line gave */
+  receivedBatchId?: string | null;
+  receivedBatch?: { id: string; batchCode: string; batchStatus: string } | null;
+  /** "Create my batch record" can be used on this line now */
+  canReceiveIntoStock?: boolean;
+  receiveIntoStockBlockedReason?: string | null;
 }
 export interface Shipment {
   id: string;

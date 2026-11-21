@@ -13,7 +13,7 @@ export interface NavItemConfig {
   badge?: string;
   matcher?: { type: "startsWith" | "equals"; href: string };
   items?: NavItemConfig[];
-  permission?: PermissionKey | 'batches' | 'savedItems' | 'inspectionsHub' | 'submittedOffers';
+  permission?: PermissionKey | 'batches' | 'receivedMaterials' | 'savedItems' | 'inspectionsHub' | 'submittedOffers';
 }
 
 export interface DashboardConfig {
@@ -188,6 +188,14 @@ export const dashboardConfig: DashboardConfig = {
           permission: "passports",
         },
         {
+          key: "passports:data-requests",
+          title: "Data requests",
+          href: paths.dashboard.dataRequests,
+          icon: "tray",
+          matcher: { type: "startsWith", href: paths.dashboard.dataRequests },
+          permission: "passports",
+        },
+        {
           key: "passports:esg",
           title: "ESG & carbon",
           href: paths.dashboard.esg,
@@ -280,6 +288,8 @@ export const dashboardConfig: DashboardConfig = {
           icon: "package",
           items: [
             { key: "batches", title: "Inventory", href: paths.dashboard.batches, matcher: { type: "startsWith", href: "/dashboard/batches" }, permission: "batches" },
+            // decision #126: buyer-only companies get a batch record for each delivery they accept
+            { key: "received", title: "Received materials", href: paths.dashboard.receivedMaterials, matcher: { type: "startsWith", href: paths.dashboard.receivedMaterials }, permission: "receivedMaterials" },
             { key: "sites", title: "My sites", href: paths.dashboard.sites, matcher: { type: "startsWith", href: "/dashboard/sites" }, permission: "inventory" },
             { key: "handovers", title: "Handovers", href: paths.dashboard.handovers, matcher: { type: "startsWith", href: "/dashboard/handovers" }, permission: "traceability" },
             { key: "scan", title: "Scan a code", href: paths.dashboard.scan, matcher: { type: "startsWith", href: "/dashboard/scan" }, permission: "traceability" },

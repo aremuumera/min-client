@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import { UserCircle, Bell, ShieldCheck, Users, Scale, CreditCard } from 'lucide-react';
+import { UserCircle, Bell, ShieldCheck, Users, Scale, CreditCard, Gauge } from 'lucide-react';
 import { RootState } from '@/redux/store';
 import { cn } from '@/utils/helper';
 import { paths } from '@/config/paths';
@@ -18,6 +18,7 @@ const navItems = [
     { key: 'security', title: 'Security', href: paths.dashboard.settings.security, icon: ShieldCheck },
     { key: 'business', title: 'Business', href: paths.dashboard.settings.business, icon: Users },
     { key: 'team', title: 'Team', href: paths.dashboard.settings.team, icon: Users },
+    { key: 'usage', title: 'Usage and limits', href: paths.dashboard.settings.usage, icon: Gauge },
     { key: 'legal', title: 'Legals', href: paths.dashboard.settings.legals, icon: Scale },
 ];
 

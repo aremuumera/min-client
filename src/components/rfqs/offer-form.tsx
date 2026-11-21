@@ -33,6 +33,10 @@ export interface OfferFormRfq {
   moisture_max?: string | number | null;
   packaging?: string | null;
   productDestination?: string | null;
+  /** The buyer asked for several deliveries (recurring trades, owner 2026-11-21) */
+  recurring?: boolean;
+  recurringFrequency?: string | null;
+  recurringDuration?: number | string | null;
 }
 
 /** A supplier's offer on an RFQ (step 2.6b). Sending again makes a new version until the offer is accepted */
@@ -47,6 +51,8 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
   const [step, setStep] = React.useState<'form' | 'review' | 'sent'>('form');
   const [price, setPrice] = React.useState('');
   const [quantity, setQuantity] = React.useState('');
+  // recurring: the quantity is the total; this is one delivery (only that is held when the offer is accepted)
+  const [perDelivery, setPerDelivery] = React.useState('');
   const [unitId, setUnitId] = React.useState('');
   const [grade, setGrade] = React.useState('');
   const [moisture, setMoisture] = React.useState('');
@@ -65,6 +71,7 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
     if (!open || !existing) return;
     setPrice(String(existing.unit_price ?? ''));
     setQuantity(String(existing.quantity ?? ''));
+    setPerDelivery(existing.quantity_per_delivery == null ? '' : String(Number(existing.quantity_per_delivery)));
     setUnitId(existing.unitId ?? '');
     setGrade(existing.purity_grade ?? '');
     setMoisture(existing.moisture_max == null ? '' : String(existing.moisture_max));
@@ -88,6 +95,8 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
     const next: Record<string, string> = {};
     if (!(Number(price) > 0)) next.price = 'Enter your price';
     if (!(Number(quantity) > 0)) next.quantity = 'Enter how much you can supply';
+    if (rfq.recurring && !(Number(perDelivery) > 0)) next.perDelivery = 'Enter how much you deliver each time';
+    else if (rfq.recurring && Number(perDelivery) > Number(quantity)) next.perDelivery = 'One delivery cannot be more than the total';
     if (!unitId) next.unitId = 'Choose the unit';
     if (moisture !== '' && (Number(moisture) < 0 || Number(moisture) > 100)) next.moisture = 'Moisture is between 0 and 100';
     setErrors(next);
@@ -99,7 +108,7 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
     if (!ok) return;
     setFormError(undefined);
     const form = new FormData();
-    const values: Record<string, string> = { quantity, unitId, measure_type: unit?.symbol ?? unit?.code ?? '', unit_price: price, currency: 'NGN', purity_grade: grade.trim(), moisture_max: moisture, packaging: packaging.trim(), delivery_location: city.trim(), delivery_state: state.trim(), delivery_country: country.trim(), delivery_address: address.trim(), timeline_type: 'immediate', description: description.trim() };
+    const values: Record<string, string> = { quantity, unitId, measure_type: unit?.symbol ?? unit?.code ?? '', unit_price: price, currency: 'NGN', purity_grade: grade.trim(), moisture_max: moisture, packaging: packaging.trim(), delivery_location: city.trim(), delivery_state: state.trim(), delivery_country: country.trim(), delivery_address: address.trim(), timeline_type: rfq.recurring ? 'recurring' : 'immediate', ...(rfq.recurring ? { quantity_per_delivery: perDelivery } : {}), description: description.trim() };
     for (const [key, value] of Object.entries(values)) if (value) form.append(key, value);
     for (const f of files) form.append('offerAttachment', f);
     try {
@@ -113,7 +122,8 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
 
   const reviewRows: [string, string][] = [
     ['Price', `₦${Number(price).toLocaleString()} per ${unit?.symbol ?? 'unit'}`],
-    ['Quantity', `${quantity} ${unit?.symbol ?? ''}`],
+    ['Quantity', `${quantity} ${unit?.symbol ?? ''}${rfq.recurring ? ' in total' : ''}`],
+    ...(rfq.recurring ? ([['Per delivery', `${perDelivery} ${unit?.symbol ?? ''}`]] as [string, string][]) : []),
     ['Purity or grade', grade],
     ['Moisture', moisture ? `${moisture}%` : ''],
     ['Packaging', packaging],
@@ -175,10 +185,21 @@ export function OfferForm({ open, onClose, rfq }: { open: boolean; onClose: () =
             <FormField className="sm:col-span-2" label="Unit price (NGN)" htmlFor="offer-price" required info={INFO.price} error={errors.price}>
               <Input id="offer-price" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} autoComplete="off" />
             </FormField>
-            <FormField label="Quantity available" htmlFor="offer-quantity" required info={INFO.quantity} error={errors.quantity}>
+            <FormField label={rfq.recurring ? 'Total quantity' : 'Quantity available'} htmlFor="offer-quantity" required info={INFO.quantity} error={errors.quantity}>
               <Input id="offer-quantity" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)} autoComplete="off" />
             </FormField>
           </div>
+          {rfq.recurring && (
+            <FormField
+              label="Quantity per delivery"
+              htmlFor="offer-per-delivery"
+              required
+              help={`The buyer wants several deliveries${rfq.recurringFrequency ? `, ${rfq.recurringFrequency}` : ''}${rfq.recurringDuration ? ` for ${rfq.recurringDuration} months` : ''}. Only one delivery is held when your offer is accepted; MINMEG agrees the dates with both of you.`}
+              error={errors.perDelivery}
+            >
+              <Input id="offer-per-delivery" inputMode="decimal" value={perDelivery} onChange={(e) => setPerDelivery(e.target.value)} autoComplete="off" />
+            </FormField>
+          )}
           <FormField label="Unit" htmlFor="offer-unit" required info={INFO.unit} error={errors.unitId}>
             <DropdownSelect id="offer-unit" searchable value={unitId} onValueChange={setUnitId} options={(units.data?.data ?? []).map((u) => ({ value: u.id, label: `${u.name ?? u.code} (${u.symbol})` }))} placeholder="Choose a unit" />
           </FormField>

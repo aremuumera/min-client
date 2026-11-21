@@ -75,17 +75,21 @@ export const needsAck = (n: InboxItem) => n.requiresAcknowledgement && !n.acknow
 const SCREENS: [RegExp, (id: string) => string][] = [
   [/^\/alerts\/([^/?]+)/, (id) => `/dashboard/alerts?alert=${id}`],
   [/^\/shipments\/([^/?]+)/, (id) => `/dashboard/shipments?shipment=${id}`],
-  [/^\/(batches|events|assay-results)\//, () => '/dashboard/batches'],
+  [/^\/(events|assay-results)\//, () => '/dashboard/batches'],
   [/^\/(passports|compliance-assessments)\//, () => '/dashboard/passports'],
   [/^\/passport-template-requests\//, () => '/dashboard/passports/requests'],
   [/^\/certificates\//, () => '/dashboard/certificates'],
   [/^\/custody\//, () => '/dashboard/handovers'],
+  [/^\/data-requests\/([^/?]+)/, (id) => `/dashboard/data-requests/${id}`],
   [/^\/listings\//, () => '/dashboard/supplier-list'],
   [/^\/disqualifications\//, () => '/dashboard/documents'],
 ];
-export function noticeHref(link: string | null): string | null {
+export function noticeHref(link: string | null, role?: string | null): string | null {
   if (!link) return null;
   if (link.startsWith('/dashboard/')) return link;
+  // a batch opens itself; a buyer-only company keeps its batch records under Received materials (decision #126)
+  const batch = link.match(/^\/batches\/([^/?]+)/);
+  if (batch) return `${role === 'buyer' ? '/dashboard/received-materials' : '/dashboard/batches'}?batch=${batch[1]}`;
   for (const [pattern, to] of SCREENS) {
     const m = link.match(pattern);
     if (m) return to(m[1]);

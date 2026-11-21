@@ -45,6 +45,9 @@ export interface StandardProperty {
   active: boolean;
 }
 export interface Standard {
+  /** Decision #142: the markets this standard is for, and its own logo */
+  markets?: import('./markets').MarketBrief[];
+  logoUrl?: string | null;
   id: string;
   code: string;
   version: string;
@@ -98,6 +101,8 @@ export interface TemplateField {
   required: boolean;
   dynamic: boolean;
   enumValues: string[] | null;
+  /** Decision #134: labelled choices */
+  options?: ChoiceOption[] | null;
   validationRules: Record<string, unknown>;
   identifierBinding: (typeof IDENTIFIER_BINDINGS)[number];
   identifierType: string | null;
@@ -127,6 +132,10 @@ export interface ValidationIssue {
   standardCode?: string;
 }
 export interface Template {
+  /** Decision #142: the markets this template is for (a flag or a picture each) */
+  markets?: import('./markets').MarketBrief[];
+  /** Decision #144: the markets for which this revision is the default now */
+  defaultFor?: import('./markets').MarketBrief[];
   id: string;
   passportTypeId: string;
   code: string;
@@ -187,6 +196,8 @@ export interface Passport {
   ownerOrganizationId: string;
   status: 'DRAFT' | 'ACTIVE' | 'PUBLISHED' | 'SUSPENDED' | 'REVOKED' | 'ARCHIVED';
   correctionPending: boolean;
+  /** Decision #125 (GET /certificates/:id, batch passports): the batch comes from a conflict-affected or high-risk area */
+  originCahra?: boolean | null;
   publishedVersion: VersionSummary | null;
   /** Owner and staff only */
   openVersion?: VersionSummary | null;
@@ -198,8 +209,31 @@ export interface Passport {
   archivedAt?: string | null;
   archiveReason?: string | null;
   createdAt: string;
+  /** Owner only (decisions #129, #132): show the supply chain on the public page; the owner's name key */
+  showSupplyChain?: boolean;
+  showCompanyNames?: boolean;
+  /** Batch passports: from the batch up to the origin (decisions #129, #131) */
+  supplyChain?: SupplyChainStep | null;
 }
-export type ValueSource = 'USER' | 'DOCUMENT' | 'MEASUREMENT' | 'INSPECTION' | 'ASSESSMENT' | 'SYSTEM';
+/** One step of a passport's supply chain; `from` goes up towards the origin */
+export interface SupplyChainStep {
+  step: 'REGISTERED' | 'SPLIT' | 'MERGED' | 'PROCESSED' | 'RECEIVED';
+  source: string | null;
+  at: string;
+  material: string | null;
+  origin: { countryCode: string; stateRegion: string | null } | null;
+  verifiedByMinmeg: { origin: boolean; batch: boolean; inspection: boolean };
+  /** null when names are not shown */
+  company: string | null;
+  handover: { status: string; dataHash: string | null; anchoredOnBlockchain: boolean; transactionHash: string | null; explorerUrl: string | null } | null;
+  passport: { passportCode: string; type: string | null } | null;
+  /** Only where the reader may open that batch */
+  batch?: { id: string; batchCode: string; quantity: string; unit: string | null } | null;
+  from: SupplyChainStep[];
+}
+export const STEP_TEXT: Record<SupplyChainStep['step'], string> = { REGISTERED: 'Where it starts', SPLIT: 'Split off a larger lot', MERGED: 'Combined from several lots', PROCESSED: 'Processed', RECEIVED: 'Handed over to a new owner' };
+export const ORIGIN_SOURCE_TEXT: Record<string, string> = { MINED: 'Mined', PRODUCED: 'Produced', PURCHASED: 'Bought', IMPORTED: 'Imported', OTHER: 'Registered' };
+export type ValueSource = 'USER' | 'DOCUMENT' | 'MEASUREMENT' | 'INSPECTION' | 'ASSESSMENT' | 'SYSTEM' | 'PASSPORT';
 export interface PassportValue {
   id: string;
   templateFieldId: string;
@@ -225,6 +259,10 @@ export interface VersionField {
   unitId: string | null;
   identifierBinding: string;
   visibility: string | null;
+  /** Decision #134: PUBLIC, PARTNERS or PRIVATE */
+  visibilityLevel?: VisibilityLevel | null;
+  /** Decision #134: a choice field's labelled options */
+  options?: ChoiceOption[];
   value: PassportValue | null;
   latestReading?: Record<string, unknown> | null;
 }
@@ -240,7 +278,7 @@ export interface PassportMaterial {
 export interface PassportVersion extends VersionSummary {
   passportId: string;
   previousVersionId: string | null;
-  template: { id: string; code: string; version: number; name: string; status: string };
+  template: { id: string; code: string; version: number; name: string; status: string; markets?: import('./markets').MarketBrief[] };
   fields: VersionField[];
   hiddenFieldCount?: number;
   metadata: MetadataEntry[];
@@ -311,6 +349,8 @@ export const SOURCE_TEXT: Record<string, string> = {
   INSPECTION: 'an inspection or lab result',
   ASSESSMENT: 'an assessment',
   SYSTEM: 'MINMEG',
+  // decision #132: carried from the seller's published passport at delivery
+  PASSPORT: 'the seller’s passport',
 };
 export const PASSPORT_STATUS_TEXT: Record<Passport['status'], string> = {
   DRAFT: 'Not published yet',
@@ -488,3 +528,57 @@ export function statementRows(value: unknown, prefix = ''): { label: string; val
 }
 export const CERTIFICATE_STATUS_TEXT: Record<Certificate['status'], string> = { ACTIVE: 'Active', SUSPENDED: 'Suspended by MINMEG', REVOKED: 'Revoked by MINMEG', ARCHIVED: 'Archived' };
 export const certificateTone = (c: Pick<Certificate, 'status' | 'issued'>) => (c.status === 'ACTIVE' ? (c.issued ? 'ACTIVE' : 'PENDING') : c.status === 'SUSPENDED' ? 'ON_HOLD' : 'CANCELLED');
+
+/** A box and an arrow of the family picture (the shapes LineageGraph draws) */
+export interface PictureNode { id: string; title: string; subtitle?: string; statusLabel?: string; focus?: boolean; restricted?: boolean }
+export interface PictureEdge { from: string; to: string; label?: string }
+
+/**
+ * The relationship tree as a picture: the passports of the batches it came from (left) and went into
+ * (right), the record it was issued from, and its other links, each pointing the way the link was recorded
+ */
+export function relationshipPicture(t: RelationshipTree, id: string): { nodes: PictureNode[]; edges: PictureEdge[] } {
+  const nodes = new Map<string, PictureNode>();
+  const edges: PictureEdge[] = [];
+  const self = t.passport ?? (t.certificate ? { id: t.certificate.id, passportCode: t.certificate.certificateCode, status: t.certificate.status } : { id, passportCode: id, status: '' });
+  nodes.set(id, { id, focus: true, title: self.passportCode, subtitle: t.subject.label ?? words(t.subject.type) });
+  for (const l of t.lineage ?? []) {
+    if (!nodes.has(l.passport.id)) nodes.set(l.passport.id, { id: l.passport.id, title: l.passport.passportCode, subtitle: 'Passport of a related batch', statusLabel: words(l.passport.status) });
+    edges.push(l.relationshipType === 'DERIVED_FROM' ? { from: l.passport.id, to: id, label: words(l.lineageType) } : { from: id, to: l.passport.id, label: words(l.lineageType) });
+  }
+  if (t.source) {
+    const key = `${t.source.type}:${t.source.id}`;
+    nodes.set(key, { id: key, title: words(t.source.type), subtitle: t.source.id });
+    edges.push({ from: key, to: id, label: 'Issued from' });
+  }
+  for (const r of t.relationships) {
+    const selfIsSource = r.source.id === id || r.source.id === t.passport?.id;
+    const other = selfIsSource ? r.target : r.source;
+    const key = other.id === id ? id : `${other.type}:${other.id}`;
+    if (key === id) continue;
+    if (!nodes.has(key)) nodes.set(key, { id: key, title: words(other.type), subtitle: other.id });
+    edges.push(selfIsSource ? { from: id, to: key, label: words(r.relationshipType) } : { from: key, to: id, label: words(r.relationshipType) });
+  }
+  return { nodes: [...nodes.values()], edges };
+}
+
+// =========================== decision #134: access words and choice labels ===========================
+export type VisibilityLevel = 'PUBLIC' | 'PARTNERS' | 'PRIVATE';
+export interface ChoiceOption {
+  value: string;
+  label: string;
+  order?: number;
+}
+export const VISIBILITY_LEVEL_TEXT: Record<VisibilityLevel, { label: string; tone: 'success' | 'neutral' | 'dark'; hint: string }> = {
+  PUBLIC: { label: 'Public', tone: 'success', hint: 'Anyone, also on the public check page' },
+  PARTNERS: { label: 'Partners', tone: 'neutral', hint: 'Trade parties, inspectors and companies you gave access' },
+  PRIVATE: { label: 'Private', tone: 'dark', hint: 'Your company and MINMEG only' },
+};
+/** The choices of a field as people read them: its labels, else its values */
+export const choicesOf = (def: { enumValues?: string[] | null; options?: ChoiceOption[] | null } | undefined): ChoiceOption[] =>
+  def?.options?.length ? [...def.options].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : (def?.enumValues ?? []).map((v) => ({ value: v, label: v }));
+/** A choice value shown with its label */
+export const choiceText = (value: unknown, options: ChoiceOption[] | undefined): string => {
+  const hit = options?.find((o) => o.value === value);
+  return hit ? hit.label : valueText(value);
+};

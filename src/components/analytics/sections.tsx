@@ -18,6 +18,7 @@ import {
 import { useGetMeasurementChoicesQuery } from '@/redux/features/locations/locations_api';
 import { useGetActiveStandardsQuery } from '@/redux/features/passports/passports_api';
 import { Breakdown, Pair, Section, Tiles, Trend } from './charts';
+import { PassportCompletenessSection } from '@/components/passports/completeness';
 
 /*
  * The sections of the Analytics page (step 2.14, D3/D4). Each reads one Group 27 view for the
@@ -145,6 +146,17 @@ export function StockSection({ q, opt, window }: { q: Q; opt: Opt; window?: Wind
               { label: 'Changes waiting for MINMEG', value: number(d.ledger.waitingForApproval) },
             ]}
           />
+          {!!d.conflictAreas && d.conflictAreas.sites + d.conflictAreas.batches > 0 && (
+            <div data-testid="analytics-conflict-areas" className="space-y-2">
+              <p className="text-sm font-medium text-ink">From conflict-affected and high-risk areas, today</p>
+              <Tiles
+                items={[
+                  { label: 'Your sites in such an area', value: number(d.conflictAreas.sites) },
+                  { label: 'Batches in stock from one', value: number(d.conflictAreas.batches), hint: d.conflictAreas.quantity.map((r) => `${number(Number(r.quantity))} ${r.unit ?? ''}`.trim()).join(' · ') || undefined },
+                ]}
+              />
+            </div>
+          )}
           <Pair>
             <Trend title="Batches created" series={d.batches.created} window={window} />
             <Breakdown title="Batches, by status" counts={d.batches.byStatus} />
@@ -293,6 +305,7 @@ export function PassportsSection({ q, opt, window }: { q: Q; opt: Opt; window?: 
           </>
         )}
       </Section>
+      <PassportCompletenessSection q={q} window={window} />
       <Section title="Compliance checks" description="The current compliance checks on your passports, and MINMEG’s verification of them." query={comp} testId="analytics-compliance">
         {k && window && (
           <>

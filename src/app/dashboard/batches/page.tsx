@@ -4,8 +4,9 @@ import { BatchPassport } from '@/components/passports/passport-panel';
 import { CarbonFor } from '@/components/esg/carbon-panel';
 import { EsgFor } from '@/components/esg/esg-panel';
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { Button, Checkbox, DataTable, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
+import { Button, Checkbox, DataTable, DownloadButton, FilterBar, DropdownSelect, PageHeader, PaginationBar, StatusBadge } from '@/components/ui';
 import { BatchDetailSheet, type BatchPermissions } from '@/components/batches/batch-detail-sheet';
 import { BatchDocumentsPanel } from '@/components/batches/batch-documents-panel';
 import { BatchFormSheet } from '@/components/batches/batch-form-sheet';
@@ -16,6 +17,7 @@ import { inventoryHelp } from '@/lib/help/inventory';
 import { BatchUnitsPanel } from '@/components/traceability/batch-units-panel';
 import { CustodyPanel } from '@/components/traceability/custody-panel';
 import { RequireAccess } from '@/lib/permissions';
+import { ImportSheet } from '@/components/bulk/import-sheet';
 import { useGetBatchesQuery, useGetMaterialChoicesQuery } from '@/redux/features/batches/batches_api';
 import { useGetLocationsQuery } from '@/redux/features/locations/locations_api';
 
@@ -48,8 +50,10 @@ function InventoryPage() {
   const list = useGetBatchesQuery({ page, limit, search: debounced, materialId, batchStatus, currentLocationId, includeRetired: includeRetired || undefined });
   const materials = useGetMaterialChoicesQuery();
   const locations = useGetLocationsQuery({ active: true, limit: 100 });
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  // ?batch= opens one, e.g. from a shipment line's batch record (decision #130)
+  const [selectedId, setSelectedId] = React.useState<string | null>(useSearchParams().get('batch'));
   const [registering, setRegistering] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
   const filterCount = [materialId, batchStatus, currentLocationId, includeRetired].filter(Boolean).length;
 
   return (
@@ -59,9 +63,13 @@ function InventoryPage() {
         help={inventoryHelp}
         description="The material your company physically has, kept as batches with their origin and quantity history."
         actions={
-          <Button onClick={() => setRegistering(true)} startIcon={<Plus className="h-4 w-4" aria-hidden />}>
-            Register batch
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outlined" color="secondary" size="sm" onClick={() => setImporting(true)} data-testid="open-import-batches">Import</Button>
+            <DownloadButton path="/batches/export.csv" params={{ search: debounced, materialId, batchStatus, currentLocationId, includeRetired: includeRetired || undefined }} fileName="batches.csv" data-testid="export-batches">Export CSV</DownloadButton>
+            <Button onClick={() => setRegistering(true)} startIcon={<Plus className="h-4 w-4" aria-hidden />}>
+              Register batch
+            </Button>
+          </div>
         }
       />
       <FilterBar
@@ -127,6 +135,7 @@ function InventoryPage() {
       />
       <BatchDetailSheet batchId={registering ? null : selectedId} can={OWNER_ACCESS} units={(b) => (<div className="space-y-6"><BatchUnitsPanel batchId={b.id} unitSymbol={b.unit?.symbol} canManage /><CustodyPanel subjectType="BATCH" subjectId={b.id} canHandOver /></div>)} documents={(b) => <BatchDocumentsPanel batchId={b.id} batchCode={b.batchCode} />} passport={(b) => <BatchPassport batchId={b.id} mode="owner" />} esgCarbon={(b) => (<div className="space-y-8"><EsgFor subjectType="BATCH" subjectId={b.id} mode="owner" /><CarbonFor subjectType="BATCH" subjectId={b.id} mode="owner" /></div>)} onClose={() => setSelectedId(null)} onOpenBatch={setSelectedId} />
       <BatchFormSheet open={registering} batch={null} onClose={() => setRegistering(false)} onSaved={(b) => setSelectedId(b.id)} />
+      <ImportSheet kind="batches" open={importing} onClose={() => setImporting(false)} onImported={() => list.refetch()} />
     </div>
   );
 }
@@ -134,7 +143,9 @@ function InventoryPage() {
 export default function Page() {
   return (
     <RequireAccess role={['supplier', 'buyer_supplier']} teamKey="inventory">
-      <InventoryPage />
+      <React.Suspense fallback={null}>
+        <InventoryPage />
+      </React.Suspense>
     </RequireAccess>
   );
 }

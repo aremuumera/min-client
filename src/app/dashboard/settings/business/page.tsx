@@ -3,6 +3,8 @@
 import * as React from 'react';
 import BusinessSettings from '@/components/dashboard/settings/business';
 import { PermissionGate } from '@/components/team/PermissionGate';
+// decision #132: the company's name key on supply chains, built but hidden for now (every company is named, decision #131)
+// import { CompanyNameSetting } from '@/components/passports/company-name-setting';
 
 export default function BusinessSettingsPage() {
   return (
@@ -12,6 +14,7 @@ export default function BusinessSettingsPage() {
         fallback={<div className="p-8 text-center text-red-500 font-bold">You do not have permission to access business settings.</div>}
       >
         <BusinessSettings />
+        {/* decision #132, hidden for now: <div className="mt-6"><CompanyNameSetting /></div> */}
       </PermissionGate>
     </div>
   );

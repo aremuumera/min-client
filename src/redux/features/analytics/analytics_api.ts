@@ -1,4 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import type { FieldAggregate, NumberFields, PassportCompletenessAnalytics } from '@/lib/analytics';
 import type { AlertsAnalytics, CertificatesAnalytics, ComplianceAnalytics, EsgCarbonAnalytics, HardwareAnalytics, InspectionsAnalytics, LogisticsAnalytics, MeasurementsAnalytics, SuppliersAnalytics, TraceabilityAnalytics, TradeAnalytics } from '@/lib/analytics';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -22,10 +23,20 @@ export const analyticsApi = createApi({
     getEsgCarbonAnalytics: builder.query<EsgCarbonAnalytics, Query>(view('esg-carbon')),
     getAlertAnalytics: builder.query<AlertsAnalytics, Query>(view('alerts')),
     getHardwareAnalytics: builder.query<HardwareAnalytics, Query>(view('hardware')),
+    // decision #133: passport completeness (how things stand now) and totals of a number field
+    getPassportCompleteness: builder.query<PassportCompletenessAnalytics, { attention?: number; organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports', params: params(q as Query) }), keepUnusedDataFor: 60 }),
+    getPassportNumberFields: builder.query<NumberFields, { organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports/number-fields', params: params(q as Query) }) }),
+    getFieldAggregate: builder.query<FieldAggregate, Query & { fieldKey: string; organizationId?: string }>({ query: (q) => ({ url: '/analytics/passports/field-aggregate', params: params(q) }), keepUnusedDataFor: 120 }),
+    // decision #135: the company's limits and what it uses, and which switchable features it has
+    // decision #143: the company's own key on the blockchain (read only)
+    getMyBlockchainIdentity: builder.query<{ success: boolean; data: { mode: 'OFF' | 'B2' | 'B'; address: string | null; keyNumber: number | null; activeFrom: string | null; replacedKeys: number } }, void>({ query: () => '/company-controls/me/blockchain-identity' }),
+    getMyCompanyControls: builder.query<{ success: boolean; data: { organizationId: string; limits: { maximumUsers: number | null; maximumStorageBytes: number | null; maximumFileBytes: number | null; note: string | null }; usage: { teamMembers: number; storageBytes: number }; features: Record<string, boolean> } }, void>({ query: () => '/company-controls/me', keepUnusedDataFor: 60 }),
+    getOnePassportCompleteness: builder.query<{ success: boolean; data: import('@/lib/analytics').PassportCompleteness }, string>({ query: (id) => `/certificates/${id}/completeness`, keepUnusedDataFor: 0 }),
   }),
 });
 
 export const {
+  useGetMyBlockchainIdentityQuery,
   useGetTradeAnalyticsQuery,
   useGetTraceabilityAnalyticsQuery,
   useGetLogisticsAnalyticsQuery,
@@ -37,4 +48,9 @@ export const {
   useGetEsgCarbonAnalyticsQuery,
   useGetAlertAnalyticsQuery,
   useGetHardwareAnalyticsQuery,
+  useGetPassportCompletenessQuery,
+  useGetPassportNumberFieldsQuery,
+  useGetFieldAggregateQuery,
+  useGetOnePassportCompletenessQuery,
+  useGetMyCompanyControlsQuery,
 } = analyticsApi;
