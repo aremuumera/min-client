@@ -1,13 +1,16 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { Button, CopyableId, ErrorState, FormField, Modal, QuantityInput, SideSheet, StatusBadge, Textarea, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { useIdempotencyKey } from '@/lib/api/idempotency';
 import { formatDateTime } from '@/lib/format';
 import { DELIVERY_RECORDED, LINE_LABELS, MOVING, PLANNING, shipmentStatusLabel, vehicleTypeLabel, type Shipment, type ShipmentLine } from '@/lib/shipments';
 import { showQuantity } from '@/lib/trade-stock';
-import { useGetReadinessQuery, useGetShipmentQuery, useRemoveLineMutation, useShipmentActionMutation } from '@/redux/features/shipments/shipments_api';
+import { useGetReadinessQuery, useGetShipmentQuery, useReceiveIntoStockMutation, useRemoveLineMutation, useShipmentActionMutation } from '@/redux/features/shipments/shipments_api';
+import { useActor } from '@/lib/permissions/react';
+import { paths } from '@/config/paths';
 import { CustodyPanel } from '@/components/traceability/custody-panel';
 import { SubjectRecords } from '@/components/traceability/subject-records';
 import { ShipmentFormSheet } from './shipment-form-sheet';
@@ -111,7 +114,36 @@ function ActionModal({ shipment, kind, onClose }: { shipment: Shipment; kind: 'd
   );
 }
 
-function LineRow({ line, canRemove, onRemove }: { line: ShipmentLine; canRemove: boolean; onRemove: () => void }) {
+/**
+ * Decision #130: the buyer's own batch record for a delivered line. Normally made when the delivery is
+ * recorded; "Create my batch record" covers older deliveries and a step that failed. The seller never
+ * gets these fields, so nothing shows for them.
+ */
+function BatchRecord({ line, batchHref, onCreate, busy }: { line: ShipmentLine; batchHref: (id: string) => string; onCreate: () => void; busy: boolean }) {
+  if (line.receivedBatch) {
+    return (
+      <p className="text-ink" data-testid="line-batch-record">
+        Your batch record:{' '}
+        <Link href={batchHref(line.receivedBatch.id)} className="font-medium text-primary hover:underline">
+          {line.receivedBatch.batchCode}
+        </Link>
+      </p>
+    );
+  }
+  if (line.canReceiveIntoStock) {
+    return (
+      <div className="flex flex-wrap items-center gap-2" data-testid="line-batch-record-missing">
+        <span className="text-steel">Not in your batch records yet.</span>
+        <Button size="sm" variant="outlined" disabled={busy} onClick={onCreate}>Create my batch record</Button>
+      </div>
+    );
+  }
+  // only worth saying once the delivery is recorded (before that, every line is "record the delivery first")
+  if (line.quantityReceived !== null && line.receiveIntoStockBlockedReason) return <p className="text-steel">No batch record: {line.receiveIntoStockBlockedReason.charAt(0).toLowerCase() + line.receiveIntoStockBlockedReason.slice(1)}.</p>;
+  return null;
+}
+
+function LineRow({ line, canRemove, onRemove, record }: { line: ShipmentLine; canRemove: boolean; onRemove: () => void; record?: React.ReactNode }) {
   const rec = line.metadata?.reconciliation;
   return (
     <li className="flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
@@ -125,6 +157,7 @@ function LineRow({ line, canRemove, onRemove }: { line: ShipmentLine; canRemove:
         </p>
         {rec?.status === 'PENDING_APPROVAL' && <p className="text-amber-700">A difference of {showQuantity(rec.difference, line.unit?.symbol)} waits for MINMEG staff.</p>}
         {line.metadata?.rejectionReason && <p className="text-steel">Reason: {line.metadata.rejectionReason}</p>}
+        {record}
       </div>
       <div className="flex items-center gap-2">
         <StatusBadge status={line.status}>{LINE_LABELS[line.status] ?? line.status}</StatusBadge>
@@ -150,8 +183,32 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
   const [error, setError] = React.useState<string | null>(null);
   const [act, { isLoading }] = useShipmentActionMutation();
   const [removeLine] = useRemoveLineMutation();
+  const [receive, receiveState] = useReceiveIntoStockMutation();
+  const { key, done } = useIdempotencyKey();
   const { confirm, dialog } = useConfirm();
+  const actor = useActor();
   const s = query.data?.data;
+  // a buyer-only company reads its records under Received materials; a supply company under Inventory
+  const batchHref = (batchId: string) => `${actor.role === 'buyer' ? paths.dashboard.receivedMaterials : paths.dashboard.batches}?batch=${batchId}`;
+  const createRecord = async (line: ShipmentLine) => {
+    if (!s) return;
+    const ok = await confirm({
+      title: 'Create your batch record?',
+      description: `MINMEG adds the ${showQuantity(line.quantityAccepted, line.unit?.symbol)} of ${line.material?.name ?? 'material'} you accepted to your records as a batch of your own, linked to the batch it came from, so its origin stays traceable. This is done once per line.`,
+      confirmLabel: 'Create batch record',
+    });
+    if (!ok) return;
+    setError(null);
+    try {
+      const res = await receive({ id: s.id, lines: [line.id], idempotencyKey: key }).unwrap();
+      done();
+      const made = res.data.created[0];
+      if (made) setNotice(`Batch ${made.batchCode} is now in your records.`);
+    } catch (err) {
+      setError(toApiError(err).message);
+    }
+  };
+  const [notice, setNotice] = React.useState<string | null>(null);
 
   const simple = async (kind: 'arrive' | 'close', title: string, description: string, confirmLabel: string) => {
     if (!s || !(await confirm({ title, description, confirmLabel }))) return;
@@ -215,6 +272,7 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
       ) : (
         <div className="space-y-6">
           {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          {notice && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
           <dl className="grid gap-4 sm:grid-cols-2">
             <Field label="Trade" value={s.trade?.tradeCode} />
             <Field label="From" value={s.origin?.name} />
@@ -239,7 +297,13 @@ export function ShipmentDetailSheet({ id, onClose }: { id: string | null; onClos
             <h3 className="mb-2 text-sm font-semibold text-ink">Lines</h3>
             <ul className="divide-y divide-hairline rounded-xl border border-hairline">
               {(s.lines ?? []).map((l) => (
-                <LineRow key={l.id} line={l} canRemove={planning && seller && l.status === 'PLANNED'} onRemove={() => remove(l)} />
+                <LineRow
+                  key={l.id}
+                  line={l}
+                  canRemove={planning && seller && l.status === 'PLANNED'}
+                  onRemove={() => remove(l)}
+                  record={buyer && !isReturn ? <BatchRecord line={l} batchHref={batchHref} busy={receiveState.isLoading} onCreate={() => createRecord(l)} /> : undefined}
+                />
               ))}
             </ul>
           </section>

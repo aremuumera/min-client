@@ -93,6 +93,8 @@ export const paths = {
     // step 2.13b: operational alerts
     alerts: "/dashboard/alerts",
     batches: "/dashboard/batches",
+    // decision #126: a buyer-only company's batch records, read only
+    receivedMaterials: "/dashboard/received-materials",
     shipments: "/dashboard/shipments",
     scan: "/dashboard/scan",
     handovers: "/dashboard/handovers",

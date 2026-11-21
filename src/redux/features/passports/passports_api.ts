@@ -88,6 +88,17 @@ export const passportsApi = createApi({
       query: ({ id, action, reason }) => ({ url: `/certificates/${id}/${action}`, method: 'POST', body: reason ? { reason } : {} }),
       invalidatesTags: ['Passports'],
     }),
+    // decision #132: a company's own key for its name on supply chains (the screens keep it hidden for now)
+    getCompanySupplyChainSetting: builder.query<Single<{ nameOnSupplyChains: boolean }>, void>({ query: () => '/organizations/me/supply-chain-settings', providesTags: ['Passports'] }),
+    setCompanySupplyChainSetting: builder.mutation<Single<{ nameOnSupplyChains: boolean }>, { nameOnSupplyChains: boolean }>({
+      query: (body) => ({ url: '/organizations/me/supply-chain-settings', method: 'PUT', body }),
+      invalidatesTags: ['Passports'],
+    }),
+    // decisions #129, #132: the owner's supply chain switches
+    setSupplyChain: builder.mutation<Single<{ showSupplyChain: boolean; showCompanyNames: boolean }>, { id: string; showSupplyChain?: boolean; showCompanyNames?: boolean }>({
+      query: ({ id, ...body }) => ({ url: `/certificates/${id}/supply-chain`, method: 'PATCH', body }),
+      invalidatesTags: ['Passports'],
+    }),
     setPassportValue: builder.mutation<unknown, { versionId: string; fieldId: string } & Body>({
       query: ({ versionId, fieldId, ...body }) => ({ url: `/passport-versions/${versionId}/fields/${fieldId}`, method: 'PUT', body }),
       invalidatesTags: ['Passports'],
@@ -165,6 +176,9 @@ export const {
   useCheckPassportVersionMutation,
   useDiscardPassportVersionMutation,
   usePassportActionMutation,
+  useSetSupplyChainMutation,
+  useGetCompanySupplyChainSettingQuery,
+  useSetCompanySupplyChainSettingMutation,
   useSetPassportValueMutation,
   useClearPassportValueMutation,
   useAddPassportMaterialMutation,

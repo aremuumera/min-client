@@ -51,6 +51,7 @@ import { EuHeaderPanel } from './eu-header-panel';
 import { PassOnPanel } from './pass-on-panel';
 import { PassportCompletenessCard } from './completeness';
 import { ProofSection } from '@/components/proof/proof-section';
+import { SupplyChainSection } from './supply-chain-section';
 
 /*
  * A batch's digital passport (step 2.9b, decisions #74, #108).
@@ -457,6 +458,8 @@ export function PassportDetail({ passportId, mode, batchId }: { passportId: stri
       {mode === 'owner' && p.publishedVersion && <CompanySignatureBlock passportId={p.id} />}
       {mode === 'owner' && <EuHeaderPanel passportId={p.id} canEdit={!closed} />}
       {mode === 'owner' && p.publishedVersion && <BackupPanel passportId={p.id} passportCode={p.passportCode} />}
+      {/* decisions #129, #131: the supply chain up to the origin; the owner decides whether the public page shows it */}
+      {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <SupplyChainSection passport={p} owner={mode === 'owner' && !closed} />}
       {mode === 'owner' && p.publishedVersion && !closed && <SharePanel resourceType="PASSPORT" resourceId={p.id} />}
       {mode === 'reader' && p.publishedVersion && !closed && <PassOnPanel passportId={p.id} />}
       {!(mode === 'reader' && (p.status === 'SUSPENDED' || p.status === 'REVOKED')) && <ComplianceSection passportId={p.id} owner={mode === 'owner' && !closed} published={!!p.publishedVersion} />}

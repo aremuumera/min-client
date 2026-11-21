@@ -18,6 +18,8 @@ export interface LineageNode {
   statusLabel?: string;
   /** The viewer may not see this record */
   restricted?: boolean;
+  /** What a restricted box says instead of the picture's default (e.g. "Delivered") */
+  restrictedTitle?: string;
   /** The record being viewed */
   focus?: boolean;
 }
@@ -168,7 +170,7 @@ export function LineageGraph({ nodes, edges, label, onSelect, restrictedText = '
             const clickable = !!onSelect && !n.focus && !n.restricted;
             const body = (
               <>
-                <span className="block truncate text-sm font-semibold text-ink">{n.restricted ? restrictedText : n.title}</span>
+                <span className="block truncate text-sm font-semibold text-ink">{n.restricted ? (n.restrictedTitle ?? restrictedText) : n.title}</span>
                 {n.subtitle && <span className="mt-0.5 block break-all text-[11px] leading-4 text-steel">{n.subtitle}</span>}
                 {n.focus ? (
                   <span className="mt-1 inline-block rounded bg-primary-100 px-1.5 text-[11px] font-medium text-primary-800">This record</span>
@@ -181,7 +183,7 @@ export function LineageGraph({ nodes, edges, label, onSelect, restrictedText = '
               n.focus ? 'border-primary-500 bg-primary-50' : n.restricted ? 'border-dashed border-neutral-300 bg-neutral-50' : 'border-hairline bg-white'
             }`;
             const style = { left: n.x, top: n.y, width: NODE_W, height: NODE_H };
-            const name = `${n.restricted ? restrictedText : n.title}${n.statusLabel ? `, ${n.statusLabel}` : ''}${n.focus ? ', this record' : ''}`;
+            const name = `${n.restricted ? (n.restrictedTitle ?? restrictedText) : n.title}${n.statusLabel ? `, ${n.statusLabel}` : ''}${n.focus ? ', this record' : ''}`;
             return clickable ? (
               <button key={n.id} type="button" className={`${box} hover:border-primary-400 hover:bg-primary-50 focus-visible:outline-2`} style={style} onClick={() => onSelect!(n.id)} aria-label={`Open ${name}`}>
                 {body}

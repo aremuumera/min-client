@@ -7,6 +7,7 @@ import { toApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format';
 import { ENDED_STATUSES, OPERABLE_STATUSES, approvalRule, batchLabel, entryStatusLabel, formatQuantity, signedQuantity, toMicro, type Batch, type HistoryItem, type LedgerEntry, type TreeNode } from '@/lib/batches';
 import { SubjectRecords } from '@/components/traceability/subject-records';
+import { ProofSection } from '@/components/proof/proof-section';
 import { useGetBatchHistoryQuery, useGetBatchLineageQuery, useGetBatchQuery, useGetBatchTreeQuery, useGetLedgerQuery, useGetUnitChoicesQuery, useQuarantineBatchMutation, useReleaseBatchMutation, useRetireBatchMutation } from '@/redux/features/batches/batches_api';
 import { BatchFormSheet } from './batch-form-sheet';
 import { MergeSheet, SplitSheet, TransformSheet } from './batch-operation-sheets';
@@ -74,7 +75,10 @@ function FamilyList({ batchId, onOpen }: { batchId: string; onOpen: (id: string)
 
   const row = (n: TreeNode, kids: TreeNode[], direction: 'parents' | 'children'): React.ReactNode => (
     <li key={n.id}>
-      {n.restricted ? (
+      {n.restricted && n.relationshipType === 'RECEIVED_FROM' ? (
+        // decision #130: the other company's side of a delivery, named but never opened
+        <p className="py-2 text-sm text-steel">{direction === 'parents' ? "The supplier's batch: earlier history, recorded by MINMEG" : "Delivered: now in the buyer's records"}</p>
+      ) : n.restricted ? (
         <p className="py-2 text-sm text-steel">
           Restricted: <span className="break-all font-mono text-xs">{n.id}</span>
         </p>
@@ -117,27 +121,51 @@ function FamilyPicture({ batchId, onOpen }: { batchId: string; onOpen: (id: stri
   const graph = React.useMemo(() => {
     const d = lineage.data?.data;
     if (!d) return null;
-    const nodes: LineageNode[] = d.nodes.map((n) => ({
-      id: n.id,
-      restricted: n.restricted,
-      focus: n.id === d.batchId,
-      title: n.batchCode ?? n.id,
-      subtitle: n.restricted ? n.id : `${batchLabel(n.batchType)} · ${formatQuantity(n.initialQuantity, symbol(n.quantityUnitId))}`,
-      statusLabel: n.restricted ? undefined : batchLabel(n.batchStatus),
-    }));
+    // decision #130: a hidden box across a "received from" link is the other company's side of a delivery
+    const receivedFrom = d.edges.filter((e) => e.relationshipType === 'RECEIVED_FROM');
+    const otherSide = (id: string) => (receivedFrom.some((e) => e.parentBatchId === id) ? 'supplier' : receivedFrom.some((e) => e.childBatchId === id) ? 'buyer' : null);
+    const nodes: LineageNode[] = d.nodes.map((n) => {
+      const side = n.restricted ? otherSide(n.id) : null;
+      return {
+        id: n.id,
+        restricted: n.restricted,
+        restrictedTitle: side === 'supplier' ? "Supplier's batch" : side === 'buyer' ? 'Delivered' : undefined,
+        focus: n.id === d.batchId,
+        title: n.batchCode ?? n.id,
+        subtitle: side === 'supplier' ? 'Earlier history, recorded by MINMEG' : side === 'buyer' ? "Now in the buyer's records" : n.restricted ? n.id : `${batchLabel(n.batchType)} · ${formatQuantity(n.initialQuantity, symbol(n.quantityUnitId))}`,
+        statusLabel: n.restricted ? undefined : batchLabel(n.batchStatus),
+      };
+    });
     const edges: LineageEdge[] = d.edges.map((e) => ({
       from: e.parentBatchId,
       to: e.childBatchId,
       label: `${batchLabel(e.relationshipType)}${e.quantityContributed ? ` · ${formatQuantity(e.quantityContributed, symbol(e.unitId))}` : ''}`,
     }));
-    return { nodes, edges };
+    // deliveries out of this batch: the proof of each handover (both companies may read it)
+    const deliveries = receivedFrom.filter((e) => e.parentBatchId === d.batchId && e.eventId).map((e) => ({ id: e.id, eventId: e.eventId as string, quantity: formatQuantity(e.quantityContributed, symbol(e.unitId)), at: e.createdAt }));
+    return { nodes, edges, deliveries };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineage.data, units.data]);
 
   if (lineage.isError) return <Alert severity="error">{toApiError(lineage.error).message}</Alert>;
   if (!graph) return <p className="text-sm text-steel">Loading…</p>;
   if (!graph.edges.length) return <p className="text-sm text-steel">This batch has no parents or children. It was registered directly and hasn&apos;t been split, merged or processed.</p>;
-  return <LineageGraph nodes={graph.nodes} edges={graph.edges} onSelect={onOpen} label="Family tree of this batch: the batches it came from and became" restrictedText="A batch not shared with you" />;
+  return (
+    <div className="flex flex-col gap-5">
+      <LineageGraph nodes={graph.nodes} edges={graph.edges} onSelect={onOpen} label="Family tree of this batch: the batches it came from and became" restrictedText="A batch not shared with you" />
+      {graph.deliveries.length > 0 && (
+        <section aria-label="Deliveries from this batch" className="flex flex-col gap-3">
+          <h3 className="text-sm font-semibold text-ink">Delivered to buyers</h3>
+          {graph.deliveries.map((d) => (
+            <div key={d.id} className="rounded-xl border border-hairline p-3" data-testid="delivery-proof">
+              <p className="mb-2 text-sm text-ink">{d.quantity}{d.at ? ` · ${formatDateTime(d.at)}` : ''}</p>
+              <ProofSection subjectType="TRACEABILITY_EVENT" subjectId={d.eventId} />
+            </div>
+          ))}
+        </section>
+      )}
+    </div>
+  );
 }
 
 /** Came from / became, as a picture or as the list it always was */
@@ -226,7 +254,9 @@ export function BatchDetailSheet({
   const operable = !!b && OPERABLE_STATUSES.includes(b.batchStatus);
   const ended = !!b && ENDED_STATUSES.includes(b.batchStatus);
   const quarantined = b?.batchStatus === 'QUARANTINED';
-  const staffHold = !!b?.quarantinedByStaff && !can.releaseStaffHold;
+  // decision #126: a buyer-only company reads the batches it received but cannot change them
+  const allowed: BatchPermissions = b?.canOperate === false ? { edit: false, operate: false, adjust: false, quarantine: false, releaseStaffHold: false } : can;
+  const staffHold = !!b?.quarantinedByStaff && !allowed.releaseStaffHold;
   const empty = !!b && toMicro(b.currentQuantity) === BigInt(0);
 
   const run = async (action: () => Promise<unknown>, message: string) => {
@@ -286,7 +316,7 @@ export function BatchDetailSheet({
                     { label: 'First registered', value: formatQuantity(b.initialQuantity, unit) },
                     { label: 'How it was created', value: batchLabel(b.batchType) },
                     { label: 'Source', value: batchLabel(b.sourceType) },
-                    { label: 'Origin site', value: b.sourceLocation?.name },
+                    { label: 'Origin site', value: b.sourceLocation?.name ?? (b.receivedFrom ? 'Through the batch it was received from' : null) },
                     ...(b.originCahra ? [{ label: 'Origin area', value: <StatusBadge tone="warning" data-testid="origin-cahra">Conflict-affected or high-risk area</StatusBadge> }] : []),
                     { label: 'Where it is now', value: b.currentLocation?.name },
                     { label: 'Physical form', value: b.physicalForm ? batchLabel(b.physicalForm) : null },
@@ -298,17 +328,31 @@ export function BatchDetailSheet({
                     { label: 'On listing', value: b.listing ? `${b.listing.product_name} (${b.listing.listingCode ?? b.listing.status})` : 'Not listed' },
                     { label: 'Quantity approval', value: approvalRule(b.quantityApproval) },
                     { label: 'Last changed', value: formatDateTime(b.updatedAt) },
+                    ...(b.receivedFrom
+                      ? [
+                          { label: 'Received on shipment', value: b.receivedFrom.shipment?.shipmentNumber },
+                          { label: 'Trade', value: b.receivedFrom.trade?.tradeCode },
+                          { label: 'Received', value: `${formatQuantity(b.receivedFrom.quantity, unit)} · ${formatDateTime(b.receivedFrom.receivedAt)}` },
+                        ]
+                      : []),
                   ]}
                 />
+                {b.receivedFrom?.eventId && (
+                  <section aria-label="Proof of the handover" className="flex flex-col gap-2 border-t border-hairline pt-4">
+                    <h3 className="text-sm font-semibold text-ink">Proof of the handover</h3>
+                    <p className="text-sm text-steel">MINMEG sealed the moment this material passed from the supplier to you. Its fingerprint goes on the blockchain with MINMEG&apos;s next batch of proofs.</p>
+                    <ProofSection subjectType="TRACEABILITY_EVENT" subjectId={b.receivedFrom.eventId} />
+                  </section>
+                )}
 
-                {!ended && (
+                {!ended && (allowed.edit || allowed.adjust || allowed.operate || allowed.quarantine) && (
                   <section aria-label="Actions" className="flex flex-col gap-3 border-t border-hairline pt-4">
                     <div className="flex flex-wrap gap-2">
-                      {can.edit && !quarantined && <Button variant="outlined" onClick={() => setSub('edit')}>Edit</Button>}
-                      {can.adjust && operable && <Button variant="outlined" onClick={() => setSub('adjust')}>Change quantity</Button>}
-                      {can.adjust && operable && <Button variant="outlined" onClick={() => setSub('reconcile')}>Check against a measurement</Button>}
+                      {allowed.edit && !quarantined && <Button variant="outlined" onClick={() => setSub('edit')}>Edit</Button>}
+                      {allowed.adjust && operable && <Button variant="outlined" onClick={() => setSub('adjust')}>Change quantity</Button>}
+                      {allowed.adjust && operable && <Button variant="outlined" onClick={() => setSub('reconcile')}>Check against a measurement</Button>}
                     </div>
-                    {can.operate && operable && (
+                    {allowed.operate && operable && (
                       <div className="flex flex-wrap gap-2">
                         <Button variant="outlined" color="secondary" onClick={() => setSub('split')}>Split</Button>
                         <Button variant="outlined" color="secondary" onClick={() => setSub('merge')}>Merge</Button>
@@ -316,9 +360,9 @@ export function BatchDetailSheet({
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2">
-                      {can.quarantine && !quarantined && operable && <Button variant="outlined" color="secondary" onClick={() => setDialog('quarantine')}>Place on hold</Button>}
-                      {can.quarantine && quarantined && !staffHold && <Button variant="outlined" onClick={() => setDialog('release')}>Release hold</Button>}
-                      {can.operate && operable && <Button variant="outlined" color="error" onClick={() => setDialog('retire')}>Retire</Button>}
+                      {allowed.quarantine && !quarantined && operable && <Button variant="outlined" color="secondary" onClick={() => setDialog('quarantine')}>Place on hold</Button>}
+                      {allowed.quarantine && quarantined && !staffHold && <Button variant="outlined" onClick={() => setDialog('release')}>Release hold</Button>}
+                      {allowed.operate && operable && <Button variant="outlined" color="error" onClick={() => setDialog('retire')}>Retire</Button>}
                     </div>
                   </section>
                 )}
