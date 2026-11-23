@@ -79,6 +79,13 @@ export function TradeDeliveriesTab({ inquiryId, itemType }: { inquiryId: string;
               </span>
               {Number(d.carriedOverQuantity) > 0 && <span className="block text-xs text-gray-500">Includes {showQuantity(d.carriedOverQuantity, unit)} carried over from an earlier short delivery</span>}
               {d.agreedDueDate && d.agreedDueDate !== d.dueDate && <span className="block text-xs text-gray-500">Moved from {showDay(d.agreedDueDate)}{d.metadata?.dateMoves?.at(-1)?.reason ? `: ${d.metadata.dateMoves.at(-1)!.reason}` : ''}</span>}
+              {d.checks && d.status === 'OPEN' && (
+                <span className="mt-1 block text-xs text-gray-600">
+                  {d.checks.ready ? 'Ready to leave.' : `Before it leaves: ${[!d.checks.stock.ok && 'stock', !d.checks.inspection.ok && (d.checks.inspection.status ? 'its inspection to finish' : 'its inspection'), !d.checks.payment.ok && 'payment'].filter(Boolean).join(', ')}.`}
+                  {d.needsInspection && ' This delivery is inspected on its own.'}
+                </span>
+              )}
+              {d.checks && d.status === 'PLANNED' && d.needsInspection && <span className="mt-1 block text-xs text-gray-600">This delivery is inspected on its own before it leaves.</span>}
               {d.metadata?.shortfall && (
                 <span className="block text-xs text-gray-500">
                   Arrived {showQuantity(d.metadata.shortfall.quantity, unit)} short: {d.metadata.shortfall.settled === 'CARRIED_OVER' ? `added to delivery ${d.metadata.shortfall.toDeliveryNumber}` : 'dropped by the signed schedule change'}

@@ -28,11 +28,21 @@ export interface TradeDelivery {
   paymentConfirmedAt: string | null;
   openedAt: string | null;
   closedAt: string | null;
+  /** slice 3: what a planned or open delivery still needs before it leaves (null otherwise) */
+  checks?: DeliveryChecks | null;
   /** slice 2: date moves (up to 14 days) and how a shortfall was settled */
   metadata?: {
     dateMoves?: Array<{ from: string; to: string; reason: string; at: string }>;
     shortfall?: { quantity: string; settled: 'CARRIED_OVER' | 'DROPPED'; toDeliveryNumber?: number; note?: string | null };
   } | null;
+}
+
+export interface DeliveryChecks {
+  stock: { ok: boolean; committed: string; due: string };
+  inspection: { needed: boolean; ok: boolean; assignmentId: string | null; status: string | null; passStatus: string | null; released: boolean; proceededAt: string | null };
+  payment: { needed: boolean; ok: boolean; status: DeliveryPaymentStatus; required: 'PAID' | 'PART_PAID' | null };
+  ready: boolean;
+  missing: string[];
 }
 
 export type ChangeLineType = 'MOVE' | 'QUANTITY' | 'CANCEL' | 'PAUSE' | 'RESUME' | 'ADD' | 'DROP_SHORTFALL' | 'END_EARLY';
