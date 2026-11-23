@@ -28,7 +28,41 @@ export interface TradeDelivery {
   paymentConfirmedAt: string | null;
   openedAt: string | null;
   closedAt: string | null;
+  /** slice 2: date moves (up to 14 days) and how a shortfall was settled */
+  metadata?: {
+    dateMoves?: Array<{ from: string; to: string; reason: string; at: string }>;
+    shortfall?: { quantity: string; settled: 'CARRIED_OVER' | 'DROPPED'; toDeliveryNumber?: number; note?: string | null };
+  } | null;
 }
+
+export type ChangeLineType = 'MOVE' | 'QUANTITY' | 'CANCEL' | 'PAUSE' | 'RESUME' | 'ADD' | 'DROP_SHORTFALL' | 'END_EARLY';
+export type ChangeStatus = 'DRAFT' | 'AWAITING_SIGNATURES' | 'APPLIED' | 'REJECTED' | 'WITHDRAWN';
+/** What staff send (one per line) */
+export type ChangeLineInput =
+  | { type: 'MOVE'; deliveryId: string; dueDate: string }
+  | { type: 'QUANTITY'; deliveryId: string; quantity: string }
+  | { type: 'CANCEL' | 'PAUSE' | 'RESUME' | 'DROP_SHORTFALL'; deliveryId: string }
+  | { type: 'ADD'; dueDate: string; quantity: string }
+  | { type: 'END_EARLY' };
+export interface ScheduleChange {
+  id: string;
+  scheduleId: string;
+  requestedBy: 'BUYER' | 'SUPPLIER' | 'STAFF';
+  reason: string;
+  lines: Array<{
+    type: ChangeLineType;
+    deliveryId: string | null;
+    deliveryNumber: number | null;
+    before: { dueDate?: string; quantity?: string; status?: string; short?: string } | null;
+    after: { dueDate?: string; quantity?: string; status?: string } | null;
+    input: ChangeLineInput;
+  }>;
+  status: ChangeStatus;
+  documentIds: string[];
+  appliedAt: string | null;
+  createdAt: string;
+}
+
 
 export interface DeliverySchedule {
   id: string;
@@ -43,6 +77,7 @@ export interface DeliverySchedule {
   activatedAt: string | null;
   activationNote: string | null;
   deliveries: TradeDelivery[];
+  changes: ScheduleChange[];
   summary: {
     deliveries: number;
     delivered: number;
@@ -94,3 +129,24 @@ export function scheduleLine(schedule: DeliverySchedule): string {
   if (schedule.status === 'DRAFT') return `Recurring (draft): ${deliveries} deliveries`;
   return `Recurring: ${delivered} of ${deliveries} delivered${nextDue ? ` · next due ${showDay(nextDue.dueDate)}` : ''}`;
 }
+
+export const CHANGE_STATUS_LABELS: Record<ChangeStatus, string> = { DRAFT: 'Draft', AWAITING_SIGNATURES: 'Waiting for signatures', APPLIED: 'Applied', REJECTED: 'Not signed', WITHDRAWN: 'Withdrawn' };
+export const REQUESTED_BY_LABELS = { BUYER: 'The buyer', SUPPLIER: 'The supplier', STAFF: 'MINMEG' } as const;
+
+/** Plain words for one line of a recorded change, as on the signed document */
+export function changeLineText(l: ScheduleChange['lines'][number], unit: string | null): string {
+  const q = (v?: string) => (v ? `${Number(v)}${unit ? ` ${unit}` : ''}` : '');
+  switch (l.type) {
+    case 'MOVE': return `Delivery ${l.deliveryNumber}: due ${showDay(l.before?.dueDate)} → ${showDay(l.after?.dueDate)}`;
+    case 'QUANTITY': return `Delivery ${l.deliveryNumber}: ${q(l.before?.quantity)} → ${q(l.after?.quantity)}`;
+    case 'CANCEL': return `Delivery ${l.deliveryNumber} cancelled (${q(l.before?.quantity)})`;
+    case 'PAUSE': return `Delivery ${l.deliveryNumber} paused`;
+    case 'RESUME': return `Delivery ${l.deliveryNumber} resumed`;
+    case 'ADD': return `New delivery ${l.deliveryNumber}: ${q(l.after?.quantity)}, due ${showDay(l.after?.dueDate)}`;
+    case 'DROP_SHORTFALL': return `Delivery ${l.deliveryNumber}: the ${q(l.before?.short)} shortfall is dropped`;
+    case 'END_EARLY': return `The agreement ends early (${q(l.after?.quantity)} not opened is cancelled)`;
+  }
+}
+
+/** What a delivered delivery is still short of (0 when not short) */
+export const shortOf = (d: TradeDelivery) => Math.max(0, Math.round((Number(d.plannedQuantity) + Number(d.carriedOverQuantity) - Number(d.deliveredQuantity)) * 1e6) / 1e6);

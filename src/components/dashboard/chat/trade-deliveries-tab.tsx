@@ -4,7 +4,7 @@ import * as React from 'react';
 import { EmptyState, ErrorState, KeyValueList, StatTile, StatusBadge } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { showQuantity } from '@/lib/trade-stock';
-import { DELIVERY_LABELS, INSPECTION_OPTIONS, PAYMENT_OPTIONS, PAYMENT_STATUS_LABELS, SCHEDULE_LABELS, scheduleLine, showDay } from '@/lib/delivery-schedule';
+import { CHANGE_STATUS_LABELS, DELIVERY_LABELS, INSPECTION_OPTIONS, PAYMENT_OPTIONS, PAYMENT_STATUS_LABELS, REQUESTED_BY_LABELS, SCHEDULE_LABELS, changeLineText, scheduleLine, shortOf, showDay } from '@/lib/delivery-schedule';
 import { useGetDeliveryScheduleQuery, useGetTradeStockQuery } from '@/redux/features/trade/trade_api';
 
 /*
@@ -77,14 +77,44 @@ export function TradeDeliveriesTab({ inquiryId, itemType }: { inquiryId: string;
                 Due {showDay(d.dueDate)} · {showQuantity(Number(d.plannedQuantity) + Number(d.carriedOverQuantity), unit)}
                 {(d.status === 'DELIVERED' || d.status === 'CLOSED') && ` · ${showQuantity(d.deliveredQuantity, unit)} accepted`}
               </span>
+              {Number(d.carriedOverQuantity) > 0 && <span className="block text-xs text-gray-500">Includes {showQuantity(d.carriedOverQuantity, unit)} carried over from an earlier short delivery</span>}
+              {d.agreedDueDate && d.agreedDueDate !== d.dueDate && <span className="block text-xs text-gray-500">Moved from {showDay(d.agreedDueDate)}{d.metadata?.dateMoves?.at(-1)?.reason ? `: ${d.metadata.dateMoves.at(-1)!.reason}` : ''}</span>}
+              {d.metadata?.shortfall && (
+                <span className="block text-xs text-gray-500">
+                  Arrived {showQuantity(d.metadata.shortfall.quantity, unit)} short: {d.metadata.shortfall.settled === 'CARRIED_OVER' ? `added to delivery ${d.metadata.shortfall.toDeliveryNumber}` : 'dropped by the signed schedule change'}
+                </span>
+              )}
             </span>
             <span className="flex flex-wrap items-center gap-2">
               <StatusBadge status={d.status}>{DELIVERY_LABELS[d.status]}</StatusBadge>
+              {d.status === 'DELIVERED' && shortOf(d) > 0 && <StatusBadge tone="warning">Short by {showQuantity(shortOf(d), unit)}</StatusBadge>}
               {d.paymentStatus !== 'NOT_REQUIRED' && <StatusBadge status={d.paymentStatus === 'PAID' ? 'COMPLETED' : 'PENDING'}>{PAYMENT_STATUS_LABELS[d.paymentStatus]}</StatusBadge>}
             </span>
           </li>
         ))}
       </ul>
+      {schedule.changes?.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white">
+          <p className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-900">Schedule changes</p>
+          <ul className="divide-y divide-gray-100">
+            {schedule.changes.map((c) => (
+              <li key={c.id} className="space-y-1.5 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={c.status === 'APPLIED' ? 'COMPLETED' : c.status === 'AWAITING_SIGNATURES' ? 'PENDING' : 'REJECTED'}>{CHANGE_STATUS_LABELS[c.status]}</StatusBadge>
+                  <span className="text-xs text-gray-500">Asked for by {REQUESTED_BY_LABELS[c.requestedBy].toLowerCase()} · {new Date(c.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-sm text-gray-700">{c.reason}</p>
+                <ul className="list-disc space-y-0.5 pl-5 text-sm text-gray-700">
+                  {c.lines.map((l, i) => (
+                    <li key={i}>{changeLineText(l, unit)}</li>
+                  ))}
+                </ul>
+                {c.status === 'AWAITING_SIGNATURES' && <p className="text-xs font-medium text-emerald-700">Sign your copy in the Document Vault. It applies when both parties have signed; if either does not, nothing changes.</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <KeyValueList columns={2} items={choices} />
       </div>
