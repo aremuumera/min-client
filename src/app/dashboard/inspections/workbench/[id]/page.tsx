@@ -102,12 +102,19 @@ export default function TradeWorkbenchPage() {
     }, [currentPhaseIndex, isCancelledOrRejected]);
 
     // SLA Calculation
+    // Decision #149: the report is due `report_sla_hours` after the site visit ends (+ the lab time while the job is in
+    // the lab), as the inspector commits on their limits page; before the visit, the same sum from the planned date
     const slaInfo = useMemo(() => {
-        if (!assignment?.scheduledDate) return { remaining: 48, status: 'good' as const };
-        const scheduled = new Date(assignment.scheduledDate);
+        const limits = profileRes?.data?.operational_limits;
+        const slaHours = limits?.report_sla_hours || 48;
+        const ms = (d: { max?: number; unit?: string } | null | undefined) => (Number(d?.max ?? 0) > 0 ? Number(d!.max) * (d!.unit === 'days' ? 86_400_000 : 3_600_000) : 0);
+        const ended = assignment?.siteVisitCompletedAt ? new Date(assignment.siteVisitCompletedAt).getTime() : null;
+        if (!ended && !assignment?.scheduledDate) return { remaining: slaHours, status: 'good' as const };
         const now = new Date();
-        const slaHours = profileRes?.data?.operational_limits?.report_sla_hours || 48;
-        const deadline = new Date(scheduled.getTime() + slaHours * 60 * 60 * 1000);
+        const start = ended
+            ? ended + (assignment?.status === 'LAB_ANALYSIS' ? ms(limits?.lab_duration) : 0)
+            : new Date(assignment.scheduledDate).getTime() + ms(limits?.onsite_duration) + ms(limits?.lab_duration);
+        const deadline = new Date(start + slaHours * 60 * 60 * 1000);
         const diff = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
         return {
             remaining: Math.max(0, Math.round(diff)),
