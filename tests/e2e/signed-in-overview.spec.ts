@@ -38,7 +38,7 @@ async function overview(page: Page) {
 }
 
 for (const [role, key] of [['supplier', 'E2E_SUPPLIER'], ['buyer', 'E2E_BUYER']] as const) {
-  test(`${role}: every part of the overview, "waiting for you" as the API says, no premium section`, async ({ browser }) => {
+  test(`${role}: every part of the overview, "waiting for you" as the API says, the premium strip (× hides it until reload)`, async ({ browser }) => {
     const page = await signIn(browser, env[key]);
     await page.goto('/dashboard');
     await expect(page.getByTestId('merchant-overview')).toBeVisible({ timeout: 60_000 });
@@ -55,6 +55,13 @@ for (const [role, key] of [['supplier', 'E2E_SUPPLIER'], ['buyer', 'E2E_BUYER']]
     if (data.recentTrades.length) await expect(page.getByTestId('overview-recent')).toBeVisible();
 
     await expect(page.getByText('Become a premium User')).toHaveCount(0);
+    // the premium strip: × hides it, a reload shows it again (owner, 2026-11-24)
+    const strip = page.getByTestId('premium-strip');
+    await expect(strip).toContainText('Premium is coming to MINMEG.');
+    await strip.getByRole('button', { name: 'Hide for now' }).click();
+    await expect(page.getByTestId('premium-strip')).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByTestId('premium-strip')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText('Something went wrong')).toHaveCount(0);
     await page.screenshot({ path: `tests/e2e/.results/overview-${role}.png`, fullPage: true });
   });

@@ -192,6 +192,7 @@ export { SegmentProgress, type SegmentProgressProps } from "./segment-progress";
 export { QuickAction, type QuickActionProps } from "./quick-action";
 export { ActionChip, type ActionChipProps, type ActionChipTone } from "./action-chip";
 export { SectionCard, type SectionCardProps } from "./section-card";
+export { AnnouncementStrip, type AnnouncementStripProps } from "./announcement-strip";
 export { QuantityInput, QUANTITY_PATTERN, type QuantityInputProps } from "./quantity-input";
 export { DataTable, type DataTableColumn, type DataTableProps } from "./data-table";
 export { FilterBar, type FilterBarProps } from "./filter-bar";
