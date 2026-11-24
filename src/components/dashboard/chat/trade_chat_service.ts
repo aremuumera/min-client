@@ -26,6 +26,19 @@ import {
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { chatNotificationService } from "./chat_notif_service";
 import { logger } from "@/utils/logger";
+import { mergeFeeds, watchFeed, type Feed, type FeedState } from "./firestore-feed";
+
+export type { Feed, FeedState } from "./firestore-feed";
+
+/** Messages per page in a thread: older ones load when the user asks */
+export const MESSAGES_PAGE_SIZE = 50;
+
+const millisOfMessage = (m: TradeMessage): number => {
+  const ts = m.timestamp as { toMillis?: () => number } | string | number | Date | null | undefined;
+  if (ts && typeof ts === "object" && "toMillis" in ts && ts.toMillis) return ts.toMillis();
+  if (ts === null || ts === undefined) return Number.MAX_SAFE_INTEGER; // still sending
+  return new Date(ts as string | number | Date).getTime();
+};
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -294,86 +307,65 @@ export const customerTradeChatService = {
   },
 
   /**
-   * Get messages for a user's spoke (real-time)
+   * The user's spoke thread of one cycle, 50 messages at a time (2026-11-24). The newest page is live;
+   * `loadMore()` fetches older messages. Messages come back oldest first, as the chat shows them.
    */
-  getSpokeMessages(
+  watchSpokeMessages(
     tradeId: string,
     inquiryId: string,
     spoke: UserSpokeType,
-    callback: (messages: TradeMessage[]) => void,
-    errorCallback?: (error: any) => void,
-  ) {
-    if (!tradeId || !inquiryId || !spoke) {
-      console.warn("getSpokeMessages: Missing tradeId, inquiryId, or spoke", {
-        tradeId,
-        inquiryId,
-        spoke,
-      });
-      return () => { };
-    }
-    const id = this._sanitizeId(tradeId);
-    const messagesRef = collection(
-      db,
-      "trade_rooms",
-      id,
-      "trades",
-      this._sanitizeId(inquiryId),
-      "threads",
-      spoke,
-      "messages",
-    );
-    const q = query(messagesRef, orderBy("timestamp", "asc"));
-
-    return onSnapshot(
-      q,
-      (snapshot) => {
-        const messages: TradeMessage[] = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        })) as TradeMessage[];
-
-        callback(messages);
+    onChange: (messages: TradeMessage[], state: FeedState) => void,
+    onError?: (error: unknown) => void,
+  ): Feed {
+    const ref = collection(db, "trade_rooms", this._sanitizeId(tradeId), "trades", this._sanitizeId(inquiryId), "threads", spoke, "messages");
+    return watchFeed<TradeMessage>({
+      ref,
+      orderField: "timestamp",
+      pageSize: MESSAGES_PAGE_SIZE,
+      toItem: (d) => ({ id: d.id, ...d.data() }) as TradeMessage,
+      onChange: (newestFirst, state) => onChange([...newestFirst].reverse(), state),
+      onError: (error) => {
+        console.error("[TradeChat] watchSpokeMessages snapshot error:", error);
+        onError?.(error);
       },
-      (error) => {
-        console.error("[TradeChat] getSpokeMessages snapshot error:", error);
-        if (errorCallback) errorCallback(error);
-      },
-    );
+    });
   },
 
   /**
    * Decision #146: the buyer keeps one thread with MINMEG for the whole room. Each cycle still stores its
    * own buyer thread (so a supplier never sees another cycle); this merges them, oldest cycle first, in
    * time order, with a divider where another supplier's cycle starts. `cycleIds` run oldest → newest.
+   * Each cycle loads in pages; `loadMore()` loads the cycle whose older messages come next.
    */
-  getRoomBuyerMessages(
+  watchRoomBuyerMessages(
     tradeId: string,
     cycleIds: string[],
-    callback: (messages: TradeMessage[]) => void,
-    errorCallback?: (error: unknown) => void,
-  ) {
-    const byCycle = new Map<string, TradeMessage[]>();
-    const millis = (m: TradeMessage) => (m.timestamp?.toMillis ? m.timestamp.toMillis() : new Date(m.timestamp ?? 0).getTime());
-    const emit = () => {
-      const merged: TradeMessage[] = [];
-      cycleIds.forEach((cycleId, index) => {
-        const list = byCycle.get(cycleId) ?? [];
-        if (index > 0 && list.length) {
-          const first = millis(list[0]);
-          merged.push({ id: `cycle-start:${cycleId}`, sender_id: 'system', sender_role: 'system', sender_display: 'MINMEG', sender_name: 'MINMEG', text: `Trade cycle ${index + 1} · another supplier`, timestamp: new Date(first - 1), type: 'system', meta: { type: 'cycle_start' } } as TradeMessage & { meta: { type: string } });
-        }
-        merged.push(...list);
-      });
-      merged.sort((a, b) => millis(a) - millis(b));
-      callback(merged);
-    };
-    const stops = cycleIds.map((cycleId) =>
-      this.getSpokeMessages(tradeId, cycleId, "admin_buyer", (messages) => {
-        byCycle.set(cycleId, messages);
-        emit();
-      }, errorCallback),
+    onChange: (messages: TradeMessage[], state: FeedState) => void,
+    onError?: (error: unknown) => void,
+  ): Feed {
+    const starts = cycleIds.map((cycleId) => (cb: (items: TradeMessage[], state: FeedState) => void) =>
+      watchFeed<TradeMessage>({
+        ref: collection(db, "trade_rooms", this._sanitizeId(tradeId), "trades", this._sanitizeId(cycleId), "threads", "admin_buyer", "messages"),
+        orderField: "timestamp",
+        pageSize: MESSAGES_PAGE_SIZE,
+        toItem: (d) => ({ id: d.id, ...d.data() }) as TradeMessage,
+        onChange: cb,
+        onError,
+      }),
     );
-    return () => stops.forEach((stop) => stop());
+    return mergeFeeds<TradeMessage>(starts, millisOfMessage, (newestFirst, state, parts) => {
+      const shown = new Set(newestFirst.map((m) => m.id));
+      const merged = [...newestFirst].reverse();
+      // a divider before each later cycle's first message, once that message is loaded and shown
+      parts.forEach((part, index) => {
+        if (index === 0 || part.hasMore || !part.items.length) return;
+        const first = part.items[part.items.length - 1];
+        if (!shown.has(first.id)) return;
+        merged.push({ id: `cycle-start:${cycleIds[index]}`, sender_id: 'system', sender_role: 'system', sender_display: 'MINMEG', sender_name: 'MINMEG', text: `Trade cycle ${index + 1} · another supplier`, timestamp: new Date(millisOfMessage(first) - 1), type: 'system', meta: { type: 'cycle_start' } } as TradeMessage & { meta: { type: string } });
+      });
+      merged.sort((a, b) => millisOfMessage(a) - millisOfMessage(b));
+      onChange(merged, state);
+    });
   },
 
   /**
@@ -459,6 +451,14 @@ export const customerTradeChatService = {
       await updateDoc(doc(db, "trade_rooms", id, "trades", inqId), {
         updated_at: serverTimestamp(),
       });
+
+      // Staff unread: one more message for the Trade Desk in this thread, cleared when staff open it.
+      // Kept on the room (`staff_unread.{cycleId}__{spoke}`) so the desk's room list needs no extra reads.
+      try {
+        await updateDoc(doc(db, "trade_rooms", id), { [`staff_unread.${inqId}__${spoke}`]: increment(1) });
+      } catch (error) {
+        console.error("Error counting the message for the Trade Desk:", error);
+      }
 
       // Trigger notification for Admin
       // In Hub-And-Spoke, messages from users go to 'admin'

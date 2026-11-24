@@ -28,6 +28,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
 import { VoiceNoteWaveSkeleton } from './voice-note-player';
+import { Button } from '@/components/ui/button';
 
 interface ThreadViewProps {
   threadId: string;
@@ -65,7 +66,7 @@ function ChatMessageSkeleton() {
 }
 
 export function ThreadView({ threadId }: ThreadViewProps) {
-  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, loadingAttachments, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab } = React.useContext(ChatContext);
+  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, loadingAttachments, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab, messagesHaveOlder, loadingOlderMessages, loadOlderMessages } = React.useContext(ChatContext);
   // the "Trade status" panel beside the chat (design C, owner 2026-11-24)
   const [statusOpen, setStatusOpen] = React.useState(false);
   const { user } = useSelector((state: any) => state.auth);
@@ -121,11 +122,38 @@ export function ThreadView({ threadId }: ThreadViewProps) {
     [sendMessage]
   );
 
-  React.useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  /** Where the reader was when older messages were asked for: they are added above, and the view stays put */
+  const olderAnchorRef = React.useRef<{ height: number; top: number; count: number } | null>(null);
+
+  React.useLayoutEffect(() => {
+    const el = messagesRef.current;
+    if (!el) return;
+    const anchor = olderAnchorRef.current;
+    if (anchor && messages.length > anchor.count) {
+      el.scrollTop = el.scrollHeight - anchor.height + anchor.top;
+      olderAnchorRef.current = null;
+      return;
     }
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // An older page that brought nothing new leaves no anchor behind
+  React.useEffect(() => {
+    if (!loadingOlderMessages) olderAnchorRef.current = null;
+  }, [loadingOlderMessages]);
+
+  // Trade threads load 50 messages at a time: the button, or scrolling to the top, loads the 50 before them
+  const handleLoadOlder = React.useCallback(() => {
+    const el = messagesRef.current;
+    if (!el || !messagesHaveOlder || loadingOlderMessages) return;
+    olderAnchorRef.current = { height: el.scrollHeight, top: el.scrollTop, count: messages.length };
+    loadOlderMessages();
+  }, [messagesHaveOlder, loadingOlderMessages, loadOlderMessages, messages.length]);
+
+  const handleMessagesScroll = React.useCallback(() => {
+    const el = messagesRef.current;
+    if (el && el.scrollTop < 40 && el.scrollHeight > el.clientHeight) handleLoadOlder();
+  }, [handleLoadOlder]);
 
   // Check if initial room sync is still in progress
   const isSyncing = loading || (conversations.length === 0 && (!activeConversation || activeConversation.conversationId !== threadId));
@@ -394,6 +422,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
           <Stack
             ref={messagesRef}
+            onScroll={handleMessagesScroll}
             spacing={2}
             className="flex-auto overflow-y-auto p-3 sm:p-6 relative bg-gray-50/30"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -402,6 +431,13 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               <ChatMessageSkeleton />
             ) : (
               <>
+                {messagesHaveOlder && (
+                  <div className="flex justify-center">
+                    <Button variant="text" color="secondary" size="sm" loading={loadingOlderMessages} onClick={handleLoadOlder}>
+                      Load earlier messages
+                    </Button>
+                  </div>
+                )}
                 {messages.map((message: any) => (
                   <MessageBox key={message.id} message={message} />
                 ))}

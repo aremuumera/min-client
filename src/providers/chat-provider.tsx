@@ -1,14 +1,14 @@
 'use client'
 
 
-import React, { createContext, useCallback, useEffect, useState, Dispatch, SetStateAction } from 'react';
+import React, { createContext, useCallback, useEffect, useRef, useState, Dispatch, SetStateAction } from 'react';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { toast } from 'sonner';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { chatService, db, getUserName } from '@/components/dashboard/chat/chat_service';
-import { customerTradeChatService } from '@/components/dashboard/chat/trade_chat_service';
+import { customerTradeChatService, type Feed, type FeedState, type TradeMessage } from '@/components/dashboard/chat/trade_chat_service';
 import { useAcknowledgeInquiryMutation, useRejectInquiryMutation } from '@/redux/features/trade/trade_api';
 
 
@@ -33,6 +33,10 @@ interface ChatContextType {
   setActiveTab: Dispatch<SetStateAction<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments' | 'passports' | 'deliveries'>>;
   loading: boolean;
   loadingMessages: boolean;
+  /** Trade threads load 50 messages at a time: older ones exist beyond what is loaded */
+  messagesHaveOlder: boolean;
+  loadingOlderMessages: boolean;
+  loadOlderMessages: () => void;
   loadingAttachments: boolean;
   notifications: any[];
   openDesktopSidebar: boolean;
@@ -61,6 +65,9 @@ export const ChatContext = createContext<ChatContextType>({
   messages: [],
   loading: true,
   loadingMessages: false,
+  messagesHaveOlder: false,
+  loadingOlderMessages: false,
+  loadOlderMessages: () => { },
   loadingAttachments: false,
   notifications: [],
   openDesktopSidebar: true,
@@ -96,6 +103,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeTab, setActiveTab] = useState<'chat' | 'vault' | 'activity' | 'inspections' | 'stock' | 'shipments' | 'passports' | 'deliveries'>('chat');
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [messagesState, setMessagesState] = useState<FeedState>({ hasMore: false, loadingMore: false });
+  const messagesFeed = useRef<Feed | null>(null);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [openDesktopSidebar, setOpenDesktopSidebar] = React.useState(true);
@@ -204,11 +213,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [activeConversation?.conversationId, activeConversation?.conversationType, threadType, effectiveUserId, userRole, params?.itemId]);
 
-  // Loading messages when active conversation changes
+  // Loading messages when active conversation changes. Trade threads load 50 at a time (2026-11-24):
+  // the newest page is live, and loadOlderMessages fetches the page before it.
+  const myUserId = user?.id ? String(user.id) : null;
   useEffect(() => {
     let unsubscribe: any = null;
     const conversationId = activeConversation?.conversationId;
     const userSpoke = activeConversation?.userSpoke;
+    setMessagesState({ hasMore: false, loadingMore: false });
 
     if (conversationId && userSpoke) {
       const isTradeType = ['trade', 'product', 'rfq', 'business'].includes(threadType) || activeConversation?.conversationType === 'trade';
@@ -220,7 +232,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        if (!user) {
+        if (!myUserId) {
           setLoadingMessages(false);
           return;
         }
@@ -228,47 +240,34 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setLoadingMessages(true);
         // Decision #146: the buyer's chat with MINMEG is one thread for the whole room (every cycle, oldest first)
         const roomCycles = [...roomInquiries].reverse().map((i) => String(i.id));
-        if (userSpoke === 'admin_buyer' && roomCycles.length > 1) {
-          unsubscribe = customerTradeChatService.getRoomBuyerMessages(
-            String(conversationId),
-            roomCycles,
-            (messageList) => {
-              // the same trade-message list the single-thread path passes (untyped there)
-              setMessages(messageList as unknown as Message[]);
-              setLoadingMessages(false);
-              for (const cycleId of roomCycles) customerTradeChatService.markSpokeAsRead(String(conversationId), cycleId, userSpoke, String(user.id));
-            },
-            (error: unknown) => {
-              console.error('Error listening to messages:', error);
-              toast.error('Failed to sync messages. Real-time updates may be delayed.');
-              setLoadingMessages(false);
-            },
-          );
-          return () => {
-            if (unsubscribe) unsubscribe();
-          };
-        }
-        unsubscribe = customerTradeChatService.getSpokeMessages(
-          String(conversationId),
-          activeInquiryId,
-          userSpoke,
-          (messageList: any[]) => {
-            setMessages(messageList);
-            setLoadingMessages(false);
-
-            customerTradeChatService.markSpokeAsRead(
-              String(conversationId),
-              activeInquiryId,
-              userSpoke,
-              String(user.id)
-            );
-          },
-          (error: any) => {
-            console.error('Error listening to messages:', error);
-            toast.error('Failed to sync messages. Real-time updates may be delayed.');
-            setLoadingMessages(false);
+        const isRoomBuyerThread = userSpoke === 'admin_buyer' && roomCycles.length > 1;
+        const readCycles = isRoomBuyerThread ? roomCycles : [activeInquiryId];
+        // Read receipts: once when the thread opens, then whenever an unread message from MINMEG is loaded
+        let opened = true;
+        const onMessages = (messageList: TradeMessage[], state: FeedState) => {
+          // the same trade-message list for both paths (untyped before)
+          setMessages(messageList as unknown as Message[]);
+          setMessagesState(state);
+          setLoadingMessages(false);
+          const unreadFromOthers = messageList.some((m) => m.isRead === false && String(m.sender_id) !== myUserId);
+          if (opened || unreadFromOthers) {
+            for (const cycleId of readCycles) customerTradeChatService.markSpokeAsRead(String(conversationId), cycleId, userSpoke, myUserId);
           }
-        );
+          opened = false;
+        };
+        const onError = (error: unknown) => {
+          console.error('Error listening to messages:', error);
+          toast.error('Failed to sync messages. Real-time updates may be delayed.');
+          setLoadingMessages(false);
+        };
+        const feed = isRoomBuyerThread
+          ? customerTradeChatService.watchRoomBuyerMessages(String(conversationId), roomCycles, onMessages, onError)
+          : customerTradeChatService.watchSpokeMessages(String(conversationId), activeInquiryId, userSpoke, onMessages, onError);
+        messagesFeed.current = feed;
+        return () => {
+          feed.stop();
+          messagesFeed.current = null;
+        };
       } else {
         setLoadingMessages(true);
         unsubscribe = chatService.getMessages(conversationId, (messageList: Message[]) => {
@@ -288,7 +287,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [activeConversation?.conversationId, activeConversation?.userSpoke, activeConversation?.conversationType, user, threadType, effectiveUserId, activeInquiryId, roomInquiries.map((i) => i.id).join(',')]);
+  }, [activeConversation?.conversationId, activeConversation?.userSpoke, activeConversation?.conversationType, myUserId, threadType, effectiveUserId, activeInquiryId, roomInquiries.map((i) => i.id).join(',')]);
+
+  const loadOlderMessages = useCallback(() => {
+    void messagesFeed.current?.loadMore();
+  }, []);
 
   // In your conversation component
   useEffect(() => {
@@ -748,6 +751,9 @@ New Flow for for all roles to Admin
     setOpenMobileSidebar,
     loadingMessages,
     setLoadingMessages,
+    messagesHaveOlder: messagesState.hasMore,
+    loadingOlderMessages: messagesState.loadingMore,
+    loadOlderMessages,
     loadingAttachments,
     setLoadingAttachments,
     deleteAttachment,
