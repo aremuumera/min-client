@@ -26,8 +26,9 @@ import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
+import { MessageSquare, MessageSquareDashed, ArrowLeft, Copy } from 'lucide-react';
 import { VoiceNoteWaveSkeleton } from './voice-note-player';
+import { Button } from '@/components/ui/button';
 
 interface ThreadViewProps {
   threadId: string;
@@ -65,7 +66,7 @@ function ChatMessageSkeleton() {
 }
 
 export function ThreadView({ threadId }: ThreadViewProps) {
-  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, loadingAttachments, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab } = React.useContext(ChatContext);
+  const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, loadingAttachments, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab, messagesHaveOlder, loadingOlderMessages, loadOlderMessages } = React.useContext(ChatContext);
   // the "Trade status" panel beside the chat (design C, owner 2026-11-24)
   const [statusOpen, setStatusOpen] = React.useState(false);
   const { user } = useSelector((state: any) => state.auth);
@@ -121,11 +122,38 @@ export function ThreadView({ threadId }: ThreadViewProps) {
     [sendMessage]
   );
 
-  React.useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  /** Where the reader was when older messages were asked for: they are added above, and the view stays put */
+  const olderAnchorRef = React.useRef<{ height: number; top: number; count: number } | null>(null);
+
+  React.useLayoutEffect(() => {
+    const el = messagesRef.current;
+    if (!el) return;
+    const anchor = olderAnchorRef.current;
+    if (anchor && messages.length > anchor.count) {
+      el.scrollTop = el.scrollHeight - anchor.height + anchor.top;
+      olderAnchorRef.current = null;
+      return;
     }
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // An older page that brought nothing new leaves no anchor behind
+  React.useEffect(() => {
+    if (!loadingOlderMessages) olderAnchorRef.current = null;
+  }, [loadingOlderMessages]);
+
+  // Trade threads load 50 messages at a time: the button, or scrolling to the top, loads the 50 before them
+  const handleLoadOlder = React.useCallback(() => {
+    const el = messagesRef.current;
+    if (!el || !messagesHaveOlder || loadingOlderMessages) return;
+    olderAnchorRef.current = { height: el.scrollHeight, top: el.scrollTop, count: messages.length };
+    loadOlderMessages();
+  }, [messagesHaveOlder, loadingOlderMessages, loadOlderMessages, messages.length]);
+
+  const handleMessagesScroll = React.useCallback(() => {
+    const el = messagesRef.current;
+    if (el && el.scrollTop < 40 && el.scrollHeight > el.clientHeight) handleLoadOlder();
+  }, [handleLoadOlder]);
 
   // Check if initial room sync is still in progress
   const isSyncing = loading || (conversations.length === 0 && (!activeConversation || activeConversation.conversationId !== threadId));
@@ -206,21 +234,43 @@ export function ThreadView({ threadId }: ThreadViewProps) {
                 setActiveInquiryId?.(inq.id);
                 router.push(`/dashboard/chat/${threadType}/${threadId}/${inq.id}`);
               }}
-              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeInquiryId === inq.id
+              className={`inline-flex shrink-0 items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeInquiryId === inq.id
                 ? 'border-emerald-600 text-emerald-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               Trade Cycle #{roomInquiries.length - index}
-              <span className="ml-1 opacity-70">
+              <span className="ml-1 inline-flex items-center opacity-70">
                 ({inq.quantity} {inq.measure_type || 'MT'}
                 {/* Hide price from inspectors */}
                 {inq.type === 'rfq_offer' && inq.display_price && !isInspector && (
                   <> • {inq.currency === 'USD' ? '$' : '₦'}{Number(inq.display_price).toLocaleString()}/unit</>
                 )}
-                {/* Always show ref suffix for differentiation */}
+                {/* Always show ref suffix for differentiation: on phones it ends in "…" (owner, 2026-11-24); hover shows it whole, the icon copies it whole */}
                 {inq.id && (
-                  <> • Ref: {String(inq.id)}</>
+                  <>
+                    <span className="mx-1">•</span>Ref:&nbsp;
+                    <span className="inline-block max-w-30 truncate align-bottom sm:max-w-none" title={String(inq.id)}>{String(inq.id)}</span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Copy the trade cycle ID"
+                      title="Copy the full ID"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(String(inq.id)).then(() => toast.success('Trade cycle ID copied'), () => undefined);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter' && e.key !== ' ') return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(String(inq.id)).then(() => toast.success('Trade cycle ID copied'), () => undefined);
+                      }}
+                      className="ml-1 inline-flex rounded p-0.5 hover:text-emerald-700"
+                    >
+                      <Copy size={12} aria-hidden />
+                    </span>
+                  </>
                 )}
                 )
               </span>
@@ -394,6 +444,7 @@ export function ThreadView({ threadId }: ThreadViewProps) {
 
           <Stack
             ref={messagesRef}
+            onScroll={handleMessagesScroll}
             spacing={2}
             className="flex-auto overflow-y-auto p-3 sm:p-6 relative bg-gray-50/30"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -402,6 +453,13 @@ export function ThreadView({ threadId }: ThreadViewProps) {
               <ChatMessageSkeleton />
             ) : (
               <>
+                {messagesHaveOlder && (
+                  <div className="flex justify-center">
+                    <Button variant="text" color="secondary" size="sm" loading={loadingOlderMessages} onClick={handleLoadOlder}>
+                      Load earlier messages
+                    </Button>
+                  </div>
+                )}
                 {messages.map((message: any) => (
                   <MessageBox key={message.id} message={message} />
                 ))}

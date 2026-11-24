@@ -91,8 +91,8 @@ export function ThreadToolbar({ thread }: any) {
           </Avatar>
 
           <div className="min-w-0 flex-1">
-            {/* Top Subtitle Row: Title + Copyable Ref ID + Trades Badge inline */}
-            <div className="flex items-center gap-1.5 min-w-0 flex-wrap sm:flex-nowrap">
+            {/* Top Subtitle Row: Title + Copyable Ref ID + Trades Badge inline. One line on every screen: the Ref ends in "…" where it doesn't fit (owner, 2026-11-24); hover shows it whole, copy copies it whole */}
+            <div className="flex items-center gap-1.5 min-w-0">
               <span className="hidden sm:inline-block text-[10px] sm:text-xs text-gray-500 font-medium truncate">
                 {thread.conversationType === 'trade' || thread.itemType === 'trade'
                   ? 'Min-meg Trade Desk'
@@ -104,13 +104,14 @@ export function ThreadToolbar({ thread }: any) {
               {/* Copyable Trade ID Badge next to Min-meg Trade Desk */}
               {roomInquiries?.length > 1 ? (
                 <Menu
+                  rootClassName="min-w-0 max-w-full"
                   trigger={
                     <button
-                      className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors min-w-0"
-                      title="Trade Ref ID (Click to copy / switch)"
+                      className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors min-w-0 max-w-full"
+                      title={`Ref: ${String(fullTradeId)} (click to copy or switch cycle)`}
                     >
-                      <span className="break-all text-left">Ref: {String(fullTradeId)}</span>
-                      <span onClick={handleCopyId} className="hover:text-emerald-700 p-0.5">
+                      <span className="min-w-0 truncate text-left">Ref: {String(fullTradeId)}</span>
+                      <span onClick={handleCopyId} className="hover:text-emerald-700 p-0.5 shrink-0">
                         {copied ? <Check size={10} className="text-emerald-600" /> : <Copy size={10} className="text-gray-400" />}
                       </span>
                     </button>
@@ -140,17 +141,17 @@ export function ThreadToolbar({ thread }: any) {
               ) : (
                 <button
                   onClick={handleCopyId}
-                  className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors min-w-0"
-                  title="Click to copy Trade Ref ID"
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded text-[9px] font-mono font-bold border border-gray-200 transition-colors min-w-0 max-w-full"
+                  title={`Ref: ${String(fullTradeId)} (click to copy)`}
                 >
-                  <span className="break-all text-left">Ref: {String(fullTradeId)}</span>
-                  {copied ? <Check size={10} className="text-emerald-600" /> : <Copy size={10} className="text-gray-400" />}
+                  <span className="min-w-0 truncate text-left">Ref: {String(fullTradeId)}</span>
+                  {copied ? <Check size={10} className="text-emerald-600 shrink-0" /> : <Copy size={10} className="text-gray-400 shrink-0" />}
                 </button>
               )}
 
               {/* Reduced Trades Count Badge right beside Trade ID */}
               {roomInquiries && roomInquiries.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                   {roomInquiries.length} {roomInquiries.length === 1 ? 'Trade' : 'Trades'}
                 </span>
               )}
@@ -158,11 +159,17 @@ export function ThreadToolbar({ thread }: any) {
 
             {/* Main Item Title */}
             <div className="flex items-center gap-1.5 overflow-hidden mt-0.5">
-              <Typography noWrap variant="subtitle2" className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+              <Typography noWrap variant="subtitle2" className="min-w-0 text-xs sm:text-sm font-bold text-gray-900 truncate">
                 {thread.conversationType === 'trade' || thread.itemType === 'trade'
                   ? displayItemName
                   : thread.itemType !== 'business' ? thread.itemTitle : thread.otherUserName}
               </Typography>
+              {/* Phones: the trades count sits here instead of as a chip beside the Ref (only when there are several) */}
+              {roomInquiries && roomInquiries.length > 1 && (
+                <span className="sm:hidden shrink-0 whitespace-nowrap text-xs text-gray-500">
+                  · {roomInquiries.length} {roomInquiries.length === 1 ? 'trade' : 'trades'}
+                </span>
+              )}
             </div>
           </div>
         </div>
