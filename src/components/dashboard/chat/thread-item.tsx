@@ -162,7 +162,8 @@ export function ThreadItem({ active = false, thread, onSelect }: ThreadItemProps
           <div className="flex items-center justify-between gap-1 min-w-0 my-0.5">
             {thread.tradeRef ? (
               <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-gray-700 bg-gray-100/80 px-1.5 py-0.5 rounded border border-gray-200/60 min-w-0">
-                <span className="break-all">{conversationId}</span>
+                {/* one line with an ellipsis (owner, 2026-11-24); the full id shows on hover and the button copies it whole */}
+                <span className="min-w-0 truncate" title={conversationId}>{conversationId}</span>
                 <button
                   type="button"
                   onClick={(e) => {
