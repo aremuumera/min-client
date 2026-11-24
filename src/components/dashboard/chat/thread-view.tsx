@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MessageAdd } from './message-add';
 import { MessageBox } from './message-box';
 import { ThreadToolbar } from './thread-toolbar';
-import { TradeStatusStepper } from './trade-status-stepper';
+import { TradeStatusPanel, TradeStatusStepper } from './trade-status-stepper';
 import { ActionPanel, SupplierPendingActionBanner } from './action-panel';
 import { InspectorActionPanel } from './inspector-action-panel';
 import { TradeInspectionsTab } from './trade-inspections-tab';
@@ -66,6 +66,8 @@ function ChatMessageSkeleton() {
 
 export function ThreadView({ threadId }: ThreadViewProps) {
   const { messages, conversations, activeConversation, setActiveConversation, loading, loadingMessages, loadingAttachments, sendMessage, activeInquiryId, setActiveInquiryId, roomInquiries, activeTab, setActiveTab } = React.useContext(ChatContext);
+  // the "Trade status" panel beside the chat (design C, owner 2026-11-24)
+  const [statusOpen, setStatusOpen] = React.useState(false);
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const params = useParams();
@@ -167,26 +169,29 @@ export function ThreadView({ threadId }: ThreadViewProps) {
     );
   }
 
+  // The trade status line and panel share the same trade
+  const statusCycle = thread ? roomInquiries?.find((i: any) => isMatch(i.id || undefined, activeInquiryId || undefined) || isMatch(i.inquiry_id || undefined, activeInquiryId || undefined) || isMatch(i.inquiryId || undefined, activeInquiryId || undefined)) || thread?.metadata : null;
+  const statusProps = thread
+    ? {
+        inquiryId: activeInquiryId || thread?.metadata?.inquiry_id || threadId,
+        itemType: threadType || thread?.itemType || 'product',
+        currentStatus: statusCycle?.status || statusCycle?.trade_status || statusCycle?.current_sub_status || thread?.metadata?.status || thread?.status,
+        userRole: isInspector ? 'inspector' : (isSupplier ? 'supplier' : (user?.role || 'buyer')),
+      }
+    : null;
+
   return (
     <Box className="flex flex-col flex-auto min-h-0 h-full">
       <div className='ml-2'>
         <ThreadToolbar thread={thread} />
       </div>
 
-      {/* Trade Status Stepper */}
-      {thread && (() => {
-        const activeCycle = roomInquiries?.find((i: any) => isMatch(i.id || undefined, activeInquiryId || undefined) || isMatch(i.inquiry_id || undefined, activeInquiryId || undefined) || isMatch(i.inquiryId || undefined, activeInquiryId || undefined)) || thread?.metadata;
-        const resolvedCurrentStatus = activeCycle?.status || activeCycle?.trade_status || activeCycle?.current_sub_status || thread?.metadata?.status || thread?.status;
+      {/* Trade status: one line here; "Trade status" opens the panel beside the chat */}
+      {statusProps && <TradeStatusStepper {...statusProps} open={statusOpen} onToggle={() => setStatusOpen((o) => !o)} />}
 
-        return (
-          <TradeStatusStepper
-            inquiryId={activeInquiryId || thread?.metadata?.inquiry_id || threadId}
-            itemType={threadType || thread?.itemType || 'product'}
-            currentStatus={resolvedCurrentStatus}
-            userRole={isInspector ? 'inspector' : (isSupplier ? 'supplier' : (user?.role || 'buyer'))}
-          />
-        );
-      })()}
+      {/* Everything under the status line, with the trade status panel on its right when open */}
+      <div className="relative flex min-h-0 flex-1">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {thread && !isInspector && (
         <RecurringLine inquiryId={activeInquiryId || roomInquiries[0]?.id || ''} itemType={threadType === 'rfq' ? 'rfq' : 'product'} onOpen={() => setActiveTab('deliveries')} />
       )}
@@ -451,6 +456,9 @@ export function ThreadView({ threadId }: ThreadViewProps) {
           })()}
         </>
       )}
+      </div>
+      {statusOpen && statusProps && <TradeStatusPanel {...statusProps} onClose={() => setStatusOpen(false)} />}
+      </div>
     </Box >
   );
 }
