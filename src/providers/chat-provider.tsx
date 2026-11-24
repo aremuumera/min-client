@@ -226,6 +226,28 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setLoadingMessages(true);
+        // Decision #146: the buyer's chat with MINMEG is one thread for the whole room (every cycle, oldest first)
+        const roomCycles = [...roomInquiries].reverse().map((i) => String(i.id));
+        if (userSpoke === 'admin_buyer' && roomCycles.length > 1) {
+          unsubscribe = customerTradeChatService.getRoomBuyerMessages(
+            String(conversationId),
+            roomCycles,
+            (messageList) => {
+              // the same trade-message list the single-thread path passes (untyped there)
+              setMessages(messageList as unknown as Message[]);
+              setLoadingMessages(false);
+              for (const cycleId of roomCycles) customerTradeChatService.markSpokeAsRead(String(conversationId), cycleId, userSpoke, String(user.id));
+            },
+            (error: unknown) => {
+              console.error('Error listening to messages:', error);
+              toast.error('Failed to sync messages. Real-time updates may be delayed.');
+              setLoadingMessages(false);
+            },
+          );
+          return () => {
+            if (unsubscribe) unsubscribe();
+          };
+        }
         unsubscribe = customerTradeChatService.getSpokeMessages(
           String(conversationId),
           activeInquiryId,
@@ -266,7 +288,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [activeConversation?.conversationId, activeConversation?.userSpoke, activeConversation?.conversationType, user, threadType, effectiveUserId, activeInquiryId]);
+  }, [activeConversation?.conversationId, activeConversation?.userSpoke, activeConversation?.conversationType, user, threadType, effectiveUserId, activeInquiryId, roomInquiries.map((i) => i.id).join(',')]);
 
   // In your conversation component
   useEffect(() => {
@@ -316,9 +338,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
           try {
             if (!activeInquiryId) return false;
+            // Decision #146: the buyer's one thread writes to the room's newest cycle (the current supplier's)
+            const targetCycle = activeConversation.userSpoke === 'admin_buyer' && roomInquiries.length > 1 ? String(roomInquiries[0].id) : activeInquiryId;
             const msgId = await customerTradeChatService.sendMessage(
               String(conversationId),
-              activeInquiryId,
+              targetCycle,
               activeConversation.userSpoke,
               String(user.id),
               userRole,
@@ -350,7 +374,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
       }
     },
-    [user, activeConversation, setLoadingMessages, setLoading, threadType, fullName, activeInquiryId]
+    [user, activeConversation, setLoadingMessages, setLoading, threadType, fullName, activeInquiryId, roomInquiries]
   );
 
   // Function to upload attachment
