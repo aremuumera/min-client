@@ -18,6 +18,13 @@ export interface PopoverProps extends Omit<React.HTMLAttributes<HTMLDivElement>,
   position?: 'top' | 'bottom' | 'left' | 'right';
   /** Alignment relative to trigger */
   align?: 'start' | 'center' | 'end';
+  /**
+   * Phones (under 640 px): open across the screen, 16 px from each side, just under the top bar, so a wide
+   * panel never runs off an edge (owner, 2026-11-24: the notifications list ran off the left side)
+   */
+  fullWidthOnMobile?: boolean;
+  /** Classes for the wrapper around the trigger, e.g. "min-w-0 max-w-full" so a shortened ID can shrink in a row */
+  rootClassName?: string;
 }
 
 const positionClasses = {
@@ -55,6 +62,8 @@ function Popover({
   onOpenChange,
   position = 'bottom',
   align = 'start',
+  fullWidthOnMobile = false,
+  rootClassName,
   className,
   ...props
 }: PopoverProps) {
@@ -85,8 +94,8 @@ function Popover({
   useCloseOnEscape(open, React.useCallback(() => setOpen(false), [setOpen]));
 
   return (
-    <div className="relative inline-block" ref={containerRef}>
-      <div onClick={toggle} className="cursor-pointer">
+    <div className={cn('relative inline-block', rootClassName)} ref={containerRef}>
+      <div onClick={toggle} className="max-w-full cursor-pointer">
         {trigger}
       </div>
 
@@ -101,7 +110,8 @@ function Popover({
               'absolute z-50 min-w-[150px] overflow-hidden rounded-lg border border-hairline bg-canvas p-1',
               positionClasses[position],
               alignClasses[align][position],
-              className
+              className,
+              fullWidthOnMobile && 'max-sm:fixed max-sm:inset-x-4 max-sm:top-[72px] max-sm:mt-0 max-sm:w-auto max-sm:translate-x-0'
             )}
             {...props}
           >

@@ -21,7 +21,6 @@ import { ChatContext } from '@/providers/chat-provider';
 // import { chatService } from '../chat/chat_service';
 import { chatService } from '@/components/dashboard/chat/chat_service';
 import { cn } from '@/utils/helper';
-import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface Notification {
     id: string;
@@ -93,8 +92,6 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
         }
     };
 
-    const isMobile = useMediaQuery('down', 'sm');
-
     return (
         <Popover
             trigger={trigger}
@@ -102,12 +99,10 @@ export function NotificationsPopover({ trigger, onClose, open }: NotificationsPo
             onOpenChange={(isOpen) => {
                 if (!isOpen) onClose?.();
             }}
-            className={cn(
-                "w-[calc(100vw-32px)] sm:w-[380px]",
-                isMobile && "fixed left-4 right-4 top-[72px] translate-x-0! right-auto!"
-            )}
+            className="sm:w-[380px]"
             position="bottom"
-            align={isMobile ? 'center' : 'end'}
+            align="end"
+            fullWidthOnMobile
         >
             <Stack direction="row" className="items-center justify-between px-4 py-2 border-b border-neutral-200">
                 <Typography variant="h6">Messages</Typography>

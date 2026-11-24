@@ -26,7 +26,7 @@ import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquare, MessageSquareDashed, ArrowLeft } from 'lucide-react';
+import { MessageSquare, MessageSquareDashed, ArrowLeft, Copy } from 'lucide-react';
 import { VoiceNoteWaveSkeleton } from './voice-note-player';
 import { Button } from '@/components/ui/button';
 
@@ -234,21 +234,43 @@ export function ThreadView({ threadId }: ThreadViewProps) {
                 setActiveInquiryId?.(inq.id);
                 router.push(`/dashboard/chat/${threadType}/${threadId}/${inq.id}`);
               }}
-              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeInquiryId === inq.id
+              className={`inline-flex shrink-0 items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeInquiryId === inq.id
                 ? 'border-emerald-600 text-emerald-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               Trade Cycle #{roomInquiries.length - index}
-              <span className="ml-1 opacity-70">
+              <span className="ml-1 inline-flex items-center opacity-70">
                 ({inq.quantity} {inq.measure_type || 'MT'}
                 {/* Hide price from inspectors */}
                 {inq.type === 'rfq_offer' && inq.display_price && !isInspector && (
                   <> • {inq.currency === 'USD' ? '$' : '₦'}{Number(inq.display_price).toLocaleString()}/unit</>
                 )}
-                {/* Always show ref suffix for differentiation */}
+                {/* Always show ref suffix for differentiation: on phones it ends in "…" (owner, 2026-11-24); hover shows it whole, the icon copies it whole */}
                 {inq.id && (
-                  <> • Ref: {String(inq.id)}</>
+                  <>
+                    <span className="mx-1">•</span>Ref:&nbsp;
+                    <span className="inline-block max-w-30 truncate align-bottom sm:max-w-none" title={String(inq.id)}>{String(inq.id)}</span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Copy the trade cycle ID"
+                      title="Copy the full ID"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(String(inq.id)).then(() => toast.success('Trade cycle ID copied'), () => undefined);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter' && e.key !== ' ') return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(String(inq.id)).then(() => toast.success('Trade cycle ID copied'), () => undefined);
+                      }}
+                      className="ml-1 inline-flex rounded p-0.5 hover:text-emerald-700"
+                    >
+                      <Copy size={12} aria-hidden />
+                    </span>
+                  </>
                 )}
                 )
               </span>

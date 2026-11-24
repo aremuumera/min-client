@@ -22,8 +22,6 @@ import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
 import { RouterLink } from '@/components/core/link';
-import { cn } from '@/utils/helper';
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { Chip } from '@/components/ui/chip';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 
@@ -55,8 +53,6 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
         router.replace(paths.home);
     };
 
-    const isMobile = useMediaQuery('down', 'sm');
-
     return (
         <Popover
             trigger={trigger}
@@ -64,12 +60,10 @@ export function UserPopover({ trigger, onClose, open }: UserPopoverProps) {
             onOpenChange={(isOpen) => {
                 if (!isOpen) onClose?.();
             }}
-            className={cn(
-                "w-[calc(100vw-32px)] sm:w-[320px]",
-                isMobile && "fixed left-4 right-4 top-[72px] translate-x-0!"
-            )}
+            className="sm:w-[320px]"
             position="bottom"
-            align={isMobile ? 'center' : 'end'}
+            align="end"
+            fullWidthOnMobile
         >
             <Box className="p-6 flex items-center bg-neutral-50 border-b border-neutral-200">
                 <Avatar

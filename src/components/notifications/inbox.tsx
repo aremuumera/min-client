@@ -86,7 +86,8 @@ export function InboxBell() {
       onOpenChange={setOpen}
       position="bottom"
       align="end"
-      className="w-[calc(100vw-32px)] sm:w-[400px]"
+      fullWidthOnMobile
+      className="sm:w-[400px]"
       trigger={
         <button type="button" onClick={() => setOpen((o) => !o)} aria-label={count ? `Notifications (${count} unread)` : 'Notifications'} data-testid="inbox-bell" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100">
           <Bell size={20} strokeWidth={2.5} />
