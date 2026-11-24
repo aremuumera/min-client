@@ -1,6 +1,7 @@
 "use client";
 
 import { WorkbenchLabels } from '@/components/traceability/workbench-labels';
+import { toApiError } from '@/lib/api/errors';
 import { WorkbenchResults, batchesMissingFindings } from '@/components/traceability/inspection-results-panel';
 import { WorkbenchRecords } from '@/components/traceability/subject-records';
 import { useGetRoundResultsQuery, useGetWindowQuery } from '@/redux/features/traceability/traceability_api';
@@ -101,12 +102,19 @@ export default function TradeWorkbenchPage() {
     }, [currentPhaseIndex, isCancelledOrRejected]);
 
     // SLA Calculation
+    // Decision #149: the report is due `report_sla_hours` after the site visit ends (+ the lab time while the job is in
+    // the lab), as the inspector commits on their limits page; before the visit, the same sum from the planned date
     const slaInfo = useMemo(() => {
-        if (!assignment?.scheduledDate) return { remaining: 48, status: 'good' as const };
-        const scheduled = new Date(assignment.scheduledDate);
+        const limits = profileRes?.data?.operational_limits;
+        const slaHours = limits?.report_sla_hours || 48;
+        const ms = (d: { max?: number; unit?: string } | null | undefined) => (Number(d?.max ?? 0) > 0 ? Number(d!.max) * (d!.unit === 'days' ? 86_400_000 : 3_600_000) : 0);
+        const ended = assignment?.siteVisitCompletedAt ? new Date(assignment.siteVisitCompletedAt).getTime() : null;
+        if (!ended && !assignment?.scheduledDate) return { remaining: slaHours, status: 'good' as const };
         const now = new Date();
-        const slaHours = profileRes?.data?.operational_limits?.report_sla_hours || 48;
-        const deadline = new Date(scheduled.getTime() + slaHours * 60 * 60 * 1000);
+        const start = ended
+            ? ended + (assignment?.status === 'LAB_ANALYSIS' ? ms(limits?.lab_duration) : 0)
+            : new Date(assignment.scheduledDate).getTime() + ms(limits?.onsite_duration) + ms(limits?.lab_duration);
+        const deadline = new Date(start + slaHours * 60 * 60 * 1000);
         const diff = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
         return {
             remaining: Math.max(0, Math.round(diff)),
@@ -131,7 +139,8 @@ export default function TradeWorkbenchPage() {
             toast.success(`Phase advanced to ${PHASES.find(p => p.id === pendingPhase)?.label || pendingPhase}`);
             refetch();
         } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to advance phase');
+            // e.g. "Accept the job…" / "Sign the assignment brief before you start the site visit" (decision #153)
+            toast.error(toApiError(error).message || 'Failed to advance phase');
         } finally {
             setIsConfirmOpen(false);
             setPendingPhase(null);
@@ -446,8 +455,14 @@ export default function TradeWorkbenchPage() {
                                 <div className="flex items-start gap-2">
                                     <MapPin size={14} className="text-emerald-600 shrink-0 mt-0.5" />
                                     <div className="flex-1">
-                                        <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Inspection Location</span>
-                                        <span className="text-xs font-bold text-gray-900 block">{assignment.inspectionLocation}{assignment.inspectionState ? `, ${assignment.inspectionState}` : ''}</span>
+                                        {(assignment.inquiry?.delivery_location || assignment.offer?.delivery_location) && (
+                                            <div className="mb-2 pb-2 border-b border-gray-200/60">
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Goods go to (delivery location)</span>
+                                                <span className="text-xs font-semibold text-gray-700 block">{[assignment.inquiry?.delivery_location || assignment.offer?.delivery_location, assignment.inquiry?.delivery_state || assignment.offer?.delivery_state].filter((p: string | null | undefined) => p && p !== 'N/A').join(', ')}</span>
+                                            </div>
+                                        )}
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase block mb-0.5">Inspection place (sampling address)</span>
+                                        <span className="text-xs font-bold text-gray-900 block">{[assignment.inspectionLocation, assignment.inspectionLGA, assignment.inspectionState].filter((p: string | null | undefined) => p && p !== 'N/A').join(', ')}</span>
                                         {assignment.site_contact_info && (
                                             <div className="mt-1 pt-1 border-t border-gray-200/60 text-[10px] text-gray-600 font-medium">
                                                 <span className="font-bold text-gray-700">Site Contact: </span>

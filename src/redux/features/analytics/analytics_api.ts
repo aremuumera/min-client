@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import type { FieldAggregate, NumberFields, PassportCompletenessAnalytics } from '@/lib/analytics';
+import type { Overview } from '@/lib/overview';
 import type { AlertsAnalytics, CertificatesAnalytics, ComplianceAnalytics, EsgCarbonAnalytics, HardwareAnalytics, InspectionsAnalytics, LogisticsAnalytics, MeasurementsAnalytics, SuppliersAnalytics, TraceabilityAnalytics, TradeAnalytics } from '@/lib/analytics';
 import baseQueryWithReauth from '@/redux/api/baseApi';
 
@@ -12,6 +13,8 @@ export const analyticsApi = createApi({
   reducerPath: 'analyticsApi',
   baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
+    /** The merchants overview (decisions #147 to #150): waiting for you, trade stages, recent trades, set-up */
+    getOverview: builder.query<{ success: boolean; data: Overview }, { from?: string; to?: string; limit?: number }>({ query: (q) => ({ url: '/overview', params: params(q as Query) }), keepUnusedDataFor: 30 }),
     getTradeAnalytics: builder.query<TradeAnalytics, Query>(view('trade')),
     getTraceabilityAnalytics: builder.query<TraceabilityAnalytics, Query>(view('traceability')),
     getLogisticsAnalytics: builder.query<LogisticsAnalytics, Query>(view('realtime-logistics')),
@@ -36,6 +39,7 @@ export const analyticsApi = createApi({
 });
 
 export const {
+  useGetOverviewQuery,
   useGetMyBlockchainIdentityQuery,
   useGetTradeAnalyticsQuery,
   useGetTraceabilityAnalyticsQuery,
