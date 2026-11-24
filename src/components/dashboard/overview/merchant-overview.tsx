@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { DropdownSelect } from '@/components/ui';
+import { AnnouncementStrip, DropdownSelect } from '@/components/ui';
 import { useAuthIdentity } from '@/hooks/use-auth-identity';
 import { canOpenArea, useActor } from '@/lib/permissions';
 import { useSse } from '@/lib/realtime/use-sse';
@@ -37,6 +37,16 @@ export function MerchantOverview() {
 
   return (
     <div className="space-y-6 pb-10" data-testid="merchant-overview">
+      {/* the premium strip (owner, 2026-11-24): owners only; × hides it until the page is reloaded */}
+      {!isTeamMember && (
+        <AnnouncementStrip
+          data-testid="premium-strip"
+          title="Premium is coming to MINMEG."
+          message="More team members, more storage and priority help from MINMEG."
+          actionLabel="See what's included"
+          actionHref={paths.pricing}
+        />
+      )}
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-3xl font-medium tracking-tight text-ink md:text-[34px]">Welcome back{user?.firstName ? `, ${user.firstName}` : ''}</h1>
