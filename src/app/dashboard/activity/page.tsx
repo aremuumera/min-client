@@ -166,7 +166,7 @@ export default function ActivityLogPage() {
                                 >
                                     {/* Action Icon Badge (Flat Border - No Shadow) */}
                                     <div className="absolute left-0 top-5 w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center z-10">
-                                        {getActivityIcon(currentActionType, "w-4 h-4")}
+                                        {getActivityIcon(currentActionType, "w-4 h-4", item.metadata)}
                                     </div>
 
                                     {/* Content Header */}

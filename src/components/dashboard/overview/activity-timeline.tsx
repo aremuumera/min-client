@@ -6,20 +6,20 @@ import { Typography } from '@/components/ui/typography';
 import { Bell } from 'lucide-react';
 import { dayjs } from '@/lib/dayjs';
 import { useGetActivitiesQuery } from '@/redux/features/activity/activityApi';
-import { useAppSelector } from '@/redux/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import {
     getActivityIcon,
     getActivityDescription,
-    getActivityActorName,
+    isAccountActivity,
 } from '@/utils/activity-helpers';
 
 export const ActivityTimeline = () => {
-    const { data, isLoading } = useGetActivitiesQuery({ limit: 5 });
-    const activities = data?.data || [];
+    // business events only (spec §9): sign-ins and notification settings stay in the full log
+    const { data, isLoading } = useGetActivitiesQuery({ limit: 15 });
+    type Entry = { action_type?: string; actionType?: string; action?: string };
+    const activities = (data?.data || []).filter((item: Entry) => !isAccountActivity(item.action_type || item.actionType || item.action || '')).slice(0, 5);
     const router = useRouter();
-    const { user } = useAppSelector((state) => state.auth);
 
     return (
         <Box className="bg-white border border-[#e5e7eb] rounded-xl p-5 flex flex-col">
@@ -57,7 +57,7 @@ export const ActivityTimeline = () => {
                             return (
                                 <div key={item.id} className="relative pl-7 group">
                                     <div className="absolute left-0 top-0.5 w-6 h-6 rounded-md border border-gray-200 bg-white flex items-center justify-center z-10">
-                                        {getActivityIcon(currentActionType, "w-3.5 h-3.5")}
+                                        {getActivityIcon(currentActionType, "w-3.5 h-3.5", item.metadata)}
                                     </div>
                                     <div className="flex flex-col">
                                          <p className="text-xs font-medium text-gray-900 leading-snug">

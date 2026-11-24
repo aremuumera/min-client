@@ -66,6 +66,11 @@ export const inspectorApi = createApi({
       ],
     }),
 
+    /** The inspector's overview (decisions #147 to #149) */
+    getInspectorOverview: builder.query<{ success: boolean; data: import('@/lib/overview').InspectorOverview }, { from?: string; to?: string; today?: string; limit?: number }>({
+      query: (q) => ({ url: '/inspector/overview', params: Object.fromEntries(Object.entries(q).filter(([, v]) => v !== undefined && v !== '')) }),
+      providesTags: ['InspectorAssignments'],
+    }),
     getInspectorStats: builder.query<any, void>({
       query: () => "/inspector/dashboard/stats",
     }),
@@ -242,6 +247,7 @@ export const inspectorApi = createApi({
 });
 
 export const {
+  useGetInspectorOverviewQuery,
   useGetAllInspectorsQuery,
   useCreateInspectorCompanyMutation,
   useToggleInspectorStatusMutation,
