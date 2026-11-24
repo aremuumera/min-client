@@ -342,6 +342,41 @@ export const customerTradeChatService = {
   },
 
   /**
+   * Decision #146: the buyer keeps one thread with MINMEG for the whole room. Each cycle still stores its
+   * own buyer thread (so a supplier never sees another cycle); this merges them, oldest cycle first, in
+   * time order, with a divider where another supplier's cycle starts. `cycleIds` run oldest → newest.
+   */
+  getRoomBuyerMessages(
+    tradeId: string,
+    cycleIds: string[],
+    callback: (messages: TradeMessage[]) => void,
+    errorCallback?: (error: unknown) => void,
+  ) {
+    const byCycle = new Map<string, TradeMessage[]>();
+    const millis = (m: TradeMessage) => (m.timestamp?.toMillis ? m.timestamp.toMillis() : new Date(m.timestamp ?? 0).getTime());
+    const emit = () => {
+      const merged: TradeMessage[] = [];
+      cycleIds.forEach((cycleId, index) => {
+        const list = byCycle.get(cycleId) ?? [];
+        if (index > 0 && list.length) {
+          const first = millis(list[0]);
+          merged.push({ id: `cycle-start:${cycleId}`, sender_id: 'system', sender_role: 'system', sender_display: 'MINMEG', sender_name: 'MINMEG', text: `Trade cycle ${index + 1} · another supplier`, timestamp: new Date(first - 1), type: 'system', meta: { type: 'cycle_start' } } as TradeMessage & { meta: { type: string } });
+        }
+        merged.push(...list);
+      });
+      merged.sort((a, b) => millis(a) - millis(b));
+      callback(merged);
+    };
+    const stops = cycleIds.map((cycleId) =>
+      this.getSpokeMessages(tradeId, cycleId, "admin_buyer", (messages) => {
+        byCycle.set(cycleId, messages);
+        emit();
+      }, errorCallback),
+    );
+    return () => stops.forEach((stop) => stop());
+  },
+
+  /**
    * Send a message to the admin (via the user's spoke)
    */
   async sendMessage(
