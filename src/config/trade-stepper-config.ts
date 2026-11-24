@@ -120,7 +120,7 @@ export const MAIN_TRADE_PHASES = [
 ] as const;
 
 export const BUYER_PRODUCT_STEPPER: RoleStepDefinition[] = [
-  { step: 1, title: 'Inquiry Placed', matchingKeys: ['PENDING', 'ACKNOWLEDGED'], description: 'Buyer submitted inquiry with quantity, location, grade & delivery timeframe' },
+  { step: 1, title: 'Inquiry Placed', matchingKeys: ['PENDING', 'ACKNOWLEDGED', 'REJECTED'], description: 'Buyer submitted inquiry with quantity, location, grade & delivery timeframe' },
   { step: 2, title: 'Procedural Documents Received', matchingKeys: ['BUYER_PROCEDURE_SENT', 'BUYER_PROCEDURE_ACCEPTED', 'SUPPLIER_TRADE_BRIEF_SENT', 'SUPPLIER_TRADE_BRIEF_ACCEPTED'], description: 'Admin sent procedural guide, T&C, and purchasing guidelines' },
   { step: 3, title: 'Trade Information Received', matchingKeys: ['FINAL_TRADE_PACK_SENT', 'FINAL_TRADE_PACK_ACCEPTED'], description: 'Received final trade document with confirmed specs, pricing & inspection scope' },
   { step: 4, title: 'Payment Mode Selected', matchingKeys: ['PAYMENT_MODE_SELECTED', 'INSPECTION_PAYMENT_PENDING', 'PRODUCT_DEPOSIT_PENDING', 'PRODUCT_PAYMENT_PENDING'], description: 'Buyer selected payment mode (full payment, inspection-only upfront, or part payment) for trade' },

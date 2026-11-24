@@ -194,7 +194,8 @@ function SidebarContent({
           conversationCounts={conversationCounts}
         />
       </Stack>
-      <Stack spacing={2} style={{ flex: '1 1 auto', overflowY: 'auto', padding: '0.5rem' }}>
+      {/* scrolls without showing a scroll bar (owner, 2026-11-24) */}
+      <Stack spacing={2} className="no-scrollbar" style={{ flex: '1 1 auto', overflowY: 'auto', padding: '0.5rem' }}>
         <Stack
           component="ul"
           spacing={1}

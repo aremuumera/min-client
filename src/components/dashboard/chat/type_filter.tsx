@@ -1,63 +1,75 @@
+'use client';
+
 import * as React from 'react';
-import { Box } from '@/components/ui/box';
-import { Stack } from '@/components/ui/stack';
-import { Typography } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/utils/helper';
 
-const FilterTab = ({ active, children, onClick }: any) => (
-    <Box
-        onClick={onClick}
-        className={`cursor-pointer px-3 py-1 rounded-lg text-xs transition-colors duration-200 ${active ? 'font-bold bg-emerald-600 text-white! shadow-sm' : 'font-medium bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
-    >
-        {children}
-    </Box>
-);
+/*
+ * The chat list's filter tabs. Sized so all five fit the chat list on one line (owner, 2026-11-24: "Admin" was
+ * cut off); where they still don't fit, the row scrolls sideways and fades at the edge that has more. Flat, no shadow.
+ */
+export type ConversationType = 'all' | 'product' | 'rfq' | 'business' | 'admin';
 
-// const FilterTab = styled(({ active, ...props }) => (
-//   <Box {...props} />
-// ))(({ theme, active }) => ({
-//   cursor: 'pointer',
-//   padding: theme.spacing(1, 1.5),
-//   borderRadius: theme.shape.borderRadius,
-//   fontSize: '0.75rem',
-//   fontWeight: active ? 600 : 400,
-//   backgroundColor: active ? theme.palette.action.selected : 'transparent',
-//   '&:hover': {
-//     backgroundColor: theme.palette.action.hover,
-//   },
-// }));
+interface ConversationTypeFilterProps {
+  selectedType: ConversationType | string;
+  onTypeChange: (type: ConversationType) => void;
+  conversationCounts: Partial<Record<ConversationType, number>>;
+}
 
-export function ConversationTypeFilter({ selectedType, onTypeChange, conversationCounts }: any) {
-    const types = [
-        { value: 'all', label: 'All', count: conversationCounts.all },
-        { value: 'product', label: 'Product', count: conversationCounts.product },
-        { value: 'rfq', label: 'RFQ', count: conversationCounts.rfq },
-        { value: 'business', label: 'Business', count: conversationCounts.business },
-        { value: 'admin', label: 'Admin', count: conversationCounts.admin },
-    ];
+const TYPES: { value: ConversationType; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'product', label: 'Product' },
+  { value: 'rfq', label: 'RFQ' },
+  { value: 'business', label: 'Business' },
+  { value: 'admin', label: 'Admin' },
+];
 
-    return (
-        <Stack
-            direction="row"
-            spacing={1}
-            className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pt-1"
-        >
-            {types.map((type) => (
-                <FilterTab
-                    key={type.value}
-                    active={selectedType === type.value}
-                    onClick={() => onTypeChange(type.value)}
-                >
-                    <Box className="flex items-center gap-2">
-                        <Typography variant="body2" className={`${selectedType === type.value ? 'text-white!' : ''}`}>{type.label}</Typography>
-                        {type.count > 0 && (
-                            <Badge variant="primary" pill className="text-[10px] px-1 h-4">
-                                {type.count}
-                            </Badge>
-                        )}
-                    </Box>
-                </FilterTab>
-            ))}
-        </Stack>
-    );
+export function ConversationTypeFilter({ selectedType, onTypeChange, conversationCounts }: ConversationTypeFilterProps) {
+  const rowRef = React.useRef<HTMLDivElement>(null);
+  const [fadeRight, setFadeRight] = React.useState(false);
+
+  const measure = React.useCallback(() => {
+    const el = rowRef.current;
+    if (el) setFadeRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 4);
+  }, []);
+
+  React.useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [measure]);
+
+  return (
+    <div className="relative pt-1">
+      <div ref={rowRef} role="tablist" aria-label="Filter chats" onScroll={measure} className="no-scrollbar flex w-full gap-1 overflow-x-auto">
+        {TYPES.map((type) => {
+          const active = selectedType === type.value;
+          const count = conversationCounts[type.value] ?? 0;
+          return (
+            <button
+              key={type.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onTypeChange(type.value)}
+              className={cn(
+                'inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 text-[13px] transition-colors',
+                active ? 'bg-primary font-semibold text-on-primary' : 'bg-surface-soft font-medium text-slate hover:bg-hairline-soft'
+              )}
+            >
+              {type.label}
+              {count > 0 && (
+                <Badge variant="primary" pill className="h-4 px-1 text-[10px]">
+                  {count}
+                </Badge>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {fadeRight && <span className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-surface to-transparent" aria-hidden />}
+    </div>
+  );
 }
