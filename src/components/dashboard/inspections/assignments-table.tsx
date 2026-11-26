@@ -52,7 +52,71 @@ export default function AssignmentsTable({ assignments }: { assignments: Job[] }
 
     return (
         <div className="space-y-4">
-            <div className="overflow-x-auto">
+            {/* Phones (owner, 2026-11-26): one card per job, the same fields as the table */}
+            <ul className="space-y-3 md:hidden">
+                {assignments.map((job) => {
+                    const isRfq = job.item_type === 'rfq';
+                    const productName = job.productName || job.product_name || (isRfq ? 'RFQ Request' : 'Product Inquiry');
+                    const locationStr = [job.inspectionLocation || job.location || job.delivery_location, job.inspectionState || job.delivery_state]
+                        .filter(Boolean)
+                        .filter(val => val !== 'N/A')
+                        .join(', ');
+                    const canOpenWorkbench = job.status !== 'ASSIGNED' && job.status !== 'REJECTED' && job.status !== 'CANCELLED';
+                    return (
+                        <li key={job.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+                            <div className="flex items-start justify-between gap-3">
+                                <p className="min-w-0 text-sm font-black text-neutral-900 break-words">{productName}</p>
+                                <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${getStatusStyles(job.status)}`}>
+                                    {job.status.replace(/_/g, ' ')}
+                                </span>
+                            </div>
+                            <div className="mt-1 min-w-0 overflow-hidden"><CopyableId id={job.id} /></div>
+                            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isRfq ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
+                                    {isRfq ? 'RFQ' : 'Product'}
+                                </span>
+                                {job.mineral_tag && job.mineral_tag !== 'N/A' && job.mineral_tag !== 'mineral' && (
+                                    <span className="max-w-full truncate text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200/60" title={job.mineral_tag}>
+                                        {job.mineral_tag}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="mt-3 space-y-1.5 text-xs font-bold text-neutral-700">
+                                <p className="flex items-center gap-1.5">
+                                    <Clock size={13} className="text-neutral-400 shrink-0" />
+                                    {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Flexible'}
+                                    {job.scheduledTime ? ` at ${formatTimeAmPm(job.scheduledTime)}` : ''}
+                                </p>
+                                <p className="flex items-center gap-1.5 min-w-0">
+                                    <MapPin size={13} className="text-neutral-400 shrink-0" />
+                                    <span className="truncate">{locationStr || 'Unspecified'}</span>
+                                </p>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedAssignment(job); setIsModalOpen(true); }}
+                                    className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-neutral-200 px-3 text-xs font-bold text-neutral-800 hover:bg-neutral-50"
+                                >
+                                    <Eye size={14} className="text-neutral-400" />
+                                    {job.status === 'ASSIGNED' ? 'View and respond' : 'View details'}
+                                </button>
+                                {canOpenWorkbench && (
+                                    <Link
+                                        href={paths.dashboard.inspections.workbench(job.id)}
+                                        className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-on-primary hover:opacity-90"
+                                    >
+                                        <Briefcase size={14} />
+                                        Open workbench
+                                    </Link>
+                                )}
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-neutral-50/60 border-b border-neutral-100">

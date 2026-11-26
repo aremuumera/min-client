@@ -98,7 +98,7 @@ export default function MyAssignmentsPage() {
             </div>
 
             {/* Stat Cards */}
-            <Grid container spacing={4} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Grid container spacing={4} className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <Card className="bg-white border-neutral-200">
                     <CardContent className="p-4">
                         <Typography variant="caption" className="text-neutral-500 font-bold uppercase tracking-wider">Total Jobs</Typography>
