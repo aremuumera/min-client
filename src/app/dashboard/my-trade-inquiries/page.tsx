@@ -36,6 +36,7 @@ import { Menu, MenuItem } from '@/components/ui/menu';
 import { Button } from '@/components/ui/button';
 import { CopyableId, DropdownSelect, PageHeader, PaginationBar } from '@/components/ui';
 import { myInquiriesHelp } from '@/lib/help/trades';
+import { ChatSetupNote, isChatReady } from '@/components/dashboard/trade/chat-setup-note';
 
 function useDebounced<T>(value: T, ms = 300): T {
     const [v, setV] = React.useState(value);
@@ -233,7 +234,7 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                         <div className="grid grid-cols-1 gap-1">
                             {Object.entries(inquiry).map(([key, value]) => {
                                 if (typeof value !== 'string' && typeof value !== 'number') return null;
-                                if (['id', 'external_id', 'status', 'mineral_tag', 'quantity', 'measure_type', 'delivery_location', 'delivery_state', 'delivery_country', 'delivery_address', 'timeline_type', 'createdAt', 'updatedAt', 'userId', 'supplierId', 'productId', 'product_id', 'entity_type', 'payment_plan', 'description', 'priority', 'recurring_frequency', 'recurring_duration', 'firebase_room_id', 'replaces_inquiry_id', 'replaced_by_inquiry_id'].includes(key)) return null;
+                                if (['id', 'external_id', 'status', 'mineral_tag', 'quantity', 'measure_type', 'delivery_location', 'delivery_state', 'delivery_country', 'delivery_address', 'timeline_type', 'createdAt', 'updatedAt', 'userId', 'supplierId', 'productId', 'product_id', 'entity_type', 'payment_plan', 'description', 'priority', 'recurring_frequency', 'recurring_duration', 'firebase_room_id', 'replaces_inquiry_id', 'replaced_by_inquiry_id', 'chat_room_ready_at', 'chat_room_closed_at', 'chat_room_closed_by', 'chat_hidden_at', 'chat_hidden_by'].includes(key)) return null;
                                 if (!value) return null;
                                 return (
                                     <div key={key} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-all">
@@ -260,14 +261,16 @@ const DetailDrawer = ({ isOpen, onClose, inquiry }: { isOpen: boolean; onClose: 
                         <Button variant="outlined" onClick={onClose} className="flex-1 rounded-xl py-3 font-bold border border-gray-200 hover:bg-gray-50 text-gray-700 transition-all text-xs">
                             Return
                         </Button>
-                        {!inquiry.replaced_by_inquiry_id && (
+                        {!inquiry.replaced_by_inquiry_id && (isChatReady(inquiry) ? (
                             <Link
                                 href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
                                 className="flex-1 bg-green-600 text-white rounded-xl flex items-center justify-center px-4 py-3 font-bold hover:bg-green-700 transition-all text-xs"
                             >
                                 Enter Trade Room
                             </Link>
-                        )}
+                        ) : (
+                            <ChatSetupNote className="flex-1 text-center" />
+                        ))}
                     </div>
                     {inquiry.product_id && (
                         <Link
@@ -620,12 +623,17 @@ export default function MyTradeInquiries() {
                                                         <Eye size={15} className="text-blue-500" />
                                                         <span className="font-bold text-xs">View Progress</span>
                                                     </MenuItem>
-                                                    {!inquiry.replaced_by_inquiry_id && (
+                                                    {!inquiry.replaced_by_inquiry_id && (isChatReady(inquiry) ? (
                                                         <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
                                                             <MessageSquare size={15} className="text-green-500" />
                                                             <span className="font-bold text-xs">Chat Room</span>
                                                         </MenuItem>
-                                                    )}
+                                                    ) : (
+                                                        <MenuItem disabled className="gap-2" title="Your chat is being set up. We will tell you when it is ready.">
+                                                            <MessageSquare size={15} className="text-gray-400" />
+                                                            <span className="font-bold text-xs text-gray-500">Chat being set up</span>
+                                                        </MenuItem>
+                                                    ))}
                                                 </Menu>
                                             </TableCell>
                                         </TableRow>

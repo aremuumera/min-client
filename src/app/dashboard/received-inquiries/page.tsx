@@ -43,6 +43,7 @@ import { toast } from '@/components/core/toaster';
 import { CopyableId, DropdownSelect, PageHeader, PaginationBar, useConfirm } from '@/components/ui';
 import { toApiError } from '@/lib/api/errors';
 import { receivedInquiriesHelp } from '@/lib/help/trades';
+import { ChatSetupNote, isChatReady } from '@/components/dashboard/trade/chat-setup-note';
 
 function useDebounced<T>(value: T, ms = 300): T {
     const [v, setV] = React.useState(value);
@@ -446,10 +447,17 @@ export default function ReceivedTradeInquiries() {
                                                     align="end"
                                                     usePortal={true}
                                                 >
-                                                    <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
-                                                        <MessageSquare size={15} className="text-green-500" />
-                                                        <span className="font-bold text-xs">Open Chat Room</span>
-                                                    </MenuItem>
+                                                    {isChatReady(inquiry) ? (
+                                                        <MenuItem as={Link} href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`} className="gap-2">
+                                                            <MessageSquare size={15} className="text-green-500" />
+                                                            <span className="font-bold text-xs">Open Chat Room</span>
+                                                        </MenuItem>
+                                                    ) : (
+                                                        <MenuItem disabled className="gap-2" title="Your chat is being set up. We will tell you when it is ready.">
+                                                            <MessageSquare size={15} className="text-gray-400" />
+                                                            <span className="font-bold text-xs text-gray-500">Chat being set up</span>
+                                                        </MenuItem>
+                                                    )}
 
                                                     {(inquiry.status || '').toLowerCase() === 'pending' && (
                                                         <MenuItem onClick={() => handleAcknowledge(inquiry.external_id)} className="gap-2 text-green-600">

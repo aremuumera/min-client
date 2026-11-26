@@ -6,7 +6,8 @@
  * Uses the `trade_rooms` Firebase collection with Hub-and-Spoke architecture.
  */
 
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
+import AxiosInstance from "@/lib/axios-instance";
 import {
   addDoc,
   collection,
@@ -23,7 +24,6 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { chatNotificationService } from "./chat_notif_service";
 import { logger } from "@/utils/logger";
 import { mergeFeeds, watchFeed, type Feed, type FeedState } from "./firestore-feed";
@@ -553,100 +553,27 @@ export const customerTradeChatService = {
   },
 
   /**
-   * Upload an attachment directly to Firebase Storage
+   * Send a chat file through the MINMEG backend (fix 2C): only the trade's parties may send one, and the
+   * backend checks what the file really is (not its name), re-encodes pictures and scans for viruses.
+   * The file no longer goes from the browser to Firebase Storage or to an open Cloudinary preset.
+   * `cycleId` is the inquiry or offer (or the store inquiry, for a business chat).
    */
   async uploadAttachment(
     file: File,
-    tradeId: string,
-    inquiryId: string,
-    spoke: UserSpokeType,
+    cycleId: string,
+    kind: "trade" | "business" = "trade",
   ): Promise<{ url: string; name: string; type: string }> {
-    if (!tradeId || !inquiryId || !spoke) {
-      throw new Error("uploadAttachment: Missing tradeId, inquiryId, or spoke");
-    }
-    const id = this._sanitizeId(tradeId);
-    const inqId = this._sanitizeId(inquiryId);
-
-    // Robust type detection
-    let type = "file";
-    const mimeType = file.type?.toLowerCase() || "";
-    const fileName = file.name?.toLowerCase() || "";
-
-    if (
-      mimeType.startsWith("image/") ||
-      /\.(jpg|jpeg|png|gif|webp|heic|jfif)$/i.test(fileName)
-    ) {
-      type = "image";
-    } else if (
-      mimeType.startsWith("video/") ||
-      /\.(mp4|webm|ogg|mov)$/i.test(fileName)
-    ) {
-      type = "video";
-    } else if (
-      mimeType.startsWith("audio/") ||
-      /\.(mp3|wav|ogg|webm|m4a|aac)$/i.test(fileName)
-    ) {
-      type = "audio";
-    }
-
+    if (!cycleId) throw new Error("uploadAttachment: missing the trade");
+    const form = new FormData();
+    form.append("file", file);
+    const path = kind === "business" ? "business-chat" : "chat";
     try {
-      const filePath = `trade_rooms/${id}/${inqId}/${spoke}/${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, filePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      const downloadUrl = await new Promise<string>((resolve, reject) => {
-        uploadTask.on(
-          "state_changed",
-          null,
-          (error) => reject(error),
-          async () => {
-            const url = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(url);
-          },
-        );
-      });
-
-      return {
-        url: downloadUrl,
-        name: file.name,
-        type,
-      };
-    } catch (firebaseErr: any) {
-      console.warn(
-        "[TradeChat] Firebase Storage upload unavailable, routing asset upload to Cloudinary:",
-        firebaseErr?.message || firebaseErr
-      );
-
-      try {
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dof6efau4";
-        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "min_default";
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", uploadPreset);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => null);
-          throw new Error(errData?.error?.message || `Upload failed with status ${res.status}`);
-        }
-
-        const data = await res.json();
-        const url = data.secure_url || data.url;
-
-        return {
-          url,
-          name: file.name,
-          type,
-        };
-      } catch (cloudinaryErr: any) {
-        console.error("Error uploading trade asset via Cloudinary fallback:", cloudinaryErr);
-        throw new Error(cloudinaryErr?.message || "Failed to upload file");
-      }
+      const res = await AxiosInstance.post(`/trade/${path}/${encodeURIComponent(cycleId)}/attachments`, form);
+      const data = res.data?.data as { url: string; name: string; type: string };
+      return { url: data.url, name: data.name, type: data.type };
+    } catch (error) {
+      const body = (error as { response?: { data?: { message?: string; error?: { message?: string } } } })?.response?.data;
+      throw new Error(body?.error?.message || body?.message || "The file could not be sent. Try again.");
     }
   },
 
