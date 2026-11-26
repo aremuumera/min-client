@@ -291,7 +291,7 @@ export default function OperationalLimitsPage() {
                                             max: Math.max(newMin, limits.onsite_duration.max)
                                         });
                                     }}
-                                    className="flex-1 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
+                                    className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
                                 />
                                 <input
                                     type="number"
@@ -304,12 +304,12 @@ export default function OperationalLimitsPage() {
                                             max: Math.max(limits.onsite_duration.min, newMax)
                                         });
                                     }}
-                                    className="flex-1 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
+                                    className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
                                 />
                                 <select
                                     value={limits.onsite_duration.unit}
                                     onChange={(e) => updateField('onsite_duration', { ...limits.onsite_duration, unit: e.target.value })}
-                                    className="w-24 h-10 px-2 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 bg-white transition-colors"
+                                    className="w-24 shrink-0 h-10 px-2 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 bg-white transition-colors"
                                 >
                                     <option value="hours">Hours</option>
                                     <option value="days">Days</option>
@@ -337,7 +337,7 @@ export default function OperationalLimitsPage() {
                                             max: Math.max(newMin, limits.lab_duration.max)
                                         });
                                     }}
-                                    className="flex-1 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
+                                    className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
                                 />
                                 <input
                                     type="number"
@@ -350,12 +350,12 @@ export default function OperationalLimitsPage() {
                                             max: Math.max(limits.lab_duration.min, newMax)
                                         });
                                     }}
-                                    className="flex-1 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
+                                    className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
                                 />
                                 <select
                                     value={limits.lab_duration.unit}
                                     onChange={(e) => updateField('lab_duration', { ...limits.lab_duration, unit: e.target.value })}
-                                    className="w-24 h-10 px-2 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 bg-white transition-colors"
+                                    className="w-24 shrink-0 h-10 px-2 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 bg-white transition-colors"
                                 >
                                     <option value="hours">Hours</option>
                                     <option value="days">Days</option>
@@ -403,7 +403,7 @@ export default function OperationalLimitsPage() {
                             value={newEquipment}
                             onChange={(e) => setNewEquipment(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && addEquipment()}
-                            className="flex-1 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
+                            className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-neutral-200 text-sm outline-none focus:border-primary-500 transition-colors"
                         />
                         <Button variant="outlined" color="primary" onClick={addEquipment} startIcon={<Plus className="w-4 h-4" />}>
                             Add

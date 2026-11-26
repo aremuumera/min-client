@@ -56,6 +56,39 @@ import {
 } from '@/redux/features/doc-hub/doc_hub_api';
 import { cn } from '@/utils/helper';
 
+
+/**
+ * How the document got here, at a glance (owner, 2026-11-26): each earlier version's flag or rejection, then the
+ * current version's state, read from the audit trail the API sends (each entry carries its version_number).
+ */
+const ROLE_WORD: Record<string, string> = { buyer: 'buyer', supplier: 'supplier', inspector: 'inspector', admin: 'MINMEG' };
+interface TrailEntry { version_number?: number; action?: string; signer_role?: string }
+function VersionHistoryLine({ doc }: { doc: { version_number?: number; status: string; target_roles?: string[]; audit_trail?: TrailEntry[] } }) {
+    const trail: TrailEntry[] = Array.isArray(doc.audit_trail) ? doc.audit_trail : [];
+    const current = Number(doc.version_number ?? 1);
+    const earlier = trail.filter((t) => Number(t.version_number ?? current) < current && ['flagged', 'rejected'].includes(String(t.action)));
+    const signedNow = trail.filter((t) => Number(t.version_number ?? current) === current && ['accepted', 'signed'].includes(String(t.action))).length;
+    const targets = Array.isArray(doc.target_roles) ? doc.target_roles.length : 1;
+    if (current < 2 && !['flagged', 'rejected'].includes(doc.status) && !(doc.status === 'sent' && signedNow > 0)) return null;
+    const steps = earlier.map((t) => `v${t.version_number} ${t.action} by the ${ROLE_WORD[t.signer_role ?? ''] ?? t.signer_role}`);
+    const now =
+        doc.status === 'signed' ? `v${current} signed${targets > 1 ? ' by both' : ''}`
+            : doc.status === 'flagged' ? `v${current} flagged: MINMEG is revising it`
+                : doc.status === 'rejected' ? `v${current} rejected: MINMEG is preparing a new version`
+                    : signedNow > 0 && signedNow < targets ? `v${current} signed by ${signedNow} of ${targets}: waiting for the other party`
+                        : `v${current} sent, waiting for signature`;
+    return (
+        <p className="mt-1 flex flex-wrap items-center gap-1 text-[10px] font-medium text-gray-600" aria-label="Version history">
+            {[...steps, now].map((step, i) => (
+                <React.Fragment key={i}>
+                    {i > 0 && <span aria-hidden className="text-gray-400">→</span>}
+                    <span className={cn('rounded border px-1.5 py-0.5', i < steps.length ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-gray-200 bg-gray-50')}>{step}</span>
+                </React.Fragment>
+            ))}
+        </p>
+    );
+}
+
 export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
     const [statusFilter, setStatusFilter] = React.useState('');
     const [selectedDocId, setSelectedDocId] = React.useState<string | null>(null);
@@ -289,6 +322,7 @@ export function DocumentVault({ inquiryId, itemType }: DocumentVaultProps) {
                                                                 {doc.template.description}
                                                             </p>
                                                         )}
+                                                        <VersionHistoryLine doc={doc} />
                                                     </div>
                                                 </div>
 

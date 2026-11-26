@@ -164,8 +164,9 @@ export default function InspectorProfilePage() {
     return (
         <div className="space-y-8 max-w-7xl pb-20 mx-auto">
             {/* Page Header */}
-            <div className="flex justify-between items-end px-4">
-                <div>
+            {/* on a phone the buttons go under the title (owner, 2026-11-26) */}
+            <div className="flex flex-col gap-3 px-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
                     <Typography variant="h4" className="font-bold tracking-tight text-neutral-900">
                         {viewMode === 'preview' ? "Public Profile Preview" : "Professional Profile"}
                     </Typography>
@@ -175,7 +176,7 @@ export default function InspectorProfilePage() {
                             : "Manage your mining inspection credentials and operational parameters."}
                     </Typography>
                 </div>
-                <Stack direction="row" spacing={2}>
+                <div className="flex flex-wrap gap-2">
                     <Button
                         variant={viewMode === 'preview' ? "contained" : "outlined"}
                         onClick={() => setViewMode(prev => prev === 'preview' ? 'manage' : 'preview')}
@@ -215,7 +216,7 @@ export default function InspectorProfilePage() {
                             </Button>
                         </Stack>
                     ))}
-                </Stack>
+                </div>
             </div>
 
             {viewMode === 'preview' ? (
@@ -574,8 +575,8 @@ export default function InspectorProfilePage() {
 
                             {/* Geographic Coverage & Specialties Section */}
                             <section className="space-y-4">
-                                <div className="flex justify-between items-start">
-                                    <div>
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="min-w-0">
                                         <Typography variant="h6" className="font-bold flex items-center gap-2 text-neutral-900">
                                             <Globe className="w-5 h-5 text-purple-600" />
                                             Geographic Coverage & Specialties

@@ -41,10 +41,14 @@ const CompanyDetailInfo = ({ products }: CompanyDetailInfoProps) => {
     );
   };
 
-  // Combine images and attachments for media view
+  // Combine images and attachments for media view: picture and video attachments only (documents are in the Attachments tab)
   const allMediaRaw = [
     ...(Array.isArray(images) ? images : []),
-    ...(Array.isArray(products?.attachments) ? products.attachments : []),
+    ...(Array.isArray(products?.attachments) ? products.attachments : []).filter((a: string | { url?: string; type?: string }) => {
+      const url = typeof a === 'string' ? a : a?.url;
+      if (typeof a === 'string') return /\.(png|jpe?g|webp|gif|mp4|webm|ogg|mov|m4v)(\?|$)/i.test(a);
+      return a?.type === 'image' || a?.type === 'video' || /\.(png|jpe?g|webp|gif|mp4|webm|ogg|mov|m4v)(\?|$)/i.test(String(url ?? ''));
+    }),
   ];
 
   // Normalize media items to {url, type} objects

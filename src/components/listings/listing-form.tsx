@@ -139,6 +139,15 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
   const usable = (batches.data?.data ?? []).filter((b) => canBackListing(b, unitId));
   const pickedTotal = usable.filter((b) => picked.has(b.id)).reduce((sum, b) => sum + toMicro(b.availableQuantity), BigInt(0));
   const siteOptions = (locations.data?.data ?? []).map((l) => ({ value: l.id, label: l.name }));
+  // "Add new origin site" in the dropdown (owner, 2026-11-26): the sites page opens in a new tab so the form is kept;
+  // back on this tab, the list is read again so the new site is there to pick
+  const openSites = () => window.open(sitesHref, '_blank', 'noopener,noreferrer');
+  const refetchSites = locations.refetch;
+  React.useEffect(() => {
+    const onFocus = () => void refetchSites();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refetchSites]);
 
   // A unit that doesn't measure the chosen material can't be saved
   React.useEffect(() => {
@@ -488,7 +497,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
                       <DropdownSelect id="listing-new-source" value={sourceType} onValueChange={setSourceType} options={batchOptions(REGISTER_SOURCES)} placeholder="Choose one" />
                     </FormField>
                     <FormField label="Origin site" htmlFor="listing-new-origin" optional info={FIELD_INFO.origin}>
-                      <DropdownSelect id="listing-new-origin" value={originId} onValueChange={setOriginId} options={siteOptions} placeholder="Not recorded" />
+                      <DropdownSelect id="listing-new-origin" value={originId} onValueChange={setOriginId} options={siteOptions} placeholder="Not recorded" action={{ label: 'Add new origin site', onSelect: openSites }} />
                     </FormField>
                     <FormField label="Physical form" htmlFor="listing-new-form" optional info={FIELD_INFO.physicalForm}>
                       <DropdownSelect id="listing-new-form" value={newForm} onValueChange={setNewForm} options={batchOptions(PHYSICAL_FORMS)} placeholder="Not recorded" />
@@ -628,7 +637,7 @@ export function ListingForm({ listing, ownerId, ownerField, ownerError, material
             <FormField label="Describe the payment terms" htmlFor="listing-payment-text" optional info={FIELD_INFO.paymentText}><Textarea id="listing-payment-text" value={paymentText} onChange={(e) => setPaymentText(e.target.value)} rows={2} maxLength={2000} /></FormField>
             <FormField label="Describe the shipping terms" htmlFor="listing-shipping-text" optional info={FIELD_INFO.shippingText}><Textarea id="listing-shipping-text" value={shippingText} onChange={(e) => setShippingText(e.target.value)} rows={2} maxLength={2000} /></FormField>
             <FormField label="Offered from" htmlFor="listing-site" info={FIELD_INFO.site} help={<>Needed to publish. Don&apos;t see it? <a href={sitesHref} target="_blank" rel="noopener noreferrer" className="text-brand-green-dark underline">Add a site</a>, then come back.</>}>
-              <DropdownSelect id="listing-site" value={siteId} onValueChange={setSiteId} options={siteOptions} placeholder="Not set" />
+              <DropdownSelect id="listing-site" value={siteId} onValueChange={setSiteId} options={siteOptions} placeholder="Not set" action={{ label: 'Add new site', onSelect: openSites }} />
             </FormField>
             <FormField label="Sold to" htmlFor="listing-scope" info={FIELD_INFO.tradeScope}>
               <DropdownSelect id="listing-scope" value={tradeScope} onValueChange={setTradeScope} options={[{ value: 'local', label: 'Local' }, { value: 'international', label: 'International' }, { value: 'both', label: 'Local and international' }]} />

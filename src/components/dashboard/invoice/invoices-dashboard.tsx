@@ -10,6 +10,7 @@ import { CircularProgress } from '@/components/ui/progress';
 import { Alert } from '@/components/ui/alert';
 import { Container } from '@/components/ui/container';
 import { Grid } from '@/components/ui/grid';
+import { StatTile } from '@/components/ui/stat-tile';
 import { IconButton } from '@/components/ui/icon-button';
 import { MenuItem } from '@/components/ui/menu';
 import { Paper } from '@/components/ui/paper';
@@ -158,29 +159,17 @@ export function InvoicesDashboard() {
                 </p>
             </div>
 
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Statistics: our flat stat tiles (owner, 2026-11-26), the same six figures as before */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
                 {[
-                    { label: 'Total', value: stats.total, icon: DescriptionIcon, color: 'text-gray-600', bg: 'bg-gray-50' },
-                    { label: 'Pending', value: stats.pending, icon: PendingIcon, color: 'text-amber-600', bg: 'bg-amber-50/50' },
-                    { label: 'Approved', value: stats.approved, icon: CheckCircleIcon, color: 'text-green-600', bg: 'bg-green-50/50' },
-                    { label: 'Inspection', value: stats.inInspection, icon: InspectionIcon, color: 'text-blue-600', bg: 'bg-blue-50/50' },
-                    { label: 'Completed', value: stats.completed, icon: TrendingUpIcon, color: 'text-green-700', bg: 'bg-green-50' },
-                    { label: 'Cancelled', value: stats.cancelled, icon: CancelIcon, color: 'text-red-600', bg: 'bg-red-50/50' },
+                    { label: 'Total', value: stats.total, icon: DescriptionIcon, hint: 'All agreements and invoices' },
+                    { label: 'Pending', value: stats.pending, icon: PendingIcon, hint: 'Waiting for approval' },
+                    { label: 'Approved', value: stats.approved, icon: CheckCircleIcon, hint: 'Ready to pay' },
+                    { label: 'Inspection', value: stats.inInspection, icon: InspectionIcon, hint: 'With the inspector' },
+                    { label: 'Completed', value: stats.completed, icon: TrendingUpIcon, hint: 'Paid and closed' },
+                    { label: 'Cancelled', value: stats.cancelled, icon: CancelIcon, hint: 'Withdrawn or refused' },
                 ].map((stat, idx) => (
-                    <Card key={idx} outlined className="overflow-hidden">
-                        <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", stat.bg, stat.color)}>
-                                    <stat.icon size={18} />
-                                </div>
-                                <div>
-                                    <div className="text-xl font-bold text-gray-900">{stat.value}</div>
-                                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{stat.label}</div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatTile key={stat.label} dark={idx === 0} label={stat.label} value={stat.value} hint={stat.hint} icon={<stat.icon size={18} />} />
                 ))}
             </div>
 
