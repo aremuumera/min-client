@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, Plus } from 'lucide-react';
 import { cn } from '@/utils/helper';
 import { Portal } from './portal';
 
@@ -31,6 +31,11 @@ export interface SelectOption {
   disabled?: boolean;
   isSelectable?: boolean;
   className?: string;
+}
+
+export interface SelectAction {
+  label: string;
+  onSelect: () => void;
 }
 
 export interface SelectProps {
@@ -68,6 +73,8 @@ export interface SelectProps {
   native?: boolean;
   /** Custom render function for the selected value */
   renderValue?: (value: string) => React.ReactNode;
+  /** A last row in the open list that is not a value, e.g. "Add new origin site" (owner, 2026-11-26) */
+  action?: SelectAction;
   /** Whether the select is open (controlled) */
   open?: boolean;
   /** Callback when select opens */
@@ -110,6 +117,7 @@ function Select({
   'aria-label': ariaLabel,
   'aria-invalid': ariaInvalid,
   'aria-describedby': ariaDescribedBy,
+  action,
 }: SelectProps) {
   const [internalIsOpen, setInternalIsOpen] = React.useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalIsOpen;
@@ -338,6 +346,24 @@ function Select({
                 </li>
               );
             })}
+            {action && (
+              <li role="presentation" className="border-t border-hairline">
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // before the list closes on blur
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsOpen(false);
+                    action.onSelect();
+                  }}
+                  className="flex min-h-[44px] w-full items-center gap-2 px-3 py-3 text-left text-sm font-medium text-brand-green-dark hover:bg-primary-50"
+                >
+                  <Plus className="h-4 w-4" aria-hidden />
+                  {action.label}
+                </button>
+              </li>
+            )}
           </ul>
         </Portal>
       )}

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Select } from './select';
+import { Select, type SelectAction } from './select';
 import { SearchableSelect } from './searchable-select';
 
 export interface DropdownSelectOption {
@@ -22,6 +22,8 @@ export interface DropdownSelectProps {
   /** Search box in the list. Default: on for lists longer than 8 */
   searchable?: boolean;
   className?: string;
+  /** A last row in the open list that is not a value, e.g. "Add new origin site" */
+  action?: SelectAction;
   'aria-label'?: string;
   'aria-invalid'?: boolean;
   'aria-describedby'?: string;
