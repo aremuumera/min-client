@@ -394,12 +394,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           activeConversation.itemType === 'trade';
 
         if (isTradeType) {
-          const spoke = customerTradeChatService.getUserSpoke(user?.role);
-          const conversationId = activeConversation.conversationId;
-
           try {
             if (!activeInquiryId) return null;
-            attachment = await customerTradeChatService.uploadAttachment(file, String(conversationId), activeInquiryId, activeConversation.userSpoke);
+            attachment = await customerTradeChatService.uploadAttachment(file, activeInquiryId, threadType === 'business' ? 'business' : 'trade');
           } catch (error: any) {
             console.error('Error uploading trade attachment:', error);
             toast.error(error?.message || 'Error uploading trade attachment');

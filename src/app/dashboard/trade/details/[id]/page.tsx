@@ -35,6 +35,7 @@ import { toast } from '@/components/core/toaster';
 import { cn } from '@/utils/helper';
 import { paths } from '@/config/paths';
 import { TradeStageTracker } from '@/components/dashboard/trade-stage-tracker';
+import { ChatSetupNote, isChatReady } from '@/components/dashboard/trade/chat-setup-note';
 
 export default function TradeDetailPage() {
     const params = useParams();
@@ -110,13 +111,17 @@ export default function TradeDetailPage() {
                             View Product Page
                         </Link>
                     )}
-                    <Link
-                        href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
-                        className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-700 transition-colors text-sm"
-                    >
-                        <MessageSquare size={16} />
-                        Open Trade Room
-                    </Link>
+                    {isChatReady(inquiry) ? (
+                        <Link
+                            href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
+                            className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-700 transition-colors text-sm"
+                        >
+                            <MessageSquare size={16} />
+                            Open Trade Room
+                        </Link>
+                    ) : (
+                        <ChatSetupNote />
+                    )}
                 </div>
             </div>
 
@@ -396,7 +401,7 @@ export default function TradeDetailPage() {
                             <p className="text-xs text-gray-600">
                                 {showQuantity(stock.allocationSummary.reserved, stock.unit?.symbol)} held, {showQuantity(stock.allocationSummary.committed, stock.unit?.symbol)} committed, of {showQuantity(stock.quantity, stock.unit?.symbol)}
                             </p>
-                            {inquiry.firebase_room_id && !inquiry.replaced_by_inquiry_id && (
+                            {inquiry.firebase_room_id && !inquiry.replaced_by_inquiry_id && isChatReady(inquiry) && (
                                 <Link href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}?tab=stock`} className="text-xs font-bold text-emerald-700 hover:underline">
                                     Open the Stock tab
                                 </Link>
@@ -485,13 +490,17 @@ export default function TradeDetailPage() {
                                     View Full Product Page
                                 </Link>
                             )}
-                            <Link
-                                href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
-                                className="w-full bg-white border border-gray-300 text-gray-900 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors block text-center"
-                            >
-                                <MessageSquare size={14} className="text-emerald-600" />
-                                Go to Trade Room
-                            </Link>
+                            {isChatReady(inquiry) ? (
+                                <Link
+                                    href={`/dashboard/chat/${inquiry.entity_type}/${inquiry.firebase_room_id}/${inquiry.external_id}`}
+                                    className="w-full bg-white border border-gray-300 text-gray-900 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors block text-center"
+                                >
+                                    <MessageSquare size={14} className="text-emerald-600" />
+                                    Go to Trade Room
+                                </Link>
+                            ) : (
+                                <ChatSetupNote className="w-full py-2.5" />
+                            )}
                         </div>
                     </div>
 

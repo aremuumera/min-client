@@ -43,6 +43,7 @@ import {
 import { Drawer } from '@/components/ui/drawer';
 import { Menu, MenuItem } from '@/components/ui/menu';
 import { Button } from '@/components/ui/button';
+import { ChatSetupNote, isChatReady } from '@/components/dashboard/trade/chat-setup-note';
 
 const StatusBadge = ({ status, isShortlisted }: { status: string; isShortlisted?: boolean }) => {
     if (isShortlisted && status !== 'accepted' && status !== 'rejected') {
@@ -265,12 +266,16 @@ const DetailDrawer = ({ isOpen, onClose, offer }: { isOpen: boolean; onClose: ()
                         <Button variant="outlined" onClick={onClose} className="flex-1 rounded-xl py-3 font-bold border border-gray-200 hover:bg-gray-50 text-gray-700 transition-all text-xs">
                             Return
                         </Button>
-                        <Link
-                            href={`/dashboard/chat/rfq/${offer.firebase_room_id}/${offer.rfq_id}`}
-                            className="flex-1 bg-green-600 text-white rounded-xl flex items-center justify-center px-4 py-3 font-bold hover:bg-green-700 transition-all text-xs"
-                        >
-                            Enter RFQ Room
-                        </Link>
+                        {isChatReady(offer) ? (
+                            <Link
+                                href={`/dashboard/chat/rfq/${offer.firebase_room_id}/${offer.rfq_id}`}
+                                className="flex-1 bg-green-600 text-white rounded-xl flex items-center justify-center px-4 py-3 font-bold hover:bg-green-700 transition-all text-xs"
+                            >
+                                Enter RFQ Room
+                            </Link>
+                        ) : (
+                            <ChatSetupNote className="flex-1 text-center" />
+                        )}
                     </div>
                 </div>
             </div>
@@ -528,14 +533,21 @@ export default function MySubmittedOffers() {
                                                         <Eye size={15} className="text-gray-600" />
                                                         <span className="font-bold text-xs">Review Bid</span>
                                                     </MenuItem>
-                                                    <MenuItem
-                                                        as={Link}
-                                                        href={`/dashboard/chat/rfq/${offer.firebase_room_id}/${offer.rfq_id}`}
-                                                        className="gap-2"
-                                                    >
-                                                        <MessageSquare size={15} className="text-green-500" />
-                                                        <span className="font-bold text-xs">RFQ Chat Room</span>
-                                                    </MenuItem>
+                                                    {isChatReady(offer) ? (
+                                                        <MenuItem
+                                                            as={Link}
+                                                            href={`/dashboard/chat/rfq/${offer.firebase_room_id}/${offer.rfq_id}`}
+                                                            className="gap-2"
+                                                        >
+                                                            <MessageSquare size={15} className="text-green-500" />
+                                                            <span className="font-bold text-xs">RFQ Chat Room</span>
+                                                        </MenuItem>
+                                                    ) : (
+                                                        <MenuItem disabled className="gap-2" title="Your chat is being set up. We will tell you when it is ready.">
+                                                            <MessageSquare size={15} className="text-gray-400" />
+                                                            <span className="font-bold text-xs text-gray-500">Chat being set up</span>
+                                                        </MenuItem>
+                                                    )}
                                                 </Menu>
                                             </TableCell>
                                         </TableRow>
