@@ -31,7 +31,7 @@ export const rfqApi = createApi({
         }),
         getAllRfq: builder.query({
             query: (params) => {
-                const { materialId, limit, page, sort, search, category, mainCategory, subCategory, measure, quantity, status } = params;
+                const { materialId, limit, page, sort, search, category, mainCategory, subCategory, measure, quantity, status, country, locationType, fulfillmentType } = params;
                 const queryParams = new URLSearchParams();
                 if (limit) queryParams.append('limit', limit.toString());
                 if (page) queryParams.append('page', page.toString());
@@ -44,6 +44,10 @@ export const rfqApi = createApi({
                 if (measure) queryParams.append('measure', measure);
                 if (quantity) queryParams.append('minQuantity', quantity);
                 if (status) queryParams.append('status', status);
+                // where the RFQ delivers to (ISO codes), the kind of site wanted, delivery or pickup (src/lib/marketplace-filters.ts)
+                if (country) queryParams.append('country', country);
+                if (locationType) queryParams.append('location_type', locationType);
+                if (fulfillmentType) queryParams.append('fulfillment_type', fulfillmentType);
 
                 return `/rfqs/all?${queryParams.toString()}`;
             },

@@ -53,7 +53,6 @@ export const dashboardConfig: DashboardConfig = {
           title: "Wallet",
           href: paths.dashboard.wallet,
           icon: "wallet",
-          badge: "Coming Soon",
           permission: "wallet",
         },
         {

@@ -4,6 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import { setPage, setFilter } from '@/redux/features/marketplace/marketplace_slice';
 import { useGetAllProductQuery } from '@/redux/features/supplier-products/products_api';
+import { listingFilterParams } from '@/lib/marketplace-filters';
 import NoProducts from '@/utils/no-products';
 import ProductSkeleton from '@/utils/skeleton/product-skeleton';
 import { useDispatch, useSelector } from 'react-redux';
@@ -102,20 +103,11 @@ const AllProductsView = () => {
       limit,
       page,
       category,
-      country: filters?.location,
       mainCategory,
       subCategory,
       search,
-      minPrice: filters?.minPrice,
-      maxPrice: filters?.maxPrice,
       sort,
-      supplierId: undefined, // ensure this is correct
-      profileId: undefined,
-      measure: filters?.measure,
-      quantity: filters?.quantity,
-      review: filters?.rating,
-      materialId: filters?.materialId,
-      locationType: filters?.locationType,
+      ...listingFilterParams(filters),
     },
     {
       refetchOnMountOrArgChange: true,

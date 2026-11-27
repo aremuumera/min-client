@@ -124,7 +124,8 @@ export function DynamicLayout({ children }: VerticalLayoutProps) {
                     if (section.key === 'dashboards') {
                         return {
                             ...section,
-                            items: section.items?.filter(item => ['overview'].includes(item.key))
+                            // the wallet: inspectors are paid their inspection fees through it (demo, 2026-11-26)
+                            items: section.items?.filter(item => ['overview', 'wallet'].includes(item.key))
                         };
                     }
                     if (section.key === 'general') {
