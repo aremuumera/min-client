@@ -43,6 +43,9 @@ export const supplierProductApi = createApi({
           review,
           materialId,
           locationType,
+          fulfillmentType,
+          currency,
+          minRating,
         } = params;
         const queryParams = new URLSearchParams();
         if (limit)
@@ -71,6 +74,10 @@ export const supplierProductApi = createApi({
         if (review) queryParams.append("review", review);
         if (materialId) queryParams.append("materialId", materialId);
         if (locationType) queryParams.append("location_type", locationType);
+        if (fulfillmentType) queryParams.append("fulfillment_type", fulfillmentType);
+        // a price range is compared in one currency (src/lib/marketplace-filters.ts)
+        if (currency) queryParams.append("currency", currency);
+        if (minRating) queryParams.append("minRating", String(minRating));
 
         return `/products/all?${queryParams.toString()}`;
       },

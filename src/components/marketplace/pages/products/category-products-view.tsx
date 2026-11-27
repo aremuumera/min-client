@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useRef } from 'react';
+import { listingFilterParams } from '@/lib/marketplace-filters';
 import { setPage } from '@/redux/features/marketplace/marketplace_slice';
 import { useGetAllProductQuery } from '@/redux/features/supplier-products/products_api';
 import ProductSkeleton from '@/utils/skeleton/product-skeleton';
@@ -39,20 +40,11 @@ const CategoryProductsView = ({ mainCategoryId }: CategoryProductsViewProps) => 
             limit,
             page,
             category,
-            country: filters?.location,
             mainCategory: mainCategoryId,
-            minPrice: filters?.minPrice,
-            maxPrice: filters?.maxPrice,
             subCategory,
             search,
             sort,
-            supplierId: undefined,
-            profileId: undefined,
-            measure: filters?.measure,
-            quantity: filters?.quantity,
-            review: filters?.rating,
-      materialId: filters?.materialId,
-      locationType: filters?.locationType,
+            ...listingFilterParams(filters),
         },
         {
             refetchOnMountOrArgChange: true,

@@ -1,79 +1,51 @@
-
 "use client";
 
 import { PLACE_LABELS } from '@/lib/listings';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { resetFilters, setFilter, setSort } from '@/redux/features/marketplace/marketplace_slice';
-import { useGetPublicMaterialsQuery } from '@/redux/features/listings/listings_api';
-import { DropdownSelect } from '@/components/ui';
-import { useDispatch, useSelector } from 'react-redux';
+import { useGetMarketplaceMaterialsQuery } from '@/redux/features/listings/listings_api';
+import { Button, DropdownSelect } from '@/components/ui';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/redux/hooks';
 import Link from 'next/link';
-import { usePathname, useRouter, useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAlert } from '@/providers/alert-provider';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { links, real, Category, SubCategory, countries } from '@/lib/marketplace-data';
+import { real } from '@/lib/marketplace-data';
+import { COUNTRY_CHOICES, FULFILMENT_CHOICES, PRICE_CURRENCIES, RFQ_VIEWS } from '@/lib/marketplace-filters';
 import { ChevronDown, ChevronUp, Search, X, Star } from 'lucide-react';
-
-// Assets
-const ca = '/assets/flag-ca.svg'; // Check assets
-const ru = '/assets/flag-ru.svg';
-const un = '/assets/flag-uk.svg';
-const us = '/assets/flag-us.svg';
 
 interface SideBarProps {
   variant?: 'desktop' | 'mobile';
   onClose?: () => void;
 }
 
-const SortBy = [
-  { value: 'price_asc', label: 'Price: Low to High', hasProd: true, hasRfq: false },
-  { value: 'price_desc', label: 'Price: High to Low', hasProd: true, hasRfq: false },
-  { value: 'newest', label: 'Newest Arrivals', hasProd: true, hasRfq: true },
-  { value: 'popular', label: 'Most Popular', hasProd: true, hasRfq: true },
+/* What each list can be sorted by (the backend's sort keys) */
+const SORTS = [
+  { value: 'newest', label: 'Newest', prod: true, rfq: true },
+  { value: 'price_asc', label: 'Price: low to high', prod: true, rfq: false },
+  { value: 'price_desc', label: 'Price: high to low', prod: true, rfq: false },
+  { value: 'deadline_asc', label: 'Closing soonest', prod: false, rfq: true },
+  { value: 'popular', label: 'Most viewed', prod: true, rfq: true },
 ];
 
-const storeReviews = [
-  //  { value: '4', img: '/assets/4-star.png' }, // Placeholder paths
-  // { value: '3', img: '/assets/3-star.png' },
-  // { value: '2', img: '/assets/2-star.png' },
-  // { value: '1', img: '/assets/1-star.png' },
-  { value: '5', label: '5 Stars' },
-  { value: '4', label: '4 Stars & Up' },
-  { value: '3', label: '3 Stars & Up' },
-  { value: '2', label: '2 Stars & Up' },
+const STORE_RATINGS = [
+  { value: '', label: 'Any rating', stars: 0 },
+  { value: '5', label: '5 stars', stars: 5 },
+  { value: '4', label: '4 stars & up', stars: 4 },
+  { value: '3', label: '3 stars & up', stars: 3 },
+  { value: '2', label: '2 stars & up', stars: 2 },
 ];
 
-const rfqChecks = [
-  { name: 'All', label: 'All' },
-  { name: 'pending', label: 'Pending' },
-  { name: 'open', label: 'Open' },
-  { name: 'closed', label: 'Closed' },
-  { name: 'quoted', label: 'Quoted' },
-  { name: 'expired', label: 'Expired' },
-];
+const SectionTitle = ({ children }: { children: React.ReactNode }) => <h2 className="mb-2 text-[0.95rem] font-semibold text-gray-900">{children}</h2>;
 
+/* The marketplace's categories and filters (listings and RFQs). The filters are sent by src/lib/marketplace-filters.ts */
 const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => {
   const isMobile = variant === 'mobile';
-  const router = useRouter();
   const pathname = usePathname();
-  const params = useParams(); // Note: params might not be available directly in component consistently in all next versions, but hook works.
-
-  // Extract params from pathname if useParams doesn't give them (App Router nuances)
-  // Or rely on useParams if configured correctly with dynamic segments.
-  // Assuming route is /dashboard/products/all-mineral-cp/[mainCategoryId]/[mineralCategoryId]/...
-  const mainCategoryId = params?.slug?.[0] || '';
-  const mineralCategoryId = params?.slug?.[1] || '';
-  const subMineralCategoryId = params?.slug?.[2] || '';
-
-  // Or better, let's look at how the page is structured. 
-  // If it's `src/app/dashboard/products/all-mineral-cp/[[...slug]]/page.tsx`, then slug is an array.
-
-  const mdUp = useMediaQuery('up', 'md');
   const { showAlert } = useAlert();
-  const publicMaterials = useGetPublicMaterialsQuery();
+  const materials = useGetMarketplaceMaterialsQuery();
 
-  const { limit, page, category, mainCategory, subCategory, filters, search, sort, supplierId, profileId } =
-    useSelector((state: any) => state.marketplace);
+  const { filters, sort } = useAppSelector((state) => state.marketplace);
 
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
@@ -81,44 +53,35 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   const dispatch = useDispatch();
 
   // Local UI states
-  const [locationSearchTerm, setLocationSearchTerm] = useState('');
-  const [filteredCountries, setFilteredCountries] = useState(countries);
-  const [minPrice, setMinPrice] = useState(filters.minPrice || '');
-  const [maxPrice, setMaxPrice] = useState(filters.maxPrice || '');
-
-  useEffect(() => {
-    if (locationSearchTerm) {
-      setFilteredCountries(
-        countries.filter((country) =>
-          country.name.toLowerCase().includes(locationSearchTerm.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredCountries(countries);
-    }
-  }, [locationSearchTerm]);
+  const [countrySearch, setCountrySearch] = useState('');
+  const [minPrice, setMinPrice] = useState<string>(filters.minPrice != null ? String(filters.minPrice) : '');
+  const [maxPrice, setMaxPrice] = useState<string>(filters.maxPrice != null ? String(filters.maxPrice) : '');
+  const [currency, setCurrency] = useState<string>(filters.currency || 'NGN');
 
   const prodCheck = pathname?.includes('/dashboard/products/all-mineral-cp');
   const rfqCheck = pathname?.includes('/dashboard/products/rfq-products');
 
-  const filteredSortOptions = SortBy.filter((option) => {
-    if (prodCheck) return option.hasProd;
-    if (rfqCheck) return option.hasRfq;
-    return true;
-  });
+  const sortOptions = SORTS.filter((o) => (rfqCheck ? o.rfq : o.prod));
+
+  // Chosen countries first, then the rest; search finds the short or the long name, or the code
+  const selectedCountries: string[] = useMemo(() => filters.countries ?? [], [filters.countries]);
+  const shownCountries = useMemo(() => {
+    const q = countrySearch.trim().toLowerCase();
+    const list = q ? COUNTRY_CHOICES.filter((c) => c.name.toLowerCase().includes(q) || c.otherName.toLowerCase().includes(q) || c.code.toLowerCase() === q) : COUNTRY_CHOICES;
+    return [...list.filter((c) => selectedCountries.includes(c.code)), ...list.filter((c) => !selectedCountries.includes(c.code))];
+  }, [countrySearch, selectedCountries]);
+
+  const setOne = (filterType: string, value: unknown) => dispatch(setFilter({ filterType, value }));
 
   const handleReset = () => {
     dispatch(resetFilters());
-    setLocationSearchTerm('');
-    setFilteredCountries(countries);
+    setCountrySearch('');
     setMinPrice('');
     setMaxPrice('');
+    setCurrency('NGN');
     setActiveCategory(null);
     setActiveSubCategory(null);
   };
-
-  // Import countries from library if available, otherwise mock or fetch
-  // For now I will assume countries are in `marketplace-data` or similar. I'll check imports later.
 
   const toggleCategory = (categoryId: number) => {
     setActiveCategory((prevActive) => (prevActive === categoryId ? null : categoryId));
@@ -130,57 +93,33 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
     setActiveSubCategory((prevActive) => (prevActive === combinedId ? null : combinedId));
   };
 
-  const handleLocationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    let newLocations = [...(filters.location || [])];
-
-    if (checked) {
-      if (!newLocations.includes(name)) {
-        newLocations.push(name);
-      }
-      if (isMobile) {
-        // handleClose();
-      }
-    } else {
-      newLocations = newLocations.filter((loc) => loc !== name);
-    }
-
-    dispatch(setFilter({ filterType: 'location', value: newLocations.length > 0 ? newLocations : null }));
+  const toggleCountry = (code: string, checked: boolean) => {
+    const next = checked ? [...new Set([...selectedCountries, code])] : selectedCountries.filter((c) => c !== code);
+    setOne('countries', next.length > 0 ? next : null);
   };
 
-  const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setSort(event.target.value));
-  };
-
-  const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    dispatch(setFilter({ filterType: 'rating', value: checked ? name : null }));
-  };
-
-  const handlePriceChange = () => {
-    const min = minPrice ? Number(minPrice) : null;
-    const max = maxPrice ? Number(maxPrice) : null;
-
-    if (min !== null && max !== null && min > max) {
-      showAlert('Minimum price cannot be greater than maximum price.', 'error');
+  // A price range is compared in one currency, the listing's own (src/lib/marketplace-filters.ts)
+  const applyPrice = () => {
+    const min = minPrice.trim() ? Number(minPrice) : null;
+    const max = maxPrice.trim() ? Number(maxPrice) : null;
+    if ((min !== null && (!Number.isFinite(min) || min < 0)) || (max !== null && (!Number.isFinite(max) || max < 0))) {
+      showAlert('Enter prices as numbers of 0 or more.', 'error');
       return;
     }
-
-    dispatch(setFilter({ filterType: 'minPrice', value: min }));
-    dispatch(setFilter({ filterType: 'maxPrice', value: max }));
-
+    if (min !== null && max !== null && min > max) {
+      showAlert('The lowest price cannot be more than the highest.', 'error');
+      return;
+    }
+    setOne('minPrice', min);
+    setOne('maxPrice', max);
+    setOne('currency', min === null && max === null ? null : currency);
     if (isMobile) onClose();
-  };
-
-  const handleRfqChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    dispatch(setFilter({ filterType: 'rfqsStatus', value: checked ? name : null }));
   };
 
   const hasActiveFilters = () => {
     if (sort !== null && sort !== '') return true;
     return Object.values(filters).some(
-      (value: any) => value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)
+      (value: unknown) => value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)
     );
   };
 
@@ -298,7 +237,7 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
   );
 
   return (
-    <div className={`h-full bg-white flex flex-col ${isMobile ? 'w-full' : 'w-72 border-r border-gray-100 shadow-sm'}`}>
+    <div className={`h-full bg-white flex flex-col ${isMobile ? 'w-full' : 'w-72 border-r border-gray-100'}`}>
       {isMobile && (
         <div className="flex justify-end p-2 border-b">
           <button onClick={onClose} aria-label="Close sidebar"><X size={24} /></button>
@@ -424,107 +363,115 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
         </div>
 
         {/* Filters */}
-        {/* RFQ Status Filter */}
         {rfqCheck && (
           <div className="mt-6">
-            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">RFQ Status</h2>
-            <div className="h-px bg-gray-200 mb-3"></div>
+            <SectionTitle>RFQ status</SectionTitle>
+            <div className="mb-3 h-px bg-gray-200"></div>
             <div className="space-y-2">
-              {rfqChecks.map((rfq) => (
-                <label key={rfq.name} className="flex items-center gap-2 text-sm cursor-pointer hover:text-green-600 group">
+              {RFQ_VIEWS.map((view) => (
+                <label key={view.value} className="group flex cursor-pointer items-center gap-2 text-sm hover:text-green-600">
                   <input
                     type="radio"
                     name="rfqStatus"
-                    value={rfq.name}
-                    checked={(filters.rfqsStatus || 'All') === rfq.name}
-                    onChange={handleRfqChange}
-                    className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300"
+                    value={view.value}
+                    checked={(filters.rfqsStatus || 'open') === view.value}
+                    onChange={() => setOne('rfqsStatus', view.value === 'open' ? null : view.value)}
+                    className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  <span className="text-gray-700 group-hover:text-green-600 font-medium">{rfq.label}</span>
+                  <span className="font-medium text-gray-700 group-hover:text-green-600">{view.label}</span>
                 </label>
               ))}
             </div>
           </div>
         )}
 
-        {/* Material Filter */}
-        {(
-          <div className="mt-6">
-            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Material</h2>
-            <DropdownSelect
-              aria-label="Material"
-              searchable
-              value={filters.materialId ?? ''}
-              onValueChange={(value) => dispatch(setFilter({ filterType: 'materialId', value: value || null }))}
-              options={(publicMaterials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))}
-              placeholder="All materials"
-            />
-          </div>
-        )}
-
-        {/* Mine, warehouse... (the kind of site the goods are offered from) */}
         <div className="mt-6">
-          <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Offered from</h2>
+          <SectionTitle>Material</SectionTitle>
           <DropdownSelect
-            aria-label="Offered from"
+            aria-label="Material"
+            searchable
+            value={filters.materialId ?? ''}
+            onValueChange={(value) => setOne('materialId', value || null)}
+            options={(materials.data?.data ?? []).map((m) => ({ value: m.id, label: m.name }))}
+            placeholder="All materials"
+          />
+        </div>
+
+        {/* Mine, warehouse... (the kind of site the goods are offered from, or the buyer wants them from) */}
+        <div className="mt-6">
+          <SectionTitle>{rfqCheck ? 'Wanted from' : 'Offered from'}</SectionTitle>
+          <DropdownSelect
+            aria-label={rfqCheck ? 'Wanted from' : 'Offered from'}
             value={filters.locationType ?? ''}
-            onValueChange={(value) => dispatch(setFilter({ filterType: 'locationType', value: value || null }))}
+            onValueChange={(value) => setOne('locationType', value || null)}
             options={Object.entries(PLACE_LABELS).map(([value, label]) => ({ value, label }))}
             placeholder="Any site"
           />
         </div>
 
-        {/* Location Filter */}
         <div className="mt-6">
-          <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-3">Location</h2>
+          <SectionTitle>Delivery or pickup</SectionTitle>
+          <DropdownSelect
+            aria-label="Delivery or pickup"
+            value={filters.fulfillment ?? ''}
+            onValueChange={(value) => setOne('fulfillment', value || null)}
+            options={FULFILMENT_CHOICES}
+            placeholder="Either"
+          />
+        </div>
+
+        {/* Countries: where the goods are (listings) or where the RFQ delivers to */}
+        <div className="mt-6">
+          <SectionTitle>{rfqCheck ? 'Delivery to' : 'Where the goods are'}</SectionTitle>
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
             <input
               type="text"
-              placeholder="Search location..."
-              value={locationSearchTerm}
-              onChange={(e) => setLocationSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+              aria-label="Search countries"
+              placeholder="Search countries..."
+              value={countrySearch}
+              onChange={(e) => setCountrySearch(e.target.value)}
+              className="w-full rounded-md border border-gray-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
             />
           </div>
-          <div className="max-h-[160px] overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1.5 scrollbar-hide bg-gray-50/30 font-medium">
-            {filteredCountries.map((country: any) => (
-              <label key={country.name} className="flex items-center gap-2.5 text-sm cursor-pointer hover:bg-white p-1.5 rounded-md transition-all group group-hover:shadow-sm">
+          {selectedCountries.length > 0 && (
+            <p className="mb-2 text-xs text-gray-500">
+              {selectedCountries.length} selected ·{' '}
+              <button type="button" className="text-green-600 underline hover:text-green-700" onClick={() => setOne('countries', null)}>
+                any country
+              </button>
+            </p>
+          )}
+          <div className="custom-thin-scrollbar max-h-[200px] space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/30 p-2">
+            {shownCountries.map((country) => (
+              <label key={country.code} className="group flex cursor-pointer items-center gap-2.5 rounded-md p-1.5 text-sm hover:bg-white">
                 <input
                   type="checkbox"
-                  name={country.name}
-                  checked={filters.location?.includes(country.name) || false}
-                  onChange={handleLocationChange}
-                  className="w-4 h-4 rounded text-green-600 focus:ring-green-500 border-gray-300"
+                  checked={selectedCountries.includes(country.code)}
+                  onChange={(e) => toggleCountry(country.code, e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                 />
-                <div className="flex items-center gap-2">
-                  {country.flag && (
-                    <img src={country.flag} alt={`${country.name} flag`} className="w-5 h-3.5 object-cover rounded shadow-sm border border-gray-100" />
-                  )}
-                  <span className="text-gray-700 group-hover:text-green-700">{country.name}</span>
-                </div>
+                <span aria-hidden="true">{country.flag}</span>
+                <span className="text-gray-700 group-hover:text-green-700">{country.name}</span>
               </label>
             ))}
-            {filteredCountries.length === 0 && (
-              <div className="text-center text-gray-400 py-6 text-xs italic">No locations found</div>
-            )}
+            {shownCountries.length === 0 && <div className="py-6 text-center text-xs italic text-gray-400">No country found</div>}
           </div>
         </div>
 
-        {/* Sort By Filter */}
         <div className="mt-6">
-          <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Sort By</h2>
-          <div className="h-px bg-gray-200 mb-3"></div>
+          <SectionTitle>Sort by</SectionTitle>
+          <div className="mb-3 h-px bg-gray-200"></div>
           <div className="space-y-2">
-            {filteredSortOptions.map((option) => (
-              <label key={option.value} className="flex items-center gap-2 text-sm cursor-pointer hover:text-green-600">
+            {sortOptions.map((option) => (
+              <label key={option.value} className="flex cursor-pointer items-center gap-2 text-sm hover:text-green-600">
                 <input
                   type="radio"
                   name="sort"
                   value={option.value}
-                  checked={sort === option.value}
-                  onChange={handleSortChange}
-                  className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  checked={(sort || 'newest') === option.value}
+                  onChange={(e) => dispatch(setSort(e.target.value))}
+                  className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500"
                 />
                 <span>{option.label}</span>
               </label>
@@ -532,65 +479,66 @@ const SideBar = ({ variant = 'desktop', onClose = () => { } }: SideBarProps) => 
           </div>
         </div>
 
-        {/* Price Filter */}
         {prodCheck && (
           <div className="mt-6">
-            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Price</h2>
-            <div className="h-px bg-gray-200 mb-3"></div>
-            <div className="flex items-center gap-2 mb-3">
+            <SectionTitle>Price per unit</SectionTitle>
+            <div className="mb-3 h-px bg-gray-200"></div>
+            <DropdownSelect aria-label="Price currency" value={currency} onValueChange={(value) => setCurrency(value || 'NGN')} options={PRICE_CURRENCIES} className="mb-2" />
+            <div className="mb-2 flex items-center gap-2">
               <input
                 type="number"
+                min={0}
+                aria-label="Lowest price"
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                onBlur={handlePriceChange}
-                className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                className="w-full rounded-md border border-gray-200 p-2 text-sm"
               />
               <span className="text-gray-400">-</span>
               <input
                 type="number"
+                min={0}
+                aria-label="Highest price"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                onBlur={handlePriceChange}
-                className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                className="w-full rounded-md border border-gray-200 p-2 text-sm"
               />
             </div>
-            <button
-              onClick={handlePriceChange}
-              className="w-full py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-[0.98] mt-2 outline-none"
-            >
-              Apply Price Filter
-            </button>
+            <p className="mb-2 text-xs text-gray-500">As buyers see it, with MINMEG&apos;s fees. Only listings priced in this currency.</p>
+            <Button size="sm" fullWidth onClick={applyPrice}>
+              Apply price
+            </Button>
           </div>
         )}
 
-        {/* Store Reviews Filter */}
         {prodCheck && (
           <div className="mt-8">
-            <h2 className="font-semibold text-[0.95rem] text-gray-900 mb-2">Store Reviews</h2>
-            <div className="h-px bg-gray-200 mb-4"></div>
-            <div className="space-y-3.5">
-              {storeReviews.map((rating) => (
-                <label key={rating.value} className="flex items-center gap-3 cursor-pointer group">
+            <SectionTitle>Store rating</SectionTitle>
+            <div className="mb-4 h-px bg-gray-200"></div>
+            <div className="space-y-3">
+              {STORE_RATINGS.map((rating) => (
+                <label key={rating.label} className="group flex cursor-pointer items-center gap-3">
                   <input
                     type="radio"
                     name="rating"
                     value={rating.value}
-                    checked={filters.rating === rating.value}
-                    onChange={(e) => {
-                      dispatch(setFilter({ filterType: 'rating', value: e.target.value }));
+                    checked={(filters.rating ?? '') === rating.value}
+                    onChange={() => {
+                      setOne('rating', rating.value || null);
                       if (isMobile) onClose();
                     }}
-                    className="w-4.5 h-4.5 text-green-600 focus:ring-green-500 border-gray-300 cursor-pointer"
+                    className="h-4 w-4 cursor-pointer border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  <div className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                    <div className="flex text-yellow-400">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} size={14} fill={i < parseInt(rating.value) ? "currentColor" : "none"} className={i < parseInt(rating.value) ? "" : "text-gray-300"} />
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-500 font-medium">{rating.label}</span>
+                  <div className="flex items-center gap-1.5">
+                    {rating.stars > 0 && (
+                      <div className="flex text-yellow-400" aria-hidden="true">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} size={14} fill={i < rating.stars ? 'currentColor' : 'none'} className={i < rating.stars ? '' : 'text-gray-300'} />
+                        ))}
+                      </div>
+                    )}
+                    <span className="text-xs font-medium text-gray-500">{rating.label}</span>
                   </div>
                 </label>
               ))}

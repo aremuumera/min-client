@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useRef } from 'react';
+import { rfqFilterParams } from '@/lib/marketplace-filters';
 import { useGetAllRfqQuery } from '@/redux/features/buyer-rfq/rfq-api';
 import { setPage } from '@/redux/features/marketplace/marketplace_slice';
 import NoProducts from '@/utils/no-products';
@@ -42,10 +43,7 @@ const AllRfqsView = ({ mainCategoryId, mineralCategoryId, subMineralCategoryId }
             subCategory: subMineralCategoryId,
             search,
             sort,
-            materialId: filters?.materialId,
-            measure: filters?.measure,
-            quantity: filters?.quantity,
-            status: filters?.rfqsStatus,
+            ...rfqFilterParams(filters),
         },
         {
             refetchOnMountOrArgChange: true,

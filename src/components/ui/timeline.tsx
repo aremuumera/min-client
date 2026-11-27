@@ -35,9 +35,14 @@ export function Timeline({ entries, className }: { entries: TimelineEntry[]; cla
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
                 <div className="break-words text-sm font-medium text-ink">{e.title}</div>
-                <time dateTime={e.at} title={at.toISOString()} className="shrink-0 text-[13px] text-steel">
-                  {Number.isNaN(at.getTime()) ? e.at : at.toLocaleString()}
-                </time>
+                {Number.isNaN(at.getTime()) ? (
+                  // not a date (e.g. "Not yet"): shown as written
+                  <span className="shrink-0 text-[13px] text-steel">{e.at}</span>
+                ) : (
+                  <time dateTime={e.at} title={at.toISOString()} className="shrink-0 text-[13px] text-steel">
+                    {at.toLocaleString()}
+                  </time>
+                )}
               </div>
               {e.actor && <div className="text-[13px] text-steel">{e.actor}</div>}
               {e.description && <div className="mt-1 break-words text-sm text-slate">{e.description}</div>}

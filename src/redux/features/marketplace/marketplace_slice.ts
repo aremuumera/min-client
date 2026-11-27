@@ -1,24 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { MarketplaceFilterState } from '@/lib/marketplace-filters';
 
 interface MarketplaceState {
-    filters: {
-        category: any;
-        subCategory: any;
-        mainCategory: any;
-        minPrice: any;
-        maxPrice: any;
-        order: any;
-        rating: any;
-        brand: any;
-        color: any;
-        rfqsStatus: any;
-        location: any;
-        materialId: any;
-        /** mine, warehouse... (the kind of site a listing is offered from) */
-        locationType: string | null;
-        measure: any;
-        quantity: any;
-    };
+    /** What the backend filters on (src/lib/marketplace-filters.ts); categories come from the page's address */
+    filters: MarketplaceFilterState;
     sort: any;
     search: string;
     page: number;
@@ -29,21 +14,15 @@ interface MarketplaceState {
 
 const initialState: MarketplaceState = {
     filters: {
-        category: null,
-        subCategory: null,
-        mainCategory: null,
-        minPrice: null,
-        maxPrice: null,
-        order: null,
-        rating: null,
-        brand: null,
-        color: null,
-        rfqsStatus: null,
-        location: null,
+        countries: null,
         materialId: null,
         locationType: null,
-        measure: null,
-        quantity: null,
+        fulfillment: null,
+        minPrice: null,
+        maxPrice: null,
+        currency: null,
+        rating: null,
+        rfqsStatus: null,
     },
     sort: null,
     search: '',
