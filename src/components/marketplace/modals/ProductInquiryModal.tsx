@@ -8,6 +8,8 @@ import { useAlert } from '@/providers';
 import { useCreateProductInquiryMutation, useCreateBusinessInquiryMutation } from '@/redux/features/trade/trade_api';
 import { Select } from '@/components/ui/select';
 import { MoqUnits } from '@/lib/marketplace-data';
+import { inquiryUnitOptions } from '@/lib/inquiry-units';
+import { useGetUnitChoicesQuery } from '@/redux/features/batches/batches_api';
 import { formatNumberWithCommas, stripCommas } from '@/lib/number-format';
 
 import { getErrorMessage } from '@/utils/helper';
@@ -77,9 +79,17 @@ const ProductInquiryModal = ({
     const [customPackaging, setCustomPackaging] = useState(false);
     const [showSpecsPopover, setShowSpecsPopover] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    // A listing with a minimum order is asked for in its own unit, so the amount can be checked
+    // The listing's own unit is chosen at first; the buyer may pick any unit of the same kind (src/lib/inquiry-units.ts)
     const listedMeasure = (product as { measure?: string })?.measure;
+    const listedUnitId = (product as { unitId?: string | null })?.unitId ?? null;
     const minimumOrder = (product as { minimum_order_quantity?: string | null })?.minimum_order_quantity ?? null;
+    const unitChoices = useGetUnitChoicesQuery(undefined, { skip: !isOpen });
+    const sameKindUnits = React.useMemo(
+        () => inquiryUnitOptions(unitChoices.data?.data ?? [], listedUnitId, listedMeasure),
+        [unitChoices.data, listedUnitId, listedMeasure],
+    );
+    // Older listings without a known unit keep the general list (in the listing's unit only when it has a minimum)
+    const measureOptions = sameKindUnits ?? (minimumOrder && listedMeasure ? [listedMeasure] : Array.from(new Set([...(listedMeasure ? [listedMeasure] : []), ...MoqUnits]))).map((unit) => ({ value: unit, label: unit }));
     useEffect(() => {
         if (isOpen && listedMeasure) setFormData((f: any) => ({ ...f, measure_type: listedMeasure }));
     }, [isOpen, listedMeasure]);
@@ -352,10 +362,7 @@ const ProductInquiryModal = ({
                                                     const actualValue = typeof val === 'string' ? val : val.target.value;
                                                     setFormData({ ...formData, measure_type: actualValue });
                                                 }}
-                                                options={(minimumOrder && listedMeasure ? [listedMeasure] : Array.from(new Set([...(listedMeasure ? [listedMeasure] : []), ...MoqUnits]))).map(unit => ({
-                                                    value: unit,
-                                                    label: unit
-                                                }))}
+                                                options={measureOptions}
                                             />
                                         </div>
                                     </div>
